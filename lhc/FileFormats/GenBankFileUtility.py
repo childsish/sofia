@@ -1,0 +1,195 @@
+from Range import Range as BaseRange
+from Range import SuperRange as BaseJoin
+from sequence.seq_tools import rc
+
+JOIN = 0
+SPLIT = 1
+IGNORE = 2
+
+class TokeniserError(Exception):
+	pass
+
+class GenBankTokeniser:
+	def tokenise(self, line):
+		res = []
+		fr = 0
+		c_typ = self.__getTokenType(line[0])
+		for to in xrange(len(line)-1):
+			n_typ = self.__getTokenType(line[to+1])
+			
+			if c_typ[0] == JOIN and n_typ[1] != c_typ[1]:
+				res.append(line[fr:to+1])
+				fr = to+1
+			elif c_typ[0] == SPLIT:
+				res.append(line[fr:to+1])
+				fr = to+1
+			elif c_typ[0] == IGNORE:
+				fr = to+1
+			
+			c_typ = n_typ
+		res.append(line[fr:])
+		return res
+	
+	def __getTokenType(self, char):
+		""" Returns a 2-tuple (behaviour, type).
+		 behaviours:
+		  0 - join
+		  1 - split
+		  2 - ignore
+		"""
+		if char in '()':
+			return (SPLIT,0)
+		elif char == ',':
+			return (SPLIT,1)
+		elif char in '<>':
+			return (IGNORE,2)
+		elif char == '.':
+			return (JOIN,3)
+		elif char.isdigit():
+			return (JOIN,4)
+		elif char.isalpha():
+			return (JOIN,5)
+		elif char == '^':
+			return (JOIN,6)
+		elif char.isspace():
+			return (IGNORE,7)
+		else:
+			raise TokeniserError('TokeniserException: "%s" can not be tokenised'%char)
+
+def tokenise(line):
+	tokeniser = GenBankTokeniser()
+	return tokeniser.tokenise(line)
+
+class Range(BaseRange):
+	def __str__(self):
+		return '%d..%d'%(self.f, self.t)
+	
+	def __sub__(self, other):
+		""" Overridden so the Range types stay sequence friendly. """
+		if isinstance(other, Complement):
+			return self - other.getChild()
+		elif isinstance(other, BaseJoin):
+			return BaseJoin([self]) - other
+		elif self == other:
+			return (None, None) #DELETED
+		elif not self.isOverlapping(other):
+			return self #NOEFFECT
+		
+		if self.f >= other.f:
+			if self.t > other.t:
+				return (None, Range(other.t, self.t)) #RIGHT
+			return (None, None) #DELETED
+		elif self.t > other.t:
+			return (Range(self.f, other.f),Range(other.t, self.t)) #SPLIT
+		return (Range(self.f, other.f), None) #LEFT
+	
+	def isComplement(self):
+		return False
+	
+	def get5p(self):
+		return self.f
+	
+	def get3p(self):
+		return self.t
+	
+	def adj5p(self, val):
+		self.f += val
+	
+	def adj3p(self, val):
+		self.t += val
+
+class Complement(Range):
+	#TODO Implement getAbsPos and getRelPos
+	def __init__(self, rng):
+		Range.__init__(self, rng.f, rng.t)
+		self.__rng = rng
+	
+	def __len__(self):
+		return len(self.__rng)
+	
+	def __str__(self):
+		return 'complement(%s)'%str(self.__rng)
+	
+	def isComplement(self):
+		return True
+	
+	def getChild(self):
+		return self.__rng
+	
+	def getSubSeq(self, seq):
+		return rc(self.__rng.getSubSeq(seq))
+	
+	def get5p(self):
+		return self.__rng.t
+	
+	def get3p(self):
+		return self.__rng.f
+	
+	def adj5p(self, val):
+		self.__rng.adj3p(-val)
+	
+	def adj3p(self, val):
+		self.__rng.adj5p(-val)
+
+class Join(BaseJoin):
+	def __init__(self, rngs):
+		BaseJoin.__init__(self, rngs)
+		self.__rngs = rngs
+	
+	def __str__(self):
+		return 'join(%s)'%','.join([str(rng) for rng in self.__rngs])
+	
+	def __sub__(self, other):
+		return Join(BaseJoin.__sub__(self, other).tolist())
+	
+	def isComplement(self):
+		return False
+	
+	def getSubSeq(self, seq):
+		""" Overloaded to keep the order of ranges specified in the GenBankFile. """
+		res = []
+		for rng in self.__rngs:
+			res.append(rng.getSubSeq(seq))
+		
+		if isinstance(seq, basestring):
+			res = ''.join(res)
+		elif hasattr(seq, '__iter__'):
+			res = sum(res, []) # Flattens the list
+		
+		return res
+	
+	def get5p(self):
+		return self.f
+	
+	def get3p(self):
+		return self.t
+	
+	def adj5p(self, val):
+		self.__rngs[0].f += val
+		self.f += val
+	
+	def adj3p(self, val):
+		self.__rngs[-1].t += val
+		self.t += val
+
+def main():
+	import random
+	bases = 'actg'
+	
+	x1 = [0, 10]
+	y1 = [5, 15]
+	
+	x2 = [10, 0]
+	y2 = [15, 5]
+	
+	seq = ''.join([random.sample(bases, 1)[0] for i in xrange(20)])
+	join1 = Join([Range(x1[i], y1[i]) for i in xrange(len(x1))])
+	join2 = Join([Range(x2[i], y2[i]) for i in xrange(len(x1))])
+	
+	print seq
+	print join1.getSubSeq(seq)
+	print join2.getSubSeq(seq)
+
+if __name__ == '__main__':
+	import sys
+	sys.exit(main())

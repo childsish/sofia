@@ -1,0 +1,6 @@
+rnafold = '/usr/local/bin/RNAfold'
+rnaplfold = '/usr/local/bin/RNAplfold'
+rnaeval = '/usr/local/bin/RNAeval'
+rnadist = '/usr/local/bin/RNAdist'
+rnasubopt = '/usr/local/bin/RNAsubopt'
+rnaalifold = '/usr/local/bin/RNAalifold'

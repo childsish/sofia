@@ -1,0 +1,1 @@
+jobdir = '/home/childs/jobdir'
