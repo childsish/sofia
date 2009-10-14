@@ -273,18 +273,16 @@ class GenBankFile:
 
 def split(fname, outdir):
 	infile = open(fname)
-	files = infile.read().split('\n//\n')
+	outfile = None
+	for line in infile:
+		if line.startswith('LOCUS'):
+			if outfile != None:
+				outfile.close()
+			outfname = '%s.gbk'%line.split()[1]
+			outfile = open(os.path.join(outdir, outfname), 'w')
+		outfile.write(line)
+	outfile.close()
 	infile.close()
-	
-	for f in files:
-		if f == '':
-			continue
-		
-		outfname = '%s.txt'%f[:f.find('\n')].split()[1]
-		outfile = open(os.path.join(outdir, outfname), 'w')
-		outfile.write(f)
-		outfile.write('\n//\n')
-		outfile.close()
 
 def main(argv = None):
 	if argv == None:

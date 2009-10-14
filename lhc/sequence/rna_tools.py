@@ -54,7 +54,8 @@ class RNAFolder:
 
 def calculateAccessibility(seq, w=50, u=4):
 	cwd = tempfile.mkdtemp()
-	prc = Popen([rnaplfold, '-W', '%d'%w, '-u', '%d'%u], stdin=PIPE, stdout=PIPE, cwd=cwd)
+	prc = Popen([rnaplfold, '-W', '%d'%w, '-u', '%d'%u], stdin=PIPE, stdout=PIPE, cwd=cwd,
+	 close_fds=True)
 	prc.stdin.write(seq + '\n')
 	prc.communicate()
 	
