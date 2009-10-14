@@ -44,7 +44,7 @@ class GffFile(dict):
 			self[k] = sorted(self[k])
 	
 	def getRange(self, chm, rng):
-		ftrs = self.ftrs[chm]
+		ftrs = self[chm]
 		idx = binarySearch(ftrs, 0, len(ftrs), rng.f)
 		res = []
 		while idx < len(ftrs) and ftrs[idx].f <= rng.t:
