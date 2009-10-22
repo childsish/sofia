@@ -254,6 +254,15 @@ def splitFasta(infname, npart, outdname=None):
 	
 	return (outdname, [outfile.name for outfile in outs])
 
+def readFasta(fname):
+	infile = open(fname)
+	lines = infile.readlines()
+	infile.close()
+	
+	res = [(lines[i][1:].strip(), lines[i+1].strip()) for i in xrange(0, len(lines), 2)]
+	del lines
+	return res
+
 def main(argv = None):
 	if argv == None:
 		argv = sys.argv
