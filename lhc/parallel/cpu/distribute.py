@@ -44,13 +44,7 @@ class ClusterJob:
 			sys.stderr.write(stderr)
 	
 	def start(self):
-		prc = Popen([cluster.qsub,
-		             '-o', self.logdir,
-		             '-e', self.logdir,
-		             '-N', self.label,
-		             '-v', self.args,
-		             cluster.pbs_slave],
-		            stdout=PIPE, stderr=PIPE)
+		prc = Popen(self.args, stdout=PIPE, stderr=PIPE)
 		stdout, stderr = prc.communicate()
 		if stderr != '':
 			raise Exception(stderr)
@@ -64,12 +58,12 @@ class ClusterJob:
 		
 		return stderr.strip() != 'qstat: Unknown Job Id ' + self.jobid
 
-class Distributer:
+class Distributor:
 	
 	SLEEP = 30.0
 	
 	def __init__(self, max_jobs, sleep=SLEEP):
-		""" Initialise the Distributer to run, at most, max_jobs and wait sleep
+		""" Initialise the Distributor to run, at most, max_jobs and wait sleep
 		   sleep seconds between checking if any jobs are finished.
 		"""
 		self.__max_jobs = max_jobs
@@ -100,14 +94,7 @@ class Distributer:
 		if label == '':
 			label = os.path.basename(args[0])
 		filenames = sorted(os.listdir(tmpdir))
-		jobs = [ClusterJob(label,
-		  self.formatArgs(args,
-		   lc_jobdir=t_jobdir,
-		   lc_taskid=i,
-		   lc_filename=os.path.join(tmpdir, filenames[i])),
-		  i,
-		  t_logdir)
-		 for i in xrange(len(filenames))]
+		jobs = [ClusterJob(label, args, i, t_logdir) for i in xrange(len(filenames))]
 		del filenames
 		
 		# Track the running jobs in an array.
@@ -146,15 +133,6 @@ class Distributer:
 		os.rmdir(tmpdir)
 		
 		return t_jobdir
-	
-	def formatArgs(self, args, **kw):
-		""" Formats the arguments into a single string to be passed to the
-		   argument of qsub that sets the environment variable. I don't know of
-		   any other way to send arguments to a script on the cluster.
-		"""
-		args = ['lc_arg%02d="%s"'%(i, args[i]) for i in xrange(len(args))]
-		args += ['%s="%s"'%(k,str(v)) for k, v in kw.iteritems()]
-		return ','.join(args)
 	
 	def __allocate(self, indir, n_jobs):
 		""" Partitions the jobs into "super jobs". If no number is specified,
@@ -208,7 +186,7 @@ def main(argv = None):
 	if not options.indir:
 		parser.error('Input directory not defined.')
 	
-	tool = Distributer(options.m_jobs, options.sleep)
+	tool = Distributor(options.m_jobs, options.sleep)
 	tool.distribute(options.n_jobs, options.indir, options.label, argv[i:])
 	
 	return 0

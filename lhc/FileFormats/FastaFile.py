@@ -231,6 +231,38 @@ def index_file(filename, index_name = None):
 	
 	return index_name
 
+def splitFasta(infname, npart, outdname=None):
+	if outdname == None:
+		import tempfile
+		outdname = tempfile.mkdtemp()
+	elif not os.path.exists(outdname):
+		os.makedirs(outdname)
+	
+	infile = open(infname)
+	i = -1
+	outs = []
+	for line in infile:
+		if line.startswith('>'):
+			i = (i+1)%npart
+			if i == len(outs):
+				outfile = open(os.path.join(outdname, '%s.fasta'%(i)), 'w')
+				outs.append(outfile)
+		outs[i].write(line)
+	infile.close()
+	for outfile in outs:
+		outfile.close()
+	
+	return (outdname, [outfile.name for outfile in outs])
+
+def readFasta(fname):
+	infile = open(fname)
+	lines = infile.readlines()
+	infile.close()
+	
+	res = [(lines[i][1:].strip(), lines[i+1].strip()) for i in xrange(0, len(lines), 2)]
+	del lines
+	return res
+
 def main(argv = None):
 	if argv == None:
 		argv = sys.argv
