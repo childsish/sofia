@@ -69,7 +69,7 @@ class Distributor:
 	SLEEP = 30.0
 	
 	def __init__(self, max_jobs, sleep=SLEEP):
-		""" Initialise the Distributer to run, at most, max_jobs and wait sleep
+		""" Initialise the Distributor to run, at most, max_jobs and wait sleep
 		   sleep seconds between checking if any jobs are finished.
 		"""
 		self.__max_jobs = max_jobs
@@ -92,13 +92,14 @@ class Distributor:
 		                        os.path.basename(args[0].split()[0]),
 		                        timestamp)
 		os.makedirs(t_logdir)
+
+		if label == '':
+			label = os.path.basename(args[0])
 		
 		# Partition the jobs into n_jobs jobs.
 		tmpdir = self.__allocate(indir, n_jobs)
-		
+
 		# Create all the jobs.
-		if label == '':
-			label = os.path.basename(args[0])
 		filenames = sorted(os.listdir(tmpdir))
 		jobs = [ClusterJob(label,
 		  self.formatArgs(args,
@@ -161,11 +162,18 @@ class Distributor:
 		   the same number of super jobs as jobs is created effectively changing
 		   nothing.
 		"""
+		tmpdir = tempfile.mkdtemp(dir=os.path.join(os.environ['HOME'], 'tmp'))
+		if indir == None:
+			for i in xrange(n_jobs):
+				outfile = open(os.path.join(tmpdir, '%d'%i), 'w')
+				outfile.write('%d\n'%i)
+				outfile.close()
+			return tmpdir
+			
 		filenames = os.listdir(indir)
 		if n_jobs == 0 or n_jobs > len(filenames):
 			n_jobs = len(filenames)
 		
-		tmpdir = tempfile.mkdtemp(dir=os.path.join(os.environ['HOME'], 'tmp'))
 		for i in xrange(n_jobs):
 			outfile = open(os.path.join(tmpdir, str(i)), 'w')
 			outfile.write('\n'.join([os.path.join(indir, filename)
@@ -184,6 +192,7 @@ def main(argv = None):
 		i += 2
 	
 	parser = OptionParser(usage=USAGE)
+	parser.set_defaults(indir=None)
 	parser.add_option('-l', '--label',
 	                  action='store', type='string', dest='label',
 	                  default='',
@@ -201,13 +210,13 @@ def main(argv = None):
 	                  help='The directory with the different files to use.')
 	parser.add_option('-s', '--sleep',
 	                  action='store', type='float', dest='sleep',
-	                  default=Distributer.SLEEP,
+	                  default=Distributor.SLEEP,
 	                  help='How long to sleep between checking.')
 	options, args = parser.parse_args(argv[1:i])
 	
-	if not options.indir:
-		parser.error('Input directory not defined.')
-	
+	if options.indir == None and options.n_jobs == 0:
+		parser.error('No input directory or the number of jobs not defined.')
+
 	tool = Distributor(options.m_jobs, options.sleep)
 	tool.distribute(options.n_jobs, options.indir, options.label, argv[i:])
 	

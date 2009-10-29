@@ -259,7 +259,9 @@ def readFasta(fname):
 	lines = infile.readlines()
 	infile.close()
 	
-	res = [(lines[i][1:].strip(), lines[i+1].strip()) for i in xrange(0, len(lines), 2)]
+	res = [(lines[i][1:].strip(), lines[i+1].strip())
+	 for i in xrange(0, len(lines), 2)
+	 if lines[i].strip() != '']
 	del lines
 	return res
 

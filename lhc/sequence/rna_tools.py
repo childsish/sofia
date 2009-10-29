@@ -32,17 +32,25 @@ class RNACalibrator:
 		return b.argsort()[0]
 
 class RNAFolder:
-	def __init__(self):
-		self.__prc = Popen([rnafold, '-noPS'], stdin=PIPE, stdout=PIPE,
-		 close_fds=True) #NOTE Closing the file descriptors will allow several threads
+	def __init__(self, p=False):
+		self.__p = p
+		args = [rnafold, '-noPS']
+		if p: args.append('-p')
+		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=True)
 	
 	def __del__(self):
 		self.__prc.communicate()
 	
 	def scan(self, seq, win):
-		mfes = numpy.empty(len(seq) - win, dtype=numpy.float32)
-		for i in xrange(len(seq) - win):
-			mfes[i] = self.mfe(seq[i:i + win])
+		mfes = numpy.empty(len(seq), dtype=numpy.float32)
+		for i in xrange(len(seq)):
+			fr = i - win / 2
+			if fr < 0:
+				fr = 0
+			to = i + win / 2
+			if to > len(seq):
+				to = len(seq)
+			mfes[i] = self.mfe(seq[fr:to])
 		return mfes
 	
 	def mfe(self, seq):
@@ -50,7 +58,55 @@ class RNAFolder:
 		self.__prc.stdin.flush()
 		self.__prc.stdout.readline()
 		line = self.__prc.stdout.readline()
+		if self.__p:
+			self.__prc.stdout.readline()
+			self.__prc.stdout.readline()
+			self.__prc.stdout.readline()
 		return float(line.split(' (')[1][:-2])
+
+	def fold(self, seq):
+		self.__prc.stdin.write(seq + '\n')
+		self.__prc.stdin.flush()
+		self.__prc.stdout.readline()
+		line = self.__prc.stdout.readline()
+		dot = None
+		if self.__p:
+			self.__prc.stdout.readline()
+			self.__prc.stdout.readline()
+			self.__prc.stdout.readline()
+			dot = self.__readDot('dot.ps')
+		stc, mfe = line.split(' (')
+		return stc, float(mfe[:-2]), dot
+
+	def __readDot(self, fname):
+		res = None
+	
+		record = False
+		infile = open(fname)
+		lines = infile.readlines()
+		infile.close()
+		for i in xrange(len(lines)):
+			if lines[i].startswith('/sequence'):
+				seq = []
+				j = 1
+				while '}' not in lines[i+j]:
+					seq.append(lines[i+j].strip()[:-1])
+					j += 1
+				seq = ''.join(seq)
+				res = numpy.zeros((len(seq), len(seq)), dtype=numpy.float32)
+				for j in xrange(len(seq) - 1):
+					res[j, j+1] = 1
+					res[j+1, j] = 1
+			elif lines[i] == '%data starts here\n':
+				record = True
+			elif lines[i] == 'showpage\n':
+				record = False
+			elif record:
+				parts = lines[i].split()
+				res[int(parts[0])-1, int(parts[1])-1] = 1 - float(parts[2]) # A higher probability = a shorter distance (ie. a smaller number)
+		infile.close()
+	
+		return res	
 
 def calculateAccessibility(seq, w=50, u=4):
 	cwd = tempfile.mkdtemp()

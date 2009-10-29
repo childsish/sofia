@@ -5,5 +5,5 @@ qsub = '/usr/bin/qsub'
 qstat = '/usr/bin/qstat'
 qdel = '/usr/bin/qdel'
 
-pbs_slave = '/data/home/childs/scripts/pbs/PbsSlave.py'
+pbs_slave = '/data/home/childs/scripts/parallel/pbs/PbsSlave.py'
 mpi_slave = '/data/home/childs/scripts/mpi/slave.py'

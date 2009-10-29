@@ -2,7 +2,8 @@ try:
 	import psyco
 	psyco.full()
 except ImportError, e:
-	print str(e)
+	import sys	
+	sys.stderr.write(str(e) + '\n')
 
 class Range:
 	def __init__(self, f, t):
