@@ -1,10 +1,7 @@
 #!/usr/bin/python
 
 """ distribute.py
-A class designed to distribute jobs on the cluster. Options are available to
-limit the maximum number of nodes used and, in the case of large numbers of
-small jobs, group jobs together into a smaller number of "super jobs". The time
-in between checking if a job is complete can also be altered.
+The stupidest hack ever because matrix doesn't support multiprocessing.
 
 TODO:
 1. Path extensions. ~/path works because the os expands it before running the
@@ -21,42 +18,43 @@ import os
 import sys
 import tempfile
 import time
+import threading
 
 from optparse import OptionParser
 from paths import cluster
 from subprocess import Popen, PIPE
 
+REPLACEME = '@@'
 USAGE = """usage: %prog [options] executable [executable_args]"""
 
-class ClusterJob:
-	def __init__(self, label, args, taskid, logdir):
-		self.label = label
+class CpuJob(threading.Thread):
+	def __init__(self, args, jobdir, fname):
+		threading.Thread.__init__(self)
 		self.args = args
-		self.taskid = taskid
-		self.jobid = None
-		self.logdir = logdir
-
-	def __del__(self):
-		if self.jobid != None and self.isAlive():
-			prc = Popen([cluster.qdel, self.jobid], stdout=PIPE, stderr=PIPE)
-			stdout, stderr = prc.communicate()
-			sys.stdout.write(stdout)
-			sys.stderr.write(stderr)
+		self.jobdir = jobdir
+		self.fname = fname
 	
-	def start(self):
-		prc = Popen(self.args, stdout=PIPE, stderr=PIPE)
-		stdout, stderr = prc.communicate()
-		if stderr != '':
-			raise Exception(stderr)
-		self.jobid = stdout.strip()
-	
-	def isAlive(self):
-		if self.jobid == None:
-			return False
-		prc = Popen([cluster.qstat, self.jobid], stdout=PIPE, stderr=PIPE)
-		stdout, stderr = prc.communicate()
-		
-		return stderr.strip() != 'qstat: Unknown Job Id ' + self.jobid
+	def run(self):
+		# Each line in the file is a job to run.
+		infile = open(self.fname)
+		for line in infile:
+			c_filename = os.path.join(self.jobdir, line.strip())
+			c_args = self.args[:]
+			for i in xrange(len(c_args)):
+				if REPLACEME in c_args[i]:
+					c_args[i] = c_args[i].replace(REPLACEME, c_filename)
+			
+			prc_stdout = open(c_filename, 'w')
+			try:
+				prc = Popen(c_args, stdout=prc_stdout)
+			except OSError, e:
+				prc_stdout.close()
+				os.remove(prc_stdout)
+				print c_args
+				raise e
+			prc.wait()
+			prc_stdout.close()
+		infile.close()
 
 class Distributor:
 	
@@ -70,32 +68,27 @@ class Distributor:
 		self.__inputs = []
 		self.__sleep = sleep
 	
-	def distribute(self, n_jobs, indir, label, args):
+	def distribute(self, n_jobs, indir, args):
 		""" Distributes the n_jobs "super jobs" on the cluster. The executable
 		   specified in args[0] is run on each file in indir. Any occurance of
 		   the string "@@" in the arguments is replaced with the file name.
 		"""
 		timestamp = time.strftime('%y%m%d_%H%M%S')
 		
-		# Create timestamped job and log directories
+		# Create timestamped job directory
 		t_jobdir = os.path.join(cluster.jobdir,
 		                        os.path.basename(args[0].split()[0]),
 		                        timestamp)
 		os.makedirs(t_jobdir)
-		t_logdir = os.path.join(cluster.logdir,
-		                        os.path.basename(args[0].split()[0]),
-		                        timestamp)
-		os.makedirs(t_logdir)
 		
 		# Partition the jobs into n_jobs jobs.
 		tmpdir = self.__allocate(indir, n_jobs)
 		
 		# Create all the jobs.
-		if label == '':
-			label = os.path.basename(args[0])
-		filenames = sorted(os.listdir(tmpdir))
-		jobs = [ClusterJob(label, args, i, t_logdir) for i in xrange(len(filenames))]
-		del filenames
+		fnames = sorted(os.listdir(tmpdir))
+		jobs = [CpuJob(args, t_jobdir, os.path.join(tmpdir, fnames[i]))\
+		 for i in xrange(len(fnames))]
+		del fnames
 		
 		# Track the running jobs in an array.
 		running_jobs = self.__max_jobs * [None]
@@ -112,6 +105,7 @@ class Distributor:
 				when = time.strftime('%d/%m/%y %H:%M:%S')
 				print ' stopping job %d (%s)'%(running_jobs[current_job],when)
 				stopped_jobs += 1
+				jobs[running_jobs[current_job]].join()
 				running_jobs[current_job] = None
 			
 			if running_jobs[current_job] == None and\
@@ -139,11 +133,18 @@ class Distributor:
 		   the same number of super jobs as jobs is created effectively changing
 		   nothing.
 		"""
+		tmpdir = tempfile.mkdtemp(dir=os.path.join(os.environ['HOME'], 'tmp'))
+		if indir == None:
+			for i in xrange(n_jobs):
+				outfile = open(os.path.join(tmpdir, '%d'%i), 'w')
+				outfile.write('%d\n'%i)
+				outfile.close()
+			return tmpdir
+		
 		filenames = os.listdir(indir)
 		if n_jobs == 0 or n_jobs > len(filenames):
 			n_jobs = len(filenames)
 		
-		tmpdir = tempfile.mkdtemp(dir=os.path.join(os.environ['HOME'], 'tmp'))
 		for i in xrange(n_jobs):
 			outfile = open(os.path.join(tmpdir, str(i)), 'w')
 			outfile.write('\n'.join([os.path.join(indir, filename)
@@ -162,10 +163,7 @@ def main(argv = None):
 		i += 2
 	
 	parser = OptionParser(usage=USAGE)
-	parser.add_option('-l', '--label',
-	                  action='store', type='string', dest='label',
-	                  default='',
-	                  help='The label that the jobs will have.')
+	parser.set_defaults(indir=None)
 	parser.add_option('-n', '--njob',
 	                  action='store', type='int', dest='n_jobs',
 	                  default=0,
@@ -179,15 +177,15 @@ def main(argv = None):
 	                  help='The directory with the different files to use.')
 	parser.add_option('-s', '--sleep',
 	                  action='store', type='float', dest='sleep',
-	                  default=Distributer.SLEEP,
+	                  default=Distributor.SLEEP,
 	                  help='How long to sleep between checking.')
 	options, args = parser.parse_args(argv[1:i])
 	
-	if not options.indir:
-		parser.error('Input directory not defined.')
+	if options.indir == None and options.n_jobs == 0:
+		parser.error('No input directory or the number of jobs not defined.')
 	
 	tool = Distributor(options.m_jobs, options.sleep)
-	tool.distribute(options.n_jobs, options.indir, options.label, argv[i:])
+	tool.distribute(options.n_jobs, options.indir, argv[i:])
 	
 	return 0
 

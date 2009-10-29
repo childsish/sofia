@@ -51,6 +51,14 @@ class RNAFolder:
 		self.__prc.stdout.readline()
 		line = self.__prc.stdout.readline()
 		return float(line.split(' (')[1][:-2])
+	
+	def fold(self, seq):
+		self.__prc.stdin.write(seq + '\n')
+		self.__prc.stdin.flush()
+		self.__prc.stdout.readline()
+		line = self.__prc.stdout.readline()
+		stc, mfe = line.split(' (')
+		return stc, float(mfe[:-2])
 
 def calculateAccessibility(seq, w=50, u=4):
 	cwd = tempfile.mkdtemp()

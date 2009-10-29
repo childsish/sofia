@@ -92,6 +92,12 @@ class Range(BaseRange):
 	def get3p(self):
 		return self.t
 	
+	def set5p(self, val):
+		self.f = val
+	
+	def set3p(self, val):
+		self.t = val
+	
 	def adj5p(self, val):
 		self.f += val
 	
@@ -99,7 +105,6 @@ class Range(BaseRange):
 		self.t += val
 
 class Complement(Range):
-	#TODO Implement getAbsPos and getRelPos
 	def __init__(self, rng):
 		Range.__init__(self, rng.f, rng.t)
 		self.__rng = rng
@@ -116,14 +121,28 @@ class Complement(Range):
 	def getChild(self):
 		return self.__rng
 	
+	def getAbsPos(self, pos):
+		""" Converts a position relative to the range to one relative to 0. """ 
+		return self.__rng.getAbsPos(len(self.__rng) - pos - 1)
+	
+	def getRelPos(self, pos):
+		""" Converts a position relative to 0 to one relative to the range. """
+		return len(self.__rng) - self.__rng.getRelPos(pos) - 1
+	
 	def getSubSeq(self, seq):
 		return rc(self.__rng.getSubSeq(seq))
 	
 	def get5p(self):
-		return self.__rng.t
+		return self.__rng.get3p()
 	
 	def get3p(self):
-		return self.__rng.f
+		return self.__rng.get5p()
+	
+	def set5p(self, val):
+		self.__rng.set3p(val)
+	
+	def set3p(self, val):
+		self.__rng.set5p(val)
 	
 	def adj5p(self, val):
 		self.__rng.adj3p(-val)
@@ -145,6 +164,31 @@ class Join(BaseJoin):
 	def isComplement(self):
 		return False
 	
+	def getAbsPos(self, pos):
+		""" Converts a position relative to the range to one relative to 0. """
+		i = 0
+		while i < len(self.__rngs) and len(self.__rngs[i]) <= pos:
+			pos -= len(self.__rngs[i])
+			i += 1
+		
+		if i == len(self.__rngs):
+			raise IndexError('Relative position %d is not contained within this range'%pos)
+		
+		return self.__rngs[i].getAbsPos(pos)
+	
+	def getRelPos(self, pos):
+		""" Converts a position relative to 0 to one relative to the range. """
+		i = 0
+		while i < len(self.__rngs):
+			if self.__rngs[i].contains(pos):
+				break
+			i += 1
+		
+		if i == len(self.__rngs):
+			raise IndexError('Absolute position %d is not contained within this range.'%pos)
+		
+		return sum([len(self.__rngs[j]) for j in xrange(i)]) + self.__rngs[i].getRelPos(pos)
+	
 	def getSubSeq(self, seq):
 		""" Overloaded to keep the order of ranges specified in the GenBankFile. """
 		res = []
@@ -164,12 +208,20 @@ class Join(BaseJoin):
 	def get3p(self):
 		return self.t
 	
+	def set5p(self, val):
+		self.__rngs[0].set5p(val)
+		self.f = val
+	
+	def set3p(self, val):
+		self.__rngs[-1].set3p(val)
+		self.t = val
+	
 	def adj5p(self, val):
-		self.__rngs[0].f += val
+		self.__rngs[0].adj5p(val)
 		self.f += val
 	
 	def adj3p(self, val):
-		self.__rngs[-1].t += val
+		self.__rngs[-1].adj3p(val)
 		self.t += val
 
 def main():
