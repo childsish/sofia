@@ -31,6 +31,9 @@ class GffFile(dict):
 	def __init__(self, fname, cls, chm_idx=0, cls_idx=2, fr_idx=3, to_idx=4, ann_fn=getAcc):
 		infile = open(fname)
 		for line in infile:
+			if line.startswith('#'):
+				continue
+			
 			parts = line.strip().split('\t')
 			if parts[cls_idx] == cls:
 				ann = ann_fn(parts)

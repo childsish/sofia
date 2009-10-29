@@ -1,11 +1,7 @@
 #!/usr/bin/python
 
-import re
-import os
-
 from GenBankFileUtility import Complement, Join, Range, tokenise, TokeniserError
-
-RNG_REGX = re.compile(r'^<?(?P<fr>\d+)(?:\.\.>?(?P<to>\d+))?')
+from optparse import OptionParser
 
 class GenBankFile:
 	def __init__(self, filename):
@@ -271,27 +267,60 @@ class GenBankFile:
 		tokens.pop(0) # Pop ')'
 		return Complement(res)
 
-def split(fname, outdir):
-	infile = open(fname)
-	outfile = None
-	for line in infile:
-		if line.startswith('LOCUS'):
-			if outfile != None:
-				outfile.close()
-			outfname = '%s.gbk'%line.split()[1]
-			outfile = open(os.path.join(outdir, outfname), 'w')
-		outfile.write(line)
-	outfile.close()
-	infile.close()
-
-def main(argv = None):
-	if argv == None:
-		argv = sys.argv
-	
-	indir = argv[1]
+def split(argv):
+	indir = args[1]
 	outdir = argv[2]
 	for fname in os.listdir(indir):
-		split(os.path.join(indir, fname), outdir)
+		infile = open(fname)
+		outfile = None
+		for line in infile:
+			if line.startswith('LOCUS'):
+				if outfile != None:
+					outfile.close()
+				outfname = '%s.gbk'%line.split()[1]
+				outfile = open(os.path.join(outdir, outfname), 'w')
+			outfile.write(line)
+		outfile.close()
+		infile.close()
+
+def extract(argv):
+	print argv
+	
+	parser = OptionParser()
+	parser.set_defaults(utr=75)
+	parser.add_option('-u', '--utr', action='store', type='int',
+	 help='The size of the 5\'UTR region to extract along with the sequence.')
+	options, args = parser.parse_args(argv[1:])
+	
+	print options
+	print args
+	
+	fname = args[0]
+	genes = args[1:]
+	gbk = GenBankFile(fname)
+	for gene in genes:
+		ftr = None
+		for f in gbk.ftrs:
+			if 'label' in f and f['label'] == gene:
+				ftr = f
+				break
+		if ftr == None:
+			print 'Unable to find gene'
+			sys.exit(1)
+		
+		rng = ftr['range']
+		rng.adj5p(-options.utr)
+		rng.adj3p(25)
+		seq = rng.getSubSeq(gbk.seq)
+		sys.stdout.write('>%s\n%s\n'%(gene, seq))
+
+def main(argv):
+	if argv[1] == 'split':
+		split(argv[1:])
+	elif argv[1] == 'extract':
+		extract(argv[1:])
+	elif argv[1] == 'help':
+		help()
 	
 	return 0
 

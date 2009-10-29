@@ -255,6 +255,22 @@ def splitFasta(infname, npart, outdname=None):
 	return (outdname, [outfile.name for outfile in outs])
 
 def readFasta(fname):
+	res = []
+	infile = open(fname)
+	hdr = None
+	seq = None
+	for line in infile:
+		if line[0] == '>':
+			if hdr != None:
+				res.append((hdr, ''.join(seq)))
+			hdr = line[1:].strip()
+			seq = []
+		else:
+			seq.append(line.strip())
+	res.append((hdr, ''.join(seq)))
+	return res
+
+def readFastaOne(fname):
 	infile = open(fname)
 	lines = infile.readlines()
 	infile.close()

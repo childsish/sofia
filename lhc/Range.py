@@ -8,8 +8,8 @@ except ImportError, e:
 class Range:
 	def __init__(self, f, t):
 		""" f must be smaller than t """
-		self.f = f
-		self.t = t
+		self.f = min(f, t)
+		self.t = max(f, t)
 	
 	def __len__(self):
 		return self.t - self.f
@@ -121,7 +121,7 @@ class Range:
 
 class SuperRange:
 	def __init__(self, rngs):
-		""" rngs is a list of non-overlapping Ranges """
+		""" rngs is a list of sorted non-overlapping Ranges """
 		self.__rngs = sorted(rngs)
 		self.f = rngs[0].f
 		self.t = rngs[-1].t
