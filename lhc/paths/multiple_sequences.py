@@ -1,1 +1,0 @@
-clustalw2 = '/home/childs/opt/clustalw-2.0.1-linux-i386-libcppstatic/clustalw2'
