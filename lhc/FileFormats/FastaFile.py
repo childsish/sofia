@@ -270,16 +270,19 @@ def readFasta(fname):
 	res.append((hdr, ''.join(seq)))
 	return res
 
-def readFastaOne(fname):
+def iterFasta(fname):
 	infile = open(fname)
-	lines = infile.readlines()
-	infile.close()
-	
-	res = [(lines[i][1:].strip(), lines[i+1].strip())
-	 for i in xrange(0, len(lines), 2)
-	 if lines[i].strip() != '']
-	del lines
-	return res
+	hdr = None
+	seq = None
+	for line in infile:
+		if line[0] == '>':
+			if hdr != None:
+				yield (hdr, ''.join(seq))
+			hdr = line[1:].strip()
+			seq = []
+		else:
+			seq.append(line.strip())
+	yield (hdr, ''.join(seq))
 
 def main(argv = None):
 	if argv == None:

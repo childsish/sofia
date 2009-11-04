@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import os
 import numpy
 import tempfile
@@ -6,6 +8,7 @@ from seq_tools import gc
 from paths.rna_tools import matrices
 from paths.vienna import rnafold, rnaplfold
 from subprocess import Popen, PIPE
+from optparse import OptionParser
 
 class RNACalibrator:
 	def __init__(self):
@@ -42,7 +45,9 @@ class RNAFolder:
 		self.__prc.communicate()
 	
 	def scan(self, seq, win):
+		stcs = []
 		mfes = numpy.empty(len(seq), dtype=numpy.float32)
+		dots = []
 		for i in xrange(len(seq)):
 			fr = i - win / 2
 			if fr < 0:
@@ -50,27 +55,11 @@ class RNAFolder:
 			to = i + win / 2
 			if to > len(seq):
 				to = len(seq)
-			mfes[i] = self.mfe(seq[fr:to])
-		return mfes
-	
-	def mfe(self, seq):
-		self.__prc.stdin.write(seq + '\n')
-		self.__prc.stdin.flush()
-		self.__prc.stdout.readline()
-		line = self.__prc.stdout.readline()
-		if self.__p:
-			self.__prc.stdout.readline()
-			self.__prc.stdout.readline()
-			self.__prc.stdout.readline()
-		return float(line.split(' (')[1][:-2])
-	
-	def fold(self, seq):
-		self.__prc.stdin.write(seq + '\n')
-		self.__prc.stdin.flush()
-		self.__prc.stdout.readline()
-		line = self.__prc.stdout.readline()
-		stc, mfe = line.split(' (')
-		return stc, float(mfe[:-2])
+			stc, mfe, dot = self.fold(seq[fr:to])
+			stcs.append(stc)
+			mfes[i] = mfe
+			dots.append(dot)
+		return stcs, mfes, dots
 
 	def fold(self, seq):
 		self.__prc.stdin.write(seq + '\n')
@@ -139,14 +128,65 @@ def calculateAccessibility(seq, w=50, u=4):
 	
 	return res
 
-def main(argv = None):
-	if argv == None:
-		argv = sys.argv
+def scan(argv):
+	from FileFormats.FastaFile import iterFasta
 	
-	seq = 'acgtgctagctagctagcgcggcatgctacgtagacgttagctagtcgtgggcgcgatctagatcgtagcagctagtcaatatattatctgatcgagctattataagcagctagcagcgatgcatcctgcgcgctagctgacg'
-	tool = RNAFolder()
-	print tool.scan(seq, 50)
-	print tool.mfe(seq)
+	parser = OptionParser()
+	parser.set_defaults(prob=False, output=[], atgs=[], win=50)
+	parser.add_option('-p', '--probability', action='store_true', dest='prob',
+	 help='Calculate base pair probabiities')
+	parser.add_option('-o', '--output', action='append', type='string', dest='output',
+	 help='The types of output desired [stc, mfe].')
+	parser.add_option('-0', '--atg', action='append', type='int', dest='atgs',
+	 help='The start codon positions. If only one is provided, then it applies to all.')
+	parser.add_option('-w', '--win', action='store', type='int', dest='win',
+	 help='The size of the window.')
+	parser.add_option('-r', '--range', action='store', type='int', nargs=2, dest='range',
+	 help='Output only the given range.')
+	options, args = parser.parse_args(argv[1:])
+	
+	infname = args[0]
+	
+	if 'mfe' in options.output:
+		from rpy2.robjects import r
+		from rpy2.robjects import numpy2ri
+		r['pdf']('%s.scan.pdf'%infname[:infname.rfind('.')])
+	
+	folder = RNAFolder(options.prob)
+	c_ent = 0
+	for hdr, seq in iterFasta(infname):
+		if len(options.atgs) == 0:
+			atg = 0
+		elif len(options.atgs) == 1:
+			atg = options.atgs[0]
+		else:
+			atg = options.atgs[c_ent]
+			
+		stcs, mfes, dots = folder.scan(seq, options.win)
+		if 'stc' in options.output:
+			outfile = open('%s.scan.fasta'%(infname[:infname.rfind('.')]), 'w')
+			for i in xrange(len(stcs)):
+				outfile.write('>%s_%d\n%s\n'%(hdr, i, stcs[i]))
+			outfile.close()
+		if 'mfe' in options.output:
+			f = 0
+			t = len(mfes)
+			if options.range:
+				f = options.range[0]
+				t = options.range[1]
+			xs = numpy.arange(len(mfes)) - atg
+			r['plot'](xs[f:t], mfes[f:t], ylab='Minimum Free Energy (kcal mol-1)',
+			 xlab='Position', type='l', main=hdr)
+		c_ent += 1
+	
+	if 'mfe' in options.output:
+		r['dev.off']()
+
+def main(argv):
+	if argv[1] == 'fold':
+		print 'Use RNAfold you twit!'
+	elif argv[1] == 'scan':
+		scan(argv[1:])
 
 if __name__ == '__main__':
 	import sys

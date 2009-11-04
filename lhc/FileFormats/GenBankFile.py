@@ -8,8 +8,7 @@ class GenBankFile:
 		self.gc = '0'
 		self.__filename = filename
 		self.hdrs = {}
-		self.ftrs = []
-		self.rngs = []
+		self.ftrs = {}
 		self.seq = ''
 		
 		infile = file(filename)
@@ -23,7 +22,7 @@ class GenBankFile:
 				to += 1
 			
 			if lines[fr].startswith('FEATURES'):
-				self.ftrs, self.rngs = self.__parseFtrs(lines, fr+1, to)
+				self.ftrs = self.__parseFtrs(lines, fr+1, to)
 			elif lines[fr].startswith('ORIGIN'):
 				self.seq = self.__parseSeq(lines, fr, to)
 			elif lines[fr] == '//':
@@ -113,33 +112,31 @@ class GenBankFile:
 		return hdr, val
 	
 	def __parseFtrs(self, lines, fr, to):
-		ftrs = []
-		rngs = []
+		ftrs = {}
 		
+		ttl = 0
 		prv = fr
 		for i in xrange(fr+1, to):
 			if lines[i][5] != ' ':
 				try:
 					ftr = self.__parseFtr(lines, prv, i)
-					ftr['index'] = len(ftrs)
-					ftrs.append(ftr)
-					rngs.append(ftr['range'])
+					ftr['index'] = ttl
+					typ = lines[prv][:21].strip()
+					ftrs.setdefault(typ, []).append(ftr)
+					ttl += 1
 				except TokeniserError, e:
 					print 'Unable to tokenise feature: %s\n Ignoring...'%lines[prv].strip()
 				prv = i
 		ftr = self.__parseFtr(lines, prv, to)
-		ftr['index'] = len(ftrs)
-		ftrs.append(ftr)
-		rngs.append(ftr['range'])
+		ftr['index'] = ttl
+		typ = lines[prv][:21].strip()
+		ftrs.setdefault(typ, []).append(ftr)
+		ttl += 1
 		
-		return ftrs, rngs
+		return ftrs
 	
 	def __parseFtr(self, lines, fr, to):
 		res = {}
-		
-		# Parse the feature
-		ftr = lines[fr][:21].strip()
-		res['feature'] = ftr
 		
 		# Parse the range
 		rng_str = lines[fr][21:].strip()
@@ -192,9 +189,10 @@ class GenBankFile:
 	
 	def __parseGenes(self, ftrs):
 		res = {}
-		for i in xrange(len(ftrs)):
-			ftr = ftrs[i]
-			if ftr['feature'] in ['CDS', 'tRNA', 'rRNA']:
+		for typ in ['CDS', 'tRNA', 'rRNA']:
+			if typ not in ftrs:
+				continue
+			for ftr in ftrs[typ]:
 				if not 'gene' in ftr:
 					if 'locus_tag' in ftr:
 						ftr['gene'] = ftr['locus_tag']
@@ -214,7 +212,8 @@ class GenBankFile:
 	def __parseSeq(self, lines, fr, to):
 		res = []
 		for i in xrange(fr, to):
-			res += lines[i][10:].split()
+			parts = lines[i].split()
+			res += parts[1:]
 		res = ''.join(res)
 		return res
 	
@@ -284,20 +283,23 @@ def split(argv):
 		infile.close()
 
 def extract(argv):
-	print argv
-	
 	parser = OptionParser()
-	parser.set_defaults(utr=75)
-	parser.add_option('-u', '--utr', action='store', type='int',
-	 help='The size of the 5\'UTR region to extract along with the sequence.')
+	parser.set_defaults(ext5=0, ext3=0, paths=[])
+	parser.add_option('-5', '--5p', action='store', type='int', dest='ext5',
+	 help='Extend the sequence in the  5\'direction.')
+	parser.add_option('-3', '--3p', action='store', type='int', dest='ext3',
+	 help='Extend the sequence in the  3\'direction.')
+	parser.add_option('-p', '--path', action='append', type='string', nargs=3, dest='paths',
+	 help='Extract a sequence using the given paths (eg. CDS gene nptII)')
 	options, args = parser.parse_args(argv[1:])
-	
-	print options
-	print args
 	
 	fname = args[0]
 	genes = args[1:]
 	gbk = GenBankFile(fname)
+	extractGenes(genes, gbk, options)
+	extractPaths(gbk, options)
+
+def extractGenes(genes, gbk, options):
 	for gene in genes:
 		ftr = None
 		for f in gbk.ftrs:
@@ -305,14 +307,28 @@ def extract(argv):
 				ftr = f
 				break
 		if ftr == None:
-			print 'Unable to find gene'
-			sys.exit(1)
+			sys.stdout.write('Unable to find %s\n'%gene)
 		
 		rng = ftr['range']
-		rng.adj5p(-options.utr)
-		rng.adj3p(25)
+		rng.adj5p(-options.ext5)
+		rng.adj3p(options.ext3)
 		seq = rng.getSubSeq(gbk.seq)
 		sys.stdout.write('>%s\n%s\n'%(gene, seq))
+
+def extractPaths(gbk, options):
+	for typ, qua, val in options.paths:
+		cnt = 0
+		for ftr in gbk.ftrs[typ]:
+			if ftr[qua] == val:
+				rng = ftr['range']
+				rng.adj5p(-options.ext5)
+				rng.adj3p(options.ext3)
+				seq = rng.getSubSeq(gbk.seq)
+				hdr = '%s_%s_%s.%s'%(typ, qua, val, cnt)
+				sys.stdout.write('>%s\n%s\n'%(hdr, seq))
+				cnt += 1
+		if cnt == 0:
+			sys.stdout.write('Path %s %s %s does not exist\n'%(typ, qua, val))
 
 def main(argv):
 	if argv[1] == 'split':
