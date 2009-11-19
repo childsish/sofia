@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-import os
 import numpy
+import os
+import re
 import tempfile
 
 from seq_tools import gc
@@ -64,16 +65,37 @@ class RNAFolder:
 	def fold(self, seq):
 		self.__prc.stdin.write(seq + '\n')
 		self.__prc.stdin.flush()
+		
+		# Sequence
 		self.__prc.stdout.readline()
+		
+		# Minimum free energy structure and MFE
 		line = self.__prc.stdout.readline()
-		dot = None
+		stc = line[:len(seq)]
+		mfe = float(line[len(seq)+2:-2])
+		
 		if self.__p:
-			self.__prc.stdout.readline()
-			self.__prc.stdout.readline()
-			self.__prc.stdout.readline()
-			dot = self.__readDot('dot.ps')
-		stc, mfe = line.split(' (')
-		return stc, float(mfe[:-2]), dot
+			# Ensemble structure and MFE
+			line = self.__prc.stdout.readline()
+			#estc = line[:len(seq)]
+			emfe = float(line[len(seq)+2:-2])
+			
+			# Centroid structure and centroid MFE
+			line = self.__prc.stdout.readline()
+			cstc = line[:len(seq)]
+			cmfe, cdst = line[len(seq)+2:-2].split()
+			cmfe = float(cmfe)
+			cdst = float(cdst[2:])
+
+			# MFE frequency and ensemble diversity
+			parts = self.__prc.stdout.readline().split()
+			frq = float(parts[6][:-1])
+			div = float(parts[9])
+			
+			# Base-pairing probabilities
+			bpp = self.__readDot('dot.ps')
+			return stc, mfe, emfe, cstc, cmfe, cdst, frq, div, bpp
+		return stc, mfe
 
 	def __readDot(self, fname):
 		res = None
