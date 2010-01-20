@@ -7,7 +7,7 @@ import tempfile
 
 from seq_tools import gc
 from paths.rna_tools import matrices
-from paths.vienna import rnafold, rnaplfold
+from paths.vienna import rnafold, rnaplfold, rnadistance
 from subprocess import Popen, PIPE
 from optparse import OptionParser
 
@@ -38,17 +38,20 @@ class RNACalibrator:
 class RNAFolder:
 	def __init__(self, p=False):
 		self.__p = p
+		self.cwd = tempfile.mkdtemp()
 		args = [rnafold, '-noPS']
 		if p: args.append('-p')
-		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=True)
+		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=True, cwd=self.cwd)
 	
 	def __del__(self):
+		for fname in os.listdir(self.cwd):
+			os.remove(os.path.join(self.cwd, fname))
+		os.rmdir(self.cwd)
 		self.__prc.communicate()
 	
 	def scan(self, seq, win):
 		stcs = []
 		mfes = numpy.empty(len(seq), dtype=numpy.float32)
-		dots = []
 		for i in xrange(len(seq)):
 			fr = i - win / 2
 			if fr < 0:
@@ -56,14 +59,15 @@ class RNAFolder:
 			to = i + win / 2
 			if to > len(seq):
 				to = len(seq)
-			stc, mfe, dot = self.fold(seq[fr:to])
+			
+			stc, mfe = self.fold(seq[fr:to])[:2]
 			stcs.append(stc)
 			mfes[i] = mfe
-			dots.append(dot)
-		return stcs, mfes, dots
+		return stcs, mfes
 
 	def fold(self, seq):
-		self.__prc.stdin.write(seq + '\n')
+		self.__prc.stdin.write(seq)
+		self.__prc.stdin.write('\n')
 		self.__prc.stdin.flush()
 		
 		# Sequence
@@ -93,19 +97,20 @@ class RNAFolder:
 			div = float(parts[9])
 			
 			# Base-pairing probabilities
-			bpp = self.__readDot('dot.ps')
+			bpp = self.__readDot(os.path.join(self.cwd, 'dot.ps'))
 			return stc, mfe, emfe, cstc, cmfe, cdst, frq, div, bpp
 		return stc, mfe
 
 	def __readDot(self, fname):
 		res = None
-	
-		record = False
+		
 		infile = open(fname)
 		lines = infile.readlines()
 		infile.close()
 		for i in xrange(len(lines)):
-			if lines[i].startswith('/sequence'):
+			if lines[i].startswith('%'):
+				continue
+			elif lines[i].startswith('/sequence'):
 				seq = []
 				j = 1
 				while '}' not in lines[i+j]:
@@ -116,16 +121,37 @@ class RNAFolder:
 				for j in xrange(len(seq) - 1):
 					res[j, j+1] = 1
 					res[j+1, j] = 1
-			elif lines[i] == '%data starts here\n':
-				record = True
-			elif lines[i] == 'showpage\n':
-				record = False
-			elif record:
+			elif lines[i][-5:-1] in ['ubox', 'lbox']:
 				parts = lines[i].split()
 				res[int(parts[0])-1, int(parts[1])-1] = 1 - float(parts[2]) # A higher probability = a shorter distance (ie. a smaller number)
 		infile.close()
+		
+		return res
+
+class RNADistance:
+	def __init__(self, typ='-DP'):
+		self.cwd = tempfile.mkdtemp()
+		args = [rnadistance, typ]
+		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=True, cwd=self.cwd)
+		self.__prc.stdin.write('\n') # Input no sequence
 	
-		return res	
+	def __del__(self):
+		for fname in os.listdir(self.cwd):
+			os.remove(os.path.join(self.cwd, fname))
+		os.rmdir(self.cwd)
+		self.__prc.communicate()
+
+	def compareOneOne(self, seq1, seq2):
+		self.__prc.stdin.write(seq1)
+		self.__prc.stdin.write('\n')
+		self.__prc.stdin.write(seq2)
+		self.__prc.stdin.write('\n')
+		self.__prc.stdin.flush()
+		for line in self.__prc.stdout:
+			print line
+	
+	#def compareOneMany(self, seq, seqs):
+	#def compareAll(self, seqs):
 
 def calculateAccessibility(seq, w=50, u=4):
 	cwd = tempfile.mkdtemp()
@@ -205,10 +231,13 @@ def scan(argv):
 		r['dev.off']()
 
 def main(argv):
-	if argv[1] == 'fold':
-		print 'Use RNAfold you twit!'
-	elif argv[1] == 'scan':
+	tool = RNADistance()
+	tool.compareOneOne('((...(((...)))...))', '...(((...)))...')
+	
+	return 1
+	if argv[1] == 'scan':
 		scan(argv[1:])
+	return 0
 
 if __name__ == '__main__':
 	import sys
