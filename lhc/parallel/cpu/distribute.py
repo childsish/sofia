@@ -38,11 +38,11 @@ class CpuJob(threading.Thread):
 		# Each line in the file is a job to run.
 		infile = open(self.fname)
 		for line in infile:
-			c_filename = os.path.join(self.jobdir, line.strip())
+			c_filename = os.path.join(self.jobdir, os.path.basename(line.strip()))
 			c_args = self.args[:]
 			for i in xrange(len(c_args)):
 				if REPLACEME in c_args[i]:
-					c_args[i] = c_args[i].replace(REPLACEME, c_filename)
+					c_args[i] = c_args[i].replace(REPLACEME, line.strip())
 			
 			prc_stdout = open(c_filename, 'w')
 			try:
@@ -69,7 +69,7 @@ class Distributor:
 		self.__sleep = sleep
 	
 	def distribute(self, n_jobs, indir, args):
-		""" Distributes the n_jobs "super jobs" on the cluster. The executable
+		""" Distributes the n_jobs "super jobs" over the cpus. The executable
 		   specified in args[0] is run on each file in indir. Any occurance of
 		   the string "@@" in the arguments is replaced with the file name.
 		"""
@@ -95,7 +95,7 @@ class Distributor:
 		if self.__max_jobs == 0:
 			running_jobs = len(jobs) * [None]
 		
-		# Submit jobs to the cluster.
+		# Submit jobs to the cpus.
 		current_job = 0
 		started_jobs = 0
 		stopped_jobs = 0

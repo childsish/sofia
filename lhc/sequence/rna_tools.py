@@ -7,7 +7,7 @@ import tempfile
 
 from seq_tools import gc
 from paths.rna_tools import matrices
-from paths.vienna import rnafold, rnaplfold, rnadistance
+from paths.rna import rnafold, rnaplfold, rnadistance
 from subprocess import Popen, PIPE
 from optparse import OptionParser
 
@@ -36,12 +36,12 @@ class RNACalibrator:
 		return b.argsort()[0]
 
 class RNAFolder:
-	def __init__(self, p=False):
+	def __init__(self, p=False, close_fds=True):
 		self.__p = p
 		self.cwd = tempfile.mkdtemp()
 		args = [rnafold, '-noPS']
 		if p: args.append('-p')
-		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=True, cwd=self.cwd)
+		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=close_fds, cwd=self.cwd)
 	
 	def __del__(self):
 		for fname in os.listdir(self.cwd):
@@ -129,10 +129,10 @@ class RNAFolder:
 		return res
 
 class RNADistance:
-	def __init__(self, typ='-DP'):
+	def __init__(self, typ='-DP', close_fds=True):
 		self.cwd = tempfile.mkdtemp()
 		args = [rnadistance, typ]
-		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=True, cwd=self.cwd)
+		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=close_fds, cwd=self.cwd)
 		self.__prc.stdin.write('\n') # Input no sequence
 	
 	def __del__(self):
