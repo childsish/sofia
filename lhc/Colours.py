@@ -1,14 +1,17 @@
 import numpy
 
 class ColourDistribution:
-	def __init__(self, breaks, r, g, b):
+	def __init__(self, breaks, r, g, b, a=None):
 		self.__breaks = breaks
 		self.__r = r
 		self.__g = g
 		self.__b = b
 	
+	def __call__(self, steps):
+		return self.getDistribution(steps)
+	
 	def getDistribution(self, steps):
-		res = numpy.zeros((steps, 3), dtype=numpy.float32)
+		res = numpy.zeros((steps, 4), dtype=numpy.float32)
 		
 		for i in xrange(steps):
 			step = i/float(steps)

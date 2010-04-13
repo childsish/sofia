@@ -47,6 +47,7 @@ class GenBankFile:
 		res = []
 		while array[fr][0][0] < x[1]:
 			fr += 1
+		print USAGE
 	
 	def binary_search(array, fr, to, x):
 		if to - fr <= 1:
@@ -266,54 +267,86 @@ class GenBankFile:
 		tokens.pop(0) # Pop ')'
 		return Complement(res)
 
+def iterGenbank(fname):
+	raise 'Not yet implemented'
+	infile = open(fname)
+	record = False
+	for line in infile:
+		if line.startswith('FEATURES'):
+			record = True
+			continue
+		elif line.startswith('ORIGIN'):
+			break
+		
+		
+	infile.close()
+
 def split(argv):
-	indir = args[1]
-	outdir = argv[2]
-	for fname in os.listdir(indir):
-		infile = open(fname)
-		outfile = None
-		for line in infile:
-			if line.startswith('LOCUS'):
-				if outfile != None:
-					outfile.close()
-				outfname = '%s.gbk'%line.split()[1]
-				outfile = open(os.path.join(outdir, outfname), 'w')
-			outfile.write(line)
-		outfile.close()
-		infile.close()
+	import os
+	infname = argv[1]
+	outdname = argv[2]
+	
+	infile = open(infname)
+	outfile = None
+	for line in infile:
+		if line.startswith('LOCUS'):
+			if outfile != None:
+				outfile.close()
+			outfname = '%s.gbk'%line.split()[1]
+			outfile = open(os.path.join(outdname, outfname), 'w')
+		outfile.write(line)
+	outfile.close()
+	infile.close()
 
 def extract(argv):
-	parser = OptionParser()
-	parser.set_defaults(ext5=0, ext3=0, paths=[])
+	# Warning, if rng.f is less than 0, the retrieved sequence will be wrong...
+	parser = OptionParser(usage='usage: %prog extract [options] infile')
+	parser.set_defaults(ext5=0, ext3=0, paths=[], types=[])
 	parser.add_option('-5', '--5p', action='store', type='int', dest='ext5',
 	 help='Extend the sequence in the  5\'direction.')
 	parser.add_option('-3', '--3p', action='store', type='int', dest='ext3',
 	 help='Extend the sequence in the  3\'direction.')
 	parser.add_option('-p', '--path', action='append', type='string', nargs=3, dest='paths',
 	 help='Extract a sequence using the given paths (eg. CDS gene nptII)')
+	parser.add_option('-t', '--type', action='append', type='string', nargs=1, dest='types',
+	 help='Extract a feature type (eg. CDS)')
 	options, args = parser.parse_args(argv[1:])
 	
 	fname = args[0]
 	genes = args[1:]
 	gbk = GenBankFile(fname)
+	if len(options.paths) == 0 and len(options.types) == 0:
+		sys.stdout.write('>whole_sequence\n%s\n'%(gbk.seq))
 	extractGenes(genes, gbk, options)
-	extractPaths(gbk, options)
+	if len(options.paths) > 0:
+		extractPaths(gbk, options)
+	if len(options.types) > 0:
+		extractType(gbk, options)
 
 def extractGenes(genes, gbk, options):
 	for gene in genes:
 		ftr = None
-		for f in gbk.ftrs:
-			if 'label' in f and f['label'] == gene:
-				ftr = f
+		for typ, ftrs in gbk.ftrs.iteritems():
+			for f in ftrs:
+				if 'label' in f and f['label'] == gene:
+					ftr = f
+					break
+			if ftr != None:
 				break
 		if ftr == None:
 			sys.stdout.write('Unable to find %s\n'%gene)
+			continue
 		
-		rng = ftr['range']
-		rng.adj5p(-options.ext5)
-		rng.adj3p(options.ext3)
-		seq = rng.getSubSeq(gbk.seq)
-		sys.stdout.write('>%s\n%s\n'%(gene, seq))
+		hdr = [gene]
+		if options.ext5 != 0:
+			hdr.append('atg:%d'%(options.ext5))
+		if options.ext3 != 0:
+			hdr.append('end:%d'%(options.ext3))
+		ftr['range'].adj5p(-options.ext5)
+		ftr['range'].adj3p(options.ext3)
+		seq = ftr['range'].getSubSeq(gbk.seq)
+		
+		sys.stdout.write('>%s\n%s\n'%(' '.join(hdr), seq))
 
 def extractPaths(gbk, options):
 	for typ, qua, val in options.paths:
@@ -324,19 +357,50 @@ def extractPaths(gbk, options):
 				rng.adj5p(-options.ext5)
 				rng.adj3p(options.ext3)
 				seq = rng.getSubSeq(gbk.seq)
-				hdr = '%s_%s_%s.%s'%(typ, qua, val, cnt)
-				sys.stdout.write('>%s\n%s\n'%(hdr, seq))
+				hdr = ['%s_%s_%s.%s'%(typ, qua, val, cnt)]
+				if options.ext5 != 0:
+					hdr.append('atg:%d'%(options.ext5))
+				if options.ext3 != 0:
+					hdr.append('end:%d'%(options.ext3))
+				sys.stdout.write('>%s\n%s\n'%(' '.join(hdr), seq))
 				cnt += 1
 		if cnt == 0:
 			sys.stdout.write('Path %s %s %s does not exist\n'%(typ, qua, val))
 
+def extractType(gbk, options):
+	for typ in options.types:
+		cnt = 0
+		for ftr in gbk.ftrs[typ]:
+			rng = ftr['range']
+			rng.adj5p(-options.ext5)
+			rng.adj3p(options.ext3)
+			seq = rng.getSubSeq(gbk.seq)
+			hdr = ['%s.%d'%(typ, cnt)]
+			if options.ext5 != 0:
+				hdr.append('atg:%d'%(options.ext5))
+			if options.ext3 != 0:
+				hdr.append('end:%d'%(options.ext3))
+			sys.stdout.write('>%s\n%s\n'%(' '.join(hdr), seq))
+			cnt += 1
+		if cnt == 0:
+			sys.stdout.write('Path %s does not exist\n'%(typ))
+
+USAGE = 'python GenBankFile.py [options]\n' +\
+ 'Options:\n' +\
+ 'split    split a multiple GenBank file into parts\n' +\
+ 'extract  extract a particular sequence from the GenBank file\n'
+
 def main(argv):
+	if len(argv) <= 1:
+		print USAGE
 	if argv[1] == 'split':
 		split(argv[1:])
 	elif argv[1] == 'extract':
 		extract(argv[1:])
 	elif argv[1] == 'help':
 		help()
+	else:
+		print USAGE
 	
 	return 0
 

@@ -25,7 +25,7 @@ class Feature(Range):
 		self.strand = strand
 	
 	def __str__(self):
-		return '%d\t%d\t%s'%(self.f, self.t, self.ann)
+		return '%d..%d\t%s'%(self.f, self.t, self.ann)
 
 class GffFile(dict):
 	def __init__(self, fname, cls, chm_idx=0, cls_idx=2, fr_idx=3, to_idx=4, ann_fn=getAcc):

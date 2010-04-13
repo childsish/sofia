@@ -2,7 +2,7 @@ import re
 
 class CodonUsageTable:
 	
-	REGX = re.compile(r'(?P<codon>[ACGU]{3})\s+(?P<frq>\d+\.\d+)\(\s+\d+\)')
+	REGX = re.compile(r'(?P<codon>[ACGU]{3})\s+(?P<frq>\d+\.\d+)\((\s+\d+)\)')
 	
 	def __init__(self, filename):
 		self.__codons = {}
@@ -11,7 +11,7 @@ class CodonUsageTable:
 		for line in infile:
 			matches = CodonUsageTable.REGX.findall(line)
 			for match in matches:
-				self.__codons[match[0].lower().replace('u', 't')] = float(match[1])
+				self.__codons[match[0].lower().replace('u', 't')] = float(match[2])
 		infile.close()
 	
 	def __getitem__(self, key):
