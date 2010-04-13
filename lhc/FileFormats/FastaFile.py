@@ -254,6 +254,19 @@ def splitFasta(infname, npart, outdname=None):
 	
 	return (outdname, [outfile.name for outfile in outs])
 
+def writeFasta(ents, fname, width=0):
+	outfile = open(fname, 'w')
+	if width == 0:
+		for ent in ents:
+			outfile.write('>%s\n%s\n'%(ent))
+	else:
+		for hdr, seq in ents:
+			outfile.write('>%s\n'%hdr)
+			for i in xrange(0, len(seq), width):
+				outfile.write(seq[i:i+width])
+				outfile.write('\n')
+	outfile.close()
+
 def readFasta(fname):
 	res = []
 	infile = open(fname)
@@ -283,20 +296,13 @@ def iterFasta(fname):
 		else:
 			seq.append(line.strip())
 	yield (hdr, ''.join(seq))
+	infile.close()
 
 def main(argv = None):
 	if argv == None:
 		argv = sys.argv
 	
-	index_file(r'/home/childs/lib/Ath/TAIR7_5_utr_20070226')
-	
-	import random
-	
-	#items = fasta.items()
-	#for i in xrange(10):
-	#	print fasta[i][20:90]
-	#
-	#print fasta['AT1G01030.1'][206:214]
+	index_file(argv[1])
 
 if __name__ == '__main__':
 	sys.exit(main(sys.argv))
