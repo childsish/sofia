@@ -70,12 +70,12 @@ def nameFtrs():
 	k1mer = getKmers(1)
 	k2mer = getKmers(2)
 	k3mer = getKmers(3)
-	
-	for k, v in sorted(k1mer):
+
+	for k in sorted(k1mer):
 		ftrs.append('%s count'%k)
-	for k, v in sorted(k2mer):
+	for k in sorted(k2mer):
 		ftrs.append('%s count'%k)
-	for k, v in sorted(k3mer):
+	for k in sorted(k3mer):
 		ftrs.append('%s count'%k)
 	ftrs.append('%G+C')
 	ftrs.append('AT skew')
@@ -83,20 +83,27 @@ def nameFtrs():
 	return ftrs
 
 def main(argv):
-	#nams = nameFtrs()
-	#for i in xrange(len(nams)):
-	#	print i, nams[i]
+	rnd = True
+	nams = nameFtrs()
+	for i in xrange(len(nams)):
+		sys.stdout.write('#%d\t%s\n'%(i, nams[i]))
+	if rnd:
+		for i in xrange(len(nams)):
+			sys.stdout.write('#%d\t%s (rnd)\n'%(i + len(nams), nams[i]))
 	
 	trans = maketrans('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 'atctttgtttttttttttttttttttatctttgttttttttttttttttttt')
 	for hdr, seq in iterFasta(argv[1]):
 		seq = seq.translate(trans)
-		ftrs = calcFtrs(seq)
 		sys.stdout.write('%s\t'%hdr)
+		
+		ftrs = calcFtrs(seq)
 		sys.stdout.write('\t'.join(map(str, ftrs)))
-		sys.stdout.write('\t')
-		rnd_ftrs = randFtrs(seq)
-		sys.stdout.write('\t'.join(map(str, ftrs - rnd_ftrs)))
+		if rnd:
+			sys.stdout.write('\t')
+			rnd_ftrs = randFtrs(seq)
+			sys.stdout.write('\t'.join(map(str, ftrs - rnd_ftrs)))
 		sys.stdout.write('\n')
+	return 0
 
 if __name__ == '__main__':
 	import sys

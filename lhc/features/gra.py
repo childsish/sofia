@@ -6,14 +6,13 @@ import os
 import sys
 import tempfile
 
-from paths.rna import rnadistance
-from paths.vienna import rnafold
+from paths.rna import rnadistance, rnafold
 from sequence.rna_tools import RNAFolder
 from subprocess import Popen, PIPE
 from ushuffle import shuffle
 from FileFormats.FastaFile import iterFasta
+from string import maketrans
 
-CWD = tempfile.mkdtemp(dir='/home/childs/tmp')
 FOLDER = RNAFolder(p=True)
 
 def kshuffle(seq, k=2):
@@ -38,10 +37,16 @@ def stc2adj(stc):
 	
 	return res
 
-def getGraPrps(seq):
+def calcFtrs(seq):
 	prps = []
 	
 	stc, mfe, emfe, cstc, cmfe, cdst, frq, div, bpp = FOLDER.fold(seq)
+	prps.append(mfe)
+	prps.append(emfe)
+	prps.append(cmfe)
+	prps.append(cdst)
+	prps.append(frq)
+	prps.append(div)
 	
 	 # Graph features
 	adj = stc2adj(stc)
@@ -278,7 +283,7 @@ def getGraPrps(seq):
 	
 	return prps
 
-def getRndFtrs(seq, n):
+def randFtrs(seq, n):
 	prps = None
 	for i in xrange(n):
 		rseq = kshuffle(seq, 1)
@@ -291,20 +296,145 @@ def getRndFtrs(seq, n):
 		prps[i] = numpy.mean(prps[i])
 	return prps
 
-def run(infname):
-	for hdr, seq in iterFasta(infname):
-		prps = getRndFtrs(seq, 1000)
-		sys.stdout.write('\t'.join(map(str, prps)))
-		sys.stdout.write('\n')
-	
-	# Cleanup
-	for fname in os.listdir(CWD):
-		os.remove(os.path.join(CWD, fname))
-	os.rmdir(CWD)
+def nameFtrs():
+	ftrs = []
+	ftrs.append('Minimum Free Energy')
+	ftrs.append('Ensemble Minimum Free Energy')
+	ftrs.append('Centroid Minimum Free Energy')
+	ftrs.append('Centroid Distance')
+	ftrs.append('Frequency')
+	ftrs.append('Ensemble Diversity')
+	ftrs.append('Number of Articulation Points (hard)')
+	ftrs.append('Number of Articulation Points (soft)')
+	ftrs.append('Average Shortest Path Length (hard)')
+	ftrs.append('Average Shortest Path Length (soft)')
+	ftrs.append('Average Vertex Betweenness (hard)')
+	ftrs.append('Standard Deviation Vertex Betweenness (hard)')
+	ftrs.append('Average Vertex Betweenness (soft)')
+	ftrs.append('Standard Deviation Vertex Betweenness (soft)')
+	ftrs.append('Average Edge Betweenness (hard)')
+	ftrs.append('Standard Deviation Edge Betweenness (hard)')
+	ftrs.append('Average Edge Betweenness (soft)')
+	ftrs.append('Standard Deviation Edge Betweenness (soft)')
+	ftrs.append('Average Cocitation Distance (hard)')
+	ftrs.append('Average Cocitation Distance (soft)')
+	ftrs.append('Average Bibliographic Coupling (hard)')
+	ftrs.append('Average Bibliographic Coupling (soft)')
+	ftrs.append('Average Closeness Centrality (hard)')
+	ftrs.append('Standard Deviation Closeness Centrality (hard)')
+	ftrs.append('Average Closeness Centrality (soft)')
+	ftrs.append('Standard Deviation Closeness Centrality (soft)')
+	ftrs.append('Average Burt\'s Constraint (hard)')
+	ftrs.append('Standard Deviation Burt\'s Constraint (hard)')
+	ftrs.append('Average Burt\'s Constraint (soft)')
+	ftrs.append('Standard Deviation Burt\'s Constraint (soft)')
+	ftrs.append('Average Degree (hard)')
+	ftrs.append('Average Degree (soft)')
+	ftrs.append('Graph Diameter (hard)')
+	ftrs.append('Graph Diameter (soft)')
+	ftrs.append('Graph Girth (hard)')
+	ftrs.append('Graph Girth (soft)')
+	ftrs.append('Average Coreness (hard)')
+	ftrs.append('Standard Deviation Coreness (hard)')
+	ftrs.append('Maximum Coreness (hard)')
+	ftrs.append('Average Coreness (soft)')
+	ftrs.append('Standard Deviation Coreness (soft)')
+	ftrs.append('Maximum Coreness (soft)')
+	ftrs.append('Density (hard)')
+	ftrs.append('Density (soft)')
+	ftrs.append('Transitivity (hard)')
+	ftrs.append('Transitivity (soft)')
+	ftrs.append('Average Authority Score (soft)')
+	ftrs.append('Standard Deviation Authority Score (soft)')
+	ftrs.append('Authority Score Eigenvalue (soft)')
+	ftrs.append('Clique Number (hard)')
+	ftrs.append('Clique Number (soft)')
+	ftrs.append('Average Count Multiple (hard)')
+	ftrs.append('Standard Deviation Count Multiple (hard)')
+	ftrs.append('Average Count Multiple (soft)')
+	ftrs.append('Standard Deviation Count Multiple (soft)')
+	ftrs.append('Average Hub Score (soft)')
+	ftrs.append('Standard Deviation Hub Score (soft)')
+	ftrs.append('Hub Score Eigenvalue (soft)')
+	ftrs.append('Mincut Value (hard)')
+	ftrs.append('Mincut Value (soft)')
+	ftrs.append('Average Page Rank (hard)')
+	ftrs.append('Standard Deviation Page Rank (hard)')
+	ftrs.append('Average Page Rank (soft)')
+	ftrs.append('Standard Deviation Page Range (soft)')
+	ftrs.append('Average Page Rank Old (hard)')
+	ftrs.append('Standard Deviation Page Rank Old (hard)')
+	ftrs.append('Average Page Rank Old (soft)')
+	ftrs.append('Standard Deviation Page Range Old (soft)')
+	ftrs.append('Reciprocity (hard)')
+	ftrs.append('Reciprocity (soft)')
+	ftrs.append('Average Similarity Jaccard (hard)')
+	ftrs.append('Standard Deviation Similarity Jaccard (hard)')
+	ftrs.append('Average Similarity Jaccard (soft)')
+	ftrs.append('Standard Deviation Similarity Jaccard (soft)')
+	ftrs.append('Length Community Edge Betweenness (hard)')
+	ftrs.append('Modularity Community Edge Betweenness (hard)')
+	ftrs.append('Average Community Edge Betweenness (hard)')
+	ftrs.append('Standard Deviation Community Edge Betweenness (hard)')
+	ftrs.append('Length Community Fast Greedy (hard)')
+	ftrs.append('Modularity Community Fast Greedy (hard)')
+	ftrs.append('Average Community Fast Greedy (hard)')
+	ftrs.append('Standard Deviation Community Fast Greedy (hard)')
+	ftrs.append('Length Community Fast Greedy (soft)')
+	ftrs.append('Modularity Community Fast Greedy (soft)')
+	ftrs.append('Average Community Fast Greedy (soft)')
+	ftrs.append('Standard Deviation Community Fast Greedy (soft)')
+	ftrs.append('Length Community Walktrap (hard)')
+	ftrs.append('Modularity Community Walktrap (hard)')
+	ftrs.append('Average Community Walktrap (hard)')
+	ftrs.append('Standard Deviation Community Walktrap (hard)')
+	ftrs.append('Length Community Walktrap (soft)')
+	ftrs.append('Modularity Community Walktrap (soft)')
+	ftrs.append('Average Community Walktrap (soft)')
+	ftrs.append('Standard Deviation Community Walktrap (soft)')
+	ftrs.append('3Motif #1 (hard)')
+	ftrs.append('3Motif #2 (hard)')
+	ftrs.append('3Motif #3 (hard)')
+	ftrs.append('3Motif #4 (hard)')
+	ftrs.append('4Motif #1 (hard)')
+	ftrs.append('4Motif #2 (hard)')
+	ftrs.append('4Motif #3 (hard)')
+	ftrs.append('4Motif #4 (hard)')
+	ftrs.append('4Motif #5 (hard)')
+	ftrs.append('4Motif #6 (hard)')
+	ftrs.append('4Motif #7 (hard)')
+	ftrs.append('4Motif #8 (hard)')
+	ftrs.append('4Motif #9 (hard)')
+	ftrs.append('4Motif #10 (hard)')
+	ftrs.append('3Motif #1 (soft)')
+	ftrs.append('3Motif #2 (soft)')
+	ftrs.append('3Motif #3 (soft)')
+	ftrs.append('3Motif #4 (soft)')
+	ftrs.append('4Motif #1 (soft)')
+	ftrs.append('4Motif #2 (soft)')
+	ftrs.append('4Motif #3 (soft)')
+	ftrs.append('4Motif #4 (soft)')
+	ftrs.append('4Motif #5 (soft)')
+	ftrs.append('4Motif #6 (soft)')
+	ftrs.append('4Motif #7 (soft)')
+	ftrs.append('4Motif #8 (soft)')
+	ftrs.append('4Motif #9 (soft)')
+	ftrs.append('4Motif #10 (soft)')
+
+	return ftrs
 
 def main(argv):
-	infname = argv[1]
-	run(infname)
+	nams = nameFtrs()
+	for i in xrange(len(nams)):
+		sys.stdout.write('#%d\t%s\n'%(i, nams[i]))
+	trans = maketrans('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 'atctttgtttttttttttttttttttatctttgttttttttttttttttttt')
+	for hdr, seq in iterFasta(argv[1]):
+		seq = seq.translate(trans)
+		sys.stdout.write('%s\t'%hdr)
+
+		ftrs = calcFtrs(seq)
+		sys.stdout.write('\t'.join(map(str, ftrs)))
+		sys.stdout.write('\n')
 	return 0
 
 if __name__ == '__main__':

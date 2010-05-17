@@ -7,7 +7,7 @@ import tempfile
 
 from seq_tools import gc
 from paths.rna_tools import matrices
-from paths.vienna import rnafold, rnaplfold, rnadistance, rnacofold
+from paths.rna import rnafold, rnaplfold, rnadistance, rnacofold
 from subprocess import Popen, PIPE
 from optparse import OptionParser
 

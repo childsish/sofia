@@ -68,10 +68,10 @@ def calcFtrs(seq):
 		ftrs.append(numpy.sum(a))
 		ftrs.append(numpy.mean(a))
 	 # Multi-loops - number, total size, average size # F < 0.05
-		ftrs.append(len(b))
 	if len(b) == 0:
 		ftrs.extend((0, 0))
 	else:
+		ftrs.append(len(b))
 		ftrs.append(numpy.sum(b))
 		ftrs.append(numpy.mean(b))
 	 # Internal loops - number, total size, average size, average imbalance
@@ -113,19 +113,47 @@ def randFtrs(seq, n=1000):
 		ftrs[i] = numpy.array(calcFtrs(kshuffle(seq)))
 	return numpy.mean(ftrs, 0).tolist()
 
+def nameFtrs():
+	ftrs = []
+	ftrs.append('Number of hairpin loops')
+	ftrs.append('Total size of hairpins')
+	ftrs.append('Average size of hairpins')
+	ftrs.append('Number of multiloops')
+	ftrs.append('Total size of multiloops')
+	ftrs.append('Average size of multiloops')
+	ftrs.append('Number of internal loops')
+	ftrs.append('Total size of internal')
+	ftrs.append('Average size of internal')
+	ftrs.append('Internal loop imbalance')
+	ftrs.append('Number of bulges')
+	ftrs.append('Total size of bulges')
+	ftrs.append('Average size of bulges')
+	ftrs.append('Number of stems')
+	ftrs.append('Total size of stems')
+	ftrs.append('Average size of stems')
+	ftrs.append('Number of branches')
+	ftrs.append('Total size of branches')
+	ftrs.append('Average size of branches')
+	return ftrs
+
 def main(argv):
+	nams = nameFtrs()
+	for i in xrange(len(nams)):
+		sys.stdout.write('#%d\t%s\n'%(i, nams[i]))
+	
 	trans = maketrans('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 'atctttgtttttttttttttttttttatctttgttttttttttttttttttt')
 	for hdr, seq in iterFasta(argv[1]):
 		seq = seq.translate(trans)
-		#printFtrs(seq)
-		#sys.exit(1)
-		ftrs = calcFtrs(seq)
 		sys.stdout.write('%s\t'%hdr)
+		
+		ftrs = calcFtrs(seq)
 		sys.stdout.write('\t'.join(map(str, ftrs)))
-		sys.stdout.write('\t')
-		rnd_ftrs = randFtrs(seq)
-		sys.stdout.write('\t'.join(map(str, ftrs - rnd_ftrs)))
 		sys.stdout.write('\n')
+		#sys.stdout.write('\t')
+		
+		#rnd_ftrs = randFtrs(seq)
+		#sys.stdout.write('\t'.join(map(str, ftrs - rnd_ftrs)))
+		#sys.stdout.write('\n')
 
 if __name__ == '__main__':
 	import sys
