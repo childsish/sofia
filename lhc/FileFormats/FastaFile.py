@@ -6,6 +6,7 @@
 import itertools
 import os
 import sys
+import shutil
 
 class Entry:
 	""" An indexed entry into a fasta file.
@@ -188,49 +189,6 @@ class FastaFile:
 		""" Returns the name of the underlying fasta file. """
 		return self.__src.name
 
-def index_file(filename, index_name = None):
-	import cPickle
-	import stat
-	
-	if index_name == None:
-		if '.' in filename:
-			index_name = filename[:filename.rfind('.')] + '.idx'
-		else:
-			index_name = filename + '.idx'
-	
-	if os.path.exists(index_name):
-		try:
-			infile = open(index_name)
-			iMod = cPickle.load(infile) # Indexed modification time.
-			infile.close()
-			
-			cMod = os.stat(filename)[stat.ST_MTIME] # Current modification time.
-
-			if iMod == cMod:
-				return index_name
-		except EOFError, e: # If the file is empty then continue anyway.
-			pass
-	
-	lst = []
-	infile = open(filename, 'rb')
-	while True: # Equivalent of do-while loop.
-		idx = infile.tell()
-		line = infile.readline()
-
-		if len(line) <= 0: # Exit condition
-			break
-		elif line[0] == '>':
-			lst.append(idx)
-
-	# Pickle the index to improve file access speed.
-	outfile = file(index_name, 'wb')
-	cPickle.dump(os.stat(filename)[stat.ST_MTIME], outfile, cPickle.HIGHEST_PROTOCOL)
-	cPickle.dump(filename, outfile, cPickle.HIGHEST_PROTOCOL)
-	cPickle.dump(lst, outfile, cPickle.HIGHEST_PROTOCOL)
-	outfile.close()
-	
-	return index_name
-
 def splitFasta(infname, npart, outdname=None):
 	if outdname == None:
 		import tempfile
@@ -298,11 +256,67 @@ def iterFasta(fname):
 	yield (hdr, ''.join(seq))
 	infile.close()
 
+def index_file(filename, index_name = None):
+	import cPickle
+	import stat
+	
+	if index_name == None:
+		if '.' in filename:
+			index_name = filename[:filename.rfind('.')] + '.idx'
+		else:
+			index_name = filename + '.idx'
+	
+	if os.path.exists(index_name):
+		try:
+			infile = open(index_name)
+			iMod = cPickle.load(infile) # Indexed modification time.
+			infile.close()
+			
+			cMod = os.stat(filename)[stat.ST_MTIME] # Current modification time.
+
+			if iMod == cMod:
+				return index_name
+		except EOFError, e: # If the file is empty then continue anyway.
+			pass
+	
+	lst = []
+	infile = open(filename, 'rb')
+	while True: # Equivalent of do-while loop.
+		idx = infile.tell()
+		line = infile.readline()
+
+		if len(line) <= 0: # Exit condition
+			break
+		elif line[0] == '>':
+			lst.append(idx)
+
+	# Pickle the index to improve file access speed.
+	outfile = file(index_name, 'wb')
+	cPickle.dump(os.stat(filename)[stat.ST_MTIME], outfile, cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(filename, outfile, cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(lst, outfile, cPickle.HIGHEST_PROTOCOL)
+	outfile.close()
+	
+	return index_name
+
+def flatten_file(infname):
+	from tempfile import mkstemp
+	outfile, outfname = mkstemp()
+	for hdr, seq in iterFasta(infname):
+		os.write(outfile, '>%s\n%s\n'%(hdr, seq))
+	os.close(outfile)
+	shutil.move(outfname, infname)
+
 def main(argv = None):
 	if argv == None:
 		argv = sys.argv
 	
-	index_file(argv[1])
+	if argv[1] == 'index':
+		index_file(argv[2])
+	elif argv[1] == 'flatten':
+		flatten_file(argv[2])
+	else:
+		print 'Argument 1 must be either index or flatten'
 
 if __name__ == '__main__':
 	sys.exit(main(sys.argv))
