@@ -189,29 +189,6 @@ class FastaFile:
 		""" Returns the name of the underlying fasta file. """
 		return self.__src.name
 
-def splitFasta(infname, npart, outdname=None):
-	if outdname == None:
-		import tempfile
-		outdname = tempfile.mkdtemp()
-	elif not os.path.exists(outdname):
-		os.makedirs(outdname)
-	
-	infile = open(infname)
-	i = -1
-	outs = []
-	for line in infile:
-		if line.startswith('>'):
-			i = (i+1)%npart
-			if i == len(outs):
-				outfile = open(os.path.join(outdname, '%s.fasta'%(i)), 'w')
-				outs.append(outfile)
-		outs[i].write(line)
-	infile.close()
-	for outfile in outs:
-		outfile.close()
-	
-	return (outdname, [outfile.name for outfile in outs])
-
 def writeFasta(ents, fname, width=0):
 	outfile = open(fname, 'w')
 	if width == 0:
@@ -299,6 +276,29 @@ def index_file(filename, index_name = None):
 	
 	return index_name
 
+def split_file(infname, npart, outdname=None):
+	if outdname == None:
+		import tempfile
+		outdname = tempfile.mkdtemp()
+	elif not os.path.exists(outdname):
+		os.makedirs(outdname)
+	
+	infile = open(infname)
+	i = -1
+	outs = []
+	for line in infile:
+		if line.startswith('>'):
+			i = (i+1)%npart
+			if i == len(outs):
+				outfile = open(os.path.join(outdname, '%s.fasta'%(i)), 'w')
+				outs.append(outfile)
+		outs[i].write(line)
+	infile.close()
+	for outfile in outs:
+		outfile.close()
+	
+	return (outdname, [outfile.name for outfile in outs])
+
 def flatten_file(infname):
 	from tempfile import mkstemp
 	outfile, outfname = mkstemp()
@@ -313,6 +313,8 @@ def main(argv = None):
 	
 	if argv[1] == 'index':
 		index_file(argv[2])
+	elif argv[1] == 'split':
+		split_file(argv[2], int(argv[3]), '%s_%s'%(argv[2], argv[3]))
 	elif argv[1] == 'flatten':
 		flatten_file(argv[2])
 	else:
