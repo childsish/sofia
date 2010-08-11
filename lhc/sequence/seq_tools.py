@@ -38,11 +38,11 @@ def dinuc(seq, den=None):
 	"""
 	seq = seq.lower()
 	res = numpy.zeros(16, dtype=numpy.float32)
-	for i in xrange(len(seq) - 2):
+	for i in xrange(len(seq) - 1):
 		res[NA2IDX[seq[i:i + 2]]] += 1
 	if den == None:
 		den = len(seq)
-	return res / den
+	return res# / den
 
 def rc(seq):
 	m = string.maketrans('acgtuwrkysmbhdvnACGTUWRKYSMBHDVN', 'tgcaawymrskvdhbnTGCAAWYMRSKVDHBN')

@@ -188,71 +188,18 @@ class FastaFile:
 		""" Returns the name of the underlying fasta file. """
 		return self.__src.name
 
-def index_file(filename, index_name = None):
-	import cPickle
-	import stat
-	
-	if index_name == None:
-		if '.' in filename:
-			index_name = filename[:filename.rfind('.')] + '.idx'
-		else:
-			index_name = filename + '.idx'
-	
-	if os.path.exists(index_name):
-		try:
-			infile = open(index_name)
-			iMod = cPickle.load(infile) # Indexed modification time.
-			infile.close()
-			
-			cMod = os.stat(filename)[stat.ST_MTIME] # Current modification time.
-
-			if iMod == cMod:
-				return index_name
-		except EOFError, e: # If the file is empty then continue anyway.
-			pass
-	
-	lst = []
-	infile = open(filename, 'rb')
-	while True: # Equivalent of do-while loop.
-		idx = infile.tell()
-		line = infile.readline()
-
-		if len(line) <= 0: # Exit condition
-			break
-		elif line[0] == '>':
-			lst.append(idx)
-
-	# Pickle the index to improve file access speed.
-	outfile = file(index_name, 'wb')
-	cPickle.dump(os.stat(filename)[stat.ST_MTIME], outfile, cPickle.HIGHEST_PROTOCOL)
-	cPickle.dump(filename, outfile, cPickle.HIGHEST_PROTOCOL)
-	cPickle.dump(lst, outfile, cPickle.HIGHEST_PROTOCOL)
+def writeFasta(ents, fname, width=0):
+	outfile = open(fname, 'w')
+	if width == 0:
+		for ent in ents:
+			outfile.write('>%s\n%s\n'%(ent))
+	else:
+		for hdr, seq in ents:
+			outfile.write('>%s\n'%hdr)
+			for i in xrange(0, len(seq), width):
+				outfile.write(seq[i:i+width])
+				outfile.write('\n')
 	outfile.close()
-	
-	return index_name
-
-def splitFasta(infname, npart, outdname=None):
-	if outdname == None:
-		import tempfile
-		outdname = tempfile.mkdtemp()
-	elif not os.path.exists(outdname):
-		os.makedirs(outdname)
-	
-	infile = open(infname)
-	i = -1
-	outs = []
-	for line in infile:
-		if line.startswith('>'):
-			i = (i+1)%npart
-			if i == len(outs):
-				outfile = open(os.path.join(outdname, '%s.fasta'%(i)), 'w')
-				outs.append(outfile)
-		outs[i].write(line)
-	infile.close()
-	for outfile in outs:
-		outfile.close()
-	
-	return (outdname, [outfile.name for outfile in outs])
 
 def readFasta(fname):
 	res = []
@@ -283,20 +230,95 @@ def iterFasta(fname):
 		else:
 			seq.append(line.strip())
 	yield (hdr, ''.join(seq))
+	infile.close()
+
+def index_file(filename, index_name = None):
+	import cPickle
+	import stat
+	
+	if index_name == None:
+		if '.' in filename:
+			index_name = filename[:filename.rfind('.')] + '.idx'
+		else:
+			index_name = filename + '.idx'
+	
+	if os.path.exists(index_name):
+		try:
+			infile = open(index_name)
+			iMod = cPickle.load(infile) # Indexed modification time.
+			infile.close()
+			
+			cMod = os.stat(filename)[stat.ST_MTIME] # Current modification time.
+			
+			if iMod == cMod:
+				return index_name
+		except EOFError, e: # If the file is empty then continue anyway.
+			pass
+	
+	lst = []
+	infile = open(filename, 'rb')
+	while True: # Equivalent of do-while loop.
+		idx = infile.tell()
+		line = infile.readline()
+		
+		if len(line) <= 0: # Exit condition
+			break
+		elif line[0] == '>':
+			lst.append(idx)
+	
+	# Pickle the index to improve file access speed.
+	outfile = file(index_name, 'wb')
+	cPickle.dump(os.stat(filename)[stat.ST_MTIME], outfile, cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(filename, outfile, cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(lst, outfile, cPickle.HIGHEST_PROTOCOL)
+	outfile.close()
+	
+	return index_name
+
+def split_file(infname, npart, outdname=None):
+	if outdname == None:
+		import tempfile
+		outdname = tempfile.mkdtemp()
+	elif not os.path.exists(outdname):
+		os.makedirs(outdname)
+	
+	infile = open(infname)
+	i = -1
+	outs = []
+	for line in infile:
+		if line.startswith('>'):
+			i = (i+1)%npart
+			if i == len(outs):
+				outfile = open(os.path.join(outdname, '%s.fasta'%(i)), 'w')
+				outs.append(outfile)
+		outs[i].write(line)
+	infile.close()
+	for outfile in outs:
+		outfile.close()
+	
+	return (outdname, [outfile.name for outfile in outs])
+
+def flatten_file(infname):
+	import shutil
+	from tempfile import mkstemp
+	
+	outfile, outfname = mkstemp()
+	os.close(outfile)
+	writeFasta(iterFasta(infname), outfname)
+	shutil.move(outfname, infname)
 
 def main(argv = None):
 	if argv == None:
 		argv = sys.argv
 	
-	index_file(r'/home/childs/lib/Ath/TAIR7_5_utr_20070226')
-	
-	import random
-	
-	#items = fasta.items()
-	#for i in xrange(10):
-	#	print fasta[i][20:90]
-	#
-	#print fasta['AT1G01030.1'][206:214]
+	if argv[1] == 'index':
+		index_file(argv[2])
+	elif argv[1] == 'split':
+		split_file(argv[2], int(argv[3]), '%s_%s'%(argv[2], argv[3]))
+	elif argv[1] == 'flatten':
+		flatten_file(argv[2])
+	else:
+		print 'Argument 1 must be either index or flatten'
 
 if __name__ == '__main__':
 	sys.exit(main(sys.argv))

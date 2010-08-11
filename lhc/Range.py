@@ -3,7 +3,7 @@ try:
 	psyco.full()
 except ImportError, e:
 	import sys	
-	sys.stderr.write(str(e) + '\n')
+	sys.stderr.write('Unable to import psyco. Continuing without\n')
 
 class Range:
 	def __init__(self, f, t):
@@ -87,7 +87,7 @@ class Range:
 	def toList(self):
 		return [self]
 	
-	def isOverlapping(self, other):
+	def overlaps(self, other):
 		return (self.f <= other.f and self.t > other.f) or\
 		       (other.f <= self.f and other.t > self.f)
 	
@@ -233,7 +233,7 @@ class SuperRange:
 	def toList(self):
 		return self.__rngs
 	
-	def isOverlapping(self, other):
+	def overlaps(self, other):
 		if isinstance(other, Range):
 			other = SuperRange([other])
 		

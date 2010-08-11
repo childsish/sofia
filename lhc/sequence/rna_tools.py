@@ -7,7 +7,7 @@ import tempfile
 
 from seq_tools import gc
 from paths.rna_tools import matrices
-from paths.rna import rnafold, rnaplfold, rnadistance
+from paths.rna import rnafold, rnaplfold, rnadistance, rnacofold
 from subprocess import Popen, PIPE
 from optparse import OptionParser
 
@@ -36,12 +36,12 @@ class RNACalibrator:
 		return b.argsort()[0]
 
 class RNAFolder:
-	def __init__(self, p=False):
+	def __init__(self, p=False, close_fds=True):
 		self.__p = p
 		self.cwd = tempfile.mkdtemp()
 		args = [rnafold, '-noPS']
 		if p: args.append('-p')
-		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=True, cwd=self.cwd)
+		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=close_fds, cwd=self.cwd)
 	
 	def __del__(self):
 		for fname in os.listdir(self.cwd):
@@ -129,10 +129,10 @@ class RNAFolder:
 		return res
 
 class RNADistance:
-	def __init__(self, typ='-DP'):
+	def __init__(self, typ='-DP', close_fds=True):
 		self.cwd = tempfile.mkdtemp()
 		args = [rnadistance, typ]
-		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=True, cwd=self.cwd)
+		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=close_fds, cwd=self.cwd)
 		self.__prc.stdin.write('\n') # Input no sequence
 	
 	def __del__(self):
@@ -152,6 +152,57 @@ class RNADistance:
 	
 	#def compareOneMany(self, seq, seqs):
 	#def compareAll(self, seqs):
+
+class RNAHybrid:
+	def __init__(self, p=False):
+		self.__p = p
+		self.cwd = tempfile.mkdtemp()
+		args = [rnacofold, '-noPS']
+		if p: args.append('-p')
+		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=True, cwd=self.cwd)
+	
+	def __del__(self):
+		for fname in os.listdir(self.cwd):
+			os.remove(os.path.join(self.cwd, fname))
+		os.rmdir(self.cwd)
+		self.__prc.communicate()
+
+	def hybridise(self, seq1, seq2):
+		seq = '%s&%s'%(seq1, seq2)
+		self.__prc.stdin.write(seq)
+		self.__prc.stdin.write('\n')
+		self.__prc.stdin.flush()
+		
+		# Sequence
+		self.__prc.stdout.readline()
+		
+		# Minimum free energy structure and MFE
+		line = self.__prc.stdout.readline()
+		stc = line[:len(seq)]
+		mfe = float(line[len(seq)+2:-2])
+		
+		if self.__p:
+			# Ensemble structure and MFE
+			line = self.__prc.stdout.readline()
+			#estc = line[:len(seq)]
+			emfe = float(line[len(seq)+2:-2])
+			
+			# Centroid structure and centroid MFE
+			line = self.__prc.stdout.readline()
+			cstc = line[:len(seq)]
+			cmfe, cdst = line[len(seq)+2:-2].split()
+			cmfe = float(cmfe)
+			cdst = float(cdst[2:])
+
+			# MFE frequency and ensemble diversity
+			parts = self.__prc.stdout.readline().split()
+			frq = float(parts[6][:-1])
+			div = float(parts[9])
+			
+			# Base-pairing probabilities
+			bpp = self.__readDot(os.path.join(self.cwd, 'dot.ps'))
+			return stc, mfe, emfe, cstc, cmfe, cdst, frq, div, bpp
+		return stc, mfe
 
 def calculateAccessibility(seq, w=50, u=4):
 	cwd = tempfile.mkdtemp()
@@ -229,6 +280,36 @@ def scan(argv):
 	
 	if 'mfe' in options.output:
 		r['dev.off']()
+
+def hybridise(seq1, seq2):
+	FREE2BIND = '/home/childs/opt/free2bind/free_align.pl'
+	FREE2BINDWD = '/home/childs/opt/free2bind/'
+	seq2 = seq2[::-1] # Free2bind assumes co-directional strands.
+	aff = None
+	ctcs = []
+	s1s = None
+	prc = Popen([FREE2BIND, seq1, seq2], stdout=PIPE, cwd=FREE2BINDWD)
+	for line in prc.stdout:
+		#sys.stdout.write(line)
+		if line.startswith('Delta-G for best pairing'):
+			aff = float(line.split('=')[1])
+		elif line.startswith('seq1  0:'):
+			line = line[9:]
+			s1s = 0
+			for i in xrange(len(line)):
+				if line[i] == ' ':
+					s1s += 1
+				else:
+					break
+		elif line.startswith('       :'):
+			line = line.strip()[2+s1s:]
+			gap = 0
+			for i in xrange(len(line)):
+				if line[i] == '|':
+					ctcs.append(i - gap)
+				elif line[i] == 'b':
+					gap += 1
+	return aff, numpy.array(ctcs)
 
 def main(argv):
 	tool = RNADistance()

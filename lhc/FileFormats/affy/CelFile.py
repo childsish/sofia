@@ -38,7 +38,7 @@ def readCel(infname):
 		try: # Speed hack - Don't have to check for empty line all the time.
 			parts = line.split()
 			x, y, val = int(parts[0]), int(parts[1]), float(parts[2])
-			res[x,y] = val + random.random()
+			res[y,x] = val + random.random()
 		except ValueError:
 			break
 		except IndexError:
