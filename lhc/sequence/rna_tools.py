@@ -281,6 +281,36 @@ def scan(argv):
 	if 'mfe' in options.output:
 		r['dev.off']()
 
+def hybridise(seq1, seq2):
+	FREE2BIND = '/home/childs/opt/free2bind/free_align.pl'
+	FREE2BINDWD = '/home/childs/opt/free2bind/'
+	seq2 = seq2[::-1] # Free2bind assumes co-directional strands.
+	aff = None
+	ctcs = []
+	s1s = None
+	prc = Popen([FREE2BIND, seq1, seq2], stdout=PIPE, cwd=FREE2BINDWD)
+	for line in prc.stdout:
+		#sys.stdout.write(line)
+		if line.startswith('Delta-G for best pairing'):
+			aff = float(line.split('=')[1])
+		elif line.startswith('seq1  0:'):
+			line = line[9:]
+			s1s = 0
+			for i in xrange(len(line)):
+				if line[i] == ' ':
+					s1s += 1
+				else:
+					break
+		elif line.startswith('       :'):
+			line = line.strip()[2+s1s:]
+			gap = 0
+			for i in xrange(len(line)):
+				if line[i] == '|':
+					ctcs.append(i - gap)
+				elif line[i] == 'b':
+					gap += 1
+	return aff, numpy.array(ctcs)
+
 def main(argv):
 	tool = RNADistance()
 	tool.compareOneOne('((...(((...)))...))', '...(((...)))...')

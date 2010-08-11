@@ -6,7 +6,6 @@
 import itertools
 import os
 import sys
-import shutil
 
 class Entry:
 	""" An indexed entry into a fasta file.
@@ -250,7 +249,7 @@ def index_file(filename, index_name = None):
 			infile.close()
 			
 			cMod = os.stat(filename)[stat.ST_MTIME] # Current modification time.
-
+			
 			if iMod == cMod:
 				return index_name
 		except EOFError, e: # If the file is empty then continue anyway.
@@ -261,12 +260,12 @@ def index_file(filename, index_name = None):
 	while True: # Equivalent of do-while loop.
 		idx = infile.tell()
 		line = infile.readline()
-
+		
 		if len(line) <= 0: # Exit condition
 			break
 		elif line[0] == '>':
 			lst.append(idx)
-
+	
 	# Pickle the index to improve file access speed.
 	outfile = file(index_name, 'wb')
 	cPickle.dump(os.stat(filename)[stat.ST_MTIME], outfile, cPickle.HIGHEST_PROTOCOL)
@@ -300,11 +299,12 @@ def split_file(infname, npart, outdname=None):
 	return (outdname, [outfile.name for outfile in outs])
 
 def flatten_file(infname):
+	import shutil
 	from tempfile import mkstemp
+	
 	outfile, outfname = mkstemp()
-	for hdr, seq in iterFasta(infname):
-		os.write(outfile, '>%s\n%s\n'%(hdr, seq))
 	os.close(outfile)
+	writeFasta(iterFasta(infname), outfname)
 	shutil.move(outfname, infname)
 
 def main(argv = None):

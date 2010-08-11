@@ -153,7 +153,7 @@ def ribosome(a,b,c):
 				return 4
 	return 21
 
-def shuffle(seq, codonfname = ''):
+def dcshuffle(seq, codonfname = ''):
 	MAX_NUM_SEQ = 1
 	
 	aacodon = [None for x in xrange(22)]
