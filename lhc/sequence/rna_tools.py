@@ -123,7 +123,7 @@ class RNAFolder:
 					res[j+1, j] = 1
 			elif lines[i][-5:-1] in ['ubox', 'lbox']:
 				parts = lines[i].split()
-				res[int(parts[0])-1, int(parts[1])-1] = 1 - float(parts[2]) # A higher probability = a shorter distance (ie. a smaller number)
+				res[int(parts[0])-1, int(parts[1])-1] = float(parts[2])
 		infile.close()
 		
 		return res
