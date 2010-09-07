@@ -153,7 +153,7 @@ def ribosome(a,b,c):
 				return 4
 	return 21
 
-def shuffle(seq, codonfname = ''):
+def dcshuffle(seq, codonfname = ''):
 	MAX_NUM_SEQ = 1
 	
 	aacodon = [None for x in xrange(22)]
@@ -287,7 +287,11 @@ def shuffle(seq, codonfname = ''):
 			nextaacodon[i] = None
 	
 	for j in xrange(0, len(seq)-3, 3):
-		aa = ribosome(seq[j], seq[j+1], seq[j+2]);
+		aa = ribosome(seq[j], seq[j+1], seq[j+2])
+		#print type(aacodon[aa])
+		#print type(naa[aa])
+		#print aacodon[aa][naa[aa]]
+		#sys.exit(1)
 		aacodon[aa][naa[aa]] = seq[j:j+3]
 		nextaa = ribosome(seq[j+3], seq[j+4], seq[j+5])
 		nextaacodon[aa][naa[aa]] = seq[j+3:j+6]
@@ -307,10 +311,10 @@ def shuffle(seq, codonfname = ''):
 	# now shuffle the codons for each amino acid
 
 	for h in xrange(20):# amino acid i
-		i = shuffledaa[h];
+		i = shuffledaa[h]
 
 		for j in xrange(aac[i]): # codon j
-			r = aac[i]-j;
+			r = aac[i]-j
 			k = int(r*random.random())
 			
 			# consider swapping aacodon[i][j] with aacodon[i][j+k])

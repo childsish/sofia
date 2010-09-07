@@ -10,7 +10,7 @@ except ImportError:
 	print 'Unable to import psyco'
 
 class Feature(Range):
-	def __init__(self, fr, to, chm, cls, acc):
+	def __init__(self, chm, fr, to, cls, acc):
 		Range.__init__(self, fr, to)
 		self.chm = chm
 		self.cls = cls
@@ -137,6 +137,12 @@ def readGff(infname):
 	
 	gff = GffFile(infname)
 	return gff
+
+def iterGff(infname):
+	infile = open(infname)
+	for line in infile:
+		parts = line.split()
+	infile.close()
 
 def pickleGff(infname, outfname=None):
 	import os

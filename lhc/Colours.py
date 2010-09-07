@@ -89,6 +89,11 @@ def toRString(col):
 	c = col * 255
 	return '#%02x%02x%02x'%(c[0], c[1], c[2])
 
+def toSvgString(col):
+	if len(col) == 3:
+		return 'rgb(%d,%d,%d)'%(col[0]*255, col[1]*255, col[2]*255)
+	return 'rgba(%d,%d,%d,%.3f)'%(col[0]*255, col[1]*255, col[2]*255, col[3])
+
 def main():
 	print Rainbow(8)
 	print GreenMagenta(16)
@@ -102,3 +107,4 @@ def main():
 if __name__ == '__main__':
 	import sys
 	sys.exit(main())
+
