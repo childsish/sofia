@@ -57,7 +57,7 @@ def calcFtrs(seq):
 	prps.append(numpy.mean(wss2)) # Average within cluster sum of squares (distance centroid)
 	 # F < 0.05
 
-	return prps
+	return numpy.array(prps)
 
 def getPairs(stc):
 	pairs = []
@@ -221,6 +221,7 @@ def nameFtrs():
 	return ftrs
 
 def main(argv):
+	t = time.time()
 	rnd = False
 	nams = nameFtrs()
 	for i in xrange(len(nams)):
@@ -241,6 +242,7 @@ def main(argv):
 			rnd_ftrs = randFtrs(seq)
 			sys.stdout.write('\t'.join(map(str, ftrs - rnd_ftrs)))
 		sys.stdout.write('\n')
+	sys.stdout.write('Time: ' + str(time.time() - t) + '\n')
 	return 0
 
 if __name__ == '__main__':
