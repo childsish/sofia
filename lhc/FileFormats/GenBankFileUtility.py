@@ -69,10 +69,11 @@ class Range(BaseRange):
 		if isinstance(other, Complement):
 			return self - other.getChild()
 		elif isinstance(other, BaseJoin):
-			return BaseJoin([self]) - other
+			res = BaseJoin([self]) - other
+			return res
 		elif self == other:
 			return (None, None) #DELETED
-		elif not self.isOverlapping(other):
+		elif not self.overlaps(other):
 			return self #NOEFFECT
 		
 		if self.f >= other.f:
@@ -82,6 +83,30 @@ class Range(BaseRange):
 		elif self.t > other.t:
 			return (Range(self.f, other.f),Range(other.t, self.t)) #SPLIT
 		return (Range(self.f, other.f), None) #LEFT
+	
+	def __and__(self, other):
+		""" FIXME: Need to work for the case lots & one large. """
+		if isinstance(other, Complement):
+			return self & other.getChild()
+		elif isinstance(other, Join):
+			return Join([self]) & other
+		elif self == other:
+			return self
+		elif not self.overlaps(other):
+			return None
+		
+		if self.f >= other.f:
+			if self.t > other.t:
+				return Range(self.f, other.t)
+			return self
+		elif self.t >= other.t:
+			return other
+		return Range(other.f, self.t)
+	
+	def __or__(self, other):
+		if isinstance(other, Complement):
+			return Join([self, other])
+		return BaseRange.__or__(self, other)
 	
 	def isComplement(self):
 		return False
@@ -103,6 +128,12 @@ class Range(BaseRange):
 	
 	def adj3p(self, val):
 		self.t += val
+	
+	def getGenomic5p(self):
+		return self.f
+	
+	def getGenomic3p(self):
+		return self.t
 
 class Complement(Range):
 	def __init__(self, rng):
@@ -114,6 +145,36 @@ class Complement(Range):
 	
 	def __str__(self):
 		return 'complement(%s)'%str(self.__rng)
+	
+	def __sub__(self, other):
+		if isinstance(other, Complement):
+			return Complement(self.__rng - other.__rng)
+		res = self.__rng - other
+		if res != None:
+			res = Complement(res)
+		return res
+	
+	def __and__(self, other):
+		if isinstance(other, Complement):
+			res = self.__rng & other.__rng
+			if res != None:
+				return Complement(res)
+			else:
+				return res
+		elif isinstance(other, Range):
+			res = self.__rng & other
+			if res != None:
+				return Complement(res)
+			else:
+				return res
+		raise Exception('NotYetImplemented')
+	
+	def __or__(self, other):
+		if isinstance(other, Range):
+			return Join([self, other])
+		elif isinstance(other, Complement):
+			return Complement(self.rng | other.rng)
+		raise Exception('NotYetImplemented')
 	
 	def isComplement(self):
 		return True
@@ -130,7 +191,7 @@ class Complement(Range):
 		return len(self.__rng) - self.__rng.getRelPos(pos) - 1
 	
 	def getSubSeq(self, seq):
-		return rc(self.__rng.getSubSeq(seq))
+		return rc(str(self.__rng.getSubSeq(seq)))
 	
 	def get5p(self):
 		return self.__rng.get3p()
@@ -159,7 +220,7 @@ class Join(BaseJoin):
 		return 'join(%s)'%','.join([str(rng) for rng in self.__rngs])
 	
 	def __sub__(self, other):
-		return Join(BaseJoin.__sub__(self, other).tolist())
+		return Join(BaseJoin.__sub__(self, other).toList())
 	
 	def isComplement(self):
 		return False
@@ -195,11 +256,7 @@ class Join(BaseJoin):
 		for rng in self.__rngs:
 			res.append(rng.getSubSeq(seq))
 		
-		if isinstance(seq, basestring):
-			res = ''.join(res)
-		elif hasattr(seq, '__iter__'):
-			res = sum(res, []) # Flattens the list
-		
+		res = ''.join(res)
 		return res
 	
 	def get5p(self):
@@ -223,6 +280,12 @@ class Join(BaseJoin):
 	def adj3p(self, val):
 		self.__rngs[-1].adj3p(val)
 		self.t += val
+	
+	def getGenomic5p(self):
+		return self.f
+	
+	def getGenomic3p(self):
+		return self.t
 
 def main():
 	import random

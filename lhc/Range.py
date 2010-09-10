@@ -5,6 +5,10 @@ except ImportError, e:
 	import sys	
 	sys.stderr.write('Unable to import psyco. Continuing without\n')
 
+def extendAndReturn(x, y):
+	x.extend(y)
+	return x
+
 class Range:
 	def __init__(self, f, t):
 		""" f must be smaller than t """
@@ -52,14 +56,14 @@ class Range:
 		if isinstance(other, SuperRange):
 			return SuperRange([self]) - other
 		elif self == other:
-			return (None, None) #DELETED
-		elif not self.isOverlapping(other):
+			return None #DELETED
+		elif not self.overlaps(other):
 			return self #NOEFFECT
 		
 		if self.f >= other.f:
 			if self.t > other.t:
 				return (None, Range(other.t, self.t)) #RIGHT
-			return (None, None) #DELETED
+			return None #DELETED
 		elif self.t > other.t:
 			return (Range(self.f, other.f),Range(other.t, self.t)) #SPLIT
 		return (Range(self.f, other.f), None) #LEFT
@@ -70,7 +74,7 @@ class Range:
 			return SuperRange([self]) & other
 		elif self == other:
 			return self
-		elif not self.isOverlapping(other):
+		elif not self.overlaps(other):
 			return None
 		
 		if self.f >= other.f:
@@ -82,7 +86,13 @@ class Range:
 		return Range(other.f, self.t)
 	
 	def __or__(self, other):
-		raise Exception('NotYetImplemented')
+		if isinstance(other, SuperRange):
+			return SuperRange([self]) | other
+		elif self == other:
+			return self
+		elif self.overlaps(other):
+			return Range(min(self.f, other.f), max(self.t, other.t))
+		return SuperRange([self, other])
 	
 	def toList(self):
 		return [self]
@@ -121,7 +131,6 @@ class Range:
 
 class SuperRange:
 	def __init__(self, rngs):
-		""" rngs is a list of sorted non-overlapping Ranges """
 		self.__rngs = sorted(rngs)
 		self.f = rngs[0].f
 		self.t = rngs[-1].t
@@ -184,6 +193,8 @@ class SuperRange:
 			      other.__rngs[iOther].f < pieces[1].t:
 				#print pieces[1], '-', other.__rngs[iOther]
 				pieces = pieces[1] - other.__rngs[iOther]
+				if pieces == None:
+					pieces = (None, None)
 				if isinstance(pieces, Range):
 					pieces = (pieces, None)
 				if isinstance(pieces, SuperRange):
@@ -204,6 +215,8 @@ class SuperRange:
 		
 		if len(rngs) == 0:
 			return None
+		elif len(rngs) == 1:
+			return rngs[0]
 		return SuperRange(rngs)
 	
 	def __and__(self, other):
@@ -214,21 +227,41 @@ class SuperRange:
 		iOther = 0
 		
 		rngs = []
-		while iSelf < len(self.getRanges()) and iOther < len(other.getRanges()):
+		while iSelf < len(self.toList()) and iOther < len(other.toList()):
 			#print iSelf
-			while iOther < len(other.getRanges()) and\
-			      other.getRanges()[iOther].f < self.getRanges()[iSelf].t:
-				res = self.getRanges()[iSelf] & other.getRanges()[iOther]
+			while iOther < len(other.toList()) and\
+			      other.toList()[iOther].f < self.toList()[iSelf].t:
+				res = self.toList()[iSelf] & other.toList()[iOther]
 				#print str(iOther) + str(self[iSelf]) + str(other[iOther]) + str(res)
 				if res != None:
 					rngs.append(res)
 				iOther += 1
 			#print
 			iSelf += 1
+		
+		if len(rngs) == 0:
+			return None
+		elif len(rngs) == 1:
+			return rngs[0]
 		return SuperRange(rngs)
 	
 	def __or__(self, other):
-		pass
+		if isinstance(other, Range):
+			other = SuperRange([other])
+		
+		allrngs = self.toList() + other.toList()
+		rngs = [allrngs[0]]
+		for i in xrange(1, len(allrngs)):
+			if allrngs[i].overlaps(rngs[-1]):
+				rngs[-1] = rngs[-1] | allrngs[i]
+			else:
+				rngs.append(allrngs[i])
+		
+		if len(rngs) == 0:
+			return None
+		elif len(rngs) == 1:
+			return rngs[0]
+		return SuperRange(rngs)
 	
 	def toList(self):
 		return self.__rngs
@@ -239,7 +272,7 @@ class SuperRange:
 		
 		for iSelf in xrange(len(self)):
 			for iOther in xrange(len(other)):
-				if self[iSelf].isOverlapping(other[iOther]):
+				if self[iSelf].overlaps(other[iOther]):
 					return True
 		return False
 	
@@ -279,12 +312,12 @@ class SuperRange:
 		for rng in self.__rngs:
 			res.append(rng.getSubSeq(seq))
 		
-		print res
-		
 		if isinstance(seq, basestring):
 			res = ''.join(res)
 		elif hasattr(seq, '__iter__'):
-			res = sum(res, []) # Flattens the list
+			res = reduce(extendAndReturn, res, []) # Flattens the list
+			if isinstance(res[0], basestring):
+				res = ''.join(res)
 		
 		return res
 	

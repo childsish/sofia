@@ -123,7 +123,7 @@ class RNAFolder:
 					res[j+1, j] = 1
 			elif lines[i][-5:-1] in ['ubox', 'lbox']:
 				parts = lines[i].split()
-				res[int(parts[0])-1, int(parts[1])-1] = 1 - float(parts[2]) # A higher probability = a shorter distance (ie. a smaller number)
+				res[int(parts[0])-1, int(parts[1])-1] = float(parts[2])
 		infile.close()
 		
 		return res
@@ -282,8 +282,8 @@ def scan(argv):
 		r['dev.off']()
 
 def hybridise(seq1, seq2):
-	FREE2BIND = '/home/MPIMP-GOLM/childs/opt/free2bind/free_align.pl'
-	FREE2BINDWD = '/home/MPIMP-GOLM/childs/opt/free2bind/'
+	FREE2BIND = '/home/childs/opt/free2bind/free_align.pl'
+	FREE2BINDWD = '/home/childs/opt/free2bind/'
 	seq2 = seq2[::-1] # Free2bind assumes co-directional strands.
 	aff = None
 	ctcs = []
