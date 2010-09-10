@@ -263,7 +263,6 @@ def dcshuffle(seq, codonfname = ''):
 					rho[i,j,k,l] = dif[i,j,k,l] / mf[i,k] * mf[j,l]
 					if i == 0 and j == 1:
 						codstemF[k,l] = 100 * dif[i,j,k,l]
-	
 	for i in xrange(3):
 		for j in xrange(4):
 			for k in xrange(4):
@@ -276,7 +275,7 @@ def dcshuffle(seq, codonfname = ''):
 	aaf = aac / aad
 	
 	res = []
-		
+	
 	for i in xrange(22):
 		if aac[i] > 0:
 			aacodon[i] = aac[i] * ['']
@@ -287,10 +286,10 @@ def dcshuffle(seq, codonfname = ''):
 			nextaacodon[i] = None
 	
 	for j in xrange(0, len(seq)-3, 3):
-		aa = ribosome(seq[j], seq[j+1], seq[j+2]);
-		aacodon[aa][naa[aa]] = seq[j:j+3]
+		aa = ribosome(seq[j], seq[j+1], seq[j+2])
+		aacodon[aa][int(naa[aa])] = seq[j:j+3]
 		nextaa = ribosome(seq[j+3], seq[j+4], seq[j+5])
-		nextaacodon[aa][naa[aa]] = seq[j+3:j+6]
+		nextaacodon[aa][int(naa[aa])] = seq[j+3:j+6]
 		naa[aa] += 1
 	
 	for i in xrange(20):
@@ -307,10 +306,10 @@ def dcshuffle(seq, codonfname = ''):
 	# now shuffle the codons for each amino acid
 
 	for h in xrange(20):# amino acid i
-		i = shuffledaa[h];
+		i = int(shuffledaa[h])
 
 		for j in xrange(aac[i]): # codon j
-			r = aac[i]-j;
+			r = aac[i]-j
 			k = int(r*random.random())
 			
 			# consider swapping aacodon[i][j] with aacodon[i][j+k])
@@ -456,7 +455,7 @@ def dcshuffle(seq, codonfname = ''):
 			if aa == 20:
 				res.append('tga')
 			else:
-				res.append("%s"%aacodon[aa][naa[aa]])
+				res.append("%s"%aacodon[aa][int(naa[aa])])
 		
 		if j%60 > 57:
 			res.append('\n')

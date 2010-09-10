@@ -282,8 +282,8 @@ def scan(argv):
 		r['dev.off']()
 
 def hybridise(seq1, seq2):
-	FREE2BIND = '/home/childs/opt/free2bind/free_align.pl'
-	FREE2BINDWD = '/home/childs/opt/free2bind/'
+	FREE2BIND = '/home/MPIMP-GOLM/childs/opt/free2bind/free_align.pl'
+	FREE2BINDWD = '/home/MPIMP-GOLM/childs/opt/free2bind/'
 	seq2 = seq2[::-1] # Free2bind assumes co-directional strands.
 	aff = None
 	ctcs = []
