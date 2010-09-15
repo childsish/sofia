@@ -139,6 +139,7 @@ class Complement(Range):
 	def __init__(self, rng):
 		Range.__init__(self, rng.f, rng.t)
 		self.__rng = rng
+		
 	
 	def __len__(self):
 		return len(self.__rng)
@@ -170,10 +171,12 @@ class Complement(Range):
 		raise Exception('NotYetImplemented')
 	
 	def __or__(self, other):
-		if isinstance(other, Range):
+		if isinstance(other, Complement):
+			return Complement(self.__rng | other.__rng)
+		elif isinstance(other, Range):
 			return Join([self, other])
-		elif isinstance(other, Complement):
-			return Complement(self.rng | other.rng)
+		elif other == None:
+			return self
 		raise Exception('NotYetImplemented')
 	
 	def isComplement(self):
