@@ -290,7 +290,7 @@ def hybridise(seq1, seq2):
 	s1s = None
 	prc = Popen([FREE2BIND, seq1, seq2], stdout=PIPE, cwd=FREE2BINDWD)
 	for line in prc.stdout:
-		#sys.stdout.write(line)
+		#print line[:-1]
 		if line.startswith('Delta-G for best pairing'):
 			aff = float(line.split('=')[1])
 		elif line.startswith('seq1  0:'):
@@ -309,6 +309,7 @@ def hybridise(seq1, seq2):
 					ctcs.append(i - gap)
 				elif line[i] == 'b':
 					gap += 1
+	prc.communicate()
 	return aff, numpy.array(ctcs)
 
 def main(argv):
