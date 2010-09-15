@@ -98,8 +98,8 @@ class Range:
 		return [self]
 	
 	def overlaps(self, other):
-		return (self.f <= other.f and self.t > other.f) or\
-		       (other.f <= self.f and other.t > self.f)
+		return (self.f <= other.f and self.t >= other.f) or\
+		       (other.f <= self.f and other.t >= self.f)
 	
 	def contains(self, pos):
 		return self.f <= pos and self.t > pos
