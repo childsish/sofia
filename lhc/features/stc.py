@@ -150,7 +150,6 @@ def main(argv):
 	if rnd:
 		for i in xrange(len(nams)):
 			sys.stdout.write('#%d\t%s (rnd)\n'%(i + len(nams), nams[i]))
-
 	
 	trans = maketrans('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 'atctttgtttttttttttttttttttatctttgttttttttttttttttttt')
 	for hdr, seq in iterFasta(argv[1]):

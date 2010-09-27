@@ -44,9 +44,7 @@ def calcFtrs(seq):
 	
 	 # Graph features
 	adj = stc2adj(stc)
-	for i in xrange(1, len(seq)):
-		bpp[i-1,i] = 1
-		bpp[i,i-1] = 1
+	bpp = bpp * 10
 	gra_h = igraph.Graph.Weighted_Adjacency(adj.tolist(), mode=igraph.ADJ_UPPER)
 	gra_s = igraph.Graph.Weighted_Adjacency(bpp.tolist(), mode=igraph.ADJ_UPPER)
 	
