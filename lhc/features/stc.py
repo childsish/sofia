@@ -19,13 +19,17 @@ def structuralFeatures(stc):
 	bulges = []
 	stems = []
 	branches = []
+	bridges = []
 	
 	lvls = [[]]
+	dots = []
 	c_lvl = 0
 	c_stem = 0
 	for i in xrange(len(stc)):
-		
 		if stc[i] == '(':
+			if c_lvl == 0:
+				bridges.append(len(dots))
+				dots = []
 			lvls[c_lvl].append('(')
 			lvls.append([])
 			c_lvl += 1
@@ -50,11 +54,12 @@ def structuralFeatures(stc):
 			c_stem += 1
 		elif stc[i] == '.':
 			if c_lvl == 0:
-				continue
+				dots.append(i)
 			lvls[c_lvl].append('.')
+	bridges.append(len(dots))
 	stems.append(c_stem)
 
-	return hloops, mloops, iloops, bulges, stems, branches
+	return hloops, mloops, iloops, bulges, stems, branches, bridges
 
 def calcFtrs(seq):
 	ftrs = []
@@ -69,7 +74,7 @@ def calcFtrs(seq):
 		ftrs.append(numpy.mean(a))
 	 # Multi-loops - number, total size, average size # F < 0.05
 	if len(b) == 0:
-		ftrs.extend((0, 0))
+		ftrs.extend((0, 0, 0))
 	else:
 		ftrs.append(len(b))
 		ftrs.append(numpy.sum(b))
@@ -110,8 +115,9 @@ def randFtrs(seq, n=1000):
 	ftrs = numpy.empty((n, len(tmp)))
 	ftrs[0] = numpy.array(tmp)
 	for i in xrange(1, n):
-		ftrs[i] = numpy.array(calcFtrs(kshuffle(seq)))
-	return numpy.mean(ftrs, 0).tolist()
+		tmp = calcFtrs(kshuffle(seq))
+		ftrs[i] = numpy.array(tmp)
+	return numpy.mean(ftrs, 0)
 
 def nameFtrs():
 	ftrs = []
@@ -137,9 +143,13 @@ def nameFtrs():
 	return ftrs
 
 def main(argv):
+	rnd = True
 	nams = nameFtrs()
 	for i in xrange(len(nams)):
 		sys.stdout.write('#%d\t%s\n'%(i, nams[i]))
+	if rnd:
+		for i in xrange(len(nams)):
+			sys.stdout.write('#%d\t%s (rnd)\n'%(i + len(nams), nams[i]))
 	
 	trans = maketrans('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 'atctttgtttttttttttttttttttatctttgttttttttttttttttttt')
 	for hdr, seq in iterFasta(argv[1]):
@@ -148,12 +158,12 @@ def main(argv):
 		
 		ftrs = calcFtrs(seq)
 		sys.stdout.write('\t'.join(map(str, ftrs)))
+		if rnd:
+			sys.stdout.write('\t')
+			rnd_ftrs = randFtrs(seq)
+			sys.stdout.write('\t'.join(map(str, ftrs - rnd_ftrs)))
 		sys.stdout.write('\n')
-		#sys.stdout.write('\t')
-		
-		#rnd_ftrs = randFtrs(seq)
-		#sys.stdout.write('\t'.join(map(str, ftrs - rnd_ftrs)))
-		#sys.stdout.write('\n')
+	return 0
 
 if __name__ == '__main__':
 	import sys
