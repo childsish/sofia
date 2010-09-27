@@ -257,7 +257,7 @@ class Join(BaseJoin):
 		""" Overloaded to keep the order of ranges specified in the GenBankFile. """
 		res = []
 		for rng in self.__rngs:
-			res.append(rng.getSubSeq(seq))
+			res.append(str(rng.getSubSeq(seq)))
 		
 		res = ''.join(res)
 		return res

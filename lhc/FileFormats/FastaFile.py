@@ -35,6 +35,9 @@ class IndexedFastaSequence:
 		self.__seq_fr = seq_fr
 		self.__seq_to = seq_to
 	
+	def __len__(self):
+		return self.__seq_to - self.__seq_fr
+	
 	def __str__(self):
 		offset_fr = self.__calcOffset(self.__seq_fr)
 		offset_to = self.__calcOffset(self.__seq_to)
