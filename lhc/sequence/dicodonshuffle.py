@@ -289,12 +289,12 @@ def dcshuffle(seq, codonfname = ''):
 	for j in xrange(0, len(seq)-3, 3):
 		aa = ribosome(seq[j], seq[j+1], seq[j+2])
 		#print type(aacodon[aa])
-		#print type(naa[aa])
-		#print aacodon[aa][naa[aa]]
+		#print type(int(naa[aa]))
+		#print aacodon[aa][int(naa[aa])]
 		#sys.exit(1)
-		aacodon[aa][naa[aa]] = seq[j:j+3]
+		aacodon[aa][int(naa[aa])] = seq[j:j+3]
 		nextaa = ribosome(seq[j+3], seq[j+4], seq[j+5])
-		nextaacodon[aa][naa[aa]] = seq[j+3:j+6]
+		nextaacodon[aa][int(naa[aa])] = seq[j+3:j+6]
 		naa[aa] += 1
 	
 	for i in xrange(20):
@@ -311,7 +311,7 @@ def dcshuffle(seq, codonfname = ''):
 	# now shuffle the codons for each amino acid
 
 	for h in xrange(20):# amino acid i
-		i = shuffledaa[h]
+		i = int(shuffledaa[h])
 
 		for j in xrange(aac[i]): # codon j
 			r = aac[i]-j
@@ -460,7 +460,7 @@ def dcshuffle(seq, codonfname = ''):
 			if aa == 20:
 				res.append('tga')
 			else:
-				res.append("%s"%aacodon[aa][naa[aa]])
+				res.append("%s"%aacodon[aa][int(naa[aa])])
 		
 		if j%60 > 57:
 			res.append('\n')

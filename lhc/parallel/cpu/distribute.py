@@ -67,6 +67,10 @@ class Distributor:
 		self.__max_jobs = max_jobs
 		self.__inputs = []
 		self.__sleep = sleep
+		
+		infile = open('/proc/cpuinfo')
+		self.__mx_cpus = len([line for line in infile if line.startswith('processor')])
+		infile.close()
 	
 	def distribute(self, n_jobs, indir, args):
 		""" Distributes the n_jobs "super jobs" over the cpus. The executable
@@ -110,11 +114,15 @@ class Distributor:
 			
 			if running_jobs[current_job] == None and\
 			   started_jobs < len(jobs):
-				when = time.strftime('%d/%m/%y %H:%M:%S')
-				print 'starting job %d (%s)'%(started_jobs,when)
-				running_jobs[current_job] = started_jobs
-				jobs[started_jobs].start()
-				started_jobs += 1
+				infile = open('/proc/loadavg')
+				used = float(infile.readline().split()[0])
+				infile.close()
+				if self.__max_cpus - used >= 1:
+					when = time.strftime('%d/%m/%y %H:%M:%S')
+					print 'starting job %d (%s)'%(started_jobs,when)
+					running_jobs[current_job] = started_jobs
+					jobs[started_jobs].start()
+					started_jobs += 1
 			
 			current_job += 1
 			if current_job >= len(running_jobs):
@@ -180,6 +188,8 @@ def main(argv = None):
 	                  default=Distributor.SLEEP,
 	                  help='How long to sleep between checking.')
 	options, args = parser.parse_args(argv[1:i])
+	if options.sleep < 61:
+		options.sleep = 61
 	
 	if options.indir == None and options.n_jobs == 0:
 		parser.error('No input directory or the number of jobs not defined.')
