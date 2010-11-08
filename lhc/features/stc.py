@@ -64,21 +64,23 @@ def structuralFeatures(stc):
 def calcFtrs(seq):
 	ftrs = []
 	stc, mfe = FOLDER.fold(seq)
-	a, b, c, d, e, f = structuralFeatures(stc)
+	a, b, c, d, e, f, g = structuralFeatures(stc)
 	 # Hairpin loops - number, total size, average size # F < 0.05
 	if len(a) == 0:
-		ftrs.extend((0, 0, 0))
+		ftrs.extend((0, 0, 0, 0))
 	else:
 		ftrs.append(len(a)) # Keep (Unshuffled = 0.04)
 		ftrs.append(numpy.sum(a))
 		ftrs.append(numpy.mean(a))
+		ftrs.append(numpy.std(a))
 	 # Multi-loops - number, total size, average size # F < 0.05
 	if len(b) == 0:
-		ftrs.extend((0, 0, 0))
+		ftrs.extend((0, 0, 0, 0))
 	else:
 		ftrs.append(len(b))
 		ftrs.append(numpy.sum(b))
 		ftrs.append(numpy.mean(b))
+		ftrs.append(numpy.std(b))
 	 # Internal loops - number, total size, average size, average imbalance
 	if len(c) == 0:
 		ftrs.extend((0, 0, 0, 0))
@@ -89,25 +91,35 @@ def calcFtrs(seq):
 		ftrs.append(numpy.mean([abs(c_[0] - c_[1]) for c_ in c]))
 	 # Bulges - number, total size, average size
 	if len(d) == 0:
-		ftrs.extend((0, 0, 0))
+		ftrs.extend((0, 0, 0, 0))
 	else:
 		ftrs.append(len(d))
 		ftrs.append(numpy.sum(d))
 		ftrs.append(numpy.mean(d))
+		ftrs.append(numpy.std(d))
 	 # Stems - number, total size, average size
 	if len(e) == 0:
-		ftrs.extend((0, 0, 0))
+		ftrs.extend((0, 0, 0, 0))
 	else:
 		ftrs.append(len(e)) # Keep (Shuffled = 0.04)
 		ftrs.append(numpy.sum(e))
 		ftrs.append(numpy.mean(e)) # Keep (Shuffled = 0.07)
+		ftrs.append(numpy.std(e)) # Keep (Shuffled = 0.07)
 	 # Branches - number, total size, average size
 	if len(f) == 0:
-		ftrs.extend((0, 0, 0))
+		ftrs.extend((0, 0, 0, 0))
 	else:
 		ftrs.append(len(f))
 		ftrs.append(numpy.sum(f))
 		ftrs.append(numpy.mean(f))
+		ftrs.append(numpy.std(f))
+	if len(g) == 0:
+		ftrs.extend((0, 0, 0, 0))
+	else:
+		ftrs.append(len(g))
+		ftrs.append(numpy.sum(g))
+		ftrs.append(numpy.mean(g))
+		ftrs.append(numpy.std(g))
 	return numpy.array(ftrs)
 
 def randFtrs(seq, n=1000):
@@ -124,9 +136,11 @@ def nameFtrs():
 	ftrs.append('Number of hairpin loops')
 	ftrs.append('Total size of hairpins')
 	ftrs.append('Average size of hairpins')
+	ftrs.append('Stddev of hairpins')
 	ftrs.append('Number of multiloops')
 	ftrs.append('Total size of multiloops')
 	ftrs.append('Average size of multiloops')
+	ftrs.append('Stddev of multiloops')
 	ftrs.append('Number of internal loops')
 	ftrs.append('Total size of internal')
 	ftrs.append('Average size of internal')
@@ -134,12 +148,19 @@ def nameFtrs():
 	ftrs.append('Number of bulges')
 	ftrs.append('Total size of bulges')
 	ftrs.append('Average size of bulges')
+	ftrs.append('Stddev of bulges')
 	ftrs.append('Number of stems')
 	ftrs.append('Total size of stems')
 	ftrs.append('Average size of stems')
+	ftrs.append('Stddev of stems')
 	ftrs.append('Number of branches')
 	ftrs.append('Total size of branches')
 	ftrs.append('Average size of branches')
+	ftrs.append('Stddev of bridges')
+	ftrs.append('Number of bridges')
+	ftrs.append('Total size of bridges')
+	ftrs.append('Average size of bridges')
+	ftrs.append('Stddev of branches')
 	return ftrs
 
 def main(argv):

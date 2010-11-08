@@ -30,7 +30,7 @@ def main():
 		for i in xrange(len(c_args)):
 			if REPLACEME in c_args[i]:
 				c_args[i] = c_args[i].replace(REPLACEME, c_filename)
-
+	
 		# Write local then copy.
 		handle, filename = tempfile.mkstemp()
 		prc_stdout = os.fdopen(handle, 'w')
@@ -52,6 +52,7 @@ def main():
 			os.remove(os.path.join(root, name))
 		for name in dirs:
 			os.rmdir(os.path.join(root, name))
+	os.rmdir(tmpdir)
 	return 0
 
 if __name__ == '__main__':

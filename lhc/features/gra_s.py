@@ -230,10 +230,14 @@ def nameFtrs():
 		ftrs.append('3-motif %d'%(i+1))
 	for i in [4, 6, 7, 8, 9, 10]:
 		ftrs.append('4-motif %d'%(i+1))
+
+	for i in xrange(len(ftrs)):
+		ftrs[i] = '%s S'%(ftrs[i],)
+	
 	return ftrs
 
 def main(argv):
-	rnd = False
+	rnd = True
 	nams = nameFtrs()
 	for i in xrange(len(nams)):
 		sys.stdout.write('#%d\t%s\n'%(i, nams[i]))
