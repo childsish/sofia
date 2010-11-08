@@ -24,6 +24,8 @@ def calcFtrs(seq):
 	prps = []
 
 	stc, mfe = FOLDER.fold(seq)
+	if stc.count('.') == len(stc):
+		return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 	
 	 # Ensemble features
 	clus, cpcs, dmat, hibp, hibp_clus, mfe_dsts, bss, wss, bss2, wss2\

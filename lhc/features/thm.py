@@ -48,7 +48,7 @@ def randFtrs(seq, n=1000):
 	for i in xrange(1, n):
 		tmp = calcFtrs(kshuffle(seq))
 		ftrs[i] = numpy.array(tmp)
-	return ftrs
+	return numpy.mean(ftrs, 0)
 
 def nameFtrs():
 	ftrs = []
