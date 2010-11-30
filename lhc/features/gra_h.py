@@ -253,6 +253,10 @@ def nameFtrs():
 		ftrs.append('3-motif %d'%(i+1))
 	for i in [4, 6, 8]:
 		ftrs.append('4-motif %d'%(i+1))
+	
+	for i in xrange(len(ftrs)):
+		ftrs[i] = '%s H'%(ftrs[i],)
+	
 	return ftrs
 
 def main(argv):
