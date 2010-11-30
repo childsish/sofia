@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-from GenBankFileUtility import Complement, Join, Range, tokenise, TokeniserError
+from binf.sequence import Range, Complement, Join
+from GenBankFileUtility import tokenise, TokeniserError
 from optparse import OptionParser
 
 class GenBankFile:
@@ -120,17 +121,20 @@ class GenBankFile:
 		for i in xrange(fr+1, to):
 			if lines[i][5] != ' ':
 				try:
+					typ = lines[prv][:21].strip()
 					ftr = self.__parseFtr(lines, prv, i)
 					ftr['index'] = ttl
-					typ = lines[prv][:21].strip()
+					ftr['gene_type'] = typ
 					ftrs.setdefault(typ, []).append(ftr)
 					ttl += 1
 				except TokeniserError, e:
-					print 'Unable to tokenise feature: %s\n Ignoring...'%lines[prv].strip()
+					print 'Unable to tokenise feature: %s\n Ignoring...'%\
+					 lines[prv].strip()
 				prv = i
+		typ = lines[prv][:21].strip()
 		ftr = self.__parseFtr(lines, prv, to)
 		ftr['index'] = ttl
-		typ = lines[prv][:21].strip()
+		ftr['gene_type'] = typ
 		ftrs.setdefault(typ, []).append(ftr)
 		ttl += 1
 		
@@ -195,18 +199,20 @@ class GenBankFile:
 				continue
 			for ftr in ftrs[typ]:
 				if not 'gene' in ftr:
-					if 'locus_tag' in ftr:
-						ftr['gene'] = ftr['locus_tag']
-					elif 'protein_id' in ftr:
-						ftr['gene'] = ftr['protein_id']
-					elif 'product' in ftr:
-						ftr['gene'] = ftr['product']
-					elif 'label' in ftr:
-						ftr['gene'] = ftr['label']
-					elif 'note' in ftr:
-						ftr['gene'] = ftr['note']
-					else:
-						raise Exception('Unlabelled gene: %s'%str(ftr))
+					# Then this is probably an unsupported gene
+					#if 'locus_tag' in ftr:
+						#ftr['gene'] = ftr['locus_tag']
+					#elif 'protein_id' in ftr:
+						#ftr['gene'] = ftr['protein_id']
+					#elif 'product' in ftr:
+						#ftr['gene'] = ftr['product']
+					#elif 'label' in ftr:
+						#ftr['gene'] = ftr['label']
+					#elif 'note' in ftr:
+						#ftr['gene'] = ftr['note']
+					#else:
+						#raise Exception('Unlabelled gene: %s'%str(ftr))
+					continue
 				res.setdefault(ftr['gene'], []).append(ftr)
 		return res
 	
@@ -306,10 +312,11 @@ def extract(argv):
 	 help='Extend the sequence in the  5\'direction.')
 	parser.add_option('-3', '--3p', action='store', type='int', dest='ext3',
 	 help='Extend the sequence in the  3\'direction.')
-	parser.add_option('-p', '--path', action='append', type='string', nargs=3, dest='paths',
+	parser.add_option('-p', '--path', action='append', type='string', nargs=3,
+	 dest='paths',
 	 help='Extract a sequence using the given paths (eg. CDS gene nptII)')
-	parser.add_option('-t', '--type', action='append', type='string', nargs=1, dest='types',
-	 help='Extract a feature type (eg. CDS)')
+	parser.add_option('-t', '--type', action='append', type='string', nargs=1,
+	 dest='types', help='Extract a feature type (eg. CDS)')
 	options, args = parser.parse_args(argv[1:])
 	
 	fname = args[0]

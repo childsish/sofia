@@ -20,8 +20,8 @@ class MFEGenerator:
 		atcg = self.__scale(atcg, self.__atcg_lim)
 		at = self.__scale(at, self.__at_lim)
 		cg = self.__scale(cg, self.__cg_lim)
-		return (self.__avg.predict((0, l, atcg, at, cg)))#,
-		 #self.__std.predict((0, l, atcg, at, cg)))
+		return (self.__avg.predict((0, l, atcg, at, cg))),
+		 self.__std.predict((0, l, atcg, at, cg)))
 	
 	def __scale(self, a, alim):
 		blim = self.__tgt

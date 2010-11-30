@@ -62,11 +62,11 @@ class Range:
 		
 		if self.f >= other.f:
 			if self.t > other.t:
-				return (None, Range(other.t, self.t)) #RIGHT
+				return Range(other.t, self.t) #RIGHT
 			return None #DELETED
 		elif self.t > other.t:
-			return (Range(self.f, other.f),Range(other.t, self.t)) #SPLIT
-		return (Range(self.f, other.f), None) #LEFT
+			return SuperRange([Range(self.f, other.f),Range(other.t, self.t)]) #SPLIT
+		return Range(self.f, other.f) #LEFT
 	
 	def __and__(self, other):
 		""" FIXME: Need to work for the case lots & one large. """
@@ -90,16 +90,16 @@ class Range:
 			return SuperRange([self]) | other
 		elif self == other:
 			return self
-		elif self.overlaps(other):
+		elif self.overlaps(other) or self.adjacent(other):
 			return Range(min(self.f, other.f), max(self.t, other.t))
 		return SuperRange([self, other])
 	
-	def toList(self):
-		return [self]
-	
 	def overlaps(self, other):
-		return (self.f <= other.f and self.t >= other.f) or\
-		       (other.f <= self.f and other.t >= self.f)
+		return (self.f <= other.f and self.t > other.f) or\
+		 (other.f <= self.f and other.t > self.f)
+	
+	def adjacent(self, other):
+		return self.t == other.f or other.t == self.f
 	
 	def contains(self, pos):
 		return self.f <= pos and self.t > pos
@@ -181,35 +181,29 @@ class SuperRange:
 		
 		rngs = []
 		while iSelf < len(self.__rngs) and iOther < len(other.__rngs):
-			#print iSelf, ':', self.__rngs[iSelf]
-			
 			while iOther < len(other.__rngs) and\
 			      other.__rngs[iOther].t <= self.__rngs[iSelf].f:
 				iOther += 1
 			
-			pieces = (None, self.__rngs[iSelf])
+			srng = self.__rngs[iSelf]
 			while iOther < len(other.__rngs) and\
-			      pieces[1] != None and\
-			      other.__rngs[iOther].f < pieces[1].t:
-				#print pieces[1], '-', other.__rngs[iOther]
-				pieces = pieces[1] - other.__rngs[iOther]
-				if pieces == None:
-					pieces = (None, None)
-				if isinstance(pieces, Range):
-					pieces = (pieces, None)
-				if isinstance(pieces, SuperRange):
-					pieces = pieces.toList()
+			     srng != None and\
+			     other.__rngs[iOther].f < srng.t:
+				orng = other.__rngs[iOther]
+				srng = srng - orng
+				if isinstance(srng, Range):
+					if srng.t == orng.f:
+						rngs.append(srng)
+						srng = None
+					elif srng.f == orng.t:
+						iOther += 1
+				elif isinstance(srng, SuperRange):
+					pieces = srng.toList()
 					rngs += pieces[:-1]
-					pieces = (None, pieces[-1])
-				#print '=', pieces
-				if pieces[0] != None: # If there is a left piece, append it.
-					rngs.append(pieces[0])
-				if pieces[1] != None:
-					iOther += 1
-			#print
+					srng = pieces[-1]
 			
-			if pieces[1] != None:
-				rngs.append(pieces[1])
+			if srng != None:
+				rngs.append(srng)
 			
 			iSelf += 1
 		
@@ -225,19 +219,24 @@ class SuperRange:
 		
 		iSelf = 0
 		iOther = 0
+		lSelf = self.toList()
+		lOther = other.toList()
 		
 		rngs = []
-		while iSelf < len(self.toList()) and iOther < len(other.toList()):
-			#print iSelf
-			while iOther < len(other.toList()) and\
-			      other.toList()[iOther].f < self.toList()[iSelf].t:
-				res = self.toList()[iSelf] & other.toList()[iOther]
-				#print str(iOther) + str(self[iSelf]) + str(other[iOther]) + str(res)
-				if res != None:
-					rngs.append(res)
-				iOther += 1
-			#print
-			iSelf += 1
+		while iSelf < len(lSelf) and iOther < len(lOther):
+			res = lSelf[iSelf] & lOther[iOther]
+			if res != None:
+				rngs.append(res)
+			
+			diSelf = 0
+			diOther = 0
+			if lSelf[iSelf].t <= lOther[iOther].t:
+				diSelf = 1
+			if lOther[iOther].t <= lSelf[iSelf].t:
+				diOther += 1
+			
+			iSelf += diSelf
+			iOther += diOther
 		
 		if len(rngs) == 0:
 			return None
@@ -250,9 +249,10 @@ class SuperRange:
 			other = SuperRange([other])
 		
 		allrngs = self.toList() + other.toList()
+		allrngs.sort()
 		rngs = [allrngs[0]]
 		for i in xrange(1, len(allrngs)):
-			if allrngs[i].overlaps(rngs[-1]):
+			if allrngs[i].overlaps(rngs[-1]) or allrngs[i].adjacent(rngs[-1]):
 				rngs[-1] = rngs[-1] | allrngs[i]
 			else:
 				rngs.append(allrngs[i])
@@ -326,19 +326,51 @@ class SuperRange:
 			rng.shift(offset)
 
 def main():
+	a = Range(0, 10)
+	b = Range(5, 15)
+	print a & b == Range(5, 10)
+	print b & a == Range(5, 10)
+	print a | b == Range(0, 15)
+	print b | a == Range(0, 15)
+	print a - b == Range(0, 5)
+	print b - a == Range(10, 15)
+	print
+	
+	a = Range(0, 1)
+	b = Range(1, 2)
+	print a & b == None
+	print b & a == None
+	print a | b == Range(0, 2)
+	print b | a == Range(0, 2)
+	print a - b == a
+	print b - a == b
+	print
+	
+	a = SuperRange([Range(0, 1), Range(2, 3)])
+	b = Range(1, 2)
+	print a & b == None
+	print b & a == None
+	print a | b == Range(0, 3)
+	print b | a == Range(0, 3)
+	print a - b == a
+	print b - a == b
+	print
+	
 	a = SuperRange([Range(3,  15), Range(40, 62)])
 	b = SuperRange([Range(x*4+4, x*4+8) for x in xrange(0, 16, 2)])
+	print a & b == SuperRange([Range(4, 8), Range(12, 15), Range(44, 48), Range(52, 56), Range(60, 62)])
+	print b & a == SuperRange([Range(4, 8), Range(12, 15), Range(44, 48), Range(52, 56), Range(60, 62)])
+	print a | b == SuperRange([Range(3, 16), Range(20, 24), Range(28, 32), Range(36, 64)])
+	print b | a == SuperRange([Range(3, 16), Range(20, 24), Range(28, 32), Range(36, 64)])
+	print a - b == SuperRange([Range(3, 4), Range(8, 12), Range(40, 44), Range(48, 52), Range(56, 60)])
+	print b - a == SuperRange([Range(15, 16), Range(20, 24), Range(28, 32), Range(36, 40), Range(62, 64)])
+	print
 	
-	print a
-	print b
-	print b - a
+	print a.getAbsPos(15) == 43
+	print a.getRelPos(43) == 15
 	
-	print a.getAbsPos(15)
-	print a.getRelPos(43)
-
 	return 0
 
 if __name__ == '__main__':
 	import sys
 	sys.exit(main())
-

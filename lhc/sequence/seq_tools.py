@@ -44,10 +44,6 @@ def dinuc(seq, den=None):
 		den = len(seq)
 	return res# / den
 
-def rc(seq):
-	m = string.maketrans('acgtuwrkysmbhdvnACGTUWRKYSMBHDVN', 'tgcaawymrskvdhbnTGCAAWYMRSKVDHBN')
-	return seq.translate(m)[::-1]
-
 if __name__ == '__main__':
 	seq1 = 'atgattacggattcaagatctctggccgtcgttttacaacgtcgtgactgggaaaaccctggcgttacccaacttaatcgccttgcagcacatccccctttcgccagctggcgtaatagcgaagaggcccgcaccgatcgcccttcccaacagttgcgcagcctgaatggcgaatggtaa'
 	seq2 = 'augauuacggauucaagaucccuggcaguuguuuuacaacgucgcgauugggaaaauccuggcgucacccaacuuaaccgccuugccgcacauccuccuuucgccagcuggcguaauagcgaggaagcccgcaccgaccgccccucucaacaguugcguagccugaauggcgaaugguaa'

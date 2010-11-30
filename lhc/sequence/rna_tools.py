@@ -49,7 +49,7 @@ class RNAFolder:
 		os.rmdir(self.cwd)
 		self.__prc.communicate()
 	
-	def scan(self, seq, win):
+	def scan(self, seq, win=50):
 		stcs = []
 		mfes = numpy.empty(len(seq), dtype=numpy.float32)
 		for i in xrange(len(seq)):
