@@ -317,13 +317,24 @@ def extract(argv):
 	 help='Extract a sequence using the given paths (eg. CDS gene nptII)')
 	parser.add_option('-t', '--type', action='append', type='string', nargs=1,
 	 dest='types', help='Extract a feature type (eg. CDS)')
+	parser.add_option('-w', '--wrap', action='store', type='int', nargs=1,
+	 dest='wrap', help='Wrap the sequence')
 	options, args = parser.parse_args(argv[1:])
 	
 	fname = args[0]
 	genes = args[1:]
 	gbk = GenBankFile(fname)
 	if len(options.paths) == 0 and len(options.types) == 0:
-		sys.stdout.write('>whole_sequence\n%s\n'%(gbk.seq))
+		sys.stdout.write('>whole_sequence\n')
+		if options.wrap:
+			for i in xrange(0, len(gbk.seq), options.wrap):
+				sys.stdout.write(gbk.seq[i:i+options.wrap])
+				sys.stdout.write('\n')
+				
+		else:
+			sys.stdout.write(gbk.seq)
+			sys.stdout.write('\n')
+	
 	extractGenes(genes, gbk, options)
 	if len(options.paths) > 0:
 		extractPaths(gbk, options)

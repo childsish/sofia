@@ -1,10 +1,3 @@
-try:
-	import psyco
-	psyco.full()
-except ImportError, e:
-	import sys	
-	sys.stderr.write('Unable to import psyco. Continuing without\n')
-
 def extendAndReturn(x, y):
 	x.extend(y)
 	return x

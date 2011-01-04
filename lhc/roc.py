@@ -2,13 +2,6 @@
 
 import numpy
 
-try:
-	import psyco
-	psyco.full()
-except ImportError:
-	import sys
-	sys.stderr.write('Unable to import psyco')
-
 X = 0 # True positives
 Y = 1 # False positives
 A = 2 # Area under curve
