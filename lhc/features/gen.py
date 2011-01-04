@@ -37,7 +37,3 @@ def nameFtrs():
 	ftrs.append('Generated EFE')
 	ftrs.append('Generated EFEz')
 	return ftrs
-
-if __name__ == '__main__':
-	import sys
-	sys.exit(main(sys.argv))
