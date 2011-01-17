@@ -69,7 +69,7 @@ class Distributor:
 		self.__sleep = sleep
 		
 		infile = open('/proc/cpuinfo')
-		self.__mx_cpus = len([line for line in infile if line.startswith('processor')])
+		self.__max_cpus = len([line for line in infile if line.startswith('processor')])
 		infile.close()
 	
 	def distribute(self, n_jobs, indir, args):
