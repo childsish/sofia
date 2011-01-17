@@ -5,7 +5,7 @@ import ushuffle
 
 from optparse import OptionParser
 from string import maketrans
-from FileFormats.FastaFile import iterFasta
+from Bio import SeqIO
 
 def kshuffle(seq, k=2):
 	return ushuffle.shuffle(seq, len(seq), k)
@@ -51,7 +51,7 @@ def main(argv):
 		raise Exception('No feature calculator selected.')
 	
 	nams = ftr.nameFtrs()
-	sys.stdout.write('class\tid\t')
+	sys.stdout.write('acc\t')
 	sys.stdout.write('\t'.join(nams))
 	if rnd:
 		sys.stdout.write('\t')
@@ -60,10 +60,9 @@ def main(argv):
 		sys.stdout.write('\t'.join(('%s (z)'%nam for nam in nams)))
 	sys.stdout.write('\n')
 	
-	for hdr, seq in iterFasta(argv[1]):
-		seq = seq.translate(trans)
-		cls, id_ = hdr.split('_')
-		sys.stdout.write('%s\t%s\t'%(cls, id_))
+	for ent in SeqIO.parse(argv[1], 'fasta'):
+		seq = str(ent.seq).translate(trans)
+		sys.stdout.write('%s\t'%(ent.id,))
 		
 		ftrs = ftr.calcFtrs(seq)
 		sys.stdout.write('\t'.join(map(str, ftrs)))

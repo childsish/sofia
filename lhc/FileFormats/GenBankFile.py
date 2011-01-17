@@ -204,8 +204,9 @@ class GenBankFile:
 						#ftr['gene'] = ftr['locus_tag']
 					#elif 'protein_id' in ftr:
 						#ftr['gene'] = ftr['protein_id']
-					#elif 'product' in ftr:
-						#ftr['gene'] = ftr['product']
+					if 'product' in ftr and 'hypothetical' not in ftr['product']:
+						ftr['gene'] = ftr['product']
+						res.setdefault(ftr['gene'], []).append(ftr)
 					#elif 'label' in ftr:
 						#ftr['gene'] = ftr['label']
 					#elif 'note' in ftr:

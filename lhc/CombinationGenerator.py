@@ -2,7 +2,6 @@
 # Systematically generate combinations.
 #--------------------------------------
 
-import psyco
 import numpy
 
 from operator import mul
@@ -81,4 +80,3 @@ class CombinationGenerator:
 		
 		self.__numLeft -= 1
 		return self.__a
-psyco.bind(CombinationGenerator)
