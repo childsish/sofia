@@ -1,12 +1,15 @@
 #!/usr/bin/python
 
+import os
+
+from paths.misc import mfe
 from svm import svm_model
 
 class MFEGenerator:
-	def __init__(self):
-		self.__avg = svm_model('/home/childs/data/Tools/GenerateMFE/mfe_avg.model')
-		#self.__std = svm_model('/home/childs/data/Tools/GenerateMFE/mfe_std.model')
-		infile = open('/home/childs/data/Tools/GenerateMFE/mfe.range')
+	def __init__(self, typ='mfe'):
+		self.__avg = svm_model(os.path.join(mfe, '%s_avg.model'%typ))
+		self.__std = svm_model(os.path.join(mfe, '%s_std.model'%typ))
+		infile = open(os.path.join(mfe, '%s.range'%typ))
 		infile.readline()
 		self.__tgt = tuple(map(float, infile.readline().split()))
 		self.__len_lim = tuple(map(float, infile.readline().split()[1:]))
@@ -20,8 +23,8 @@ class MFEGenerator:
 		atcg = self.__scale(atcg, self.__atcg_lim)
 		at = self.__scale(at, self.__at_lim)
 		cg = self.__scale(cg, self.__cg_lim)
-		return (self.__avg.predict((0, l, atcg, at, cg)))#,
-		 #self.__std.predict((0, l, atcg, at, cg)))
+		return self.__avg.predict((0, l, atcg, at, cg)),\
+		 self.__std.predict((0, l, atcg, at, cg))
 	
 	def __scale(self, a, alim):
 		blim = self.__tgt
@@ -35,10 +38,11 @@ def main(argv):
 	infile = open(argv[1])
 	for line in infile:
 		parts = line.split()
-		exp = float(parts[0])
-		l, atcg, at, cg = map(lambda x:float(x.split(':')[1]), parts[1:])
-		obs_avg = mfes.generate(l, atcg, at, cg)
-		sys.stdout.write('%.3f\t%.3f\n'%(exp, obs_avg))
+		exp_avg = float(parts[1])
+		exp_std = float(parts[2])
+		l, atcg, at, cg = map(float, parts[0].split(';'))
+		obs_avg, obs_std = mfes.generate(l, atcg, at, cg)
+		sys.stdout.write('%.3f\t%.3f\t%.3f\t%.3f\n'%(exp_avg, obs_avg, exp_std, obs_std))
 	infile.close()
 
 if __name__ == '__main__':

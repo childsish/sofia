@@ -49,9 +49,8 @@ class RNAFolder:
 		os.rmdir(self.cwd)
 		self.__prc.communicate()
 	
-	def scan(self, seq, win):
-		stcs = []
-		mfes = numpy.empty(len(seq), dtype=numpy.float32)
+	def scan(self, seq, win=50, prp_idx=1):
+		res = []
 		for i in xrange(len(seq)):
 			fr = i - win / 2
 			if fr < 0:
@@ -60,10 +59,9 @@ class RNAFolder:
 			if to > len(seq):
 				to = len(seq)
 			
-			stc, mfe = self.fold(seq[fr:to])[:2]
-			stcs.append(stc)
-			mfes[i] = mfe
-		return stcs, mfes
+			prp = self.fold(seq[fr:to])[prp_idx]
+			res.append(prp)
+		return res
 
 	def fold(self, seq):
 		self.__prc.stdin.write(seq)
@@ -203,6 +201,44 @@ class RNAHybrid:
 			bpp = self.__readDot(os.path.join(self.cwd, 'dot.ps'))
 			return stc, mfe, emfe, cstc, cmfe, cdst, frq, div, bpp
 		return stc, mfe
+
+class VSFolder:
+	def __init__(self):
+		self.cwd = tempfile.mkdtemp()
+		self.__cmd = ['/home/childs/opt/vsfold5_Linux32/vsfold5']
+	
+	#def __del__(self):
+		#for fname in os.listdir(self.cwd):
+			#os.remove(os.path.join(self.cwd, fname))
+		#os.rmdir(self.cwd)
+		#self.__prc.communicate()
+	
+	def scan(self, seq, win=50):
+		res = []
+		for i in xrange(len(seq)):
+			fr = i - win / 2
+			if fr < 0:
+				fr = 0
+			to = i + win / 2
+			if to > len(seq):
+				to = len(seq)
+			
+			prp = self.fold(seq[fr:to])
+			res.append(prp)
+		return numpy.array(res)
+
+	def fold(self, seq):
+		prc = Popen(self.__cmd, stdin=PIPE, stdout=PIPE, cwd=self.cwd)
+		stdout, stderr = prc.communicate(seq)
+		res = []
+		for line in stdout.split('\n'):
+			if line.startswith('dG_local:'):
+				res.append(float(line.split()[1]))
+			elif line.startswith('dG_global:'):
+				res.append(float(line.split()[1]))
+			elif line.startswith('dG_total:'):
+				res.append(float(line.split()[1]))
+		return res
 
 def calculateAccessibility(seq, w=50, u=4):
 	cwd = tempfile.mkdtemp()

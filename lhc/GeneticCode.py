@@ -126,9 +126,12 @@ class GeneticCode:
 class GeneticCodes:
 	def __init__(self, filename = geneticcodes):
 		self.__codes = {}
+		self.__name2id = {}
 		self.__parseFile(filename)
 
 	def __getitem__(self, key):
+		if isinstance(key, basestring):
+			key = self.__name2id[key]
 		return self.__codes[key]
 
 	def getCode(self, id):
@@ -137,14 +140,23 @@ class GeneticCodes:
 	def translate(self, seq, id):
 		return self[id].translate(seq)
 	
+	def getValidNames(self):
+		return self.__name2id.keys()
+	
 	def __parseFile(self, filename):
 		infile = file(filename)
 		line = infile.readline()
+		names = []
 		while line != '':
-			if line[2:4] == 'id':
-				id = line[5:line.find(',')].strip()
+			if line[2:6] == 'name':
+				names.append(line[line.find('"') + 1: line.rfind('"')])
+			elif line[2:4] == 'id':
+				id_ = int(line[5:line.find(',')].strip())
 				na2aa = self.__parseCode(infile)
-				self.__codes[id] = GeneticCode(na2aa)
+				self.__codes[id_] = GeneticCode(na2aa)
+				for name in names:
+					self.__name2id[name] = id_
+				names = []
 			line = infile.readline()
 		infile.close()
 

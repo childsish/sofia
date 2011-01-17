@@ -45,6 +45,8 @@ def main(argv):
 		import gra_h as ftr
 	elif 'gra_s' in argv:
 		import gra_s as ftr
+	elif 'gen' in argv:
+		import gen as ftr
 	else:
 		raise Exception('No feature calculator selected.')
 	

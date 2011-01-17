@@ -2,32 +2,27 @@
 
 import numpy
 
-try:
-	import psyco
-	psyco.full()
-except ImportError:
-	import sys
-	sys.stderr.write('Unable to import psyco')
-
 X = 0 # True positives
 Y = 1 # False positives
 A = 2 # Area under curve
 T = 3 # Threshold
 
-def roc(points, pve):
-	"""
-	points: sorted list of points in the form [[value, class]]
-	pve: the symbol for the class with low values.
+def roc(clss, vals):
+	""" clss: boolean. True if positive case, False if the negative case
+	vals: list of real numbers.
 	"""
 	global X, Y, A, T
 	
-	length = len(points) + 1
+	clss = clss[numpy.argsort(vals)]
+	vals = numpy.sort(vals)
+	
+	length = len(clss) + 1
 	data = numpy.empty( (4, length) , dtype=numpy.float32)
 	data[X, 0] = 0; data[Y, 0] = 0; data[A, 0] = 0
-	data[T, 0] = points[0][0]
+	data[T, 0] = clss[0]
 	
 	for i in xrange(length-1):
-		if points[i][1] == pve:
+		if clss[i]:
 			data[X, i+1] = data[X, i]
 			data[Y, i+1] = data[Y, i] + 1
 			data[A, i+1] = data[A, i]
@@ -36,8 +31,7 @@ def roc(points, pve):
 			data[Y, i+1] = data[Y, i]
 			data[A, i+1] = data[A, i] + data[Y, i+1]
 	
-		data[T, i+1] = points[i][0]
-	#data[A,:] = data[A,:] / data[A:-1]
+		data[T, i+1] = vals[i]
 	return data
 
 def getRates(roc):
@@ -51,26 +45,18 @@ def parseLine(line):
 def main(argv = None):
 	global X, Y, A, T
 	
-	if len(argv) != 3:
-		print 'Usage ./roc.py <infile> <class>'
-		sys.exit(1)
-	
 	infile = file(argv[1])
 	infile.readline()
-	points = [parseLine(line) for line in infile]
-	points.sort()
+	points = numpy.array([map(float, line.split()) for line in infile])
 	infile.close()
 	
-	data = roc(points, argv[2])
+	data = roc(points[:,0], points[:,1])
 	nCol, nRow = data.shape
 	
-	outfile = file(argv[1][:-3] + 'roc', 'w')
-	outfile.write('x\ty\ta\tt\n')
-	i = 0
-	while i < nRow:
-		outfile.write(str(data[X, i]) + '\t' + str(data[Y, i]) + '\t' + str(data[A, i]) + '\t' + str(data[T, i]) + '\n')
-		i += 1
-	outfile.close()
+	sys.stdout.write('x\ty\ta\tt\n')
+	for i in xrange(1, nRow):
+		sys.stdout.write('%.0f\t%.0f\t%.0f\t%.3f\n'%\
+		 (data[X,i], data[Y,i], data[A,i], data[T,i]))
 
 if __name__ == '__main__':
 	import sys

@@ -105,7 +105,7 @@ def calcFtrs(seq):
 		ftrs.append(numpy.sum(e))
 		ftrs.append(numpy.mean(e)) # Keep (Shuffled = 0.07)
 		ftrs.append(numpy.std(e)) # Keep (Shuffled = 0.07)
-	 # Branches - number, total size, average size
+	 # Branches - number, total size, average size, stddev
 	if len(f) == 0:
 		ftrs.extend((0, 0, 0, 0))
 	else:
@@ -113,6 +113,7 @@ def calcFtrs(seq):
 		ftrs.append(numpy.sum(f))
 		ftrs.append(numpy.mean(f))
 		ftrs.append(numpy.std(f))
+	 # Bridges - number, total size, average size, stddev
 	if len(g) == 0:
 		ftrs.extend((0, 0, 0, 0))
 	else:
@@ -156,11 +157,11 @@ def nameFtrs():
 	ftrs.append('Number of branches')
 	ftrs.append('Total size of branches')
 	ftrs.append('Average size of branches')
-	ftrs.append('Stddev of bridges')
+	ftrs.append('Stddev of branches')
 	ftrs.append('Number of bridges')
 	ftrs.append('Total size of bridges')
 	ftrs.append('Average size of bridges')
-	ftrs.append('Stddev of branches')
+	ftrs.append('Stddev of bridges')
 	return ftrs
 
 def main(argv):

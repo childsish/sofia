@@ -82,7 +82,7 @@ class IntervalTree:
 				self.stack.append(iternode)
 			return res.node.rng
 	
-	def __init__(self):
+	def __init__(self, rngs=None):
 		# Initialise sentinels
 		self.nil = Node(Range(-maxint-1, -maxint-1))
 		self.nil.l = self.nil
@@ -93,6 +93,10 @@ class IntervalTree:
 		self.head.l = self.nil
 		self.head.r = self.nil
 		self.head.p = self.nil
+		
+		if rngs != None:
+			for rng in rngs:
+				self.insert(rng)
 	
 	def __str__(self):
 		return self.__treePrintHelper(self.head.l)

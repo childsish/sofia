@@ -25,7 +25,7 @@ class IndexedFastaSequence:
 		Currently unsure whether this will work on different platforms.
 	"""
 	
-	def __init__(self, fname, idx_fr, idx_to, wrap, newlines, seq_fr=0, seq_to=sys.maxint):
+	def __init__(self, fname, idx_fr, idx_to, wrap, newlines, seq_fr=0, seq_to=None):
 		""" Intialises the entry. """
 		self.__fname = fname
 		self.__idx_fr = idx_fr
@@ -33,10 +33,12 @@ class IndexedFastaSequence:
 		self.__wrap = wrap
 		self.__newlines = newlines
 		self.__seq_fr = seq_fr
+		if seq_to == None:
+			seq_to = idx_to - idx_fr
 		self.__seq_to = seq_to
 	
 	def __len__(self):
-		return self.__seq_to - self.__seq_fr
+		return int(self.__seq_to - self.__seq_fr)
 	
 	def __str__(self):
 		offset_fr = self.__calcOffset(self.__seq_fr)
