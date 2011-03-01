@@ -28,23 +28,6 @@ def main():
 	# Get the arguments from the environment.
 	jobdir = os.environ['lc_jobdir']
 	
-<<<<<<< HEAD:parallel/pbs/PbsSlave.py
-		# Write local then copy.
-		handle, filename = tempfile.mkstemp()
-		prc_stdout = os.fdopen(handle, 'w')
-		try:
-			prc = Popen(c_args, stdout=prc_stdout)
-		except OSError, e:
-			prc_stdout.close()
-			os.remove(filename)
-			print c_args
-			raise e
-		prc.wait()
-		prc_stdout.close()
-		o_filename = os.path.basename(c_filename)
-		shutil.move(filename, os.path.join(jobdir, o_filename)) # Includes rm
-	infile.close()
-=======
 	if os.environ['lc_superjob'] == '0':
 		args = [val for key, val in sorted(os.environ.items(), key=lambda x:int(x[0][6:]))
 		 if key.startswith('lc_arg')]
@@ -55,7 +38,6 @@ def main():
 			outfname, cmd = line.split('\t')
 			execute(cmd, tmpdir, jobdir, outfname)
 		infile.close()
->>>>>>> 92a1ffad5ca9cf752ff091fe1d71e095ecc9b248:parallel/pbs/PbsSlave.py
 
 	for root, dirs, files in os.walk(tmpdir, topdown=False):
 		for name in files:
