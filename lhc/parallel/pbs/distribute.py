@@ -226,11 +226,12 @@ class Distributor:
 		os.makedirs(t_logdir)
 		
 		if n_jobs == None:
+			tmpdir = None
 			# Create all the jobs.
 			jobs = [ClusterJob(label,
 			  self.formatArgs(args,
 			   lc_jobdir=t_jobdir,
-			   lc_filename='.'.join(arglist),
+			   lc_filename='.'.join(map(os.path.basename, arglist)),
 			   lc_superjob='0'),
 			  t_logdir)
 			 for args, arglist in cmdgen.generateArguments()]
@@ -250,9 +251,10 @@ class Distributor:
 			del filenames
 		
 		# Track the running jobs in an array.
-		running_jobs = self.__max_jobs * [None]
 		if self.__max_jobs == None:
 			running_jobs = len(jobs) * [None]
+		else:
+			running_jobs = self.__max_jobs * [None]
 		
 		# Submit jobs to the cluster.
 		current_job = 0
@@ -280,9 +282,10 @@ class Distributor:
 				time.sleep(self.__sleep)
 		
 		# Cleanup
-		for filename in os.listdir(tmpdir):
-			os.remove(os.path.join(tmpdir, filename))
-		os.rmdir(tmpdir)
+		if tmpdir:
+			for filename in os.listdir(tmpdir):
+				os.remove(os.path.join(tmpdir, filename))
+			os.rmdir(tmpdir)
 		
 		return t_jobdir
 	
@@ -307,7 +310,7 @@ class Distributor:
 			if (i%n_jobs) == len(outs):
 				outfile = open(os.path.join(tmpdir, '%d'%(i%n_jobs,)), 'w')
 				outs.append(outfile)
-			outfname = '.'.join(arglist)
+			outfname = '.'.join(map(os.path.basename, arglist))
 			outfname = outfname.replace('/', '_')
 			outs[i%n_jobs].write('%s\t%s\n'%(outfname, ' '.join(args)))
 			i += 1
@@ -354,7 +357,7 @@ def main(argv = None):
 	#parser.add_argument('-c', '--config',
 	 #action='store', dest='config',
 	 #help='A configuration file for dealing with ranges of input')
-	parser.add_argument('-R', '--range', metavar=('FROM', 'TO', 'STEP', 'FORMAT'),
+	parser.add_argument('-R', '--range', metavar='FROM,TO,STEP,FORMAT',
 	 action='append', type=arg_range_adaptor, dest='args',
 	 help='The start, stop and step values of a range. The format is also necessary.')
 	parser.add_argument('-L', '--list', metavar='LIST',

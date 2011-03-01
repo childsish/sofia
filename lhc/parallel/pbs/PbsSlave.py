@@ -8,17 +8,16 @@ from subprocess import Popen
 
 def execute(cmd, lcldir, rmtdir, fname):
 	# Write local then copy.
-	prc_stdout = open(os.path.join(lcldir, fname))
+	prc_stdout = open(os.path.join(lcldir, fname), 'w')
 	try:
 		prc = Popen(cmd, stdout=prc_stdout)
 	except OSError, e:
 		prc_stdout.close()
-		os.remove(prc_stdout)
 		print cmd
 		raise e
 	prc.wait()
 	prc_stdout.close()
-	shutil.move(filename, os.path.join(rmtdir, fname)) # Includes rm
+	shutil.move(fname, os.path.join(rmtdir, fname)) # Includes rm
 
 def main():
 	# Change directory to the local /tmp.
@@ -29,13 +28,16 @@ def main():
 	jobdir = os.environ['lc_jobdir']
 	
 	if os.environ['lc_superjob'] == '0':
-		args = [val for key, val in sorted(os.environ.items(), key=lambda x:int(x[0][6:]))
-		 if key.startswith('lc_arg')]
-		execute(' '.join(args), tmpdir, jobdir, os.environ['lc_filename'])
+		argkeys = sorted((key for key in os.environ if key.startswith('lc_arg')),
+		 key=lambda x:int(x[6:]))
+		argvals = [os.environ[key] for key in argkeys]
+		execute(argvals, tmpdir, jobdir, os.environ['lc_filename'])
 	else:
 		infile = open(os.environ['lc_filename'])
 		for line in infile:
-			outfname, cmd = line.split('\t')
+			parts = line.split('\t')
+			outfname = parts[0]
+			cmd = parts[1:]
 			execute(cmd, tmpdir, jobdir, outfname)
 		infile.close()
 
