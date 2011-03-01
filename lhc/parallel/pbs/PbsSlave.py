@@ -38,7 +38,7 @@ def main():
 			prc = Popen(c_args, stdout=prc_stdout)
 		except OSError, e:
 			prc_stdout.close()
-			os.remove(prc_stdout)
+			os.remove(filename)
 			print c_args
 			raise e
 		prc.wait()

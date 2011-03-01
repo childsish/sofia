@@ -44,9 +44,10 @@ class RNAFolder:
 		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=close_fds, cwd=self.cwd)
 	
 	def __del__(self):
-		for fname in os.listdir(self.cwd):
-			os.remove(os.path.join(self.cwd, fname))
-		os.rmdir(self.cwd)
+		if os.path.exists(self.cwd):
+			for fname in os.listdir(self.cwd):
+				os.remove(os.path.join(self.cwd, fname))
+			os.rmdir(self.cwd)
 		self.__prc.communicate()
 	
 	def scan(self, seq, win=50, prp_idx=1):
