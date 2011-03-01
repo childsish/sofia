@@ -24,7 +24,7 @@ from optparse import OptionParser
 from paths import cluster
 from subprocess import Popen, PIPE
 
-REPLACEME = '@@'
+FILE_PLACEHOLDER = '@@'
 USAGE = """usage: %prog [options] executable [executable_args]"""
 
 class CpuJob(threading.Thread):
@@ -41,15 +41,15 @@ class CpuJob(threading.Thread):
 			c_filename = os.path.join(self.jobdir, os.path.basename(line.strip()))
 			c_args = self.args[:]
 			for i in xrange(len(c_args)):
-				if REPLACEME in c_args[i]:
-					c_args[i] = c_args[i].replace(REPLACEME, line.strip())
+				if FILE_PLACEHOLDER in c_args[i]:
+					c_args[i] = c_args[i].replace(FILE_PLACEHOLDER, line.strip())
 			
 			prc_stdout = open(c_filename, 'w')
 			try:
 				prc = Popen(c_args, stdout=prc_stdout)
 			except OSError, e:
 				prc_stdout.close()
-				os.remove(prc_stdout)
+				os.remove(prc_stdout.name)
 				print c_args
 				raise e
 			prc.wait()
@@ -60,13 +60,14 @@ class Distributor:
 	
 	SLEEP = 30.0
 	
-	def __init__(self, max_jobs, sleep=SLEEP):
+	def __init__(self, max_jobs, sleep=SLEEP, outdir=cluster.jobdir):
 		""" Initialise the Distributor to run, at most, max_jobs and wait sleep
 		   sleep seconds between checking if any jobs are finished.
 		"""
 		self.__max_jobs = max_jobs
 		self.__inputs = []
 		self.__sleep = sleep
+		self.__outdir = outdir
 		
 		infile = open('/proc/cpuinfo')
 		self.__max_cpus = len([line for line in infile if line.startswith('processor')])
@@ -80,7 +81,7 @@ class Distributor:
 		timestamp = time.strftime('%y%m%d_%H%M%S')
 		
 		# Create timestamped job directory
-		t_jobdir = os.path.join(cluster.jobdir,
+		t_jobdir = os.path.join(self.__outdir,
 		                        os.path.basename(args[0].split()[0]),
 		                        timestamp)
 		os.makedirs(t_jobdir)
@@ -104,31 +105,29 @@ class Distributor:
 		started_jobs = 0
 		stopped_jobs = 0
 		while stopped_jobs < len(jobs):
-			if running_jobs[current_job] != None and\
-			   not jobs[running_jobs[current_job]].isAlive():
-				when = time.strftime('%d/%m/%y %H:%M:%S')
-				print ' stopping job %d (%s)'%(running_jobs[current_job],when)
-				stopped_jobs += 1
-				jobs[running_jobs[current_job]].join()
-				running_jobs[current_job] = None
+			infile = open('/proc/loadavg')
+			available = self.__max_cpus - float(infile.readline().split()[0])
+			infile.close()
 			
-			if running_jobs[current_job] == None and\
-			   started_jobs < len(jobs):
-				infile = open('/proc/loadavg')
-				used = float(infile.readline().split()[0])
-				infile.close()
-				if self.__max_cpus - used >= 1:
+			for current_job in len(running_jobs):
+				if running_jobs[current_job] != None and\
+				 not jobs[running_jobs[current_job]].isAlive():
 					when = time.strftime('%d/%m/%y %H:%M:%S')
-					print 'starting job %d (%s)'%(started_jobs,when)
-					running_jobs[current_job] = started_jobs
-					jobs[started_jobs].start()
-					started_jobs += 1
-			
-			current_job += 1
-			if current_job >= len(running_jobs):
-				current_job = 0
-				time.sleep(self.__sleep)
-		
+					print ' stopping job %d (%s)'%(running_jobs[current_job],when)
+					stopped_jobs += 1
+					jobs[running_jobs[current_job]].join()
+					running_jobs[current_job] = None
+				
+				if running_jobs[current_job] == None and\
+				 started_jobs < len(jobs) and available > 0:
+					if self.__max_cpus - used >= 1:
+						when = time.strftime('%d/%m/%y %H:%M:%S')
+						print 'starting job %d (%s)'%(started_jobs,when)
+						running_jobs[current_job] = started_jobs
+						jobs[started_jobs].start()
+						started_jobs += 1
+						available -= 1
+			time.sleep(self.__sleep)
 		# Cleanup
 		for filename in os.listdir(tmpdir):
 			os.remove(os.path.join(tmpdir, filename))
