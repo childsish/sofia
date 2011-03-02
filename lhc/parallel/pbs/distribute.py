@@ -323,6 +323,8 @@ class Distributor:
 		return tmpdir
 
 def arg_range_adaptor(arg):
+	if arg[0] == 'r':
+		arg = arg[1:]
 	fr, to, step, fmt = arg.split(',')
 	return ArgumentRange(float(fr), float(to), float(step), fmt)
 
