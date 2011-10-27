@@ -4,9 +4,12 @@ class AssociationDatabase(Database):
 	def __init__(self, db=':memory:'):
 		Database.__init__(self, db)
 		
-		self.trts = sorted((row[0] for row in
+		self.trts = set((row[0] for row in
 		 self.conn.execute('SELECT DISTINCT trait FROM Association')))
-		#self.chms = sorted(self.conn.execute('SELECT DISTINCT chm FROM Association'))
+		self.chms = set((row[0] for row in
+		 self.conn.execute('SELECT DISTINCT chm FROM Association')))
+		self.poss = set((row[0] for row in
+		 self.conn.execute('SELECT DISTINCT pos FROM Association')))
 	
 	def createTables(self):
 		self.conn.execute('''CREATE TABLE Association (
@@ -18,6 +21,19 @@ class AssociationDatabase(Database):
 	def createIndices(self):
 		self.conn.execute('''CREATE INDEX IF NOT EXISTS ass_idx ON Association
 		 (trait, chm, pos)''')
+	
+	def getPosition(self, trt, chm, pos):
+		if trt not in self.trts:
+			raise Exception('Invalid trait: %s'%trt)
+		elif chm not in self.chms:
+			raise Exception('Invalid chromosome: %s'%chm)
+		elif pos not in self.poss:
+			raise Exception('Invalid position: %d'%pos)
+		qry = 'SELECT lod FROM Association WHERE trait = ? AND chm = ? and pos = ?'
+		res = self.conn.execute(qry, (trt, chm, pos)).fetchone()
+		if res == None:
+			raise Exception('Invalid association')
+		return res[0]
 	
 	def getRange(self, trt, chm, fr, to):
 		stmt = '''SELECT pos, lod FROM Association WHERE trait = ? AND chm = ? AND

@@ -26,8 +26,19 @@ class Database(object):
 			return self.curs.execute(qry)
 		return self.curs.execute(qry, args)
 	
+	def commit(self):
+		self.conn.commit()
+	
 	def close(self):
 		""" Create indices and close the connection """
 		self.curs.close()
 		self.conn.commit()
 		self.conn.close()
+	
+	def getTables(self):
+		qry = '''SELECT name FROM sqlite_master WHERE type='table' ORDER BY name'''
+		return (row[0] for row in self.conn.execute(qry))
+	
+	def getIndices(self):
+		qry = '''SELECT name FROM sqlite_master WHERE type='index' ORDER BY name'''
+		return (row[0] for row in self.conn.execute(qry))

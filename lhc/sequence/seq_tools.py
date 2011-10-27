@@ -3,6 +3,8 @@
 import numpy
 import string
 
+from subprocess import Popen, PIPE
+
 def gc(seq):
 	gc = sum([seq.count(base) for base in 'gcGC'])
 	return gc / float(len(seq))
@@ -28,6 +30,27 @@ def kContent(seq, k):
 	for i in xrange(len(seq) - k + 1):
 		res[seq[i:i + k]] += 1
 	return res
+
+def align(seq1, seq2, args=[]):
+	cmd = ['muscle']
+	cmd.extend(args)
+	prc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+	stdout, stderr = prc.communicate('>seq1\n%s\n>seq2\n%s\n'%(seq1, seq2))
+	#if stderr != '':
+	#	raise Exception(stderr)
+	seq1 = []
+	seq2 = []
+	cur = seq1
+	for line in stdout.split():
+		if line.startswith('>seq1'):
+			continue
+		elif line.startswith('>seq2'):
+			cur = seq2
+			continue
+		
+		cur.append(line.strip())
+		
+	return ''.join(seq1), ''.join(seq2)
 
 """
 Complement transformation (Degenerate Code)

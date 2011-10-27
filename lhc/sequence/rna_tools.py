@@ -39,7 +39,7 @@ class RNAFolder:
 	def __init__(self, p=False, close_fds=True):
 		self.__p = p
 		self.cwd = tempfile.mkdtemp()
-		args = [rnafold, '-noPS']
+		args = [rnafold, '-noPS', '-C']
 		if p: args.append('-p')
 		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=close_fds, cwd=self.cwd)
 	
@@ -50,7 +50,9 @@ class RNAFolder:
 			os.rmdir(self.cwd)
 		self.__prc.communicate()
 	
-	def scan(self, seq, win=50, prp_idx=1):
+	def scan(self, seq, win=50, cnst=None, prp_idx=1):
+		if cnst == None:
+			cnst = ''.join(len(seq) * '.')
 		res = []
 		for i in xrange(len(seq)):
 			fr = i - win / 2
@@ -60,13 +62,14 @@ class RNAFolder:
 			if to > len(seq):
 				to = len(seq)
 			
-			prp = self.fold(seq[fr:to])[prp_idx]
+			prp = self.fold(seq[fr:to], cnst[fr:to])[prp_idx]
 			res.append(prp)
-		return res
+		return numpy.array(res)
 
-	def fold(self, seq):
-		self.__prc.stdin.write(seq)
-		self.__prc.stdin.write('\n')
+	def fold(self, seq, cnst=None):
+		if cnst == None:
+			cnst = ''.join(len(seq) * '.')
+		self.__prc.stdin.write('%s\n%s\n'%(seq, cnst))
 		self.__prc.stdin.flush()
 		
 		# Sequence
@@ -225,7 +228,7 @@ class VSFolder:
 				to = len(seq)
 			
 			prp = self.fold(seq[fr:to])
-			res.append(prp)
+			res.append(prp[2])
 		return numpy.array(res)
 
 	def fold(self, seq):
@@ -241,10 +244,13 @@ class VSFolder:
 				res.append(float(line.split()[1]))
 		return res
 
-def calculateAccessibility(seq, w=50, u=4):
+def calculateAccessibility(seq, w=50, u=4, quiet=True):
 	cwd = tempfile.mkdtemp()
-	prc = Popen([rnaplfold, '-W', '%d'%w, '-u', '%d'%u], stdin=PIPE, stdout=PIPE, cwd=cwd,
-	 close_fds=True)
+	prc_stdout = PIPE
+	if not quiet:
+		prc_stdout = None
+	prc = Popen([rnaplfold, '-W', '%d'%w, '-u', '%d'%u], stdin=PIPE, stdout=prc_stdout,
+	 cwd=cwd, close_fds=True)
 	prc.stdin.write(seq + '\n')
 	prc.communicate()
 	
@@ -318,36 +324,54 @@ def scan(argv):
 	if 'mfe' in options.output:
 		r['dev.off']()
 
-def hybridise(seq1, seq2):
+def hybridise(seq1, seq2, quiet=True):
 	FREE2BIND = '/home/childs/opt/free2bind/free_align.pl'
 	FREE2BINDWD = '/home/childs/opt/free2bind/'
 	seq2 = seq2[::-1] # Free2bind assumes co-directional strands.
-	aff = None
 	ctcs = []
-	s1s = None
 	prc = Popen([FREE2BIND, seq1, seq2], stdout=PIPE, cwd=FREE2BINDWD)
-	for line in prc.stdout:
-		#print line[:-1]
+	lines = prc.stdout.readlines()
+	if not quiet:
+		print ''.join(lines)
+	seq1 = []
+	seq2 = []
+	strc = []
+	idx = False
+	for line in lines:
+		if line.startswith('seq1') and '0: ' in line:
+			idx = line.index(':')
+		
 		if line.startswith('Delta-G for best pairing'):
+			#print line.split('=')
 			aff = float(line.split('=')[1])
-		elif line.startswith('seq1  0:'):
-			line = line[9:]
-			s1s = 0
-			for i in xrange(len(line)):
-				if line[i] == ' ':
-					s1s += 1
-				else:
-					break
-		elif line.startswith('       :'):
-			line = line.strip()[2+s1s:]
-			gap = 0
-			for i in xrange(len(line)):
-				if line[i] == '|':
-					ctcs.append(i - gap)
-				elif line[i] == 'b':
-					gap += 1
+		elif idx and len(line) > 9 and line[idx] == ':':
+			seq = line[idx + 2:-1]
+			if line.startswith('seq1'):
+				seq1.append(seq)
+			elif line.startswith('seq2'):
+				seq2.append(seq)
+			else:
+				strc.append(seq)
 	prc.communicate()
-	return aff, numpy.array(ctcs)
+	seq1 = ''.join(seq1)
+	seq2 = ''.join(seq2)
+	strc = ''.join(strc)
+	
+	s1s = 0
+	s2s = 0
+	s1ctc = []
+	s2ctc = []
+	for i in xrange(len(seq1)):
+		if strc[i] == '|':
+			s1ctc.append(s1s)
+		if seq1[i] not in ' -':
+			s1s += 1
+	for i in xrange(len(seq2)):
+		if strc[len(seq2) - i - 1] == '|':
+			s2ctc.append(s2s)
+		if seq2[len(seq2) - i - 1] not in ' -':
+			s2s += 1
+	return aff, numpy.array(s1ctc), numpy.array(s2ctc)
 
 def main(argv):
 	tool = RNADistance()
