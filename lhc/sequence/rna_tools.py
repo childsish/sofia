@@ -4,6 +4,7 @@ import numpy
 import os
 import re
 import tempfile
+import RNA
 
 from seq_tools import gc
 from paths.rna_tools import matrices
@@ -36,11 +37,12 @@ class RNACalibrator:
 		return b.argsort()[0]
 
 class RNAFolder:
-	def __init__(self, p=False, close_fds=True):
+	def __init__(self, p=False, close_fds=False):
+		"""p: calculate partition function"""
 		self.__p = p
 		self.cwd = tempfile.mkdtemp()
-		args = [rnafold, '-noPS', '-C']
-		if p: args.append('-p')
+		args = [rnafold, '--noPS', '-C']
+		if p: args.append('-p2')
 		self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=close_fds, cwd=self.cwd)
 	
 	def __del__(self):
@@ -67,17 +69,22 @@ class RNAFolder:
 		return numpy.array(res)
 
 	def fold(self, seq, cnst=None):
+		if not self.__p:
+			return RNA.fold(seq)
+		print seq
 		if cnst == None:
 			cnst = ''.join(len(seq) * '.')
-		self.__prc.stdin.write('%s\n%s\n'%(seq, cnst))
+		print cnst
+		self.__prc.stdin.write('%s\n%s\n\n\n\n'%(seq, cnst))
 		self.__prc.stdin.flush()
 		
 		# Sequence
-		self.__prc.stdout.readline()
+		line = self.__prc.stdout.readline()
 		
 		# Minimum free energy structure and MFE
 		line = self.__prc.stdout.readline()
 		stc = line[:len(seq)]
+		print line.strip()
 		mfe = float(line[len(seq)+2:-2])
 		
 		if self.__p:
@@ -99,7 +106,7 @@ class RNAFolder:
 			div = float(parts[9])
 			
 			# Base-pairing probabilities
-			bpp = self.__readDot(os.path.join(self.cwd, 'dot.ps'))
+			bpp = self.__readDot(os.path.join(self.cwd, 'dot2.ps'))
 			return stc, mfe, emfe, cstc, cmfe, cdst, frq, div, bpp
 		return stc, mfe
 
@@ -244,14 +251,17 @@ class VSFolder:
 				res.append(float(line.split()[1]))
 		return res
 
-def calculateAccessibility(seq, w=50, u=4, quiet=True):
+def accessibility(seq, w=50, u=4, quiet=True):
+	if u == 0:
+		raise ValueError('u must be greater than or equal to 1')
 	cwd = tempfile.mkdtemp()
 	prc_stdout = PIPE
 	if not quiet:
 		prc_stdout = None
 	prc = Popen([rnaplfold, '-W', '%d'%w, '-u', '%d'%u], stdin=PIPE, stdout=prc_stdout,
 	 cwd=cwd, close_fds=True)
-	prc.stdin.write(seq + '\n')
+	prc.stdin.write(seq)
+	prc.stdin.write('\n')
 	prc.communicate()
 	
 	infile = open(os.path.join(cwd, 'plfold_lunp'))
@@ -327,7 +337,7 @@ def scan(argv):
 def hybridise(seq1, seq2, quiet=True):
 	FREE2BIND = '/home/childs/opt/free2bind/free_align.pl'
 	FREE2BINDWD = '/home/childs/opt/free2bind/'
-	seq2 = seq2[::-1] # Free2bind assumes co-directional strands.
+	seq2 = seq2[::-1] # Free2bind assumes seq2 is 3' to 5'
 	ctcs = []
 	prc = Popen([FREE2BIND, seq1, seq2], stdout=PIPE, cwd=FREE2BINDWD)
 	lines = prc.stdout.readlines()
@@ -372,6 +382,24 @@ def hybridise(seq1, seq2, quiet=True):
 		if seq2[len(seq2) - i - 1] not in ' -':
 			s2s += 1
 	return aff, numpy.array(s1ctc), numpy.array(s2ctc)
+
+def hybridise_scan(seq1, seq2):
+	handle, fname = tempfile.mkstemp()
+	os.write(handle, '>seq\n%s'%seq1)
+	os.close(handle)
+	
+	FREE2BIND = '/home/childs/opt/free2bind/free_scan.pl'
+	FREE2BINDWD = '/home/childs/opt/free2bind/'
+	seq2 = seq2[::-1] # Free2bind assumes seq2 is 3' to 5'
+	
+	prc = Popen([FREE2BIND, '-e', '-q', seq2, fname],
+	 stdout=PIPE, stderr=PIPE, cwd=FREE2BINDWD)
+	stdout, stderr = prc.communicate()
+	if stderr not in ('', None):
+		raise Exception(stderr)
+	parts = (part for part in stdout.split('\n') if part.strip() != '')
+	res = numpy.array(map(float, parts))
+	return res
 
 def main(argv):
 	tool = RNADistance()

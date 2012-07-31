@@ -16,6 +16,7 @@ char* generate(const int* frq)
 	int* abs_imb = abs(imb, N_BASE);
 	int sum_abs_imb = sum(abs_imb, N_BASE);
 	if (sum_abs_imb > 2) {
+		// No valid sequence can be generated with this frequency. Cleanup and return NULL
 		delete [] abs_imb;
 		abs_imb = NULL;
 		delete [] imb;
@@ -38,12 +39,6 @@ char* generate(const int* frq)
 		to = N_DNUC;
 	}
 	
-	// Insert the next nodes sequentially onto the stack
-//	for (int idx = fr; idx < to; ++idx) {
-//		if (frq[idx] <= 0) { continue; }
-//		Node* node = new Node(idx, frq, BASES[(idx)/N_BASE], seq_len);
-//		stk.push(node);
-//	}
 	// Insert the next nodes randomly onto the stack
 	int* order = randomOrder(frq, fr, to);
 	for (int i = 0; i < to-fr; ++i) {
@@ -69,36 +64,28 @@ char* generate(const int* frq)
 		stk.pop();
 		cur->frq[cur->i] -= 1;
 		
-		if (split(cur->frq)) { continue; }
+		if (split(cur->frq)) {
+			// Cleanup node if we split the graph
+			delete cur;
+			cur = NULL;
+			continue;
+		}
 		
 		cur->pth[strlen(cur->pth)] = BASES[cur->i%N_BASE];
 		if (strlen(cur->pth) == seq_len) {
+			// We've found a possibility
 			char* res = new char[seq_len+1];
 			strcpy(res, cur->pth);
+			
+			// Cleanup node
 			delete cur;
 			cur = NULL;
 			return res;
 		}
 		
-// 		// Calculate the imbalance
-// 		int* imb = imbalance(cur->frq);
-// 		int* abs_imb = abs(imb, N_BASE);
-// 		int sum_abs_imb = sum(abs_imb, N_BASE);
-// 		delete [] abs_imb;
-// 		abs_imb = NULL;
-// 		delete [] imb;
-// 		imb = NULL;
-// 		if ((sum_abs_imb > 2)) { continue; }
-		
 		int fr = (cur->i%N_BASE)*N_BASE;
 		int to = fr + N_BASE;
 		
-		// Insert the next nodes sequentially onto the stack
-//		for (int idx = fr; idx < to; ++idx) {
-//			if (frq[idx] <= 0) { continue; }
-//			Node* node = new Node(idx, frq, BASES[(idx)/N_BASE], seq_len);
-//			stk.push(node);
-//		}
 		// Insert the next nodes randomly onto the stack
 		int* order = randomOrder(cur->frq, fr, to);
 		for (int i = 0; i < to-fr; ++i) {
@@ -110,7 +97,7 @@ char* generate(const int* frq)
 		}
 		delete [] order;
 		order = NULL;
-
+		
 		delete cur;
 		cur = NULL;
 	}
@@ -170,6 +157,7 @@ bool split(const int* frq)
 	return false;
 }
 
+// Calculate the imbalance
 int* imbalance(const int* frq)
 {
 	int* res = new int[N_BASE];
@@ -183,6 +171,7 @@ int* imbalance(const int* frq)
 	return res;
 }
 
+// Helper function
 int sum(const int* arr, int n)
 {
 	int res = 0;
@@ -191,6 +180,7 @@ int sum(const int* arr, int n)
 	return res;
 }
 
+// Helper function
 int* abs(const int* arr, int n)
 {
 	int* res = new int[n];
@@ -200,6 +190,7 @@ int* abs(const int* arr, int n)
 }
 
 int consumer(const int* arr)
+/* Return the consumer else return -1 */
 {
 	for (int i = 0; i < N_BASE; ++i)
 		if (arr[i] == -1) return i;

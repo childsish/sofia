@@ -2,7 +2,7 @@ from Database import Database
 
 class SequenceDatabase(Database):
 	
-	SEGMENT_SIZE = 2000
+	SEGMENT_SIZE = 10000
 	
 	class Sequence(object):
 		def __init__(self, seq_id, curs):

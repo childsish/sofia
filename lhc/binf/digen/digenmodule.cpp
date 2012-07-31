@@ -4,15 +4,15 @@
 
 static PyObject* digen_generate(PyObject* self, PyObject* args)
 {
+	PyObject* obj;
+	if (!PyArg_ParseTuple(args, "O", &obj))
+		return NULL;
+	
 	int* frq = new int[N_DNUC];
 	for (int i = 0; i < N_DNUC; ++i)
 	{
 		frq[i] = 0;
 	}
-	PyObject* obj;
-	
-	if (!PyArg_ParseTuple(args, "O", &obj))
-		return NULL;
 	
 	Py_ssize_t pos = 0;
 	PyObject* pkey;
@@ -27,11 +27,7 @@ static PyObject* digen_generate(PyObject* self, PyObject* args)
 	}
 	
 	char* cres = generate(frq);
-	PyObject* pres = Py_None;
-	if (cres == NULL)
-		Py_INCREF(Py_None);
-	else
-		pres = Py_BuildValue("s", cres);
+	PyObject* pres = Py_BuildValue("s", cres);
 	delete [] cres;
 	cres = NULL;
 	return pres;

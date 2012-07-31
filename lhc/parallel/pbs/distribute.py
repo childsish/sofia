@@ -184,8 +184,6 @@ class CommandLineGenerator(object):
 		if len(self) == 0:
 			return
 		
-		print self.arglist
-		print self.__argdict
 		keys = sorted(self.__argdict, key=lambda x:self.arglist.index(x))
 		vals = [self.__argdict[key] for key in keys]
 		for arglist in product(*vals):
@@ -193,9 +191,14 @@ class CommandLineGenerator(object):
 			args = []
 			for arg in self.arglist:
 				if arg in argdict:
-					args.append(argdict[arg])
+					val = argdict[arg]
 				else:
-					args.append(arg)
+					val = arg
+				
+				if hasattr(val, '__iter__'):
+					args.extend(val)
+				else:
+					args.append(val)
 			yield (args, arglist)
 
 class Distributor:
@@ -225,17 +228,31 @@ class Distributor:
 		t_logdir = os.path.join(cluster.logdir, label, timestamp)
 		os.makedirs(t_logdir)
 		
+		#  A dirty hack just to get things working for now. I need a way to map the
+		# filename to the arguments. Otherwise I'm trying to write filenames that are
+		# too long.
+		outfile = open(os.path.join(cluster.jobdir, label, '%s.map'%(timestamp,)), 'w')
 		if n_jobs == None:
 			tmpdir = None
 			# Create all the jobs.
-			jobs = [ClusterJob(label,
-			  self.formatArgs(args,
-			   lc_jobdir=t_jobdir,
-			   lc_filename='.'.join(map(os.path.basename, arglist)),
-			   lc_superjob='0'),
-			  t_logdir)
-			 for args, arglist in cmdgen.generateArguments()]
+			jobs = []
+			c_job = 0
+			for args, arglist in cmdgen.generateArguments():
+				jobs.append(ClusterJob(label, self.formatArgs(args,
+				 lc_jobdir=t_jobdir,
+				 lc_filename=str(c_job),
+				 lc_superjob='0'), t_logdir))
+				outfile.write('%d\t%s\n'%(c_job, '\t'.join(map(str, arglist))))
+				c_job += 1
+			#jobs = [ClusterJob(label,
+			#  self.formatArgs(args,
+			#   lc_jobdir=t_jobdir,
+			#   lc_filename='.'.join(map(os.path.basename, arglist)),
+			#   lc_superjob='0'),
+			#  t_logdir)
+			# for args, arglist in cmdgen.generateArguments()]
 		else:
+			raise NotImplementedError('This functionality has been disabled for now')
 			# Partition the jobs into n_jobs jobs.
 			tmpdir = self.__allocate(cmdgen, n_jobs)
 			filenames = os.listdir(tmpdir)
@@ -249,6 +266,7 @@ class Distributor:
 			  t_logdir)
 			 for i in xrange(len(filenames))]
 			del filenames
+		outfile.close()
 		
 		# Track the running jobs in an array.
 		if self.__max_jobs == None:
@@ -317,9 +335,6 @@ class Distributor:
 		for outfile in outs:
 			oufile.close()
 		
-		print tmpdir
-		sys.exit(1)
-		
 		return tmpdir
 
 def arg_range_adaptor(arg):
@@ -333,6 +348,12 @@ def arg_list_adaptor(arg):
 
 def arg_directory_adaptor(arg):
 	return ArgumentDirectory(arg, True)
+
+def arg_file_adaptor(arg):
+	infile = open(arg)
+	lst = [line.strip().split() for line in infile]
+	infile.close()
+	return ArgumentList(lst)
 
 def main(argv = None):
 	if argv == None:
@@ -368,6 +389,10 @@ def main(argv = None):
 	parser.add_argument('-D', '--directory', metavar='DIRECTORY',
 	 action='append', type=arg_directory_adaptor, dest='args',
 	 help='The directory with the different files to use.')
+	parser.add_argument('-F', '--file', metavar='FILE',
+	 action='append', type=arg_file_adaptor, dest='args',
+	 help='A file with argument parameters. Each line will be directly inserted into the '\
+	  'command line')
 	parser.add_argument('command',
 	 help='The command to execute on the cluster')
 	args = parser.parse_args(argv[1:i+1])

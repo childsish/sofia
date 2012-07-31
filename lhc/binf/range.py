@@ -105,7 +105,7 @@ class Range(object):
 	
 	def overlaps(self, other):
 		return (self.f <= other.f and self.t > other.f) or\
-		 (self.f >= other.f and self.f < other.t)
+		 (other.f <= self.f and other.t > self.f)
 	
 	def adjacent(self, other):
 		return self.t == other.f or other.t == self.f

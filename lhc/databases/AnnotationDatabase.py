@@ -89,7 +89,7 @@ class AnnotationDatabase(Database):
 		self.conn.execute('UPDATE mRNA SET desc = ? WHERE ann_id = ?',
 		 (desc, ann_id))
 	
-	def getgene(self, ann_id):
+	def getGene(self, ann_id):
 		qry = 'SELECT chm, ann_fr, ann_to, strand, family FROM gene '\
 		 'WHERE ann_id = ?'
 		gene = self.conn.execute(qry, (ann_id,)).fetchone()

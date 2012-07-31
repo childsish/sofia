@@ -14,6 +14,12 @@ class CodonUsageTable:
 				self.__codons[match[0].lower().replace('u', 't')] = float(match[2])
 		infile.close()
 	
+	def __str__(self):
+		res = ['%s\t%d'%(codon, value)
+		 for codon, value in sorted(self.__codons.iteritems())]
+		return '\n'.join(res)
+			
+	
 	def __getitem__(self, key):
 		return self.__codons[key]
 

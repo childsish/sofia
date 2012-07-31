@@ -68,6 +68,8 @@ class Range(BaseRange):
 		raise NotImplementedError('')
 	
 	def getSubSeq(self, seq, circular=False):
+		if len(seq) == 0 and circular:
+			return ''
 		if not circular:
 			return BaseRange.getSubSeq(self, seq)
 		
@@ -200,6 +202,12 @@ class Complement(object):
 	def adj3p(self, val):
 		self.rng.adj5p(-val)
 	
+	def getGenomic5p(self):
+		return self.rng.get5p()
+	
+	def getGenomic3p(self):
+		return self.rng.get3p()
+	
 	@classmethod
 	def registerReverseComplement(cls, typ, fn):
 		cls.__REVCMPS[typ] = fn
@@ -299,6 +307,7 @@ class Join(BaseJoin):
 	def adj3p(self, val):
 		if val >= 0:
 			self.rngs[-1].adj3p(val)
+			return
 		
 		i = len(self.rngs) - 1
 		while i >= 0 and val + len(self.rngs[i]) < 0:

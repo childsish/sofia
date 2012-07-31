@@ -18,6 +18,7 @@ class RedundantCode:
 		pass
 
 	def decodeCodon(self, codon):
+		codon = codon.lower()
 		code = RedundantCode.CODE
 		res = []
 		for b1 in code[codon[0]]:

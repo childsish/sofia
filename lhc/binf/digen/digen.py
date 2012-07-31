@@ -6,7 +6,7 @@ import random
 from sequence.seq_tools import dinuc
 
 def convertFrequency(alp):
-	din2idx = dict([('%s%s'%('acgu'[i/4], 'acgu'[i%4]), i) for i in xrange(16)])
+	din2idx = dict(('%s%s'%('acgu'[i/4], 'acgu'[i%4]), i) for i in xrange(16))
 	num = numpy.zeros(16, dtype=numpy.int32)
 	for k, v in alp.iteritems():
 		num[din2idx[k]] = int(v)
@@ -59,7 +59,7 @@ def connected(frq, fr):
 	
 	return sum(res) == sum(frq > 0)
 
-def digen(frq):
+def generate(frq):
 	res = []
 	if connectivity(frq) > 1:
 		return res

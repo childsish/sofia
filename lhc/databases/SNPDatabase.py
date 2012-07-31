@@ -1,13 +1,63 @@
 from Database import Database
-from string import Template
 
 class SNPDatabase(Database):
-	def __init__(self, db=':memory:', seqdb=None):
-		if seqdb == None:
-			raise Exception('No sequence database specified')
+	
+	SEGMENT_SIZE = 2000
+	
+	class Sequence(object):
+		def __init__(self, acc_id, curs):
+			self.acc_id = acc_id
+			self.curs = curs
 		
+		def __del__(self):
+			self.curs.close()
+		
+		def __str__(self):
+			return ''.join(row[0] for row in self.curs.execute('''SELECT seq
+			 FROM SequenceSegment WHERE acc_id = ? ORDER BY idx''', (self.acc_id,)))
+		
+		def __len__(self):
+			idx, l = self.curs.execute('''SELECT idx, length(seq) FROM SequenceSegment
+			 WHERE acc_id = ? AND idx = (SELECT max(idx) FROM SequenceSegment
+			 WHERE acc_id = ?)''',
+			 (self.acc_id, self.acc_id)).fetchone()
+			return idx * SNPDatabase.SEGMENT_SIZE + l
+		
+		def __getitem__(self, key):
+			if isinstance(key, int):
+				fr = key
+				to = key + 1
+			elif isinstance(key, slice):
+				fr = key.start
+				to = key.stop
+				if fr == None:
+					fr = 0
+				if to == None:
+					to = len(self)
+			elif hasattr(key, '__iter__'):
+				raise NotImplementedError()
+			else:
+				raise TypeError('Unrecognised position type: %s'%(type(key),))
+			
+			seg_sz = SNPDatabase.SEGMENT_SIZE
+			seq = ''.join((row[0] for row in self.curs.execute('''SELECT seq
+			 FROM SequenceSegment WHERE acc_id = ? AND idx BETWEEN ? AND ?''',
+			 (self.acc_id, fr / seg_sz, to / seg_sz))))
+			return seq[fr%seg_sz:to - fr + (fr%seg_sz)]
+		
+		def __iter__(self):
+			qry = 'SELECT idx FROM SequenceSegment WHERE acc_id = ? ORDER BY idx'
+			idxs = list(row[0] for row in self.curs.execute(qry, (self.acc_id,)))
+			qry = 'SELECT seq FROM SequenceSegment WHERE acc_id = ? AND idx = ?'
+			for idx in idxs:
+				seg = self.curs.execute(qry, (self.acc_id, idx)).fetchone()[0]
+				for char in seg:
+					yield char
+		
+	def __init__(self, db=':memory:'):
 		Database.__init__(self, db)
 		self.accs = {}
+		self.acc_ids = set()
 		qry = '''SELECT t1.name, t2.acc_id
 		 FROM AccessionName AS t1 INNER JOIN AccessionSynonym AS t2
 		 ON t1.nam_id = t2.nam_id'''
@@ -15,20 +65,49 @@ class SNPDatabase(Database):
 			self.accs.setdefault(row[0], []).append(row[1])
 		for row in self.conn.execute('''SELECT acc_id FROM Accession'''):
 			self.accs.setdefault(row[0], []).append(row[0])
+			self.acc_ids.add(row[0])
+	
+	def __str__(self):
+		res = []
+		for acc_id in self:
+			print acc_id
+			nseg = self.conn.execute('''SELECT max(idx) FROM SequenceSegment
+			 WHERE acc_id = ?''', (acc_id,)).fetchone()[0]
+			seq = self.conn.execute('''SELECT seq FROM SequenceSegment
+			 WHERE acc_id = ? AND idx = 0''', (acc_id,)).fetchone()[0]
+			if len(seq) < SNPDatabase.SEGMENT_SIZE:
+				seq += '...'
+			res.append('%d\t%d\t%s'%(acc_id, nseg, seq))
+		return '\n'.join(res)
+	
+	def __len__(self):
+		return len(self.accs)
+	
+	def __getitem__(self, key):
+		acc_id = self.__getUniqueAccession(key)
+		return SNPDatabase.Sequence(acc_id, self.conn.cursor())
+	
+	def __setitem__(self, key, value):
+		acc_id = self.__getUniqueAccession(key)
 		
-		self.conn.execute("ATTACH ? AS seqdb", (seqdb,))
-		self.seqs = dict(self.conn.execute('''SELECT name, seq_id FROM
-		 seqdb.SequenceSynonym'''))
-		self.seq_ids = set()
-		for row in self.conn.execute('''SELECT seq_id FROM seqdb.Sequence'''):
-			self.seqs[row[0]] = row[0]
-			self.seq_ids.add(row[0])
-		self.conn.execute('''DETACH seqdb''')
+		self.conn.execute('''DELETE FROM SequenceSegment WHERE acc_id == ?''', (acc_id,))
+		
+		seg_sz = SNPDatabase.SEGMENT_SIZE
+		self.conn.executemany('''INSERT INTO SequenceSegment VALUES (?, ?, ?)''',
+		 ((acc_id, i, value[i * seg_sz:(i + 1) * seg_sz])
+		 for i in xrange((len(value) / seg_sz) + (len(value)%seg_sz > 0))))
+	
+	def __iter__(self):
+		return (row[0] for row in
+		 self.conn.cursor().execute('''SELECT acc_id FROM Accession'''))
+	
+	def __contains__(self, key):
+		return key in self.accs
 	
 	def createTables(self):
 		self.conn.execute('''CREATE TABLE Accession (
 		 acc_id    INTEGER PRIMARY KEY AUTOINCREMENT,
-		 latitute  REAL,
+		 latitude  REAL,
 		 longitude REAL,
 		 desc      TEXT)''')
 		
@@ -41,28 +120,31 @@ class SNPDatabase(Database):
 		 nam_id INTEGER REFERENCES AccessionName(nam_id),
 		 acc_id INTEGER REFERENCES Accession(acc_id))''')
 		
-		self.conn.execute('''CREATE TABLE SNP (
-		 acc_id   INTEGER REFERENCES Accession(acc_id),
-		 seq_id   INTEGER UNSIGNED NOT NULL,
-		 pos      INTEGER UNSIGNED NOT NULL,
-		 snp      TEXT,
-		 PRIMARY KEY (acc_id, seq_id, pos))''')
+		self.conn.execute('''CREATE TABLE SequenceSegment (
+		 acc_id INTEGER REFERENCES Accession(acc_id),
+		 idx    INTEGER NOT NULL,
+		 seq    TEXT NOT NULL)''')
+		
+		self.conn.execute('''CREATE TABLE Position (
+		 pos_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+		 chm  TEXT NOT NULL,
+		 pos     INTEGER NOT NULL)''')
 	
 	def createIndices(self):
-		"""Create the indices on the table."""
-		self.conn.execute('''CREATE INDEX IF NOT EXISTS accnam_idx
+		self.conn.execute('''CREATE INDEX IF NOT EXISTS accname_idx
 		 ON AccessionName(name)''')
-		self.conn.execute('ANALYZE SNP')
-		# Index for SNP(acc_id, seq_id, pos) exists in primary key.
+		self.conn.execute('''CREATE INDEX IF NOT EXISTS seqseg_idx
+		 ON SequenceSegment(acc_id, idx)''')
+		self.conn.execute('''CREATE INDEX IF NOT EXISTS pospos_idx
+		 ON Position(chm, pos)''')
 	
-	# Register functions
 	def registerAccession(self, lat=None, lon=None, desc=None):
 		# Insert the new accession and get the acc_id
 		self.curs.execute("INSERT INTO Accession VALUES (NULL, ?, ?, ?)", (lat, lon, desc))
 		acc_id = self.curs.lastrowid
 		self.accs[acc_id] = [acc_id]
 		return acc_id
-	
+
 	def registerAccessionSynonym(self, acc, typ, acc_id):
 		# Check if accession exists
 		if acc_id not in self.accs:
@@ -81,131 +163,22 @@ class SNPDatabase(Database):
 		self.accs.setdefault(acc, []).append(acc_id)
 		return nam_id
 	
-	def insertSNP(self, acc, seq, pos, snp, typ='name'):
-		if len(self.accs[acc]) > 1:
-			raise Exception('Accession name is not unique')
+	def addPosition(self, chm, pos):
+		qry = 'INSERT INTO Position VALUES (NULL, ?, ?)'
+		self.execute(qry, (chm, pos))
+
+	def iterPositions(self, accs=None):
+		qry = 'SELECT pos_id, chm, pos FROM Position'
+		#if accs == None:
+		for pos_id, chm, pos in self.conn.execute(qry):
+			yield pos_id - 1, chm, pos
 		
-		acc_id = self.accs[acc][0]
-		seq_id = self.seqs[seq]
-		
-		self.conn.execute('''INSERT INTO SNP VALUES (?, ?, ?, ?)''',
-		 (acc_id, seq_id, pos, snp))
+		#for pos_id, chm, pos in self.conn.execute(qry):
+		#	ales = set(self[acc][pos_id - 1] for acc in accs)
+		#	if len(ales - {'X', 'N', '-'}) > 2:
+		#		yield pos_id - 1, chm, pos
 	
-	def getSNP(self, seq, pos, acc=None):
-		tmp = Template('SELECT ${acc1}snp FROM SNP '
-		 'WHERE ${acc2}seq_id = ? AND pos == ?')
-		args = [self.seqs[seq], pos]
-		
-		# Insert accessions into query
-		if acc == None:
-			acc1 = 'acc_id, '
-			acc2 = 'acc_id IN (SELECT acc_id FROM Accession) AND '
-		elif isinstance(acc, (int, basestring)):
-			acc1 = ''
-			acc2 = 'acc_id = ? AND '
-			args.append(self.__getUniqueAccession(acc))
-		elif hasattr(acc, '__iter__'):
-			acc1 = 'acc_id, '
-			acc2 = 'acc_id IN (%s) AND '%(','.join(len(acc) * ['?']))
-			args.extend((self.__getUniqueAccession(a) for a in acc))
-		else:
-			raise TypeError('Unrecognised accession type: %s'%(str(type(acc)),))
-		
-		qry = tmp.substitute(acc1=acc1, acc2=acc2)
-		res = self.conn.execute(qry, args)
-		if isinstance(acc, (int, basestring)):
-			res = res.fetchone()
-			if res != None:
-				res = res[0]
-			return res
-		return list(res)
-	
-	def getRange(self, seq, fr=None, to=None, acc=None):
-		tmp = Template('SELECT pos${acc1}, snp FROM SNP '
-		 'WHERE ${acc2}seq_id = ?${rng} ORDER BY pos${acc1}')
-		args = [self.seqs[seq]]
-		
-		# Insert accessions into query
-		if acc == None:
-			acc1 = ', acc_id'
-			acc2 = 'acc_id IN (SELECT acc_id FROM Accession) AND '
-		elif isinstance(acc, (int, basestring)):
-			acc1 = ''
-			acc2 = 'acc_id = ? AND '
-			args.append(self.__getUniqueAccession(acc))
-		elif hasattr(acc, '__iter__'):
-			acc1 = ', acc_id'
-			acc2 = 'acc_id IN (%s) AND '%(','.join(len(acc) * ['?']))
-			args.extend((self.__getUniqueAccession(a) for a in acc))
-		else:
-			raise TypeError('Unrecognised accession type: %s'%(str(type(acc)),))
-		
-		# Insert range into query
-		if fr == None:
-			rng = ''
-		else:
-			rng = ' AND pos BETWEEN ? AND ?'
-			args.append(fr)
-			args.append(to)
-		
-		qry = tmp.substitute(rng=rng, acc1=acc1, acc2=acc2)
-		print qry
-		return list(self.conn.execute(qry, args))
-	
-	def getPositions(self, seq=None, fr=None, to=None, acc=None):
-		tmp = Template('SELECT DISTINCT ${seq_col}pos FROM SNP${where}'\
-		 ' ORDER BY ${seq_col}pos')
-		args = []
-		where = []
-		
-		# Insert accessions into query
-		if acc == None:
-			where.append('acc_id IN (SELECT acc_id FROM Accession)')
-		elif isinstance(acc, (int, basestring)):
-			where.append('acc_id = ?')
-			args.append(self.accs[acc][0])
-		elif hasattr(acc, '__iter__'):
-			where.append('acc_id IN (%s)'%(','.join(len(acc) * ['?']),))
-			args.extend((self.__getUniqueAccession(a) for a in acc))
-		else:
-			raise TypeError('Unrecognised accession type: %s'%(str(type(acc)),))
-		
-		# Insert sequence into query
-		if seq == None:
-			where.append('seq_id IN (%s)'%(','.join(map(str, self.seq_ids))))
-			seq_col = 'seq_id, '
-		elif isinstance(seq, (int, basestring)):
-			where.append('seq_id = ?')
-			args.append(self.seqs[seq])
-			seq_col = ''
-		elif hasattr(seq, '__iter__'):
-			where.append('seq_id IN (%s)'%(','.join(len(seq) * ['?']),))
-			args.extend((self.seqs[s] for s in seq))
-			seq_col = 'seq_id, '
-		else:
-			raise TypeError('Unrecognised sequence type: %s'%(str(type(seq)),))
-		
-		# Insert range into query
-		if fr == None and to == None:
-			pass
-		elif fr != None and to == None:
-			where.append('pos BETWEEN 0 AND ?')
-			args.extend((fr,))
-		elif fr == None and to != None:
-			where.append('pos BETWEEN 0 AND ?')
-			args.extend((to,))
-		else:
-			where.append('pos BETWEEN ? AND ?')
-			args.extend((fr, to))
-		
-		if seq == None and fr == None and to == None and acc == None:
-			qry = tmp.substitute(seq_col=seq_col, where='')
-			return list((row[0] for row in self.conn.execute(qry)))
-		
-		qry = tmp.substitute(seq_col=seq_col, where=' WHERE ' + ' AND '.join(where))
-		return list((row[0] for row in self.conn.execute(qry, args)))
-	
-	def __getUniqueAccession(acc):
+	def __getUniqueAccession(self, acc):
 		if acc not in self.accs:
 			raise ValueError('%s has not been registered in this database'%acc)
 		elif len(self.accs[acc]) == 0:
@@ -213,3 +186,17 @@ class SNPDatabase(Database):
 		elif len(self.accs[acc]) > 1:
 			raise ValueError('%s is not a unique identifier'%acc)
 		return self.accs[acc][0]
+	
+def main():
+	db = SNPDatabase()
+	SNPDatabase.SEGMENT_SIZE = 20
+	
+	seq = 'aaaaacccccgggggtttttAAAAACCCCCGGGGGTTTTTaaaaacccccgggggttttt'\
+	'111222333444555666777888999000'
+	db['Test'] = seq
+	for i in [4, 5, 19, 20, 21, 39, 40, 41, 59, 60, 61, len(seq) - 1]:
+		print db['Test'][i] == seq[i]
+	print len(seq) == len(db['Test'])
+
+if __name__ == '__main__':
+	main()

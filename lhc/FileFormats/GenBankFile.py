@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from binf.sequence import Range, Complement, Join
+from binf.interval import Interval, Complement
 from GenBankFileUtility import tokenise, TokeniserError
 from optparse import OptionParser
 
@@ -246,9 +246,9 @@ class GenBankFile:
 		if len(tokens) > 1 and tokens[0] in ['..', '^']:
 			tokens.pop(0) # Pop '..' | '^'
 			to = int(tokens.pop(0))
-			return Range(min(fr, to), max(fr, to))
+			return Interval(fr, to)
 		
-		return Range(fr, fr + 1)
+		return Interval(fr)
 	
 	def __parseJoin(self, tokens):
 		""" Parses a join.
@@ -262,7 +262,7 @@ class GenBankFile:
 			tokens.pop(0)
 			res.append(self.__parseSuperRange(tokens))
 		tokens.pop(0) # Pop ')'
-		return Join(res)
+		return Interval(res)
 	
 	def __parseComplement(self, tokens):
 		""" Parses a complement
@@ -361,9 +361,13 @@ def extractGenes(genes, gbk, options):
 			hdr.append('atg:%d'%(options.ext5))
 		if options.ext3 != 0:
 			hdr.append('end:%d'%(options.ext3))
-		ftr['range'].adj5p(-options.ext5)
-		ftr['range'].adj3p(options.ext3)
-		seq = ftr['range'].getSubSeq(gbk.seq)
+		rng5p = ftr['range'].get5pInterval(-options.ext5)
+		rng3p = ftr['range'].get3pInterval(options.ext3)
+		rng = rng5p | ftr['range'] | rng3p
+		print rng5p
+		print ftr['range']
+		print rng3p
+		seq = rng.getSubSeq(gbk.seq)
 		
 		sys.stdout.write('>%s\n%s\n'%(' '.join(hdr), seq))
 
@@ -372,9 +376,13 @@ def extractPaths(gbk, options):
 		cnt = 0
 		for ftr in gbk.ftrs[typ]:
 			if ftr[qua] == val:
-				rng = ftr['range']
-				rng.adj5p(-options.ext5)
-				rng.adj3p(options.ext3)
+				rng5p = ftr['range'].get5pInterval(-options.ext5)
+				rng3p = ftr['range'].get3pInterval(options.ext3)
+				rng = rng5p | ftr['range'] | rng3p
+				print rng5p
+				print ftr['range']
+				print rng3p
+				print rng
 				seq = rng.getSubSeq(gbk.seq)
 				hdr = ['%s_%s_%s.%s'%(typ, qua, val, cnt)]
 				if options.ext5 != 0:
