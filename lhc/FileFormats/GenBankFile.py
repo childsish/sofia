@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from binf.interval import Interval, Complement
+from lhc.binf.interval import Interval, Complement
 from GenBankFileUtility import tokenise, TokeniserError
 from optparse import OptionParser
 

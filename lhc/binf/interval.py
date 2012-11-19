@@ -83,7 +83,7 @@ class Interval(object):
             return self.getStart()
         elif key == 'to':
             return self.getEnd()
-        return getattr(self, key)
+        raise AttributeError("'Interval' object has no attribute '%s'"%key)
 
     def __repr__(self):
         return str(self)

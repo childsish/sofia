@@ -2,286 +2,306 @@
 
 import os
 import sys
+import cPickle
+import stat
 
-class SynchError(Exception):
-	def __init__(self, val):
-		self.__val = val
-	
-	def __str__(self):
-		return self.__val
+from collections import OrderedDict
 
-class WrapError(Exception):
-	def __init__(self, lineno, wrap):
-		self.__lineno = lineno
-		self.__wrap = wrap
-	
-	def __str__(self):
-		return "Line number %d does not have %d characters"%(self.__lineno, self.__wrap)
+class FastaIndex(object):
+    def __init__(self, fname):
+        self.fname = fname
+        self.source = None
+        self.wrap = None
+        self.newlines = None
+        self.seq_idxs = None
+        if os.path.exists(fname):
+            self._loadIndex(fname)
+    
+    def __del__(self):
+        if not os.path.exists(self.fname):
+            self._dumpIndex(self.fname)
 
-class IndexedFastaSequence:
-	""" An indexed sequence into a fasta file. Retrieving a sequence involves opening a file
-		 finding the start and stop indices, returning the stripped and joined lines between
-		 them and closing the file.
-		Currently unsure whether this will work on different platforms.
-	"""
-	
-	def __init__(self, fname, idx_fr, idx_to, wrap, newlines, seq_fr=0, seq_to=None):
-		""" Intialises the entry. """
-		self.__fname = fname
-		self.__idx_fr = idx_fr
-		self.__idx_to = idx_to
-		self.__wrap = wrap
-		self.__newlines = newlines
-		self.__seq_fr = seq_fr
-		if seq_to == None:
-			seq_to = idx_to - idx_fr
-		self.__seq_to = seq_to
-	
-	def __len__(self):
-		return int(self.__seq_to - self.__seq_fr)
-	
-	def __str__(self):
-		offset_fr = self.__calcOffset(self.__seq_fr)
-		offset_to = self.__calcOffset(self.__seq_to)
-		
-		if offset_fr > self.__idx_to:
-			offset_fr = self.__idx_to
-		if offset_to > self.__idx_to:
-			offset_to = self.__idx_to
-		
-		return self.__readSequence(offset_fr, offset_to - offset_fr)
-	
-	def __getitem__(self, key):
-		if isinstance(key, int):
-			offset = self.__calcOffset(key)
-			if offset < self.__idx_fr or offset >= self.__idx_to:
-				raise IndexError('string index out of range')
-			return self.__readSequence(offset, 1)
-		elif isinstance(key, slice):
-			fr = self.__seq_fr + key.start
-			to = self.__seq_fr + key.stop
-			
-			if fr > self.__seq_to:
-				fr = self.__seq_to
-			if to > self.__seq_to:
-				to = self.__seq_to
-			
-			seq = IndexedFastaSequence(self.__fname, self.__idx_fr, self.__idx_to,
-			 self.__wrap, self.__newlines, fr, to)
-			return seq
-	
-	def __iter__(self):
-		# Jump to incorrect offset then correct for newlines.
-		offset_fr = self.__calcOffset(self.__seq_fr)
-		offset_to = self.__calcOffset(self.__seq_to)
-		
-		# Find the region between the two offsets
-		infile = open(self.__fname)
-		infile.seek(self.__idx_fr)
-		infile.readline()
-		infile.tell()
-		infile.seek(offset_fr, 1)
-		for i in xrange(offset_to - offset_fr):
-			seq = infile.read(1)
-			if len(seq.strip()) > 0:
-				yield seq
-		infile.close()
-	
-	def __calcOffset(self, pos):
-		res = pos + (pos/self.__wrap) * len(self.__newlines)
-		if pos%self.__wrap == 0:
-			res -= len(self.__newlines)
-		return res
-	
-	def __readSequence(self, fr, sz):
-		infile = open(self.__fname)
-		infile.seek(self.__idx_fr)
-		infile.readline()
-		infile.tell()
-		infile.seek(fr, 1)
-		seq = infile.read(sz)
-		infile.close()
-		return seq.replace(self.__newlines, '')
+    def _loadIndex(self, fname):
+        infile = open(fname, 'rb')
+        mtime = cPickle.load(infile)
+        self.source = cPickle.load(infile)
+        if mtime != os.stat(self.source)[stat.ST_MTIME]:
+            raise OSError('Index is out-of-synch with source')
+        self.wrap = cPickle.load(infile)
+        self.newlines = cPickle.load(infile)
+        self.seq_idxs = cPickle.load(infile)
+        infile.close()
 
-def getIndexName(fname):
-	if '.' in fname:
-		iname = fname[:fname.rfind('.')] + '.idx'
-	else:
-		iname = fname + '.idx'
-	return iname
+    def _dumpIndex(self, fname):
+        mtime = os.stat(self.source)[stat.ST_MTIME]
+        outfile = file(fname, 'wb')
+        cPickle.dump(mtime, outfile, cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(self.source, outfile, cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(self.wrap, outfile, cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(self.newlines, outfile, cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(self.seq_idxs, outfile, cPickle.HIGHEST_PROTOCOL)
+        outfile.close()
+
+class IndexedFastaSequence(object):
+    """ An indexed sequence into a fasta file. Retrieving a sequence involves
+    opening a file finding the start and stop indices, returning the
+    stripped and joined lines between them and closing the file.
+    Currently unsure whether this will work on different platforms.
+    """
+    
+    def __init__(self, fname, idx_hdr, idx_fr, idx_to, wrap, newlines, pos_fr=0, pos_to=None):
+        """ Intialises the entry. """
+        self._fname = fname
+        self.idx_hdr = idx_hdr
+        self.idx_fr = idx_fr
+        self.idx_to = idx_to
+        self._wrap = wrap
+        self._newlines = newlines
+        self.pos_fr = pos_fr
+        self.pos_to = self.convertIndexToPosition(idx_to)\
+            if pos_to is None else pos_to
+    
+    def __len__(self):
+        return int(self.pos_to - self.pos_fr)
+    
+    def __str__(self):
+        idx_fr = self.convertPositionToIndex(self.pos_fr)
+        idx_to = self.convertPositionToIndex(self.pos_to)
+        sz = idx_to - idx_fr
+        infile = open(self._fname)
+        infile.seek(idx_fr)
+        seq = infile.read(sz)
+        infile.close()
+        return seq.replace(self._newlines, '')
+    
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            offset = self.convertPositionToIndex(key)
+            if offset < self.pos_fr or offset >= self.pos_to:
+                raise IndexError('string index out of range')
+            seq = IndexedFastaSequence(self._fname, self.idx_hdr, self.idx_fr,
+                self.idx_to, self._wrap, self._newlines, key, key + 1)
+            return str(seq)
+        elif isinstance(key, slice):
+            fr = self.pos_fr + key.start
+            to = self.pos_fr + key.stop
+            
+            if fr > self.pos_to:
+                fr = self.pos_to
+            if to > self.pos_to:
+                to = self.pos_to
+            
+            seq = IndexedFastaSequence(self._fname, self.idx_hdr, self.idx_fr,
+                self.idx_to, self._wrap, self._newlines, fr, to)
+            return seq
+        raise KeyError('Invalid key type: %s'%type(key))
+    
+    def __iter__(self):
+        # Jump to incorrect offset then correct for newlines.
+        idx_fr = self.convertPositionToIndex(self.pos_fr)
+        idx_to = self.convertPositionToIndex(self.pos_to)
+        
+        # Find the region between the two offsets
+        infile = open(self._fname, 'rU')
+        infile.seek(self.idx_fr)
+        infile.tell()
+        infile.seek(idx_fr, 1)
+        for i in xrange(idx_to - idx_fr):
+            seq = infile.read(1)
+            if len(seq.strip()) > 0:
+                yield seq
+        infile.close()
+    
+    def convertIndexToPosition(self, idx):
+        """ Calculate the position of the given index from the start of the
+        sequence.
+        """
+        return (((idx + 1) - self.idx_fr) * self._wrap) /\
+            (self._wrap + len(self._newlines))
+    
+    def convertPositionToIndex(self, pos):
+        """ Calculate the offset of the given position from the start of the
+        sequence.
+        """
+        return pos + (pos / self._wrap) * len(self._newlines) + self.idx_fr
+    
+    def getHeader(self):
+        infile = open(self._fname, 'rU')
+        infile.seek(self.idx_hdr)
+        hdr = infile.readline().strip()[1:]
+        infile.close()
+        return hdr
 
 def writeFasta(ents, fname, width=0):
-	outfile = open(fname, 'w')
-	if width == 0:
-		for ent in ents:
-			outfile.write('>%s\n%s\n'%(ent))
-	else:
-		for hdr, seq in ents:
-			outfile.write('>%s\n'%hdr)
-			for i in xrange(0, len(seq), width):
-				outfile.write(seq[i:i+width])
-				outfile.write('\n')
-	outfile.close()
+    outfile = open(fname, 'w')
+    if width == 0:
+        for ent in ents:
+            outfile.write('>%s\n%s\n'%(ent))
+    else:
+        for hdr, seq in ents:
+            outfile.write('>%s\n'%hdr)
+            for i in xrange(0, len(seq), width):
+                outfile.write(seq[i:i+width])
+                outfile.write('\n')
+    outfile.close()
 
 def iterFasta(fname):
-	iname = getIndexName(fname)
-	if os.path.exists(iname):
-		return iterIndexedFasta(iname)
-	return iterNormalFasta(fname)
+    iname = getIndexName(fname)
+    if os.path.exists(iname):
+        return iterIndexedFasta(iname)
+    return iterNormalFasta(fname)
+
+def getIndexName(fname):
+    if '.' in fname:
+        iname = fname[:fname.rfind('.')] + '.idx'
+    else:
+        iname = fname + '.idx'
+    return iname
 
 def iterNormalFasta(fname):
-	infile = open(fname)
-	hdr = None
-	seq = None
-	for line in infile:
-		if line[0] == '>':
-			if hdr != None:
-				yield (hdr, ''.join(seq))
-			hdr = line[1:].strip()
-			seq = []
-		else:
-			seq.append(line.strip())
-	yield (hdr, ''.join(seq))
-	infile.close()
+    infile = open(fname, 'rU')
+    hdr = None
+    seq = None
+    for line in infile:
+        if line[0] == '>':
+            if hdr != None:
+                yield (hdr, ''.join(seq))
+            hdr = line[1:].strip()
+            seq = []
+        else:
+            seq.append(line.strip())
+    yield hdr, ''.join(seq)
+    infile.close()
 
 def iterIndexedFasta(iname):
-	import cPickle
-	import stat
-	
-	# Get source file
-	infile = open(iname, 'rb')
-	mod = cPickle.load(infile)
-	fname = cPickle.load(infile)
-	if mod != os.stat(fname)[stat.ST_MTIME]:
-		infile.close()
-		raise SynchError
-	wrap = cPickle.load(infile)
-	newlines = cPickle.load(infile)
-	idxs = cPickle.load(infile)
-	end = cPickle.load(infile)
-	infile.close()
-	
-	infile = open(fname)
-	for i in xrange(len(idxs)):
-		infile.seek(idxs[i])
-		hdr = infile.readline()[1:].strip()
-		idx_fr = idxs[i]
-		idx_to = end
-		if i < len(idxs) - 1:
-			idx_to = idxs[i+1]
-		
-		seq = IndexedFastaSequence(fname, idx_fr, idx_to, wrap, newlines)
-		yield (hdr, seq)
-	infile.close()
+    idx = FastaIndex(iname)
+    infile = open(idx.source, 'rU')
+    for hdr, rng in idx.seq_idxs.iteritems():
+        idx_hdr, idx_fr, idx_to = rng
+        seq = IndexedFastaSequence(idx.source, idx_hdr, idx_fr, idx_to, idx.wrap, idx.newlines)
+        yield (seq.getHeader(), seq)
+    infile.close()
 
-def indxFasta(fname, iname = None):
-	import cPickle
-	import stat
-	
-	iname = getIndexName(fname)
-	
-	# Check to see if it already exists.
-	if os.path.exists(iname):
-		try:
-			infile = open(iname, 'rb')
-			iMod = cPickle.load(infile) # Indexed modification time.
-			infile.close()
-			
-			cMod = os.stat(fname)[stat.ST_MTIME] # Current modification time.
-			
-			if iMod == cMod:
-				return iname
-		except EOFError, e: # If the file is empty then continue anyway.
-			pass
-	
-	# Open the file handle
-	infile = open(fname, 'rU')
-	# Determine the wrap size
-	wrap = 0
-	for line in infile:
-		if line[0] not in '#>':
-			wrap = len(line.strip())
-			break
-	infile.seek(0)
-	
-	idxs = []
-	lineno = 0
-	wrap_err = None
-	while True: # Equivalent of do-while loop.
-		idx = infile.tell()
-		line = infile.readline()
-		
-		if len(line) <= 0: # Exit condition
-			break
-		elif line[0] == '>':
-			idxs.append(idx)
-			wrap_err = None
-		elif line[0] not in '#':
-			if wrap_err:
-				raise wrap_err
-			elif len(line.strip()) != wrap:
-				wrap_err = WrapError(lineno, wrap)
-		lineno += 1
-	newlines = infile.newlines
-	end = infile.tell()
-	infile.close()
-	
-	# Pickle the index to improve file access speed.
-	outfile = file(iname, 'wb')
-	cPickle.dump(os.stat(fname)[stat.ST_MTIME], outfile, cPickle.HIGHEST_PROTOCOL)
-	cPickle.dump(fname, outfile, cPickle.HIGHEST_PROTOCOL)
-	cPickle.dump(wrap, outfile, cPickle.HIGHEST_PROTOCOL)
-	cPickle.dump(newlines, outfile, cPickle.HIGHEST_PROTOCOL)
-	cPickle.dump(idxs, outfile, cPickle.HIGHEST_PROTOCOL)
-	cPickle.dump(end, outfile, cPickle.HIGHEST_PROTOCOL)
-	outfile.close()
-	
-	return iname
+def extractFasta(fname, hdr):
+    iname = getIndexName(fname)
+    if os.path.exists(iname):
+        return extractIndexedFasta(iname, hdr)
+    return extractNormalFasta(fname, hdr)
 
-def split_file(infname, npart, outdname=None):
-	if outdname == None:
-		import tempfile
-		outdname = tempfile.mkdtemp()
-	elif not os.path.exists(outdname):
-		os.makedirs(outdname)
-	
-	infile = open(infname)
-	i = -1
-	outs = []
-	for line in infile:
-		if line.startswith('>'):
-			i = (i+1)%npart
-			if i == len(outs):
-				outfile = open(os.path.join(outdname, '%s.fasta'%(i)), 'w')
-				outs.append(outfile)
-		outs[i].write(line)
-	infile.close()
-	for outfile in outs:
-		outfile.close()
-	
-	return (outdname, [outfile.name for outfile in outs])
+def extractNormalFasta(fname, hdr):
+    infile = open(fname, 'rU')
+    record = False
+    seq = []
+    for line in infile:
+        if line[0] == '>':
+            record = getHeader(line) == hdr
+        elif line[0] == '>' and record:
+            break
+        elif record:
+            seq.append(line.strip())
+    infile.close()
+    return ''.join(seq)
 
-def flatten_file(infname):
-	import shutil
-	from tempfile import mkstemp
-	
-	outfile, outfname = mkstemp()
-	os.close(outfile)
-	writeFasta(iterFasta(infname), outfname)
-	shutil.move(outfname, infname)
+def extractIndexedFasta(fname, hdr):
+    idx = FastaIndex(getIndexName(fname))
+    idx_hdr, idx_fr, idx_to = idx.seq_idxs[hdr]
+    return IndexedFastaSequence(idx.source, idx_hdr, idx_fr, idx_to, idx.wrap, idx.newlines)
+
+def getHeader(line):
+    return line.strip().split()[0][1:]
+
+def indexFasta(fname, iname=None):
+    iname = getIndexName(fname) if iname is None else iname
+    idx = FastaIndex(iname)
+    
+    # Determine the wrap size
+    wrap = getWrap(fname)
+    if wrap is None:
+        raise ValueError('Could not find a valid sequence line in fasta file')
+    infile = open(fname, 'rU')
+    idxs = OrderedDict()
+    lineno = 0
+    hdr = None
+    while True: # Equivalent of do-while loop.
+        idx_to = infile.tell()
+        line = infile.readline()
+        if len(line) == 0: # Exit condition
+            if hdr is not None:
+                idxs[hdr] = (idx_hdr, idx_fr, infile.tell())
+            break
+        elif line[0] == '>':
+            if hdr is not None:
+                idxs[hdr] = (idx_hdr, idx_fr, idx_to)
+            hdr = getHeader(line)
+            idx_hdr = idx_to
+            idx_fr = infile.tell()
+        elif line[0] != '#' and len(line.strip()) != wrap:
+            raise ValueError('Line %d does not have %d characters'%\
+                (lineno, wrap))
+        lineno += 1
+    idx.source = fname
+    idx.wrap = wrap
+    idx.newlines = infile.newlines
+    idx.seq_idxs = idxs
+    infile.close()
+    return iname
+
+def getWrap(fname):
+    wrap = None
+    infile = open(fname, 'rU')
+    for line in infile:
+        if line[0] not in '#>':
+            wrap = len(line.strip())
+            break
+    infile.close()
+    return wrap
+
+def splitFile(infname, npart, outdname=None):
+    if outdname == None:
+        import tempfile
+        outdname = tempfile.mkdtemp()
+    elif not os.path.exists(outdname):
+        os.makedirs(outdname)
+    
+    infile = open(infname, 'rU')
+    i = -1
+    outs = []
+    for line in infile:
+        if line.startswith('>'):
+            i = (i+1)%npart
+            if i == len(outs):
+                outfile = open(os.path.join(outdname, '%s.fasta'%(i)), 'w')
+                outs.append(outfile)
+        outs[i].write(line)
+    infile.close()
+    for outfile in outs:
+        outfile.close()
+    
+    return (outdname, [outfile.name for outfile in outs])
+
+def flattenFile(infname):
+    import shutil
+    from tempfile import mkstemp
+    
+    outfile, outfname = mkstemp()
+    os.close(outfile)
+    writeFasta(iterFasta(infname), outfname)
+    shutil.move(outfname, infname)
 
 def main(argv = None):
-	if argv == None:
-		argv = sys.argv
-	
-	if argv[1] == 'index':
-		index_file(argv[2])
-	elif argv[1] == 'split':
-		split_file(argv[2], int(argv[3]), '%s_%s'%(argv[2], argv[3]))
-	elif argv[1] == 'flatten':
-		flatten_file(argv[2])
-	else:
-		print 'Argument 1 must be either index or flatten'
+    if argv == None:
+        argv = sys.argv
+    
+    if argv[1] == 'index':
+        index_file(argv[2])
+    elif argv[1] == 'split':
+        splitFile(argv[2], int(argv[3]), '%s_%s'%(argv[2], argv[3]))
+    elif argv[1] == 'flatten':
+        flattenFile(argv[2])
+    elif argv[1] == 'extract':
+        extract_sequence(argv[2], int(argv[3]), int(argv[4]))
+    else:
+        print 'Argument 1 must be either index or flatten'
 
 if __name__ == '__main__':
-	sys.exit(main(sys.argv))
+    sys.exit(main(sys.argv))
