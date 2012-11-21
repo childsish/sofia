@@ -49,6 +49,8 @@ class IndexedFastaSequence(object):
     Currently unsure whether this will work on different platforms.
     """
     
+    CHUNK = 2048
+    
     def __init__(self, fname, idx_hdr, idx_fr, idx_to, wrap, newlines, pos_fr=0, pos_to=None):
         """ Intialises the entry. """
         self._fname = fname
@@ -97,20 +99,11 @@ class IndexedFastaSequence(object):
         raise KeyError('Invalid key type: %s'%type(key))
     
     def __iter__(self):
-        # Jump to incorrect offset then correct for newlines.
-        idx_fr = self.convertPositionToIndex(self.pos_fr)
-        idx_to = self.convertPositionToIndex(self.pos_to)
-        
-        # Find the region between the two offsets
-        infile = open(self._fname, 'rU')
-        infile.seek(self.idx_fr)
-        infile.tell()
-        infile.seek(idx_fr, 1)
-        for i in xrange(idx_to - idx_fr):
-            seq = infile.read(1)
-            if len(seq.strip()) > 0:
-                yield seq
-        infile.close()
+        chunk = IndexedFastaSequence.CHUNK
+        for i in xrange(0, self.pos_to - self.pos_fr, chunk):
+            sub = self[i:i + chunk]
+            for base in str(sub):
+                yield base
     
     def convertIndexToPosition(self, idx):
         """ Calculate the position of the given index from the start of the
@@ -179,7 +172,7 @@ def iterIndexedFasta(iname):
     for hdr, rng in idx.seq_idxs.iteritems():
         idx_hdr, idx_fr, idx_to = rng
         seq = IndexedFastaSequence(idx.source, idx_hdr, idx_fr, idx_to, idx.wrap, idx.newlines)
-        yield (seq.getHeader(), seq)
+        yield seq
     infile.close()
 
 def extractFasta(fname, hdr):
@@ -222,6 +215,7 @@ def indexFasta(fname, iname=None):
     idxs = OrderedDict()
     lineno = 0
     hdr = None
+    prv_wrap = None
     while True: # Equivalent of do-while loop.
         idx_to = infile.tell()
         line = infile.readline()
@@ -235,9 +229,12 @@ def indexFasta(fname, iname=None):
             hdr = getHeader(line)
             idx_hdr = idx_to
             idx_fr = infile.tell()
-        elif line[0] != '#' and len(line.strip()) != wrap:
+            prv_wrap = None
+        elif line[0] != '#' and prv_wrap != None and prv_wrap != wrap:
             raise ValueError('Line %d does not have %d characters'%\
                 (lineno, wrap))
+        else:
+            prv_wrap = len(line.strip())
         lineno += 1
     idx.source = fname
     idx.wrap = wrap
@@ -256,7 +253,7 @@ def getWrap(fname):
     infile.close()
     return wrap
 
-def splitFile(infname, npart, outdname=None):
+def splitFasta(infname, npart, outdname=None):
     if outdname == None:
         import tempfile
         outdname = tempfile.mkdtemp()
@@ -279,7 +276,7 @@ def splitFile(infname, npart, outdname=None):
     
     return (outdname, [outfile.name for outfile in outs])
 
-def flattenFile(infname):
+def flattenFasta(infname):
     import shutil
     from tempfile import mkstemp
     
@@ -293,11 +290,11 @@ def main(argv = None):
         argv = sys.argv
     
     if argv[1] == 'index':
-        index_file(argv[2])
+        indexFasta(argv[2])
     elif argv[1] == 'split':
-        splitFile(argv[2], int(argv[3]), '%s_%s'%(argv[2], argv[3]))
+        splitFasta(argv[2], int(argv[3]), '%s_%s'%(argv[2], argv[3]))
     elif argv[1] == 'flatten':
-        flattenFile(argv[2])
+        flattenFasta(argv[2])
     elif argv[1] == 'extract':
         extract_sequence(argv[2], int(argv[3]), int(argv[4]))
     else:
