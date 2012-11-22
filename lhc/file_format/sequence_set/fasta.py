@@ -1,11 +1,10 @@
 #!/usr/bin/python
 
 import os
-import sys
-import cPickle
 import stat
+import cPickle
 
-from collections import OrderedDict
+from header import getSequenceId
 
 class FastaIndex(object):
     def __init__(self, fname):
@@ -20,7 +19,7 @@ class FastaIndex(object):
     def __del__(self):
         if not os.path.exists(self.fname):
             self._dumpIndex(self.fname)
-
+    
     def _loadIndex(self, fname):
         infile = open(fname, 'rb')
         mtime = cPickle.load(infile)
@@ -51,14 +50,12 @@ class IndexedFastaSequence(object):
     
     CHUNK = 2048
     
-    def __init__(self, fname, idx_hdr, idx_fr, idx_to, wrap, newlines, pos_fr=0, pos_to=None):
+    def __init__(self, idx, idx_hdr, idx_fr, idx_to, pos_fr=0, pos_to=None):
         """ Intialises the entry. """
-        self._fname = fname
+        self.idx = idx
         self.idx_hdr = idx_hdr
         self.idx_fr = idx_fr
         self.idx_to = idx_to
-        self._wrap = wrap
-        self._newlines = newlines
         self.pos_fr = pos_fr
         self.pos_to = self.convertIndexToPosition(idx_to)\
             if pos_to is None else pos_to
@@ -70,19 +67,19 @@ class IndexedFastaSequence(object):
         idx_fr = self.convertPositionToIndex(self.pos_fr)
         idx_to = self.convertPositionToIndex(self.pos_to)
         sz = idx_to - idx_fr
-        infile = open(self._fname)
+        infile = open(self.idx.source)
         infile.seek(idx_fr)
         seq = infile.read(sz)
         infile.close()
-        return seq.replace(self._newlines, '')
+        return seq.replace(self.idx.newlines, '')
     
     def __getitem__(self, key):
         if isinstance(key, int):
             offset = self.convertPositionToIndex(key)
             if offset < self.pos_fr or offset >= self.pos_to:
                 raise IndexError('string index out of range')
-            seq = IndexedFastaSequence(self._fname, self.idx_hdr, self.idx_fr,
-                self.idx_to, self._wrap, self._newlines, key, key + 1)
+            seq = IndexedFastaSequence(self.idx.source, self.idx_hdr, self.idx_fr,
+                self.idx_to, self.idx.wrap, self.idx.newlines, key, key + 1)
             return str(seq)
         elif isinstance(key, slice):
             fr = self.pos_fr + key.start
@@ -93,8 +90,8 @@ class IndexedFastaSequence(object):
             if to > self.pos_to:
                 to = self.pos_to
             
-            seq = IndexedFastaSequence(self._fname, self.idx_hdr, self.idx_fr,
-                self.idx_to, self._wrap, self._newlines, fr, to)
+            seq = IndexedFastaSequence(self.idx.source, self.idx_hdr, self.idx_fr,
+                self.idx_to, self.idx.wrap, self.idx.newlines, fr, to)
             return seq
         raise KeyError('Invalid key type: %s'%type(key))
     
@@ -109,21 +106,69 @@ class IndexedFastaSequence(object):
         """ Calculate the position of the given index from the start of the
         sequence.
         """
-        return (((idx + 1) - self.idx_fr) * self._wrap) /\
-            (self._wrap + len(self._newlines))
+        return (((idx + 1) - self.idx_fr) * self.idx.wrap) /\
+            (self.idx.wrap + len(self.idx.newlines))
     
     def convertPositionToIndex(self, pos):
         """ Calculate the offset of the given position from the start of the
         sequence.
         """
-        return pos + (pos / self._wrap) * len(self._newlines) + self.idx_fr
+        return pos + (pos / self.idx.wrap) * len(self.idx.newlines) + self.idx_fr
     
     def getHeader(self):
-        infile = open(self._fname, 'rU')
+        infile = open(self.idx.source, 'rU')
         infile.seek(self.idx_hdr)
-        hdr = infile.readline().strip()[1:]
+        hdr = getHeader(infile.readline())
         infile.close()
         return hdr
+
+class FastaDictionary(object):
+    def __init__(self, fname):
+        self.fname = fname
+        iterator = FastaIterator(fname)
+        self.data = dict((getSequenceId(hdr), seq) for hdr, seq in iterator)
+    
+    def __getitem__(self, key):
+        return self.data[key]
+
+class FastaIndexedDictionary(object):
+    def __init__(self, iname):
+        self.iname = iname
+    
+    def __get__(self, key):
+        idx = FastaIndex(self.iname)
+        idx_hdr, idx_fr, idx_to = idx.seq_idxs[hdr]
+        return IndexedFastaSequence(idx, idx_hdr, idx_fr, idx_to)
+
+class FastaIterator(object):
+    def __init__(self, fname):
+        self.fname = fname
+    
+    def __iter__(self):
+        infile = open(self.fname, 'rU')
+        hdr = None
+        seq = None
+        for line in infile:
+            if line[0] == '>':
+                if hdr != None:
+                    yield (hdr, ''.join(seq))
+                hdr = line.strip()[1:]
+                seq = []
+            else:
+                seq.append(line.strip())
+        yield hdr, ''.join(seq)
+        infile.close()
+
+class FastaIndexedIterator(object):
+    def __init__(self, iname):
+        self.idx = FastaIndex(iname)
+    
+    def __iter__(self):
+        idx = FastaIndex(iname)
+        for hdr, rng in idx.seq_idxs.iteritems():
+            idx_hdr, idx_fr, idx_to = rng
+            seq = IndexedFastaSequence(idx, idx_hdr, idx_fr, idx_to)
+            yield seq.getHeader(), seq
 
 def writeFasta(ents, fname, width=0):
     outfile = open(fname, 'w')
@@ -141,8 +186,8 @@ def writeFasta(ents, fname, width=0):
 def iterFasta(fname):
     iname = getIndexName(fname)
     if os.path.exists(iname):
-        return iterIndexedFasta(iname)
-    return iterNormalFasta(fname)
+        return FastaIndexedIterator(iname).__iter__()
+    return FastaIterator(fname).__iter__()
 
 def getIndexName(fname):
     if '.' in fname:
@@ -151,59 +196,17 @@ def getIndexName(fname):
         iname = fname + '.idx'
     return iname
 
-def iterNormalFasta(fname):
-    infile = open(fname, 'rU')
-    hdr = None
-    seq = None
-    for line in infile:
-        if line[0] == '>':
-            if hdr != None:
-                yield (hdr, ''.join(seq))
-            hdr = line[1:].strip()
-            seq = []
-        else:
-            seq.append(line.strip())
-    yield hdr, ''.join(seq)
-    infile.close()
-
-def iterIndexedFasta(iname):
-    idx = FastaIndex(iname)
-    infile = open(idx.source, 'rU')
-    for hdr, rng in idx.seq_idxs.iteritems():
-        idx_hdr, idx_fr, idx_to = rng
-        seq = IndexedFastaSequence(idx.source, idx_hdr, idx_fr, idx_to, idx.wrap, idx.newlines)
-        yield seq
-    infile.close()
-
 def extractFasta(fname, hdr):
     iname = getIndexName(fname)
     if os.path.exists(iname):
-        return extractIndexedFasta(iname, hdr)
-    return extractNormalFasta(fname, hdr)
-
-def extractNormalFasta(fname, hdr):
-    infile = open(fname, 'rU')
-    record = False
-    seq = []
-    for line in infile:
-        if line[0] == '>':
-            record = getHeader(line) == hdr
-        elif line[0] == '>' and record:
-            break
-        elif record:
-            seq.append(line.strip())
-    infile.close()
-    return ''.join(seq)
-
-def extractIndexedFasta(fname, hdr):
-    idx = FastaIndex(getIndexName(fname))
-    idx_hdr, idx_fr, idx_to = idx.seq_idxs[hdr]
-    return IndexedFastaSequence(idx.source, idx_hdr, idx_fr, idx_to, idx.wrap, idx.newlines)
+        return FastaIndexedDictionary(iname)[hdr]
+    return FastaDictioanry(fname)[hdr]
 
 def getHeader(line):
     return line.strip().split()[0][1:]
 
 def indexFasta(fname, iname=None):
+    from collections import OrderedDict
     iname = getIndexName(fname) if iname is None else iname
     idx = FastaIndex(iname)
     
@@ -286,9 +289,6 @@ def flattenFasta(infname):
     shutil.move(outfname, infname)
 
 def main(argv = None):
-    if argv == None:
-        argv = sys.argv
-    
     if argv[1] == 'index':
         indexFasta(argv[2])
     elif argv[1] == 'split':
@@ -301,4 +301,5 @@ def main(argv = None):
         print 'Argument 1 must be either index or flatten'
 
 if __name__ == '__main__':
+    import sys
     sys.exit(main(sys.argv))
