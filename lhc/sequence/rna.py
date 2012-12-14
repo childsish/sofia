@@ -7,8 +7,8 @@ import tempfile
 import RNA
 
 from seq_tools import gc
-from paths.rna_tools import matrices
-from paths.rna import rnafold, rnaplfold, rnadistance, rnacofold
+#from paths.rna_tools import matrices
+#from paths.rna import rnafold, rnaplfold, rnadistance, rnacofold
 from subprocess import Popen, PIPE
 from optparse import OptionParser
 
@@ -41,7 +41,7 @@ class RNAFolder:
         """p: calculate partition function"""
         self.__p = p
         self.cwd = tempfile.mkdtemp()
-        args = [rnafold, '--noPS', '-C', '-T', '%.2f'%temp]
+        args = ['/home/childs/opt/bin/RNAfold', '--noPS', '-C', '-T', '%.2f'%temp]
         if p: args.append('-p2')
         self.__prc = Popen(args, stdin=PIPE, stdout=PIPE, close_fds=close_fds,
             cwd=self.cwd)

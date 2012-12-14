@@ -206,7 +206,7 @@ class Interval(object):
 
     def isEmpty(self):
         return len(self.ivls) == 0
-    
+
     def overlaps(self, other):
         # Traverse smaller tree (n) and search larger tree (logm)
         if len(other) < len(self):

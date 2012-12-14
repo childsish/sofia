@@ -1,5 +1,6 @@
 from netCDF4 import Dataset
-from header import getSequenceId
+from lhc.file_format.header import getSequenceId
+from itertools import izip
 
 class NetCDFSequence(object):
     def __init__(self, sequence_id=None, var=''):
@@ -38,9 +39,6 @@ class NetCDFSequenceSet(object):
     def __len__(self):
         return len(self.root.variables)
     
-    def __iter__(self):
-        return self.root.variables.iteritems()
-        
     def __getitem__(self, key):
         key_converted = getSequenceId(key)
         if key_converted not in self.root.variables:
@@ -54,7 +52,25 @@ class NetCDFSequenceSet(object):
         dim = self.root.createDimension(key_converted, len(value))
         var = self.root.createVariable(key_converted, '|S1', (key_converted,))
         var[:] = list(value)
-
+    
+    def __iter__(self):
+        return self.root.variables.iteritems()
+    
+    def __contains__(self, key):
+        return key in self.root.variables
+    
+    def iteritems(self):
+        for item in izip(self.iterkeys(), self.itervalues()):
+            yield (k, NetCDFSequence(k, self.root.variables[k]))
+    
+    def iterkeys(self):
+        for k in self.root.variables:
+            yield k
+    
+    def itervalues(self):
+        for k in self.root.variables:
+            yield NetCDFSequence(k, self.root.variables[k])
+        
     def close(self):
         if hasattr(self, 'closed') and not self.closed:
             self.root.close()
