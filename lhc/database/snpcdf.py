@@ -6,12 +6,9 @@ import numpy as np
 from netCDF4 import Dataset, default_fillvals
 from functools import total_ordering
 from collections import Counter
+from lhc.enum import enum
 
-class enum(set):
-    def __getattr__(self, name):
-        if name in self:
-            return name
-        raise AttributeError
+Type = enum(['ID', 'MAIN', 'ALT', 'STOCK'])
 
 @total_ordering
 class Position(object):
@@ -28,8 +25,6 @@ class Position(object):
     def __lt__(self, other):
         return (self.chm < other.chm) or\
             (self.chm == other.chm) and (self.pos < other.pos)
-
-Type = enum(['ID', 'MAIN', 'ALT', 'STOCK'])
 
 class Alias(object):
     def __init__(self, name, typ=None):
@@ -176,11 +171,23 @@ class NetCDFMarkerSet(object):
             fr = to
 
     def _initDimensionsAndVariables(self, poss):
+        """ Initialise as many variables as possible.
+            WARNING: For some reason, if these variables are created out-of-
+            order, a HDF error will occur when trying to save the file. The
+            zygosity variable must be created before the reference variable has
+            values assigned to it.
+        """
         npos = sum(len(chm_poss) for chm, chm_poss in poss.iteritems())
         self.data.createDimension('gens', None)
         self.data.createDimension('poss', npos)
         chmvar = self.data.createVariable('chms', 'S1', ('poss',))
         posvar = self.data.createVariable('poss', 'u4', ('poss',))
+        zygvar = self.data.createVariable('zygs', 'u1', ('gens',)) # u1
+        zygvar.missing_value = default_fillvals['i1']
+        malvar = self.data.createVariable('mal', 'S1', ('poss',))
+        malvar.missing_value = default_fillvals['S1']
+        mafvar = self.data.createVariable('maf', 'f4', ('poss',))
+        mafvar.missing_value = default_fillvals['f4']
         grp = self.data.createGroup('chm_idxs')
         grp.createDimension('rng', 2)
         return chmvar, posvar, grp
@@ -213,13 +220,7 @@ class NetCDFMarkerSet(object):
         """ Determine genotypes are homozygous (0/False) or heterozygous
             (1/True)
         """
-        # Get the group
-        if 'zygs' in self.data.variables:
-            zygvar = self.data.variables['zygs']
-        else:
-            zygvar = self.data.createVariable('zygs', 'i1', ('gens',)) # u1
-            zygvar.missing_value = default_fillvals['i1']
-        # Determine zygosity
+        zygvar = self.data.variables['zygs']
         snpvar = self.data.variables['snps']
         for i in xrange(len(self.data.dimensions['gens'])):
             zyg_per_pos = snpvar[i,:,:] != np.matrix(snpvar[i,:,0]).T
@@ -229,18 +230,8 @@ class NetCDFMarkerSet(object):
         """ Initialise the minor allele variables (minor allele and the minor
             allele frequency)
         """
-        if 'mal' in self.data.variables:
-            malvar = self.data.variables['mal']
-        else:
-            malvar = self.data.createVariable('mal', 'S1', ('poss',))
-            malvar.missing_value = default_fillvals['S1']
-
-        if 'maf' in self.data.variables:
-            mafvar = self.data.variables['maf']
-        else:
-            mafvar = self.data.createVariable('maf', 'f4', ('poss',))
-            mafvar.missing_value = default_fillvals['f4']
-
+        malvar = self.data.variables['mal']
+        mafvar = self.data.variables['maf']
         # Populate the variables
         snpvar = self.data.variables['snps']
         for i in xrange(len(self.data.dimensions['poss'])):
