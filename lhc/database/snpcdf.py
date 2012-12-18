@@ -180,6 +180,7 @@ class NetCDFMarkerSet(object):
         npos = sum(len(chm_poss) for chm, chm_poss in poss.iteritems())
         self.data.createDimension('gens', None)
         self.data.createDimension('poss', npos)
+        genvar = self.data.createVariable('gens', 'u4', ('gens',))
         chmvar = self.data.createVariable('chms', 'S1', ('poss',))
         posvar = self.data.createVariable('poss', 'u4', ('poss',))
         zygvar = self.data.createVariable('zygs', 'u1', ('gens',)) # u1
