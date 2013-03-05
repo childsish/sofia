@@ -2,7 +2,7 @@ from netCDF4 import Dataset
 from lhc.file_format.header import getSequenceId
 from itertools import izip
 
-class NetCDFSequence(object):
+class Sequence(object):
     def __init__(self, sequence_id=None, var=''):
         self.id = sequence_id
         self.var = var
@@ -29,7 +29,7 @@ class NetCDFSequence(object):
             return other
         raise NotImplementedError('Sequence addition not implemented for type: %s'%(type(other)))
 
-class NetCDFSequenceSet(object):
+class SequenceSet(object):
     def __init__(self, fname, mode='r'):
         self.root = Dataset(fname, mode)
 
@@ -43,7 +43,7 @@ class NetCDFSequenceSet(object):
         key_converted = getSequenceId(key)
         if key_converted not in self.root.variables:
             raise KeyError('Sequence name "%s" not found in database'%key)
-        return NetCDFSequence(key_converted, self.root.variables[key_converted])
+        return Sequence(key_converted, self.root.variables[key_converted])
     
     def __setitem__(self, key, value):
         key_converted = getSequenceId(key)
@@ -61,7 +61,7 @@ class NetCDFSequenceSet(object):
     
     def iteritems(self):
         for item in izip(self.iterkeys(), self.itervalues()):
-            yield (k, NetCDFSequence(k, self.root.variables[k]))
+            yield (k, Sequence(k, self.root.variables[k]))
     
     def iterkeys(self):
         for k in self.root.variables:
@@ -69,7 +69,7 @@ class NetCDFSequenceSet(object):
     
     def itervalues(self):
         for k in self.root.variables:
-            yield NetCDFSequence(k, self.root.variables[k])
+            yield Sequence(k, self.root.variables[k])
         
     def close(self):
         if hasattr(self, 'closed') and not self.closed:
