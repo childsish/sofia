@@ -1,0 +1,7 @@
+.*
+!.gitignore
+*.pyc
+paths/*
+*.so
+*.o
+*.*~
