@@ -1,5 +1,4 @@
 from netCDF4 import Dataset
-from lhc.file_format.header import getSequenceId
 from itertools import izip
 
 class Sequence(object):
@@ -40,17 +39,13 @@ class SequenceSet(object):
         return len(self.root.variables)
     
     def __getitem__(self, key):
-        key_converted = getSequenceId(key)
-        if key_converted not in self.root.variables:
+        if key not in self.root.variables:
             raise KeyError('Sequence name "%s" not found in database'%key)
-        return Sequence(key_converted, self.root.variables[key_converted])
+        return Sequence(key, self.root.variables[key])
     
     def __setitem__(self, key, value):
-        key_converted = getSequenceId(key)
-        if key_converted in self.root.variables:
-            raise ValueError('Sequence name "%s" has already been defined'%key)
-        dim = self.root.createDimension(key_converted, len(value))
-        var = self.root.createVariable(key_converted, '|S1', (key_converted,))
+        dim = self.root.createDimension(key, len(value))
+        var = self.root.createVariable(key, '|S1', (key,))
         var[:] = list(value)
     
     def __iter__(self):
