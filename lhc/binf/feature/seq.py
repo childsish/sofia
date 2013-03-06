@@ -20,7 +20,11 @@ class NucleotideFrequency(Feature):
     
 class NucleotideSkew(Feature):
     def __init__(self):
+        self.depends = [(NucleotideFrequency, 1)]
         self.transform = [string.lower]
     
-    def calculate(self, seq):
-        pass
+    def calculate(self, frq):
+        res = OrderedDict([
+            ('at', (frq['a'] - frq['t']) / (frq['a'] + frq['t'])),
+            ('gc', (frq['g'] - frq['c']) / (frq['g'] + frq['c']))
+        ])
