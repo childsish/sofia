@@ -1,5 +1,4 @@
 #!/usr/bin/python
-from paths.misc import geneticcodes
 
 class RedundantCode:
 	BASES = set("actgu")
@@ -125,7 +124,7 @@ class GeneticCode:
 		return "".join(codon)
 
 class GeneticCodes:
-	def __init__(self, filename = geneticcodes):
+	def __init__(self, filename):
 		self.__codes = {}
 		self.__name2id = {}
 		self.__parseFile(filename)

@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 
-from lhc.binf.feature.sequence import NucleotideFrequency, NucleotideSkew
+from lhc.binf.feature.nucleotide import NucleotideFrequency, NucleotideSkew
 
 class TestNucleotideFrequency(TestCase):
     def test_generateMono(self):

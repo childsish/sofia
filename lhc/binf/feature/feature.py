@@ -1,24 +1,35 @@
+from lhc.tool import enum
+from collections import OrderedDict
+
+Transform = enum(['NUC2PEP', 'NUC2RNA', 'NUC2BPP'])
+
 class Feature(object):
     def __init__(self):
-        self.depends = {}
-        self.transform = []
-    
-    def registerDependency(self, dependency):
-        self.depends[dependency.class_.__name__] = dependency
+        self.dependency = None
+        self.transforms = OrderedDict()
     
     def generate(self, obj):
         """ Generate the feature from the given object. This method should
             be used when you are not using the supporting structure to reduce
             redundant calculations.
         """
-        raise NotImplementedError('You must override this function')
+        dep_res = None
+        if self.dependency is not None:
+            self.dependency.instantiate()
+            dep_res = self.dependency.instance.generate(obj)
+        return self.calculate(obj, dep_res)
     
-    def calculate(self):
+    def calculate(self, obj, dep_res=None):
         """ Calculate the feature from the dependencies. This method should
             be used when you are using the supporting structure that reduces
             redundant calculations.
         """
         raise NotImplementedError('You must override this function')
+    
+    def transform(self, obj):
+        for v in self.transforms.itervalues():
+            obj = v(obj)
+        return obj
 
 
 class Dependency(object):
@@ -27,13 +38,11 @@ class Dependency(object):
         self.args = args
         self.kwargs = kwargs
         self.instance = None
-        self.instatiated = False
     
     def instantiate(self):
-        self.instance = self.class_(*self.args, **self.kwargs)
-        self.instantiated = True
+        if self.instance is None:
+            self.instance = self.class_(*self.args, **self.kwargs)
         return self.instance
     
     def setInstance(self, instance):
         self.instance = instance
-        self.instantiated = True
