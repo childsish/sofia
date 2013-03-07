@@ -1,18 +1,15 @@
 from distutils.core import setup
 
 setup(
-    name='TowelStuff',
-    version='0.1.0',
-    author='J. Random Hacker',
-    author_email='jrh@example.com',
-    packages=['towelstuff', 'towelstuff.test'],
-    scripts=['bin/stowe-towels.py','bin/wash-towels.py'],
-    url='http://pypi.python.org/pypi/TowelStuff/',
+    name='lhc-python',
+    version='0.0.1',
+    author='Liam H. Childs',
+    author_email='liam_childs@hotmail.com',
+    packages=['lhc', 'lhc.test'],
+    scripts=[],
+    url='https://github.com/childsish/lhc-python',
     license='LICENSE.txt',
-    description='Useful towel-related stuff.',
+    description='My python library of classes and functions that help me work',
     long_description=open('README.txt').read(),
-    install_requires=[
-        "Django >= 1.1.1",
-        "caldav == 0.1.4",
-    ],
+    install_requires=[],
 )
