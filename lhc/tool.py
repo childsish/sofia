@@ -1,6 +1,12 @@
 from collections import deque
 from itertools import repeat
 
+class enum(set):
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
 def window(iterable, n=2, cast=tuple):
     """ This function passes a running window along the length of the given
         iterable.  By default, the return value is a tuple, but the cast
