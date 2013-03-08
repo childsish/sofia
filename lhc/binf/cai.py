@@ -7,7 +7,7 @@ from FileFormats.CodonUsageTable import CodonUsageTable
 from scipy.stats.mstats import gmean # Geometric mean
 
 class CodonAdaptationIndex(object):
-    def __init__(self, cut, gc):
+    def __init__(self, cut, genetic_code):
         self.cut = CodonUsageTable(cut)
         self.genetic_code = GeneticCodes()[genetic_code]
         self.rscu = self.calculateRelativeSynonymousCodonUsage(self.cut)
