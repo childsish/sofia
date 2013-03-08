@@ -9,15 +9,18 @@ from scipy.stats.mstats import gmean # Geometric mean
 class CodonAdaptationIndex(object):
     def __init__(self, cut, gc):
         self.cut = CodonUsageTable(cut)
-        self.gc = GeneticCodes()[gc]
-        
-        # Calculate relative synonymous codon usage
+        self.genetic_code = GeneticCodes()[genetic_code]
+        self.rscu = self.calculateRelativeSynonymousCodonUsage(self.cut)
+    
+    def calculateRelativeSynonymousCodonUsage(self, cut):
+        gc = self.genetic_code
         self.rscu = {}
         for aa in self.gc.AMINO_ACIDS:
             codons = self.gc.getCodons(aa)
             ttl = numpy.mean([self.cut[codon] for codon in codons])
             for codon in codons:
                 self.rscu[codon] = self.cut[codon] / ttl
+        
         
     def calculateCAI(self, seq):
         rscu = self.rscu

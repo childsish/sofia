@@ -9,7 +9,6 @@ from feature import Feature, Dependency
 class NucleotideFrequency(Feature):
     def __init__(self, k):
         super(NucleotideFrequency, self).__init__()
-        self.transform.append(string.lower)
         self.k = k
     
     def calculate(self, seq, dep_res):
@@ -23,7 +22,6 @@ class NucleotideSkew(Feature):
     def __init__(self):
         super(NucleotideSkew, self).__init__()
         self.dependency = Dependency(NucleotideFrequency, 1)
-        self.transform = [string.lower]
 
     def calculate(self, seq, frq):
         at = 0 if frq['a'] + frq['t'] == 0 else\

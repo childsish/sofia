@@ -1,8 +1,7 @@
 from unittest import TestCase, main
 
 from lhc.GeneticCode import GeneticCodes
-from lhc.binf.feature.peptide import PeptideFrequency, CodonAdaptationIndex
-from lhc.file_format.cut import CodonUsageTable
+from lhc.binf.feature.peptide import PeptideFrequency
 
 class TestPeptideFrequency(TestCase):
     def test_generate(self):
@@ -18,17 +17,6 @@ class TestPeptideFrequency(TestCase):
             ('Q', 0), ('P', 0), ('S', 0), ('R', 0), ('T', 0), ('W', 0),
             ('V', 0), ('Y', 0)
         ])
-
-class TestCodonAdaptationIndex(TestCase):
-    def test_generate(self):
-        gcs = GeneticCodes('/data/gc.prt')
-        cut = CodonUsageTable('/data/organisms/Ath/cut.txt')
-        gen = CodonAdaptationIndex(gcs['Standard'], cut)
-        seq = 'cttatagcgatg'
-        
-        res = gen.generate(seq)
-        
-        print res
 
 if __name__ == '__main__':
     import sys

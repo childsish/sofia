@@ -4,9 +4,8 @@ class SequenceLength(Feature):
     def __init__(self):
         super(SequenceLength, self).__init__()
 
-    def generate(self, seq):
-        return len(seq)
+    def calculate(self, seq, dep_res):
+        return {'len': len(seq)}
 
-    def calculate(self, seq):
-        return len(seq)
-
+class OpenReadingFrames(Feature):
+    pass

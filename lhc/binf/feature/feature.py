@@ -1,12 +1,15 @@
+import string
+
 from lhc.tool import enum
 from collections import OrderedDict
 
-Transform = enum(['NUC2PEP', 'NUC2RNA', 'NUC2BPP'])
+Transform = enum(['NUC2NUC', 'NUC2PEP', 'NUC2STR', 'NUC2BPP'])
 
 class Feature(object):
     def __init__(self):
         self.dependency = None
         self.transforms = OrderedDict()
+        self.transforms[Transform.NUC2NUC] = string.lower
     
     def generate(self, obj):
         """ Generate the feature from the given object. This method should
