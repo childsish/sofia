@@ -1,9 +1,11 @@
 import numpy as np
+import warnings
 
 from itertools import izip
 from lhc.tool import window, combinations_with_replacement as genKmers, gmean
 from collections import Counter, OrderedDict
 from feature import Feature, Dependency
+from lhc.binf.genetic_code import RedundantCode
 
 class CodonUsage(Feature):
     def __init__(self):
@@ -29,7 +31,11 @@ class CodonAdaptationIndex(Feature):
         cai = []
         for i in xrange(0, len(seq), 3):
             cdn = seq[i:i+3]
-            if cdn not in ['atg', 'tgg']:
+            red = set(cdn) & RedundantCode.REDUNDANT_BASES
+            if len(red) > 0:
+                warnings.warn('Redundant bases "%s" encountered in codon. Codon "%s" has been ignored.'%(','.join(sorted(red)), cdn))
+                continue
+            if cdn not in ['atg', 'tgg', 'taa', 'tga', 'tag']:
                 cai.append(w[cdn])
         cai = np.array(cai)
         return {'cai': gmean(cai)}

@@ -6,6 +6,3 @@ class SequenceLength(Feature):
 
     def calculate(self, seq, dep_res):
         return {'len': len(seq)}
-
-class OpenReadingFrames(Feature):
-    pass
