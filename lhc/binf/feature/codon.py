@@ -8,13 +8,18 @@ from feature import Feature, Dependency
 from lhc.binf.genetic_code import RedundantCode
 
 class CodonUsage(Feature):
-    def __init__(self):
+    def __init__(self, ignore_redundant=True):
         super(CodonUsage, self).__init__()
+        self.ignore_redundant = ignore_redundant
 
     def calculate(self, seq, dep_res):
         res = OrderedDict((''.join(kmer), 0) for kmer in\
             genKmers('tgca', 3))
         res.update(Counter(seq[i:i+3] for i in xrange(0, len(seq), 3)))
+        if self.ignore_redundant:
+            for k in res:
+                if len(set(k) & RedundantCode.REDUNDANT_BASES) > 0:
+                    del res[k]
         return res
 
 class CodonAdaptationIndex(Feature):
