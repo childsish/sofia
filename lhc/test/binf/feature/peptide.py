@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 
-from lhc.GeneticCode import GeneticCodes
+from lhc.binf.genetic_code import GeneticCodes
 from lhc.binf.feature.peptide import PeptideFrequency
 
 class TestPeptideFrequency(TestCase):
@@ -17,7 +17,16 @@ class TestPeptideFrequency(TestCase):
             ('Q', 0), ('P', 0), ('S', 0), ('R', 0), ('T', 0), ('W', 0),
             ('V', 0), ('Y', 0)
         ])
+    
+    def test_noStop(self):
+        gcs = GeneticCodes('/data/gc.prt')
+        gen = PeptideFrequency(gcs['Standard'])
+        seq = 'cttatagcgatgtaa'
 
+        res = gen.generate(gen.transform(seq))
+        
+        self.assertNotIn('*', res)
+        
 if __name__ == '__main__':
     import sys
     sys.exit(main())
