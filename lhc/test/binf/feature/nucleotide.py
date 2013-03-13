@@ -23,6 +23,24 @@ class TestNucleotideFrequency(TestCase):
             ('ga', 1), ('gc', 1), ('gg', 0), ('gt', 2),
             ('ta', 2), ('tc', 2), ('tg', 1), ('tt', 0)
         ])
+    
+    def test_withoutRedundant(self):
+        gen = NucleotideFrequency(2, True)
+        seq = 'ctaygcatgcta'
+        
+        res = gen.generate(seq)
+        
+        self.assertNotIn('ay', res)
+        self.assertNotIn('yg', res)
+
+    def test_withRedundant(self):
+        gen = NucleotideFrequency(2, False)
+        seq = 'ctaygcatgcta'
+        
+        res = gen.generate(seq)
+        
+        self.assertIn('ay', res)
+        self.assertIn('yg', res)
 
 class TestNucleotideSkew(TestCase):
     def test_generateAGgtTC(self):

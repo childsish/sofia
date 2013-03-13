@@ -2,14 +2,16 @@
 
 import string
 
+from lhc.binf.genetic_code import RedundantCode
 from lhc.tool import window, combinations_with_replacement as genKmers
 from collections import Counter, OrderedDict
 from feature import Feature, Dependency
 
 class NucleotideFrequency(Feature):
-    def __init__(self, k):
+    def __init__(self, k, ignore_redundant=True):
         super(NucleotideFrequency, self).__init__()
         self.k = k
+        self.ignore_redundant = ignore_redundant
     
     def calculate(self, seq, dep_res):
         res = OrderedDict((''.join(kmer), 0) for kmer in\
@@ -20,6 +22,10 @@ class NucleotideFrequency(Feature):
         else:
             res.update(Counter(kmer for kmer in\
                 window(seq, self.k, lambda x: ''.join(x))))
+        if self.ignore_redundant:
+            for k in res:
+                if len(set(k) & RedundantCode.REDUNDANT_BASES) > 0:
+                    del res[k]
         return res
  
 class NucleotideSkew(Feature):
