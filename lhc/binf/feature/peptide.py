@@ -9,6 +9,7 @@ class PeptideFrequency(Feature):
         
     def calculate(self, seq, dep_res):
         res = OrderedDict((aa, 0) for aa in self.genetic_code.AMINO_ACIDS)
+        res['X'] = 0
         res.update(Counter(seq))
         if '*' in res:
             del res['*']
