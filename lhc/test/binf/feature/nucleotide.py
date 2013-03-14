@@ -49,7 +49,7 @@ class TestNucleotideSkew(TestCase):
         
         res = gen.generate(seq)
         
-        self.assertEquals(res.items(), [('at', 0.5), ('gc', 0.5)])
+        self.assertEquals(res.items(), [('at_skew', 0.5), ('gc_skew', 0.5)])
 
     def test_generateAGltTC(self):
         gen = NucleotideSkew()
@@ -57,7 +57,7 @@ class TestNucleotideSkew(TestCase):
         
         res = gen.generate(seq)
         
-        self.assertEquals(res.items(), [('at', -0.5), ('gc', -0.5)])
+        self.assertEquals(res.items(), [('at_skew', -0.5), ('gc_skew', -0.5)])
 
     def test_generateAGeqTC(self):
         gen = NucleotideSkew()
@@ -65,7 +65,7 @@ class TestNucleotideSkew(TestCase):
         
         res = gen.generate(seq)
         
-        self.assertEquals(res.items(), [('at', 0), ('gc', 0)])
+        self.assertEquals(res.items(), [('at_skew', 0), ('gc_skew', 0)])
 
     def test_generateNoAT(self):
         gen = NucleotideSkew()
@@ -73,7 +73,7 @@ class TestNucleotideSkew(TestCase):
         
         res = gen.generate(seq)
         
-        self.assertEquals(res.items(), [('at', 0), ('gc', 0)])
+        self.assertEquals(res.items(), [('at_skew', 0), ('gc_skew', 0)])
 
 if __name__ == '__main__':
     import sys
