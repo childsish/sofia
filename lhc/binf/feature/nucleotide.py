@@ -44,5 +44,5 @@ class NucleotideSkew(Feature):
         else:
             gc = 0 if frq['g'] + frq['c'] == 0 else\
                  (frq['g'] - frq['c']) / float(frq['g'] + frq['c'])
-        res = OrderedDict([('at', at), ('gc', gc)])
+        res = OrderedDict([('at_skew', at), ('gc_skew', gc)])
         return res
