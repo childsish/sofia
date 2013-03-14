@@ -7,11 +7,11 @@ class MinimumFreeEnergy(Feature):
         super(MinimumFreeEnergy, self).__init__()
     
     def calculate(self, seq, dep_res):
-        return {'mfe': RNA.fold(seq)[1]}
+        return {'mfe': 'NA' if len(seq) == 0 else RNA.fold(seq)[1]}
 
 class EnsembleFreeEnergy(Feature):
     def __init__(self):
         super(EnsembleFreeEnergy, self).__init__()
     
     def calculate(self, seq, dep_res):
-        return {'efe': RNA.pf_fold(seq)[1]}
+        return {'efe': 'NA' if len(seq) == 0 else RNA.pf_fold(seq)[1]}
