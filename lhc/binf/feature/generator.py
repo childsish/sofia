@@ -15,8 +15,15 @@ class Generator(object):
     def generate(self, seq):
         res = OrderedDict()
         for name, feature in self.features.iteritems():
-            res[name] = feature.calculate(seq)
+            for k, v in feature.generate(seq):
+                res[k] = v
         return res
     
-    def calculate(self, seq, dep_res):
-        pass
+class RandomGenerator(Generator):
+    def generate(self, seq):
+        res = OrderedDict()
+        for name, feature in self.features.iteritems():
+            for k, v in feature.generate(seq):
+                res[k] = v
+        return res
+        

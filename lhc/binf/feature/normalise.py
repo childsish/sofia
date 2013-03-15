@@ -3,7 +3,7 @@ from feature import Feature, Dependency
 class LengthNormalised(Feature):
     def __init__(self, dependency):
         super(NormaliseLength, self).__init__()
-        self.registerDependency(dependency)
+        self.dependency = dependency
     
     def calculate(self, obj, dep_res):
         for k in dep_res:
