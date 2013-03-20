@@ -6,6 +6,7 @@ setup(
     author='Liam H. Childs',
     author_email='liam_childs@hotmail.com',
     packages=['lhc', 'lhc.test'],
+    package_data={'lhc': ['data/*.dat']},
     scripts=[],
     url='https://github.com/childsish/lhc-python',
     license='LICENSE.txt',

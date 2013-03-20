@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 
 from lhc.binf.genetic_code import GeneticCodes
-from lhc.binf.feature.peptide import PeptideFrequency
+from lhc.binf.feature.peptide import PeptideFrequency, Pest
 
 class TestPeptideFrequency(TestCase):
     def test_generate(self):
@@ -26,6 +26,18 @@ class TestPeptideFrequency(TestCase):
         res = gen.generate(gen.transform(seq))
         
         self.assertNotIn('*', res)
+
+class TestPest(TestCase):
+    def test_generate(self):
+        gcs = GeneticCodes('/data/gc.prt')
+        gen = Pest(gcs['Standard'])
+        seq = 'PDSAAAAAAAAARRRRPDTAAAAAAAAAKRHPESKHRKPETAAAAAAAAAKK'
+        
+        res = gen.generate(seq)
+        
+        self.assertEquals(res['npst'], 3)
+        self.assertAlmostEquals(res['avgpst'], -24.7825572)
+        self.assertAlmostEquals(res['maxpst'], -24.5838916)
         
 if __name__ == '__main__':
     import sys

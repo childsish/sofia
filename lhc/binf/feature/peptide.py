@@ -1,5 +1,6 @@
 from collections import Counter, OrderedDict
 from feature import Feature, Transform
+from lhc.binf.pest import Pest as PestBase
 
 class PeptideFrequency(Feature):
     def __init__(self, genetic_code):
@@ -14,3 +15,18 @@ class PeptideFrequency(Feature):
         if '*' in res:
             del res['*']
         return res
+
+class Pest(Feature):
+    def __init__(self, genetic_code, win=12, thr=5):
+        super(Pest, self).__init__()
+        self.transforms[Transform.NUC2PEP] = genetic_code.translate
+        self.genetic_code = genetic_code
+        self.pest = PestBase()
+    
+    def calculate(self, seq, dep_res):
+        psts = list(self.pest.iterPest(seq))
+        return OrderedDict(
+            npst = len(psts),
+            avgpst = sum(pst[0] for pst in psts) / float(len(psts)),
+            maxpst = max(pst[0] for pst in psts)
+        )
