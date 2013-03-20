@@ -1,4 +1,4 @@
-#!/usr/bin/python
+from pkg_resources import resource_string
 
 class RedundantCode:
     BASES = set("actgu")
@@ -124,15 +124,21 @@ class GeneticCode:
         return "".join(codon)
 
 class GeneticCodes:
-    def __init__(self, filename):
-        self.__codes = {}
-        self.__name2id = {}
-        self.__parseFile(filename)
+    def __init__(self, fname=None):
+        if fname is None:
+            data = resource_string(__name__, '../data/gc.prt')
+        else:
+            infile = open(fname)
+            data = infile.read()
+            infile.close()
+        self.codes = {}
+        self.name2id = {}
+        self.__parseFile(data)
 
     def __getitem__(self, key):
         if isinstance(key, basestring):
-            key = self.__name2id[key]
-        return self.__codes[key]
+            key = self.name2id[key]
+        return self.codes[key]
 
     def getCode(self, id):
         return self[id]
@@ -141,32 +147,34 @@ class GeneticCodes:
         return self[id].translate(seq)
     
     def getValidNames(self):
-        return self.__name2id.keys()
+        return self.name2id.keys()
     
-    def __parseFile(self, filename):
-        infile = file(filename)
-        line = infile.readline()
+    def __parseFile(self, data):
+        lines = iter(data.split('\n'))
+        line = lines.next()
         names = []
-        while line != '':
+        while True:
             if line[2:6] == 'name':
                 names.append(line[line.find('"') + 1: line.rfind('"')])
             elif line[2:4] == 'id':
                 id_ = int(line[5:line.find(',')].strip())
-                na2aa = self.__parseCode(infile)
-                self.__codes[id_] = GeneticCode(na2aa)
+                na2aa = self.__parseCode(lines)
+                self.codes[id_] = GeneticCode(na2aa)
                 for name in names:
-                    self.__name2id[name] = id_
+                    self.name2id[name] = id_
                 names = []
-            line = infile.readline()
-        infile.close()
+            try:
+                line = lines.next()
+            except StopIteration:
+                break
 
-    def __parseCode(self, infile):
+    def __parseCode(self, lines):
         na2aa = {}#'NNN': 'X'}
-        aa_line = infile.readline()
-        infile.readline()
-        _1 = infile.readline()
-        _2 = infile.readline()
-        _3 = infile.readline()
+        aa_line = lines.next()
+        lines.next()
+        _1 = lines.next()
+        _2 = lines.next()
+        _3 = lines.next()
         i = 12
         while aa_line[i] != '"':
             codon = (_1[i] + _2[i] + _3[i]).lower()
