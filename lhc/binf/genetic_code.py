@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pkg_resources import resource_string
 
 class RedundantCode:
@@ -100,7 +101,7 @@ class GeneticCode:
         for i in xrange(len(aa)):
             aa[i] = self[na[i*3:(i*3)+3]]
         return ''.join(aa)
-
+    
     def __init_aa2na(self, na2aa):
         setdefault = self.__aa2na.setdefault #SPEED_HACK
         for key, val in na2aa.iteritems():

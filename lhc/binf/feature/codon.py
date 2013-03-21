@@ -3,9 +3,10 @@ import warnings
 
 from itertools import izip
 from lhc.tool import window, combinations_with_replacement as genKmers, gmean
-from collections import Counter, OrderedDict
+from collections import Counter, OrderedDict, defaultdict
 from feature import Feature, Dependency
 from lhc.binf.genetic_code import RedundantCode
+from lhc.binf.cut import createCutFromSeqs
 
 class CodonUsage(Feature):
     def __init__(self, ignore_redundant=True):
@@ -61,3 +62,24 @@ class CodonAdaptationIndex(Feature):
                 rscu[cdn] = rscu_
                 w[cdn] = w_
         return rscu, w
+
+class EffectiveNumberOfCodons(Feature):
+    def __init__(self, genetic_code):
+        super(EffectiveNumberOfCodons, self).__init__()
+        self.genetic_code = genetic_code
+    
+    def calculate(self, seq, dep_res):
+        cut = createCutFromSeqs([seq])
+        Fs = {aa: self.calculateF(cut, self.genetic_code[aa])\
+            for aa in self.genetic_code.AMINO_ACIDS}
+        fams = defaultdict(list)
+        for aa in self.genetic_code.AMINO_ACIDS:
+            fams[len(self.genetic_code[aa])].append(Fs[aa])
+        Nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / np.mean(fam_Fs)\
+            for sz, fam_Fs in fams.iteritems())
+        return {'Nc': Nc}
+    
+    def calculateF(self, cut, fam):
+        n = float(sum(cut[cdn] for cdn in fam))
+        res = n * sum((cut[cdn] / n) ** 2 for cdn in fam) / (n - 1)
+        return res
