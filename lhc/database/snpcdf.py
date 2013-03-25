@@ -6,7 +6,7 @@ import numpy as np
 from netCDF4 import Dataset, default_fillvals
 from functools import total_ordering
 from collections import Counter
-from lhc.enum import enum
+from lhc.tool import enum
 
 Type = enum(['ID', 'MAIN', 'ALT', 'STOCK'])
 
@@ -140,7 +140,7 @@ class GenotypeSet(object):
             outfile.close()
             self.closed = True
 
-class NetCDFMarkerSet(object):
+class MarkerSet(object):
     def __init__(self, fname, mode='r'):
         self.fname = fname
         self.mode = mode

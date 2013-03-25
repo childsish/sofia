@@ -24,9 +24,13 @@ class Pest(Feature):
         self.pest = PestBase()
     
     def calculate(self, seq, dep_res):
+        if seq.endswith('*'):
+            seq = seq[:-1]
         psts = list(self.pest.iterPest(seq))
         return OrderedDict(
             npst = len(psts),
-            avgpst = sum(pst[0] for pst in psts) / float(len(psts)),
-            maxpst = max(pst[0] for pst in psts)
+            avgpst = 'NA' if len(psts) == 0 else\
+                sum(pst[0] for pst in psts) / float(len(psts)),
+            maxpst = 'NA' if len(psts) == 0 else\
+                max(pst[0] for pst in psts)
         )

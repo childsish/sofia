@@ -69,17 +69,19 @@ class EffectiveNumberOfCodons(Feature):
         self.genetic_code = genetic_code
     
     def calculate(self, seq, dep_res):
+        if len(seq) == 0:
+            return {'Nc': 'NA'}
         cut = createCutFromSeqs([seq])
         Fs = {aa: self.calculateF(cut, self.genetic_code[aa])\
             for aa in self.genetic_code.AMINO_ACIDS}
         fams = defaultdict(list)
         for aa in self.genetic_code.AMINO_ACIDS:
-            fams[len(self.genetic_code[aa])].append(Fs[aa])
+            if Fs[aa] is not None: # Assume missing aa have the mean F
+                fams[len(self.genetic_code[aa])].append(Fs[aa])
         Nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / np.mean(fam_Fs)\
             for sz, fam_Fs in fams.iteritems())
         return {'Nc': Nc}
     
     def calculateF(self, cut, fam):
         n = float(sum(cut[cdn] for cdn in fam))
-        res = n * sum((cut[cdn] / n) ** 2 for cdn in fam) / (n - 1)
-        return res
+        return None if n <= 1 else n * sum((cut[cdn] / n) ** 2 for cdn in fam) / (n - 1)
