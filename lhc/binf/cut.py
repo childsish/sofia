@@ -4,7 +4,7 @@ from lhc.file_format.fasta import iterFasta
 
 class CodonUsageTable(object):
     def __init__(self):
-        self.cut = OrderedDict((''.join(cdn), 0)\
+        self.cut = OrderedDict((''.join(cdn), 0.)\
             for cdn in combinations_with_replacement('acgt', 3))
     
     def __str__(self):
