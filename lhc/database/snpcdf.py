@@ -166,7 +166,8 @@ class MarkerSet(object):
         for chm, chm_poss in sorted(poss.iteritems()):
             to = fr + len(chm_poss)
             rnggrp.createVariable(chm, 'u4', ('rng',))[:] = np.array((fr, to))
-            chmvar[fr:to] = chm
+            chm_idx = rnggrp.variables.keys().index(chm)
+            chmvar[fr:to] = chm_idx
             posvar[fr:to] = chm_poss
             fr = to
 
@@ -181,7 +182,7 @@ class MarkerSet(object):
         self.data.createDimension('gens', None)
         self.data.createDimension('poss', npos)
         genvar = self.data.createVariable('gens', 'u4', ('gens',))
-        chmvar = self.data.createVariable('chms', 'S1', ('poss',))
+        chmvar = self.data.createVariable('chms', 'u1', ('poss',))
         posvar = self.data.createVariable('poss', 'u4', ('poss',))
         zygvar = self.data.createVariable('zygs', 'u1', ('gens',)) # u1
         zygvar.missing_value = default_fillvals['i1']
