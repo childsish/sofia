@@ -13,7 +13,7 @@ class CodonUsage(Feature):
         super(CodonUsage, self).__init__()
         self.ignore_redundant = ignore_redundant
 
-    def calculate(self, seq, dep_res):
+    def calculate(self, seq, dep_res=None):
         res = OrderedDict((''.join(kmer), 0) for kmer in\
             genKmers('tgca', 3))
         res.update(Counter(seq[i:i+3] for i in xrange(0, len(seq), 3)))
@@ -30,7 +30,7 @@ class CodonAdaptationIndex(Feature):
         self.cut = cut
         self.rscu, self.w = self.calculateStatistics(self.cut)
 
-    def calculate(self, seq, dep_res):
+    def calculate(self, seq, dep_res=None):
         gc = self.genetic_code
         cut = self.cut
         w = self.w
@@ -68,7 +68,7 @@ class EffectiveNumberOfCodons(Feature):
         super(EffectiveNumberOfCodons, self).__init__()
         self.genetic_code = genetic_code
     
-    def calculate(self, seq, dep_res):
+    def calculate(self, seq, dep_res=None):
         if len(seq) == 0:
             return {'Nc': 'NA'}
         cut = createCutFromSeqs([seq])
