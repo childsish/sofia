@@ -87,6 +87,19 @@ class GenotypeSet(object):
     def __del__(self):
         self.close()
     
+    def __len__(self):
+        return len(self.idx2gen)
+
+    def __contains__(self, key):
+        if key is None:
+            return False
+        elif isinstance(key, int):
+            return key in self.idx2gen
+        elif isinstance(key, basestring):
+            return key in self.gen2idx
+        raise KeyError('Unexpected key type. Get %s, expected <str>.'%\
+            (type(key)))
+    
     def __getitem__(self, key):
         if isinstance(key, int):
             return self.idx2gen[key]
@@ -101,7 +114,7 @@ class GenotypeSet(object):
     def addGenotype(self, genotype):
         self.idx2gen[genotype.idx] = genotype
         for alias in genotype.aliases:
-            self.gen2idx[alias.name] = genotype.idx
+            self.gen2idx.setdefault(alias.name, []).append(genotype.idx)
     
     def _createIdx2Gen(self):
         self.idx2gen = {}
@@ -153,7 +166,7 @@ class MarkerSet(object):
     
     def __getitem__(self, key):
         gens = self.gens[key]
-        if isinstance(gen, list):
+        if isinstance(gens, list):
             for gen in gens:
                 gen.data = self.data.variables['snps']
         else:
@@ -204,15 +217,15 @@ class MarkerSet(object):
         self.data.ploidy_multiplier = ploidy / ref.shape[1]
 
     def registerGenotype(self, id_=None):
-        refvar = self.data.variables['ref']
-        snpvar = self.data.variables['snps']
-        nxt = len(self.data.dimensions['gens'])
-        snpvar[nxt] = refvar[:]
-        id_ = str(nxt + 1) if id_ is None else id_
-        gen = Genotype(id_, nxt)
-        gen.data = self.data.variables['snps']
-        self.gens.addGenotype(gen)
-        return gen
+        if id_ not in self.gens:
+            nxt = len(self.data.dimensions['gens'])
+            id_ = str(nxt + 1) if id_ is None else id_
+            snpvar = self.data.variables['snps']
+            refvar = self.data.variables['ref']
+            snpvar[nxt] = refvar[:]
+            gen = Genotype(id_, nxt)
+            self.gens.addGenotype(gen)
+        return self[id_]
     
     def getChromosomeRanges(self):
         grp = self.data.groups['chm_idxs']
