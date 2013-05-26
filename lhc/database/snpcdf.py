@@ -174,9 +174,10 @@ class MarkerSet(object):
         return gens
 
     def registerPositions(self, poss):
+        """Warning, you must use an OrderedDict to specify chromosome order"""
         chmvar, posvar, rnggrp = self._initDimensionsAndVariables(poss)
         fr = 0
-        for chm, chm_poss in sorted(poss.iteritems()):
+        for chm, chm_poss in poss.iteritems():
             to = fr + len(chm_poss)
             rnggrp.createVariable(chm, 'u4', ('rng',))[:] = np.array((fr, to))
             chm_idx = rnggrp.variables.keys().index(chm)
