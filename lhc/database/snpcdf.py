@@ -193,28 +193,29 @@ class MarkerSet(object):
             values assigned to it.
         """
         npos = sum(len(chm_poss) for chm, chm_poss in poss.iteritems())
-        self.data.createDimension('gens', None)
         self.data.createDimension('poss', npos)
-        self.data.createDimension('ploidy', 2)
-        genvar = self.data.createVariable('gens', 'u4', ('gens',))
         chmvar = self.data.createVariable('chms', 'u1', ('poss',))
         posvar = self.data.createVariable('poss', 'u4', ('poss',))
+        self.data.createVariable('mal', 'S1', ('poss',))\
+            .missing_value = default_fillvals['S1']
+        self.data.createVariable('maf', 'f4', ('poss',))\
+            .missing_value = default_fillvals['f4']
+        
+        self.data.createDimension('ploidy', 2)
+        self.data.createVariable('ref', 'S1', ('poss', 'ploidy'))
+        
+        self.data.createDimension('gens', None)
+        self.data.createVariable('snps', 'S1', ('gens', 'poss', 'ploidy'))\
+            .missing_value = default_fillvals['S1']
         zygvar = self.data.createVariable('zygs', 'u1', ('gens',)) # u1
         zygvar.missing_value = default_fillvals['i1']
-        malvar = self.data.createVariable('mal', 'S1', ('poss',))
-        malvar.missing_value = default_fillvals['S1']
-        mafvar = self.data.createVariable('maf', 'f4', ('poss',))
-        mafvar.missing_value = default_fillvals['f4']
+        
         grp = self.data.createGroup('chm_idxs')
         grp.createDimension('rng', 2)
         return chmvar, posvar, grp
         
     def registerReference(self, ref):
-        refvar = self.data.createVariable('ref', 'S1', ('poss', 'ploidy'))
-        snpvar = self.data.createVariable('snps', 'S1',
-            ('gens', 'poss', 'ploidy'))
-        snpvar.missing_value = default_fillvals['S1']
-        refvar[:] = ref
+        self.data.variables['ref'][:] = ref
 
     def registerGenotype(self, id_=None):
         if id_ not in self.gens:
