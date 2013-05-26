@@ -195,6 +195,7 @@ class MarkerSet(object):
         npos = sum(len(chm_poss) for chm, chm_poss in poss.iteritems())
         self.data.createDimension('gens', None)
         self.data.createDimension('poss', npos)
+        self.data.createDimension('ploidy', 2)
         genvar = self.data.createVariable('gens', 'u4', ('gens',))
         chmvar = self.data.createVariable('chms', 'u1', ('poss',))
         posvar = self.data.createVariable('poss', 'u4', ('poss',))
@@ -208,14 +209,12 @@ class MarkerSet(object):
         grp.createDimension('rng', 2)
         return chmvar, posvar, grp
         
-    def registerReference(self, ref, ploidy):
-        self.data.createDimension('ploidy', ref.shape[1])
+    def registerReference(self, ref):
         refvar = self.data.createVariable('ref', 'S1', ('poss', 'ploidy'))
         snpvar = self.data.createVariable('snps', 'S1',
             ('gens', 'poss', 'ploidy'))
         snpvar.missing_value = default_fillvals['S1']
         refvar[:] = ref
-        self.data.ploidy_multiplier = ploidy / ref.shape[1]
 
     def registerGenotype(self, id_=None):
         if id_ not in self.gens:
@@ -283,7 +282,6 @@ class MarkerSet(object):
         csnp = self.data.variables['snps']
         nsnp[:] = np.sum(csnp[:] == mal[:][np.newaxis,:,np.newaxis], 2,
             dtype=np.dtype('f4'))
-        nsnp[:] = self.data.ploidy_multiplier * nsnp[:]
 
     def processMatrix(self, name, pipe, kwargs, dim, dim_sz=None):
         if dim not in self.data.dimensions:
