@@ -9,11 +9,20 @@ def iterObo(fname):
         line = infile.next()
     term = Term()
     for line in infile:
-        if line.strip() == '[Term]':
-            yield term
-            term = Term()
-        else:
-            k, v = line.strip().split(':', 1)
+        line = line.strip()
+        if line == '':
+            continue
+        elif line[0] == '[':
+            if term is not None:
+                yield term
+            
+            if line == '[Term]':
+                term = Term()
+            else:
+                term = None
+        elif term is not None:
+            k, v = line.split(':', 1)
             term[k.strip()] = v.strip()
-    yield term
+    if term is not None:
+        yield term
     infile.close()
