@@ -1,8 +1,8 @@
 class Term(dict):
     def __init__(self):
         self.__dict__ = self
-
-def iterObo(fname):
+    
+def iterObo(fname, unq_keys=set(('id', 'name', 'namespace', 'def'))):
     infile = open(fname)
     line = infile.next()
     while line.strip() != '[Term]':
@@ -21,8 +21,11 @@ def iterObo(fname):
             else:
                 term = None
         elif term is not None:
-            k, v = line.split(':', 1)
-            term[k.strip()] = v.strip()
+            k, v = [part.strip() for part in line.split(':', 1)]
+            if k in unq_keys:
+                term[k] = v
+            else:
+                term.setdefault(k, []).append(v)
     if term is not None:
         yield term
     infile.close()
