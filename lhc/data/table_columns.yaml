@@ -1,0 +1,80 @@
+gff:
+    import:
+      - lhc.binf.interval
+    columns:
+      - name: chr
+      - name: src
+      - name: type
+      - name: fr
+        type: int
+      - name: to
+        type: int
+      - name: scr
+        type: float
+      - name: strand
+      - name: phase
+        type: int
+      - name: attr
+    fields:
+      - name: chr
+      - name: src
+      - name: type
+      - name: rng
+        init: interval.Interval(fr - 1, to)
+      - name: scr
+      - name: strand
+      - name: phase
+      - name: attr
+        init: dict(part.split(' ', 1) for part in attr.split(';') if part != '')
+vcf:
+    columns:
+      - name: chr
+      - name: pos
+        type: int
+      - name: id
+      - name: ref
+      - name: alt
+      - name: quality
+        type: float
+      - name: filter
+      - name: info
+    fields:
+      - name: chr
+      - name: pos
+      - name: id
+      - name: ref
+      - name: alt
+      - name: quality
+      - name: filter
+      - name: info
+        init: dict(part.split('=', 1) for part in info.split(';') if part != '')
+maf:
+    import:
+      - lhc.binf.interval
+    columns:
+      - name: chr
+        idx: 4
+      - name: fr
+        idx: 5
+        type: int
+      - name: to
+        idx: 6
+        type: int
+      - name: type
+        idx: 9
+      - name: ref
+        idx: 10
+      - name: allele1
+        idx: 11
+      - name: allele2
+        idx: 12
+      - name: id
+    fields:
+      - name: chr
+      - name: rng
+        init: interval.Interval(fr - 1, to)
+      - name: type
+      - name: ref
+      - name: allele1
+      - name: allele2
+      - name: id

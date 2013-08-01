@@ -1,4 +1,4 @@
 from functools import partial
 from table import iterTable
 
-iterGff = functool.partial(iterTable, type='gff')
+iterMaf = functool.partial(iterTable, type='maf')
