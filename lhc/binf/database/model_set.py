@@ -13,7 +13,7 @@ class ModelSet(object):
     
     def createTables(self):
         cur = self.conn.cursor()
-        cur.execute('''CREATE VIRTUAL TABLE IF NOT EXISTS interval USING rtree(id, fr, to);''')
+        cur.execute('''CREATE VIRTUAL TABLE IF NOT EXISTS interval USING rtree(id, ivl_fr, ivl_to);''')
         cur.execute('''CREATE TABLE IF NOT EXISTS model (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chr TEXT,
