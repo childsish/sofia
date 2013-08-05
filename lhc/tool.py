@@ -41,3 +41,25 @@ def combinations_with_replacement(iterable, r):
 def gmean(seq):
     """ Calculate the geometric mean. """
     return np.exp(np.mean(np.log(np.array(seq))))
+
+def argsort(seq):
+    return sorted(range(len(seq)), key=seq.__getitem__)
+
+def loadPlugins(indir, cls):
+    sys.path.append(indir)
+    plugins = {}
+
+    mnames = (fname[:-3] for fname in os.listdir(indir)\
+        if fname[0] != '.' and fname.endswith('.py'))
+
+    for mname in mnames:
+        d = __import__(mname).__dict__
+        for k, v in d.iteritems():
+            if k == cls.__name__:
+                continue
+            try:
+                if issubclass(v, cls):
+                    plugins[k] = v
+            except TypeError:
+                continue
+    return plugins

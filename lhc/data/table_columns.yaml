@@ -1,29 +1,50 @@
 gff:
-    import:
-      - lhc.binf.interval
     columns:
       - name: chr
-      - name: src
+        idx: 0
       - name: type
+        idx: 2
       - name: fr
+        idx: 3
         type: int
       - name: to
+        idx: 4
         type: int
-      - name: scr
-        type: float
       - name: strand
-      - name: phase
-        type: int
+        idx: 6
       - name: attr
+        idx: 8
     fields:
       - name: chr
       - name: src
       - name: type
       - name: rng
-        init: interval.Interval(fr - 1, to)
-      - name: scr
+        init: interval(fr - 1, to)
       - name: strand
-      - name: phase
+      - name: attr
+        init: dict(part.strip().split(' ', 1) for part in attr.split(';') if part != '')
+gtf:
+    columns:
+      - name: chr
+        idx: 0
+      - name: type
+        idx: 2
+      - name: fr
+        idx: 3
+        type: int
+      - name: to
+        idx: 4
+        type: int
+      - name: strand
+        idx: 6
+      - name: attr
+        idx: 8
+    fields:
+      - name: chr
+      - name: type
+      - name: rng
+        init: interval(fr - 1, to)
+      - name: strand
       - name: attr
         init: dict(part.split(' ', 1) for part in attr.split(';') if part != '')
 vcf:
@@ -51,6 +72,7 @@ vcf:
 maf:
     import:
       - lhc.binf.interval
+    header: true
     columns:
       - name: chr
         idx: 4
@@ -69,10 +91,11 @@ maf:
       - name: allele2
         idx: 12
       - name: id
+        idx: 15
     fields:
       - name: chr
       - name: rng
-        init: interval.Interval(fr - 1, to)
+        init: interval(fr - 1, to)
       - name: type
       - name: ref
       - name: allele1
