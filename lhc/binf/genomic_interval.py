@@ -12,6 +12,9 @@ class interval(object):
         self.strand = strand
         self.context = context
     
+    def __str__(self):
+        return '%s:%s-%s'%(self.chr, self.fr, self.to)
+    
     def __eq__(self, other):
         return self.chr == other.chr and self.fr == other.fr and self.strand == other.strand
     
