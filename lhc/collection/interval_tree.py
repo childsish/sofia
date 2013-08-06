@@ -1,11 +1,6 @@
-from Range import Range
+from interval import Interval
 from sys import maxint
-
-try:
-    import psyco
-    psyco.full()
-except ImportError:
-    print 'Unable to import psyco'
+from lhc.slicetools import overlaps
 
 class RecursionNode:
     def __init__(self, node, p_idx, try_r):
@@ -19,9 +14,9 @@ class IterationNode:
         self.try_l = True
 
 class Node:
-    def __init__(self, rng):
-        self.rng = rng
-        self.mx = rng.t
+    def __init__(self, ivl):
+        self.ivl = ivl
+        self.mx = ivl.stop
 
         # Red/Black tree data
         self.red = False
@@ -32,22 +27,22 @@ class Node:
         self.p = None
 
     def __str__(self):
-        res = str(self.rng)
-        res += ', f=%i, t=%i, m=%i'%(self.rng.f, self.rng.t, self.mx)
+        res = str(self.ivl)
+        res += ', f=%i, t=%i, m=%i'%(self.ivl.start, self.ivl.stop, self.mx)
         return res
 
     def toString(self, nil, head):
-        res = str(self.rng)
-        res += ', f=%i, t=%i, m=%i'%(self.rng.f, self.rng.t, self.mx)
-        res += '  l.rng.f='
+        res = str(self.ivl)
+        res += ', f=%i, t=%i, m=%i'%(self.ivl.start, self.ivl.stop, self.mx)
+        res += '  l.ivl.start='
         if self.l == nil: res += 'NULL'
-        else:             res += '%i'%(self.l.rng.f)
-        res += '  r.rng.f='
+        else:             res += '%i'%(self.l.ivl.start)
+        res += '  r.ivl.start='
         if self.r == nil: res += 'NULL'
-        else:             res += '%i'%(self.r.rng.f)
-        res += '  p.rng.f='
+        else:             res += '%i'%(self.r.ivl.start)
+        res += '  p.ivl.start='
         if self.p == head: res += 'NULL'
-        else:              res += '%i'%(self.p.rng.f)
+        else:              res += '%i'%(self.p.ivl.start)
         res += '  red=%i\n'%(self.red)
         return res
 
@@ -80,23 +75,23 @@ class IntervalTree:
                 iternode = IterationNode(res.node.r)
                 iternode.try_l = iternode.node.l != self.tree.nil
                 self.stack.append(iternode)
-            return res.node.rng
+            return res.node.ivl
     
-    def __init__(self, rngs=None):
+    def __init__(self, ivls=None):
         # Initialise sentinels
-        self.nil = Node(Range(-maxint-1, -maxint-1))
+        self.nil = Node(Interval(-maxint-1, -maxint-1))
         self.nil.l = self.nil
         self.nil.r = self.nil
         self.nil.p = self.nil
         
-        self.head = Node(Range(maxint, maxint))
+        self.head = Node(Interval(maxint, maxint))
         self.head.l = self.nil
         self.head.r = self.nil
         self.head.p = self.nil
         
-        if rngs != None:
-            for rng in rngs:
-                self.insert(rng)
+        if ivls != None:
+            for ivl in ivls:
+                self.insert(ivl)
     
     def __str__(self):
         return self.__treePrintHelper(self.head.l)
@@ -104,8 +99,8 @@ class IntervalTree:
     def __iter__(self):
         return IntervalTree.Iterator(self)
 
-    def insert(self, rng):
-        x = Node(rng)
+    def insert(self, ivl):
+        x = Node(ivl)
         self.__treeInsertHelp(x)
         self.__fixUpMaxHigh(x.p)
         newNode = x
@@ -144,15 +139,15 @@ class IntervalTree:
         self.head.l.red = False
         return newNode
     
-    def getRange(self):
+    def getInterval(self):
         x = self.head.l
         y = x
         while x != self.nil:
             y = x
             x = x.l
-        return Range(y.rng.f, self.head.l.mx)
+        return Interval(y.ivl.start, self.head.l.mx)
     
-    def search(self, rng):
+    def search(self, ivl):
         """ Possible speed up: add min field to prune r searches. """
         x = self.head.l
         stuffToDo = x != self.nil
@@ -162,13 +157,13 @@ class IntervalTree:
         
         res = []
         while(stuffToDo):
-            if rng.overlaps(x.rng):
-                res.append(x.rng)
+            if overlaps(ivl, x.ivl):
+                res.append(x.ivl)
                 stack[c_parent].try_r = True
             
-            if x.l.mx >= rng.f: # Implies x != nil 
+            if x.l.mx >= ivl.start: # Implies x != nil 
                 stack.append(RecursionNode(x, c_parent, False))
-                c_parent = len(stack)-1
+                c_parent = len(stack) - 1
                 x = x.l
             else:
                 x = x.r
@@ -213,8 +208,8 @@ class IntervalTree:
         y.l = x
         x.p = y
 
-        x.mx = max(x.l.mx, x.r.mx, x.rng.t)
-        y.mx = max(x.mx, y.r.mx, y.rng.t)
+        x.mx = max(x.l.mx, x.r.mx, x.ivl.stop)
+        y.mx = max(x.mx, y.r.mx, y.ivl.stop)
     
     def __rRotate(self, y):
         x = y.l
@@ -235,8 +230,8 @@ class IntervalTree:
         x.r = y
         y.p = x
 
-        y.mx = max(y.l.mx, y.r.mx, y.rng.t)
-        x.mx = max(x.l.mx, y.mx, x.rng.t)
+        y.mx = max(y.l.mx, y.r.mx, y.ivl.stop)
+        x.mx = max(x.l.mx, y.mx, x.ivl.stop)
     
     def __treeInsertHelp(self, z):
         z.l = self.nil
@@ -245,20 +240,20 @@ class IntervalTree:
         x = self.head.l
         while(x != self.nil):
             y = x
-            if x.rng.f > z.rng.f:
+            if x.ivl.start > z.ivl.start:
                 x = x.l
-            else: # x.rng.f <= z.rng.f 
+            else: # x.ivl.start <= z.ivl.start 
                 x = x.r
         
         z.p = y
-        if (y == self.head) or (y.rng.f > z.rng.f):
+        if (y == self.head) or (y.ivl.start > z.ivl.start):
             y.l = z
         else:
             y.r = z
 
     def __fixUpMaxHigh(self, x):
         while x != self.head:
-            x.mx = max(x.rng.t, x.l.mx, x.r.mx)
+            x.mx = max(x.ivl.stop, x.l.mx, x.r.mx)
             x = x.p
     
     def __treePrintHelper(self, x):
@@ -268,42 +263,3 @@ class IntervalTree:
             res += x.toString(self.nil, self.head)
             res += self.__treePrintHelper(x.r)
         return res
-
-def main():
-    import random
-    
-    rngs = []
-    tree = IntervalTree()
-    for i in xrange(15):
-        l = random.randint(0, 100)
-        r = random.randint(0, 100)
-        rng = Range(min(l, r), max(l, r))
-        rngs.append(rng)
-        tree.insert(rng)
-        print str(tree)
-        print
-    
-    print tree.getRange()
-
-    return 0
-
-    for rng in rngs:
-        print str(rng)
-    print
-    
-    print str(tree)
-    
-    rng = Range(30, 30)
-    print '*' + str(rng)
-    res = tree.search(rng)
-    for r in res:
-        print r
-        
-    for node in tree:
-        print node
-    
-    return 0
-
-if __name__ == '__main__':
-    import sys
-    sys.exit(main())
