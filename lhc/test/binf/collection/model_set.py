@@ -25,21 +25,21 @@ class Test(unittest.TestCase):
         mset = ModelSet(self.getName(), 'w')
         ivl = interval('chr1', 0, 10, '+')
         model_id = mset.addModelSegment(ivl, 'gene')
-        mset.finaliseIntervals()
         
         qry = 'SELECT * FROM model WHERE id = ?'
         row = mset.conn.execute(qry, (model_id,)).fetchone()
-        self.assertEquals(row, (model_id, ivl.chr, 0, 'gene', ivl.strand))
+        self.assertEquals(row, (model_id, ivl.chr, 1, 'gene', ivl.strand, None))
         
-        mset_ivl = mset.ncl[0]
-        self.assertEquals((mset_ivl.start, mset_ivl.stop), (ivl.start, ivl.stop))
+        qry = 'SELECT * FROM interval WHERE id = ?'
+        interval_id = row[2]
+        row = mset.conn.execute(qry, (interval_id,)).fetchone()
+        self.assertEquals(row, (interval_id, ivl.start, ivl.stop))
     
     def testAddIdentifier(self):
         mset = ModelSet(self.getName(), 'w')
         ivl = interval('chr1', 0, 10, '+')
         model_id = mset.addModelSegment(ivl, 'gene')
         identifier_id = mset.addIdentifier(model_id, 'GENE_A')
-        mset.finaliseIntervals()
         
         qry = 'SELECT * FROM identifier WHERE id = ?'
         row = mset.conn.execute(qry, (identifier_id,)).fetchone()
@@ -50,7 +50,6 @@ class Test(unittest.TestCase):
         ivl = interval('chr1', 0, 10, '+')
         model_id = mset.addModelSegment(ivl, 'gene')
         mset.addIdentifier(model_id, 'GENE_A')
-        mset.finaliseIntervals()
         
         res = mset['GENE_A']
         
@@ -74,7 +73,6 @@ class Test(unittest.TestCase):
         mset.addModelSegment(ivl, 'exon', model_id)
         ivl = interval('chr1', 50, 100, '+')
         mset.addModelSegment(ivl, 'exon', model_id)
-        mset.finaliseIntervals()
 
         res = mset['GENE_A']
         
