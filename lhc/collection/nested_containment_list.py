@@ -12,10 +12,10 @@ from lhc.interval import interval
 
 class NestedContainmentList(object):
 
-    def __init__(self, root, mode='r'):
+    def __init__(self, root, mode='r', diskless=False):
         self.root = root
         if isinstance(root, basestring):
-            self.root = Dataset(root, mode)
+            self.root = Dataset(root, mode, diskless=diskless)
     
     def __getitem__(self, key):
         if isinstance(key, int):
@@ -29,6 +29,9 @@ class NestedContainmentList(object):
         return ivl_map
     
     def getIntervalTable(self, ivls):
+        def contains(a, b):
+            return a[0] <= b[0] and a[1] <= b[1]
+        
         owner_ids = np.zeros(len(ivls), dtype='i4')
         member_ids = np.zeros(len(ivls), dtype='i4')
         
@@ -37,13 +40,13 @@ class NestedContainmentList(object):
         stk = []
         for i in xrange(len(idxs) - 1):
             member_ids[i] = 0 if len(stk) == 0 else stk[-1][1]
-            if self.contains(ivls[idxs[i]], ivls[idxs[i + 1]]):
+            if contains(ivls[idxs[i]], ivls[idxs[i + 1]]):
                 stk.append((ivls[idxs[i]], sublist_id))
                 owner_ids[idxs[i]] = sublist_id
                 sublist_id += 1
-            while len(stk) > 0 and not self.contains(stk[-1][0], ivls[idxs[i + 1]]):
+            while len(stk) > 0 and not contains(stk[-1][0], ivls[idxs[i + 1]]):
                 stk.pop()
-        member_ids[i + 1] = 0 if len(stk) == 0 else stk[-1][1]
+        member_ids[-1] = 0 if len(stk) == 0 else stk[-1][1]
         idxs = idxs[np.argsort(member_ids)]
         
         grp_table = self.getSubGroupTable(member_ids)
@@ -65,6 +68,3 @@ class NestedContainmentList(object):
         self.root.createDimension('grp_col', 2)
         self.root.createVariable('ivls', 'i4', ('ivls', 'ivl_col'))[:] = ivls
         self.root.createVariable('grps', 'i4', ('grps', 'grp_col'))[:] = grps
-    
-    def contains(self, a, b):
-        return a[0] <= b[0] and a[1] <= b[1]

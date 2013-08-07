@@ -6,20 +6,20 @@ Created on 06/08/2013
 
 class interval(object):
 
-    def __init__(self, chromosome, fr, to, strand, context=None):
+    def __init__(self, chromosome, start, stop, strand, context=None):
         self.chr = chromosome
-        self.fr, self.to = sorted((fr, to))
+        self.start, self.stop = sorted((start, stop))
         self.strand = strand
         self.context = context
     
     def __str__(self):
-        return '%s:%s-%s'%(self.chr, self.fr, self.to)
+        return '%s:%s-%s'%(self.chr, self.start, self.stop)
     
     def __eq__(self, other):
-        return self.chr == other.chr and self.fr == other.fr and self.strand == other.strand
+        return self.chr == other.chr and self.start == other.start and self.strand == other.strand
     
     def getSubSeq(self, seq):
-        return seq[self.fr:self.to]
+        return seq[self.start:self.stop]
     
     def getAbsPos(self, pos):
         pass

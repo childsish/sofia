@@ -8,6 +8,7 @@ import sqlite3
 
 from collections import defaultdict
 from lhc.binf.genomic_interval import interval
+from lhc.collection.nested_containment_list import NestedContainmentList as NCList
 
 class Model(object):
     
@@ -19,9 +20,15 @@ class Model(object):
 
 class ModelSet(object):
     
-    def __init__(self, fname):
-        self.conn = sqlite3.connect(fname)
-        self.createTables()
+    def __init__(self, fname, mode='r'):
+        base = fname.rsplit('.', 1)[0]
+        db_name = fname if fname == ':memory:' else '%s.db'%base
+        nc_name = '%s.nc'%base
+        self.conn = sqlite3.connect(db_name)
+        self.ncl = NCList(nc_name, mode, diskless=fname == ':memory:')
+        self.ivls = []
+        if mode == 'w':
+            self.createTables()
     
     def __del__(self):
         if hasattr(self, 'conn'):
@@ -29,7 +36,7 @@ class ModelSet(object):
             self.conn.close()
     
     def __getitem__(self, key):
-        ''' Warning. Requires in order insertion of segments. '''
+        ''' Warning. Requires in-order insertion of segments. '''
         if isinstance(key, basestring):
             return self.getModelById(key)
         elif isinstance(key, interval):
@@ -38,22 +45,21 @@ class ModelSet(object):
     
     def createTables(self):
         cur = self.conn.cursor()
-        cur.execute('''CREATE VIRTUAL TABLE IF NOT EXISTS interval USING rtree(id, ivl_fr, ivl_to);''')
         cur.execute('''CREATE TABLE IF NOT EXISTS model (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chr TEXT,
-            interval_id REFERENCES interval(id),
+            interval_id INTEGER,
             type TEXT,
             strand TEXT
         );''')
         cur.execute('''CREATE TABLE IF NOT EXISTS closure (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            parent_id REFERENCES model(id),
-            child_id REFERENCES model(id)
+            parent_id INTEGER REFERENCES model(id),
+            child_id INTEGER REFERENCES model(id)
         )''')
         cur.execute('''CREATE TABLE IF NOT EXISTS identifier (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            model_id REFERENCES model(id),
+            model_id INTEGER REFERENCES model(id),
             value TEXT,
             type TEXT
         );''')
@@ -61,11 +67,9 @@ class ModelSet(object):
     def addModelSegment(self, ivl, type, parent_id=None):
         ''' Warning. Requires in order insertion of segments. '''
         cur = self.conn.cursor()
-        qry = 'INSERT INTO interval VALUES (NULL, ?, ?)'
-        cur.execute(qry, (ivl.fr, ivl.to))
-        interval_id = cur.lastrowid
-        qry = 'INSERT INTO model VALUES (NULL, ?, ? ,?, ?)'
-        cur.execute(qry, (ivl.chr, interval_id, type, ivl.strand))
+        self.ivls.append(ivl)
+        qry = 'INSERT INTO model VALUES (NULL, ?, NULL ,?, ?)'
+        cur.execute(qry, (ivl.chr, type, ivl.strand))
         model_id = cur.lastrowid
         if parent_id is not None:
             qry = '''INSERT INTO closure
@@ -80,6 +84,13 @@ class ModelSet(object):
         cur.execute(qry, locals())
         return model_id
     
+    def finaliseIntervals(self):
+        cur = self.conn.cursor()
+        ivl_map = self.ncl.insertIntervals(self.ivls)
+        qry = 'UPDATE model SET interval_id = :interval_id WHERE id = :id'
+        cur.executemany(qry, ({'id': id + 1, 'interval_id': int(interval_id)}\
+            for id, interval_id in enumerate(ivl_map)))
+    
     def addIdentifier(self, model_id, value, type='PRIMARY'):
         cur = self.conn.cursor()
         qry = 'SELECT id FROM identifier WHERE model_id = :model_id AND type = :type'
@@ -90,16 +101,15 @@ class ModelSet(object):
         return cur.lastrowid
     
     def getModelById(self, key):
-        cur = self.conn.cursor()
-        qry = '''SELECT model_id FROM identifier WHERE value = ?'''
-        return cur.execute(qry, (name,))
+        #cur = self.conn.cursor()
+        #qry = '''SELECT model_id FROM identifier WHERE value = ?'''
+        #return cur.execute(qry, (key,))
     
         cur = self.conn.cursor()
-        qry = '''SELECT model.id, cid.value, model.chr, interval.ivl_fr, interval.ivl_to, model.type, model.strand
-            FROM interval, model, closure, identifier AS pid
+        qry = '''SELECT model.id, cid.value, model.chr, model.interval_id, model.type, model.strand
+            FROM model, closure, identifier AS pid
             LEFT JOIN identifier AS cid ON cid.model_id = model.id
             WHERE
-                interval.id = model.interval_id AND
                 model.id = closure.child_id AND
                 closure.parent_id = pid.model_id AND
                 pid.value = ?;
@@ -107,8 +117,9 @@ class ModelSet(object):
         rows = cur.execute(qry, (key,))
         res = None
         models = {}
-        for model_id, model_name, chm, fr, to, type, strand in rows:
-            models[model_id] = Model(model_name, interval(chm, fr, to, strand), type)
+        for model_id, model_name, chm, interval_id, type, strand in rows:
+            ivl = self.ncl[interval_id]
+            models[model_id] = Model(model_name, interval(chm, ivl.start, ivl.stop, strand), type)
             if model_name == key:
                 res = models[model_id]
         qry = '''SELECT c.parent_id, c.child_id FROM closure AS p, closure AS c, identifier
@@ -120,6 +131,6 @@ class ModelSet(object):
         for child_id, parent_id in closure.iteritems():
             models[parent_id].children.append(models[child_id])
         return res
-    
+
     def getModelsInInterval(self, ivl):
         return []
