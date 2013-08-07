@@ -23,30 +23,6 @@ gff:
       - name: strand
       - name: attr
         init: dict(part.strip().split(' ', 1) for part in attr.split(';') if part != '')
-gtf:
-    columns:
-      - name: chr
-        idx: 0
-      - name: type
-        idx: 2
-      - name: fr
-        idx: 3
-        type: int
-      - name: to
-        idx: 4
-        type: int
-      - name: strand
-        idx: 6
-      - name: attr
-        idx: 8
-    fields:
-      - name: chr
-      - name: type
-      - name: rng
-        init: interval(fr - 1, to)
-      - name: strand
-      - name: attr
-        init: dict(part.split(' ', 1) for part in attr.split(';') if part != '')
 vcf:
     columns:
       - name: chr

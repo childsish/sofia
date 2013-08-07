@@ -7,7 +7,7 @@ Created on 06/08/2013
 def overlaps(a, b, length=None):
     a = normalise(a, length)
     b = normalise(b, length)
-    return a.start <= b.start and a.stop > b.start or
+    return a.start <= b.start and a.stop > b.start or\
         b.start < a.stop and b.stop >= a.stop
 
 def contains(a, b, length=None):

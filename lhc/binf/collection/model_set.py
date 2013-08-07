@@ -23,6 +23,11 @@ class ModelSet(object):
         self.conn = sqlite3.connect(fname)
         self.createTables()
     
+    def __del__(self):
+        if hasattr(self, 'conn'):
+            self.conn.commit()
+            self.conn.close()
+    
     def __getitem__(self, key):
         ''' Warning. Requires in order insertion of segments. '''
         if isinstance(key, basestring):

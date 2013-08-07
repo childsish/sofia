@@ -63,3 +63,9 @@ def loadPlugins(indir, cls):
             except TypeError:
                 continue
     return plugins
+
+def accumulate(xs):
+    ttl = 0
+    for x in xs:
+        ttl += x
+        yield ttl
