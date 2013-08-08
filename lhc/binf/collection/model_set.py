@@ -29,7 +29,6 @@ class ModelSet(object):
             self.conn.close()
     
     def __getitem__(self, key):
-        ''' Warning. Requires in order insertion of segments. '''
         if isinstance(key, basestring):
             return self.getModelById(key)
         elif isinstance(key, interval):
@@ -38,8 +37,11 @@ class ModelSet(object):
     
     def createTables(self):
         cur = self.conn.cursor()
-        cur.execute('''CREATE VIRTUAL TABLE interval
-            USING rtree(id, ivl_fr, ivl_to);''')
+        try:
+            cur.execute('''CREATE VIRTUAL TABLE interval
+                USING rtree(id, ivl_fr, ivl_to);''')
+        except sqlite3.OperationalError:
+            pass
         cur.execute('''CREATE TABLE IF NOT EXISTS model (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chr TEXT,
@@ -57,7 +59,6 @@ class ModelSet(object):
         );''')
     
     def addModelSegment(self, ivl, type, parent_id=None):
-        ''' Warning. Requires in order insertion of segments. '''
         cur = self.conn.cursor()
         qry = 'INSERT INTO interval VALUES (NULL, ?, ?)'
         cur.execute(qry, (ivl.start, ivl.stop))
@@ -95,10 +96,12 @@ class ModelSet(object):
         children = defaultdict(list)
         qry = '''SELECT identifier.value, model.id, model.type, model.strand,
                 model.parent_id, interval.ivl_fr, interval.ivl_to
-            FROM identifier, model, interval
-            WHERE
+            FROM model, interval
+            LEFT JOIN identifier
+            ON
                 identifier.type = 'PRIMARY' AND
-                identifier.model_id = model.id AND
+                identifier.model_id = model.id
+            WHERE
                 model.chr = ? AND
                 model.interval_id = interval.id AND
                 interval.ivl_fr >= ? AND
@@ -109,10 +112,70 @@ class ModelSet(object):
             if parent is not None:
                 children[parent].append(id)
         for parent_id, child_ids in children.iteritems():
-            models[parent_id].children =\
-                [models[child_id] for child_id in child_ids]
+            if parent_id in models:
+                models[parent_id].children =\
+                    [models[child_id] for child_id in child_ids]
         return models[res_id]
     
     def getModelsInInterval(self, ivl):
-        return []
+        cur = self.conn.cursor()
+        
+        res_ids = []
+        models = {}
+        children = defaultdict(list)
+        qry = '''SELECT identifier.value, model.id, model.type, model.strand,
+            model.parent_id, interval.ivl_fr, interval.ivl_to
+            FROM model, interval
+            LEFT JOIN identifier
+            ON
+                identifier.type = 'PRIMARY' AND
+                identifier.model_id = model.id
+            WHERE
+                model.chr = ? AND
+                model.interval_id = interval.id AND
+                interval.ivl_fr >= ? AND
+                interval.ivl_to <= ?;'''
+        rows = cur.execute(qry, (chm, fr, to))
+        for name, id, typ, strand, parent, fr, to in rows:
+            models[id] = Model(name, interval(chm, fr, to, strand), typ)
+            if parent is None:
+                res_ids.append(id)
+            else:
+                children[parent].append(id)
+        for parent_id, child_ids in children.iteritems():
+            if parent_id in models:
+                models[parent_id].children =\
+                    [models[child_id] for child_id in child_ids]
+        return [models[res_id] for res_id in res_ids]
+
+    def getModelsAtPosition(self, chm, pos):
+        cur = self.conn.cursor()
+        
+        res_ids = []
+        models = {}
+        children = defaultdict(list)
+        qry = '''SELECT identifier.value, model.id, model.type, model.strand,
+            model.parent_id, interval.ivl_fr, interval.ivl_to
+            FROM model, interval
+            LEFT JOIN identifier
+            ON
+                identifier.type = 'PRIMARY' AND
+                identifier.model_id = model.id
+            WHERE
+                model.chr = ? AND
+                model.interval_id = interval.id AND
+                interval.ivl_fr >= ? AND
+                interval.ivl_to <= ?;'''
+        rows = cur.execute(qry, (chm, pos - 10000, pos + 10000))
+        for name, id, typ, strand, parent, fr, to in rows:
+            models[id] = Model(name, interval(chm, fr, to, strand), typ)
+            if parent is None:
+                res_ids.append(id)
+            else:
+                children[parent].append(id)
+        for parent_id, child_ids in children.iteritems():
+            if parent_id in models:
+                models[parent_id].children =\
+                    [models[child_id] for child_id in child_ids]
+        return [models[res_id] for res_id in res_ids]
 
