@@ -3,9 +3,10 @@ import codecs
 import json
 import numpy as np
 
+from bisect import bisect_left, bisect_right
+from collections import Counter
 from netCDF4 import Dataset, default_fillvals
 from functools import total_ordering
-from collections import Counter
 from lhc.tool import enum
 
 Type = enum(['ID', 'MAIN', 'ALT', 'STOCK'])
@@ -159,7 +160,7 @@ class MarkerSet(object):
         self.mode = mode
         self.closed = False
         self.data = Dataset(fname, mode)
-        self.gens = GenotypeSet('%s.json'%fname, mode)
+        #self.gens = GenotypeSet('%s.json'%fname, mode)
     
     def __del__(self):
         self.close()
@@ -231,6 +232,23 @@ class MarkerSet(object):
     def getChromosomeRanges(self):
         grp = self.data.groups['chm_idxs']
         return dict((chm, grp.variables[chm]) for chm in grp.variables)
+    
+    def getMarkersInInterval(self, ivl):
+        chm_fr, chm_to = self.data.groups['chm_idxs'].variables[ivl.chr][:]
+        pos_fr = bisect_left(self.data.variables['poss'], ivl.start,
+            chm_fr, chm_to)
+        pos_to = bisect_right(self.data.variables['poss'], ivl.stop,
+            chm_fr, chm_to)
+        return [(idx, self.getPositionAtIndex(idx), self.getMarkerAtIndex(idx))\
+            for idx in xrange(pos_fr, pos_to)]
+        
+    def getPositionAtIndex(self, idx):
+        chm_idx = self.data.variables['chms'][idx]
+        pos = self.data.variables['poss'][idx]
+        return self.data.groups['chm_idxs'].variables.keys()[chm_idx], pos
+    
+    def getMarkerAtIndex(self, idx):
+        return self.data.variables['snps'][:,idx]
     
     def processZygosity(self):
         """ Determine genotypes are homozygous (0/False) or heterozygous

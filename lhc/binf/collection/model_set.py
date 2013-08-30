@@ -150,7 +150,7 @@ class ModelSet(object):
 
     def getModelsAtPosition(self, chm, pos):
         cur = self.conn.cursor()
-        
+
         res_ids = []
         models = {}
         children = defaultdict(list)
@@ -164,9 +164,9 @@ class ModelSet(object):
             WHERE
                 model.chr = ? AND
                 model.interval_id = interval.id AND
-                interval.ivl_fr >= ? AND
-                interval.ivl_to <= ?;'''
-        rows = cur.execute(qry, (chm, pos - 10000, pos + 10000))
+                interval.ivl_fr <= ? AND
+                interval.ivl_to > ?;'''
+        rows = cur.execute(qry, (chm, pos, pos))
         for name, id, typ, strand, parent, fr, to in rows:
             models[id] = Model(name, interval(chm, fr, to, strand), typ)
             if parent is None:

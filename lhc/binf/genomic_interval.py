@@ -6,7 +6,7 @@ Created on 06/08/2013
 
 class interval(object):
 
-    def __init__(self, chromosome, start, stop, strand, context=None):
+    def __init__(self, chromosome, start, stop, strand='+', context=None):
         self.chr = chromosome
         self.start, self.stop = sorted((start, stop))
         self.strand = strand
@@ -17,6 +17,11 @@ class interval(object):
     
     def __eq__(self, other):
         return self.chr == other.chr and self.start == other.start and self.strand == other.strand
+    
+    def isOverlapping(self, other):
+        if self.chr != other.chr:
+            return False
+        return self.stop > other.start and other.stop > self.start
     
     def getSubSeq(self, seq):
         return seq[self.start:self.stop]
