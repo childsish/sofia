@@ -79,6 +79,13 @@ class Test(unittest.TestCase):
             mrk_set.getMarkerAtPosition(Position('Chr2', 4))[:,0].tolist())
         self.assertEquals([list('TGGGCT'), list('CAGGCT')],
             mrk_set.getMarkersInInterval(Interval('Chr2', 0, 30))[:,:,0].tolist())
+        
+        self.assertEquals(['genotype_A', 'genotype_B'],
+            mrk_set.data.groups['gens'].variables.keys())
+        self.assertEquals(''.join(mrk_set.getGenotype('genotype_A')[Position('Chr1', 5)]),
+            'AA')
+        self.assertEquals(''.join(mrk_set.getGenotype('genotype_B')[Position('Chr1', 5)]),
+            'GG')
 
     def tearDown(self):
         os.remove(self.fname)

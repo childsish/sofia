@@ -183,4 +183,4 @@ class Genotype(object):
             idx = self.mrk_set.getIndicesInInterval(key)
         else:
             raise ValueError('Expected a Position or Interval from the genomic_coordinate package. Got %s.'%type(key))
-        return self.mrk_set.data.variables['snps'][self.idx,:,idx]
+        return self.mrk_set.data.variables['snps'][self.idx,idx,:]
