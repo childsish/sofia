@@ -25,13 +25,12 @@ class MarkerSet(object):
         npos = sum(map(len, ref.poss.itervalues()))
         
         self.data.createDimension('pos', npos)
-        self.data.createDimension('ploidy', ref.ref.shape[1])
         self.data.createDimension('gen', None)
         
         chm_var = self.data.createVariable('chms', 'u1', ('pos',))
         pos_var = self.data.createVariable('poss', 'u4', ('pos',))
-        self.data.createVariable('ref', 'S1', ('pos', 'ploidy'))[:] = ref.ref
-        self.data.createVariable('snps', 'S1', ('gen', 'pos', 'ploidy'))
+        self.data.createVariable('ref', 'S1', ('pos',))[:] = ref.ref
+        self.data.createVariable('snps', 'S1', ('gen', 'pos'))
 
         idx_grp = self.data.createGroup('idxs')
         idx_grp.createDimension('rng', 2)
@@ -71,7 +70,7 @@ class MarkerSet(object):
         if main_name is None and markers is None:
             markers = self.data.variables['ref'][:]
         if markers is not None:
-            self.data.variables['snps'][idx,:,:] = markers
+            self.data.variables['snps'][idx,:] = markers
         
         return Genotype(self, idx)
     
@@ -90,7 +89,7 @@ class MarkerSet(object):
         return poss_idx
 
     def getMarkerAtIndex(self, idx):
-        return self.data.variables['snps'][:,idx,:]
+        return self.data.variables['snps'][:,idx]
     
     def getPositionAtIndex(self, idx):
         chm_idx = self.data.variables['chms'][idx]
@@ -108,7 +107,7 @@ class MarkerSet(object):
         return np.arange(pos_fr, pos_to, dtype='u4')
     
     def getMarkersAtIndices(self, idxs):
-        return self.data.variables['snps'][:,idxs,:]
+        return self.data.variables['snps'][:,idxs]
     
     def getPositionsAtIndices(self, idxs):
         return map(self.getPositionAtIndex, idxs)
@@ -183,4 +182,4 @@ class Genotype(object):
             idx = self.mrk_set.getIndicesInInterval(key)
         else:
             raise ValueError('Expected a Position or Interval from the genomic_coordinate package. Got %s.'%type(key))
-        return self.mrk_set.data.variables['snps'][self.idx,idx,:]
+        return self.mrk_set.data.variables['snps'][self.idx,idx]

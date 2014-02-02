@@ -11,6 +11,7 @@ A collection of bioinformatics related modules
 Several collection classes that to handle biological data. They are designed to read from files that have strict standards and provide some access benefits eg. NetCDF and SQLite.
 
 * **binf.collection.marker_set.** A class designed to hold marker data. Implemented as NetCDF4. Markers are considered a genomic position that varies across several genotypes, thus is implemented as a matrix of genotype x genomic position.
+
 There are a couple of steps required to initialise this class. You need to provide a reference sequence and the positions of the reference sequence. The reference sequence is a n x m matrix where n is the position and m is the ploidy. The positions are provided as an ordered dictionary of chromosomes to a list of positions.
 ```python
 from lhc.binf.collection.marker_set import Reference, MarkerSet
