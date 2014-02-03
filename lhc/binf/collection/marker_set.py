@@ -60,10 +60,10 @@ class MarkerSet(object):
             raise KeyError('Main name %s has not yet been registered'%main_name)
         
         if name in gens_grp.variables:
-            idx = gens_grp.variables[name][0]
+            idx = int(gens_grp.variables[name][0])
         else:
             idx = len(self.data.dimensions['gen']) if main_name is None\
-                else gens_grp.variables[main_name][0]
+                else int(gens_grp.variables[main_name][0])
             gens_grp.createVariable(name, 'u4', ('idx',))[0] = idx
             self.gen2idx[name] = idx
         
@@ -75,7 +75,7 @@ class MarkerSet(object):
         return Genotype(self, idx)
     
     def getGenotype(self, name):
-        return Genotype(self, self.gen2idx[name])
+        return Genotype(self, int(self.gen2idx[name]))
     
     def getMarkerAtPosition(self, pos):
         return self.getMarkerAtIndex(self.getIndexAtPosition(pos))
