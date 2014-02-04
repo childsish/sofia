@@ -84,7 +84,7 @@ class MarkerSet(object):
         chm_fr, chm_to = self.data.groups['idxs'].variables[pos.chr][:]
         poss_var = self.data.variables['poss']
         poss_idx = bisect_left(poss_var, pos.pos, chm_fr, chm_to)
-        if poss_var[poss_idx] != pos.pos:
+        if poss_idx >= len(poss_var) or poss_var[poss_idx] != pos.pos:
             raise KeyError('Position does not exist')
         return poss_idx
 
