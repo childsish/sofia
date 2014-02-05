@@ -1,262 +1,124 @@
 import os
 import codecs
-import json
 import numpy as np
 
 from bisect import bisect_left, bisect_right
-from collections import Counter
+from collections import Counter, namedtuple, OrderedDict
 from netCDF4 import Dataset, default_fillvals
-from functools import total_ordering
-from lhc.tool import enum
+from lhc.binf.genomic_coordinate import Position, Interval
 
-Type = enum(['ID', 'MAIN', 'ALT', 'STOCK'])
-
-@total_ordering
-class Position(object):
-    def __init__(self, chm, pos=None):
-        self.chm = chm
-        self.pos = pos
-    
-    def __str__(self):
-        return 'Chr%s:%d'%(self.chm, self.pos)
-    
-    def __eq__(self, other):
-        return self.chm == other.chm and self.pos == other.pos
-    
-    def __lt__(self, other):
-        return (self.chm < other.chm) or\
-            (self.chm == other.chm) and (self.pos < other.pos)
-
-class Alias(object):
-    def __init__(self, name, typ=None):
-        self.name = name
-        self.type = typ
-
-class Genotype(object):
-    def __init__(self, id_, idx):
-        self.id = id_
-        self.idx = idx
-        self.data = None
-        self.aliases = [Alias(id_, Type.ID)]
-    
-    def __getitem__(self, key):
-        key = self._checkKey(key)
-        return self.data[key]
-    
-    def __setitem__(self, key, value):
-        key = self._checkKey(key)
-        self.data[key] = value
-    
-    def _checkKey(self, key):
-        if isinstance(key, (int, slice)):
-            key = (self.idx, key)
-        elif isinstance(key, tuple):
-            if len(key) > 2:
-                raise IndexError('too many indices')
-            key = (self.idx, key[0], key[1])
-        return key
-    
-    def addAlias(self, alias):
-        n_main = sum(alias.type == Type.MAIN for alias in self.aliases)
-        if alias.type == Type.ID:
-            if self.id is not None:
-                raise ValueError('A genotype can not have more than one id')
-            self.id = alias.name
-        elif alias.type == Type.MAIN and n_main > 0:
-            raise ValueError('A genotype can not have more than one main alias')
-        elif alias.type is None and n_main == 0:
-            alias.type = Type.MAIN
-        elif alias.type is None:
-            alias.type = Type.ALT
-        self.aliases.append(alias)
-    
-    def getAliasByType(self, typ):
-        res = []
-        for alias in self.aliases:
-            if alias.type == typ:
-                res.append(alias)
-        return res
-    
-class GenotypeSet(object):
-    def __init__(self, fname, mode='r'):
-        self.fname = fname
-        self.mode = mode
-        self._createIdx2Gen()
-        self._createGen2Idx()
-        self.closed = False
-    
-    def __del__(self):
-        self.close()
-    
-    def __len__(self):
-        return len(self.idx2gen)
-
-    def __contains__(self, key):
-        if key is None:
-            return False
-        elif isinstance(key, int):
-            return key in self.idx2gen
-        elif isinstance(key, basestring):
-            return key in self.gen2idx
-        raise KeyError('Unexpected key type. Get %s, expected <str>.'%\
-            (type(key)))
-    
-    def __getitem__(self, key):
-        if isinstance(key, int):
-            return self.idx2gen[key]
-        elif isinstance(key, basestring):
-            res = [self.idx2gen[idx] for idx in self.gen2idx[key]]
-            if len(res) == 1 and res[0].id == key:
-                return res[0]
-            return res
-        raise KeyError('Unexpected key type. Get %s, expected <str>.'%\
-            (type(key)))
-    
-    def addGenotype(self, genotype):
-        self.idx2gen[genotype.idx] = genotype
-        for alias in genotype.aliases:
-            self.gen2idx.setdefault(alias.name, []).append(genotype.idx)
-    
-    def _createIdx2Gen(self):
-        self.idx2gen = {}
-        if self.mode == 'w' or self.mode == 'a' and\
-         not os.path.exists(self.fname):
-            return
-        infile = codecs.open(self.fname, encoding='utf-8')
-        genotypes = json.load(infile)
-        infile.close()
-        for genotype in genotypes:
-            gen = Genotype()
-            for alias in genotype['aliases']:
-                gen.addAlias(Alias(alias['name'], alias['type']))
-            self.idx2gen[genotype['idx']] = gen
-
-    def _createGen2Idx(self):
-        self.gen2idx = {}
-        for idx, genotype in self.idx2gen.iteritems():
-            for alias in genotype.aliases:
-                self.gen2idx.setdefault(alias.name, []).append(idx)
-    
-    def close(self):
-        def genotypeToJson(gen):
-            return {'idx': gen.idx, 'aliases':\
-                [aliasToJson(alias) for alias in gen.aliases]}
-        
-        def aliasToJson(alias):
-            return {'name': alias.name, 'type': alias.type}
-        
-        if hasattr(self, 'closed') and not self.closed and\
-         hasattr(self, 'mode') and self.mode in 'wa':
-            outfile = codecs.open(self.fname, 'w', encoding='utf-8')
-            json.dump([genotypeToJson(gen)\
-                    for idx, gen in self.idx2gen.iteritems()],
-                outfile, indent=4)
-            outfile.close()
-            self.closed = True
+Reference = namedtuple('Reference', ['ref', 'poss'])
 
 class MarkerSet(object):
-    def __init__(self, fname, mode='r'):
+    def __init__(self, fname, ref=None):
         self.fname = fname
-        self.mode = mode
+        self.mode = 'r' if ref is None else 'w'
         self.closed = False
-        self.data = Dataset(fname, mode)
-        #self.gens = GenotypeSet('%s.json'%fname, mode)
+        self.data = Dataset(self.fname, self.mode)
+        
+        if self.mode == 'w':
+            self.__initNewFile(ref)
+        
+        self.gen2idx = self.__initGenotypeMap()
     
-    def __del__(self):
-        self.close()
-    
-    def __getitem__(self, key):
-        gens = self.gens[key]
-        if isinstance(gens, list):
-            for gen in gens:
-                gen.data = self.data.variables['snps']
-        else:
-            gens.data = self.data.variables['snps']
-        return gens
+    def __initNewFile(self, ref):
+        npos = sum(map(len, ref.poss.itervalues()))
+        
+        self.data.createDimension('pos', npos)
+        self.data.createDimension('gen', None)
+        
+        chm_var = self.data.createVariable('chms', 'u1', ('pos',))
+        pos_var = self.data.createVariable('poss', 'u4', ('pos',))
+        self.data.createVariable('ref', 'S1', ('pos',))[:] = ref.ref
+        self.data.createVariable('snps', 'S1', ('gen', 'pos'))
 
-    def registerPositions(self, poss):
-        """Warning, you must use an OrderedDict to specify chromosome order"""
-        chmvar, posvar, rnggrp = self._initDimensionsAndVariables(poss)
+        idx_grp = self.data.createGroup('idxs')
+        idx_grp.createDimension('rng', 2)
         fr = 0
-        for chm, chm_poss in poss.iteritems():
+        for chm_idx, (chm, chm_poss) in enumerate(ref.poss.iteritems()):
             to = fr + len(chm_poss)
-            rnggrp.createVariable(chm, 'u4', ('rng',))[:] = np.array((fr, to))
-            chm_idx = rnggrp.variables.keys().index(chm)
-            chmvar[fr:to] = chm_idx
-            posvar[fr:to] = chm_poss
+            idx_grp.createVariable(chm, 'u4', ('rng',))[:] = [fr, to]
+            chm_var[fr:to] = chm_idx
+            pos_var[fr:to] = chm_poss
             fr = to
+        
+        gen_grp = self.data.createGroup('gens')
+        gen_grp.createDimension('idx', 1)
+    
+    def __initGenotypeMap(self):
+        idx2gen = {}
+        for gen, idx in self.data.groups['gens'].variables.iteritems():
+            idx = idx[0]
+            if idx not in idx2gen:
+                idx2gen[idx] = gen
+        return OrderedDict([(gen, idx)\
+            for idx, gen in sorted(idx2gen.iteritems())])
+    
+    def registerGenotype(self, name, markers=None, main_name=None):
+        gens_grp = self.data.groups['gens']
+        if main_name is not None and main_name not in gens_grp.variables:
+            raise KeyError('Main name %s has not yet been registered'%main_name)
+        
+        if name in gens_grp.variables:
+            idx = int(gens_grp.variables[name][0])
+        else:
+            idx = len(self.data.dimensions['gen']) if main_name is None\
+                else int(gens_grp.variables[main_name][0])
+            gens_grp.createVariable(name, 'u4', ('idx',))[0] = idx
+            self.gen2idx[name] = idx
+        
+        if main_name is None and markers is None:
+            markers = self.data.variables['ref'][:]
+        if markers is not None:
+            self.data.variables['snps'][idx,:] = markers
+        
+        return Genotype(self, idx)
+    
+    def getGenotype(self, name):
+        return Genotype(self, int(self.gen2idx[name]))
+    
+    def getMarkerAtPosition(self, pos):
+        return self.getMarkerAtIndex(self.getIndexAtPosition(pos))
 
-    def _initDimensionsAndVariables(self, poss):
-        """ Initialise as many variables as possible.
-            WARNING: For some reason, if these variables are created out-of-
-            order, a HDF error will occur when trying to save the file. The
-            zygosity variable must be created before the reference variable has
-            values assigned to it.
-        """
-        npos = sum(len(chm_poss) for chm, chm_poss in poss.iteritems())
-        self.data.createDimension('poss', npos)
-        chmvar = self.data.createVariable('chms', 'u1', ('poss',))
-        posvar = self.data.createVariable('poss', 'u4', ('poss',))
-        self.data.createVariable('mal', 'S1', ('poss',))\
-            .missing_value = default_fillvals['S1']
-        self.data.createVariable('maf', 'f4', ('poss',))\
-            .missing_value = default_fillvals['f4']
-        
-        self.data.createDimension('ploidy', 2)
-        self.data.createVariable('ref', 'S1', ('poss', 'ploidy'))
-        
-        self.data.createDimension('gens', None)
-        self.data.createVariable('snps', 'S1', ('gens', 'poss', 'ploidy'))\
-            .missing_value = default_fillvals['S1']
-        zygvar = self.data.createVariable('zygs', 'u1', ('gens',)) # u1
-        zygvar.missing_value = default_fillvals['i1']
-        
-        grp = self.data.createGroup('chm_idxs')
-        grp.createDimension('rng', 2)
-        return chmvar, posvar, grp
-        
-    def registerReference(self, ref):
-        self.data.variables['ref'][:] = ref
+    def getIndexAtPosition(self, pos):
+        chm_fr, chm_to = self.data.groups['idxs'].variables[pos.chr][:]
+        poss_var = self.data.variables['poss']
+        poss_idx = bisect_left(poss_var, pos.pos, chm_fr, chm_to)
+        if poss_idx >= len(poss_var) or poss_var[poss_idx] != pos.pos:
+            raise KeyError('Position does not exist')
+        return poss_idx
 
-    def registerGenotype(self, id_=None):
-        if id_ not in self.gens:
-            nxt = len(self.data.dimensions['gens'])
-            id_ = str(nxt + 1) if id_ is None else id_
-            snpvar = self.data.variables['snps']
-            refvar = self.data.variables['ref']
-            snpvar[nxt] = refvar[:]
-            gen = Genotype(id_, nxt)
-            self.gens.addGenotype(gen)
-        return self[id_]
-    
-    def getChromosomeRanges(self):
-        grp = self.data.groups['chm_idxs']
-        return dict((chm, grp.variables[chm]) for chm in grp.variables)
-    
-    def getMarkersInInterval(self, ivl):
-        chm_fr, chm_to = self.data.groups['chm_idxs'].variables[ivl.chr][:]
-        pos_fr = bisect_left(self.data.variables['poss'], ivl.start,
-            chm_fr, chm_to)
-        pos_to = bisect_right(self.data.variables['poss'], ivl.stop,
-            chm_fr, chm_to)
-        return [(idx, self.getPositionAtIndex(idx), self.getMarkerAtIndex(idx))\
-            for idx in xrange(pos_fr, pos_to)]
-        
-    def getPositionAtIndex(self, idx):
-        chm_idx = self.data.variables['chms'][idx]
-        pos = self.data.variables['poss'][idx]
-        return self.data.groups['chm_idxs'].variables.keys()[chm_idx], pos
-    
     def getMarkerAtIndex(self, idx):
         return self.data.variables['snps'][:,idx]
     
+    def getPositionAtIndex(self, idx):
+        chm_idx = self.data.variables['chms'][idx]
+        pos = self.data.variables['poss'][idx]
+        return self.data.groups['idxs'].variables.keys()[chm_idx], pos
+    
+    def getMarkersInInterval(self, ivl):
+        return self.getMarkersAtIndices(self.getIndicesInInterval(ivl))
+        
+    def getIndicesInInterval(self, ivl):
+        chm_fr, chm_to = self.data.groups['idxs'].variables[ivl.chr][:]
+        poss_var = self.data.variables['poss']
+        pos_fr = bisect_left(poss_var, ivl.start, chm_fr, chm_to)
+        pos_to = bisect_right(poss_var, ivl.stop, chm_fr, chm_to)
+        return np.arange(pos_fr, pos_to, dtype='u4')
+    
+    def getMarkersAtIndices(self, idxs):
+        return self.data.variables['snps'][:,idxs]
+    
+    def getPositionsAtIndices(self, idxs):
+        return map(self.getPositionAtIndex, idxs)
+
     def processZygosity(self):
         """ Determine genotypes are homozygous (0/False) or heterozygous
             (1/True)
         """
         zygvar = self.data.variables['zygs']
         snpvar = self.data.variables['snps']
-        for i in xrange(len(self.data.dimensions['gens'])):
+        for i in xrange(len(self.data.dimensions['gen'])):
             zyg_per_pos = snpvar[i,:,:] != np.matrix(snpvar[i,:,0]).T
             zygvar[i] = np.any(zyg_per_pos)
     
@@ -268,7 +130,7 @@ class MarkerSet(object):
         mafvar = self.data.variables['maf']
         # Populate the variables
         snpvar = self.data.variables['snps']
-        for i in xrange(len(self.data.dimensions['poss'])):
+        for i in xrange(len(self.data.dimensions['pos'])):
             cnt = Counter(snpvar[:,i,:].flatten())
             if np.ma.masked in cnt:
                 del cnt[np.ma.masked]
@@ -302,21 +164,22 @@ class MarkerSet(object):
         nsnp[:] = np.sum(csnp[:] == mal[:][np.newaxis,:,np.newaxis], 2,
             dtype=np.dtype('f4'))
 
-    def processMatrix(self, name, pipe, kwargs, dim, dim_sz=None):
-        if dim not in self.data.dimensions:
-            self.data.createDimension(dim, dim_sz)
-        snps = self.data.variables['nsnps'][:]
-        for fn, args in izip(pipe, kwargs):
-            snps = fn(snps, **args)
-        if name in self.data.variables:
-            var = self.data.variables[name]
-        else:
-            var = self.data.createVariable(name, 'f4', ('gens', dim))
-        var[:] = snps
-     
     def close(self):
         if hasattr(self, 'closed') and not self.closed and\
          hasattr(self, 'mode') and self.mode in 'wa':
             self.data.close()
-            self.gens.close()
             self.closed = True
+
+class Genotype(object):
+    def __init__(self, mrk_set, idx):
+        self.mrk_set = mrk_set
+        self.idx = idx
+    
+    def __getitem__(self, key):
+        if isinstance(key, Position):
+            idx = self.mrk_set.getIndexAtPosition(key)
+        elif isinstance(key, Interval):
+            idx = self.mrk_set.getIndicesInInterval(key)
+        else:
+            raise ValueError('Expected a Position or Interval from the genomic_coordinate package. Got %s.'%type(key))
+        return self.mrk_set.data.variables['snps'][self.idx,idx]

@@ -17,7 +17,8 @@ class Sequence(object):
             fr = key.start
             to = key.stop
         elif hasattr(key, '__iter__'):
-            raise NotImplementedError()
+            return self.var[key]
+            #raise NotImplementedError()
         else:
             raise TypeError('Unrecognised position type: %s'%(type(key),))
 
