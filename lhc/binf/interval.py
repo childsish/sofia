@@ -1,9 +1,8 @@
-import numpy
 import string
+
 from itertools import izip, repeat, islice
 from operator import add
 from functools import total_ordering
-
 from bx.intervals.intersection import Intersecter, Interval as BaseInterval
 
 def seq_revcmp(seq):
@@ -26,8 +25,7 @@ class Interval(object):
     REVCMPS = {basestring: str_revcmp,
         str: str_revcmp,
         list: seq_revcmp,
-        tuple: seq_revcmp,
-        numpy.ndarray: seq_revcmp}
+        tuple: seq_revcmp}
     
     def __init__(self, fr=None, to=None, value=None, chm=None,
                  strand='+'):
@@ -156,6 +154,8 @@ class Interval(object):
                 left, right = ivl - oth_ivl
                 if left is not None:
                     res.append(left)
+                if right is None:
+                    break
                 ivl = right
             if right is not None:
                 res.append(right)
@@ -441,4 +441,10 @@ class InternalInterval(BaseInterval):
 
     def getEnd(self):
         return {'+': self.end, '-': self.start}[self.strand]
+
+try:
+    import numpy
+    Interval.REVCMP[numpy.ndarray] = seq_revcmp
+except:
+    pass
 

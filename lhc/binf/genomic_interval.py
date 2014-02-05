@@ -21,7 +21,7 @@ class interval(object):
     def isOverlapping(self, other):
         if self.chr != other.chr:
             return False
-        return self.stop > other.start and other.stop > self.start
+        return self.stop >= other.start and other.stop >= self.start
     
     def getSubSeq(self, seq):
         return seq[self.start:self.stop]
