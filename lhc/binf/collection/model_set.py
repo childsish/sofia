@@ -1,9 +1,3 @@
-'''
-Created on 05/08/2013
-
-@author: Liam Childs
-'''
-
 import sqlite3
 
 from collections import defaultdict
@@ -19,7 +13,7 @@ class Model(object):
 
 class ModelSet(object):
     
-    def __init__(self, fname, mode='w'):
+    def __init__(self, fname):
         self.conn = sqlite3.connect(fname)
         self.createTables()
     
@@ -135,9 +129,41 @@ class ModelSet(object):
                 model.interval_id = interval.id AND
                 interval.ivl_fr >= ? AND
                 interval.ivl_to <= ?;'''
-        rows = cur.execute(qry, (chm, fr, to))
+        rows = cur.execute(qry, (ivl.chr, ivl.start, ivl.stop))
         for name, id, typ, strand, parent, fr, to in rows:
             models[id] = Model(name, interval(chm, fr, to, strand), typ)
+            if parent is None:
+                res_ids.append(id)
+            else:
+                children[parent].append(id)
+        for parent_id, child_ids in children.iteritems():
+            if parent_id in models:
+                models[parent_id].children =\
+                    [models[child_id] for child_id in child_ids]
+        return [models[res_id] for res_id in res_ids]
+
+    def getModelsOverlappingInterval(self, ivl):
+        cur = self.conn.cursor()
+        
+        res_ids = []
+        models = {}
+        children = defaultdict(list)
+        qry = '''SELECT identifier.value, model.id, model.type, model.strand,
+            model.parent_id, interval.ivl_fr, interval.ivl_to
+            FROM model, interval
+            LEFT JOIN identifier
+            ON
+                identifier.type = 'PRIMARY' AND
+                identifier.model_id = model.id
+            WHERE
+                model.chr = ? AND
+                model.interval_id = interval.id AND
+                interval.ivl_fr <= ? AND
+                ? <= interval.ivl_to;'''
+        rows = cur.execute(qry, (ivl.chr, ivl.stop, ivl.start))
+        for name, id, typ, strand, parent, fr, to in rows:
+            models[id] = Model(name,
+                interval(ivl.chr, ivl.start, ivl.stop, strand), typ)
             if parent is None:
                 res_ids.append(id)
             else:
