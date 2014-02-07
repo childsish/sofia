@@ -1,14 +1,7 @@
-'''
-Created on 07/08/2013
-
-@author: Liam Childs
-'''
-
 import numpy as np
 
 from collections import Counter
 from netCDF4 import Dataset
-from lhc.interval import interval
 
 class NestedContainmentList(object):
 
@@ -20,7 +13,7 @@ class NestedContainmentList(object):
     def __getitem__(self, key):
         if isinstance(key, int):
             ivl = self.root.variables['ivls'][key,:]
-            return interval(ivl[0], -ivl[1])
+            return slice(ivl[0], -ivl[1])
     
     def insertIntervals(self, ivls):
         ivls = np.array([[ivl.start, -ivl.stop] for ivl in ivls], dtype='i4')

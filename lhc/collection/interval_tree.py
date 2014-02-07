@@ -1,4 +1,3 @@
-from interval import Interval
 from sys import maxint
 from lhc.slicetools import overlaps
 
@@ -79,12 +78,12 @@ class IntervalTree:
     
     def __init__(self, ivls=None):
         # Initialise sentinels
-        self.nil = Node(Interval(-maxint-1, -maxint-1))
+        self.nil = Node(slice(-maxint-1, -maxint-1))
         self.nil.l = self.nil
         self.nil.r = self.nil
         self.nil.p = self.nil
         
-        self.head = Node(Interval(maxint, maxint))
+        self.head = Node(slice(maxint, maxint))
         self.head.l = self.nil
         self.head.r = self.nil
         self.head.p = self.nil
@@ -145,7 +144,7 @@ class IntervalTree:
         while x != self.nil:
             y = x
             x = x.l
-        return Interval(y.ivl.start, self.head.l.mx)
+        return slice(y.ivl.start, self.head.l.mx)
     
     def search(self, ivl):
         """ Possible speed up: add min field to prune r searches. """

@@ -1,8 +1,5 @@
-#!/usr/bin/python
-# Not complete...
-
 class AugmentedTree:
-    """ Built to hold several Range objects. """
+    """Built to hold slice objects"""
     
     class Node:
         def __init__(self, points, f, t):
@@ -61,22 +58,3 @@ class AugmentedTree:
     def query(self, rng):
         self.head.query(rng)
 
-def main(argv = None):
-    import random
-    import Range
-    import itertools
-    
-    if argv == None:
-        argv = sys.argv
-    
-    points = [Range.Range(random.randint(0, 100), random.randint(0, 100))
-              for i in itertools.repeat(None, 10)]
-    print points
-    
-    tree = AugmentedTree(points)
-    
-    print tree
-
-if __name__ == '__main__':
-    import sys
-    sys.exit(main(sys.argv))

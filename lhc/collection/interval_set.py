@@ -1,7 +1,6 @@
 from bisect import bisect_left, bisect_right
 from collections import defaultdict
 from itertools import izip
-from lhc.interval import interval
 
 class IntervalSet(object):
     def __init__(self, ivls):
@@ -13,11 +12,11 @@ class IntervalSet(object):
         return len(self.frs)
     
     def __getitem__(self, key):
-        return interval(self.frs[key], self.tos[key])
+        return slice(self.frs[key], self.tos[key])
     
     def __iter__(self):
         for fr, to in izip(self.frs, self.tos):
-            yield interval(fr, to)
+            yield slice(fr, to)
     
     def getOverlap(self, other):
         res = defaultdict(list)
