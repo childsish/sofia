@@ -22,6 +22,12 @@ class sortedset(object):
 
     def __getitem__(self, key):
         return self.container[key]
+    
+    def __delitem__(self, key):
+        del self.container[key]
+    
+    def __iter__(self):
+        return iter(self.container)
 
     def add(self, item):
         if item not in self:

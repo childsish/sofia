@@ -1,25 +1,23 @@
-'''
-Created on 06/08/2013
-
-@author: Liam Childs
-'''
+"""Tools that treat slices like intervals."""
 
 def overlaps(a, b, length=None):
     a = normalise(a, length)
     b = normalise(b, length)
-    return a.start <= b.start and a.stop > b.start or\
-        b.start < a.stop and b.stop >= a.stop
+    return a.start < b.stop and b.start < a.stop
 
 def contains(a, b, length=None):
     a = normalise(a, length)
     b = normalise(b, length)
     return a.start <= b.start and a.stop >= b.stop
 
-def getAbsPos(self, ivl, pos, length=None):
+def getAbsPos(ivl, pos, length=None):
     ivl = normalise(ivl, length)
+    if pos < 0 or pos >= ivl.stop - ivl.start:
+        err = 'Relative position %d is not contained within %s'
+        raise IndexError(err)
     return ivl.start + pos
 
-def getRelPos(self, ivl, pos, length=None):
+def getRelPos(ivl, pos, length=None):
     ivl = normalise(ivl, length)
     if pos < ivl.start or pos >= ivl.stop:
         err = 'Absolute position %d is not contained within %s'
@@ -27,5 +25,10 @@ def getRelPos(self, ivl, pos, length=None):
     return pos - ivl.start
 
 def normalise(ivl, length=None):
-    return slice(ivl.start if ivl.start >= 0 else length + ivl.start,
-        ivl.stop if ivl.stop >= 0 else length + ivl.stop, ivl.step)
+    try:
+        return slice(ivl.start if ivl.start >= 0 else length + ivl.start,
+            ivl.stop if ivl.stop >= 0 else length + ivl.stop, ivl.step)
+    except TypeError:
+        err = 'You must specify a length for splices with negative indices'
+        raise TypeError(err)
+
