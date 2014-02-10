@@ -1,4 +1,9 @@
-"""Tools that treat slices like intervals."""
+"""Tools that treat slices like intervals.
+
+Treating slices like intervals is the best compromise I could find for creating
+intervals that can also be used to slice string and lists. It also avoids the
+need to create a whole new class.
+"""
 
 def overlaps(a, b, length=None):
     """Test if two slices overlap
@@ -6,7 +11,8 @@ def overlaps(a, b, length=None):
     Keyword arguments:
     a -- slice A
     b -- slice B
-    length -- only slices with positive indices can be compared. If any of the indices are negative, provide the length to normalise those slices.
+    length -- only slices with positive indices can be compared. If any of the
+        indices are negative, provide the length to normalise those slices.
     
     """
     a = normalise(a, length)
