@@ -1,6 +1,6 @@
 import operator
 
-from lhc import slicetools
+from lhc import intervaltools
 
 class IntervalTree(object):
     __slots__ = ('ivls', 'left', 'right', 'mid')
@@ -33,7 +33,7 @@ class IntervalTree(object):
         self.mid = mid
  
     def intersect(self, qry):
-        overlapping = [ivl for ivl in self.ivls if slicetools.overlaps(qry, ivl)]\
+        overlapping = [ivl for ivl in self.ivls if intervaltools.overlaps(qry, ivl)]\
             if self.ivls and not qry.stop < self.ivls[0].start\
             else []
 

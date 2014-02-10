@@ -1,11 +1,17 @@
 import operator
 
-from lhc import slicetools
+from lhc import intervaltools
 
 class AugmentedTree(object):
+    """An augmented tree designed to hold intervals.
+    """
     __slots__ = ('ivls', 'stops')
     
     def __init__(self, ivls):
+        """ Initialise the tree with a set of intervals
+        
+        :param list ivls: a list of intervals to be stored. The original list will be left untouched.
+        """
         self.ivls = sorted(ivls, key=operator.attrgetter('start'))
         self.stops = [0 for ivl in ivls]
         self._refresh()
@@ -25,7 +31,7 @@ class AugmentedTree(object):
         """Find all intervals intersecting the given interval
         
         Keyword arguments:
-        qry -- query interval
+        :param slice qry: query interval. This does not have to be a slice, simply an object with .start and .stop members where start < stop.
         """
         res = []
         stk = [(0, len(self.ivls))]
@@ -34,7 +40,7 @@ class AugmentedTree(object):
             mid = (hi + lo) / 2
             ivl = self.ivls[mid]
             stop = self.stops[mid]
-            if slicetools.overlaps(qry, ivl):
+            if intervaltools.overlaps(qry, ivl):
                 res.append(ivl)
             if lo != mid and qry.start < stop:
                 stk.append((lo, mid))
@@ -46,8 +52,8 @@ class AugmentedTree(object):
         """Refresh the maximum stop value for of the subtree at all nodes.
         
         Keyword variables:
-        lo -- lower bound of the array/tree
-        hi -- upper bound of the array/tree
+        :param int lo: lower bound of the array/tree
+        :param int hi: upper bound of the array/tree
         """
         lo = 0 if lo is None else lo
         hi = len(self.ivls) if hi is None else hi

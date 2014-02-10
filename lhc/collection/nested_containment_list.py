@@ -6,9 +6,10 @@ from netCDF4 import Dataset
 class NestedContainmentList(object):
 
     def __init__(self, root, mode='r', diskless=False):
-        self.root = root
-        if isinstance(root, basestring):
-            self.root = Dataset(root, mode, diskless=diskless)
+        #self.root = root
+        #if isinstance(root, basestring):
+        #    self.root = Dataset(root, mode, diskless=diskless)
+        pass
     
     def __getitem__(self, key):
         if isinstance(key, int):
@@ -61,3 +62,21 @@ class NestedContainmentList(object):
         self.root.createDimension('grp_col', 2)
         self.root.createVariable('ivls', 'i4', ('ivls', 'ivl_col'))[:] = ivls
         self.root.createVariable('grps', 'i4', ('grps', 'grp_col'))[:] = grps
+    
+    def _build(self, ivls):
+        nsub = 0
+        sublist_ids = len(ivls) * [-1]
+        ivls.sort()
+        i = 0
+        while i < len(ivls):
+            parent = i
+            i = parent + 1
+            while i < len(ivls) and parent > 0:
+                if ivls[i].stop > ivls[parent].stop or ivls[i] == ivls[parent]:
+                    parent = sublist_ids[parent]
+                else:
+                    sublist_ids[i] = parent
+                    nsub += 1
+                    parent = i
+                    i += 1
+        print sublist_ids
