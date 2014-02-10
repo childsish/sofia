@@ -21,26 +21,6 @@ class AugmentedTree(object):
         for k, v in state.iteritems():
             setattr(self, k, v)
     
-    def _refresh(self, lo=None, hi=None):
-        """Refresh the maximum stop value for of the subtree at all nodes.
-        
-        Keyword variables:
-        lo -- lower bound of the array/tree
-        hi -- upper bound of the array/tree
-        """
-        lo = 0 if lo is None else lo
-        hi = len(self.ivls) if hi is None else hi
-        mid = (hi + lo) / 2
-        
-        if lo == mid:
-            stop = self.ivls[mid].stop
-        elif mid + 1 == hi:
-            stop = max(self._refresh(lo, mid), self.ivls[mid].stop)
-        else:
-            stop = max(self._refresh(lo, mid), self._refresh(mid + 1, hi))
-        self.stops[mid] = stop
-        return stop
-    
     def intersect(self, qry):
         """Find all intervals intersecting the given interval
         
@@ -61,3 +41,23 @@ class AugmentedTree(object):
             if mid + 1 < hi and ivl.start < qry.stop:
                 stk.append((mid + 1, hi))
         return res
+    
+    def _refresh(self, lo=None, hi=None):
+        """Refresh the maximum stop value for of the subtree at all nodes.
+        
+        Keyword variables:
+        lo -- lower bound of the array/tree
+        hi -- upper bound of the array/tree
+        """
+        lo = 0 if lo is None else lo
+        hi = len(self.ivls) if hi is None else hi
+        mid = (hi + lo) / 2
+        
+        if lo == mid:
+            stop = self.ivls[mid].stop
+        elif mid + 1 == hi:
+            stop = max(self._refresh(lo, mid), self.ivls[mid].stop)
+        else:
+            stop = max(self._refresh(lo, mid), self._refresh(mid + 1, hi))
+        self.stops[mid] = stop
+        return stop
