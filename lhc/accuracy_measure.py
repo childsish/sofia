@@ -8,9 +8,13 @@ T = 3 # Threshold
 M = 4 # Matthews correlation coefficient
 
 def roc(clss, vals):
-    """ clss: boolean. True if positive case, False if the negative case
-    vals: list of real numbers.
     """
+    :param clss: known classes. 1 if positive case, -1 if the negative case
+    :type class: list of boolean
+    :param vals: classification probabilites etc...
+    :type vals: list of real numbers
+    """
+    assert len(clss) == len(vals)
     global X, Y, A, T, M
     
     order = numpy.argsort(vals)
@@ -23,7 +27,7 @@ def roc(clss, vals):
     data[0, T] = vals[0]
     
     for i in xrange(length-1):
-        if clss[i]:
+        if clss[i] == 1:
             data[i+1, X] = data[i, X]
             data[i+1, Y] = data[i, Y] + 1
             data[i+1, A] = data[i, A]
@@ -50,15 +54,51 @@ def roc(clss, vals):
     return data
 
 def mse(exp, obs):
+    """Mean Squared Error
+    
+    :param exp: expected values
+    :type exp: list of real numbers
+    :param obs: observed values
+    :type obs: list of real numbers
+    """
+    assert len(exp) == len(obs)
     return numpy.mean((numpy.array(exp) - numpy.array(obs)) ** 2)
 
 def confusion(exp, obs):
+    """Create a confusion matrix
+    
+    :param exp: expected values
+    :type exp: list of real numbers
+    :param obs: observed values
+    :type obs: list of real numbers
+    :rtype: (2,2) confusion matrix
+    
+    In each axis of the resulting confusion matrix the negative case is 0-index and the positive case 1-index.
+    """
+    assert len(exp) == len(obs)
     # Observed in the first dimension, expected in the second
     lbls = sorted(set(exp))
     res = numpy.zeros(shape=(len(lbls), len(lbls)))
     for i in xrange(len(exp)):
         res[lbls.index(exp[i]),lbls.index(obs[i])] += 1
     return res
+
+def mcc(mat):
+    """ Matthew's Correlation Coefficient [-1, 1].
+    
+    :param mat: a confusion matrix
+    """
+    if mat.shape == (2,2):
+        tp = mat[1,1]
+        fn = mat[1,0]
+        fp = mat[0,1]
+        tn = mat[0,0]
+        if tp + fp == 0 or tp + fn == 0 or tn + fp == 0 or tn + fn == 0:
+            den = 1
+        else:
+            den = math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+        return (tp * tn - fp * fn) / den
+    return step_matrix(mat, mcc)
 
 def step_matrix(mat, fn):
     res = numpy.empty(mat.shape[0])
@@ -71,36 +111,22 @@ def step_matrix(mat, fn):
         res[i] = fn(sub_mat)
     return res
 
-def mcc(mat, pve=1):
-    """ Matthew's Correlation Coefficient [-1, 1]. Calculated from a
-            confusion matrix.
-        """
+def ber(mat):
+    """Balanced Error Rate [0, 1]
+    
+    :param mat: a confusion matrix
+    """
     if mat.shape == (2,2):
         nve = 1 - pve
-        tp = mat[pve,pve]
-        fn = mat[pve,nve]
-        fp = mat[nve,pve]
-        tn = mat[nve,nve]
-        if tp + fp == 0 or tp + fn == 0 or tn + fp == 0 or tn + fn == 0:
-            den = 1
-        else:
-            den = math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
-        return (tp * tn - fp * fn) / den
-    return step_matrix(mat, mcc)
-
-def ber(mat, pve=1):
-    """ Balanced ERror rate [0, 1]"""
-    if mat.shape == (2,2):
-        nve = 1 - pve
-        tp = mat[pve,pve]
-        fn = mat[pve,nve]
-        fp = mat[nve,pve]
-        tn = mat[nve,nve]
+        tp = mat[1,1]
+        fn = mat[1,0]
+        fp = mat[0,1]
+        tn = mat[0,0]
         return 0.5 * (fp / (tn + fp) + fn / (fn + tp))
     return step_matrix(mat, ber)
 
 def mui(X, Y):
-    """ MUtial Information """
+    """MUtial Information"""
     assert len(X) == len(Y)
     
     # Calculate the joint and marginal probabilities
