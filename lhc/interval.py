@@ -1,17 +1,25 @@
+from functools import total_ordering
 from collections import namedtuple
 
+@total_ordering
 class Interval(object):
-    __slots__ = ('start', 'stop', 'children')
+    __slots__ = ('start', 'stop')
 
     def __init__(self, start, stop):
-        self.start = start
-        self.stop = stop
+        self.start, self.stop = sorted((start, stop))
 
     def __str__(self):
         return '[{start}, {stop})'.format(start=self.start, stop=self.stop)
     
     def __repr__(self):
         return 'Interval{s}'.format(s=str(self))
+    
+    def __eq__(self, other):
+        return self.start == other.start and\
+            self.stop == other.stop
+    
+    def __lt__(self, other):
+        return self.stop < other.stop if self.start == other.start else self.start < other.start
         
     # Relative location functions
     
@@ -142,5 +150,10 @@ class Interval(object):
             err = 'Absolute position %d is not contained within %s'
             raise IndexError(err%(pos, self))
         return pos - self.start
+    
+    # Sequence functions
+    
+    def getSubSeq(self, seq):
+        return seq[self.start:self.stop]
     
     INTERVAL_PAIR = namedtuple('IntervalPair', ('left', 'right'))
