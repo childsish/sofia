@@ -4,6 +4,11 @@ from collections import deque
 from itertools import repeat
 
 class enum(set):
+    def __getitem__(self, key):
+        if key in self:
+            return key
+        raise KeyError 
+    
     def __getattr__(self, name):
         if name in self:
             return name
