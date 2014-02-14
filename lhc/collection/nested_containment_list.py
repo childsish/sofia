@@ -6,6 +6,13 @@ from netCDF4 import Dataset
 
 class NestedContainmentList(object):
     def __init__(self, root, ivls=None):
+        """Create a nested containment list with a netCDF backend
+        
+        :param root: either a filename or the Dataset object to work upon
+        :type root: string or netCDF4.Dataset
+        :param ivls: if provided will insert the given intervals into the database overriding anything already there
+        :type ivls: list of interval
+        """
         mode = 'r' if ivls is None else 'w'
         self.root = Dataset(root, mode) if isinstance(root, basestring) else root
         self.closed = False
@@ -49,30 +56,30 @@ class NestedContainmentList(object):
         self.root.createVariable('ivls', 'i4', ('ivls', 'ivl_col'))[:] = ivl_table
         self.root.createVariable('grps', 'i4', ('grps', 'grp_col'))[:] = grp_table
 
-def getTables(ivls, root=None):
+def getTables(ivls, prior=None):
     """Compute the interval and group tables of a nested containment list.
     
     :param ivls: the intervals to be stored in the table
     :type ivls: a sorted iterable of intervals with .start and .stop
-    :param root: the known structure of the intervals
-    :type root: list of integer pairs
+    :param prior: the known structure of the intervals
+    :type prior: list of integer pairs
     
-    The parameter root describes pre-existing structure in the intervals. The
+    The parameter prior describes pre-existing structure in the intervals. The
     index of the integer pairs become group ids. The first integer of a pair
     is the index of the interval at the start of the group and the second
     integer is the length of the group.
     """
-    parent_ids = _getParentIds(ivls, root)
+    parent_ids = _getParentIds(ivls, prior)
     grp_table, pnt2grp = _getGroupTable(parent_ids)
     ivl_table = _getIntervalTable(ivls, pnt2grp, parent_ids)
     return ivl_table, grp_table
     
-def _getParentIds(ivls, root=None):
+def _getParentIds(ivls, prior=None):
     """Get the parent ids of the given intervals
     """
-    root = [(0, len(ivls))] if root is None else root
-    group_starts = set(grp[0] for grp in root)
-    parent_ids = np.hstack([-(len(root) - i) * np.ones(sz, dtype='i4') for i, (fr, sz) in enumerate(root)])
+    prior = [(0, len(ivls))] if prior is None else prior
+    group_starts = set(grp[0] for grp in prior)
+    parent_ids = np.hstack([-(len(prior) - i) * np.ones(sz, dtype='i4') for i, (fr, sz) in enumerate(prior)])
     i = 0
     while i < len(ivls):
         parent = i
