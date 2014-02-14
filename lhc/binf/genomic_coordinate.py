@@ -1,4 +1,8 @@
+import string
+
 from functools import total_ordering
+from lhc.interval import Interval as BaseInterval
+from lhc.tools import enum
 
 @total_ordering
 class Position(object):
@@ -15,30 +19,82 @@ class Position(object):
     def __lt__(self, other):
         return (self.chm < other.chm) or\
             (self.chm == other.chm) and (self.pos < other.pos)
+   
+@total_ordering 
+class Interval(BaseInterval):
     
-class Interval(object):
-    def __init__(self, chromosome, start, stop, strand='+', context=None):
-        self.chr = chromosome
-        self.start, self.stop = sorted((start, stop))
+    REVCMP = string.maketrans('acgtuwrkysmbhdvnACGTUWRKYSMBHDVN',
+                              'tgcaawymrskvdhbnTGCAAWYMRSKVDHBN')
+    
+    def __init__(self, chm, start, stop, strand='+'):
+        """Create a genomic interval
+        
+        :param string chm: the chromosome the interval is on
+        :param int start: the start position of the interval (inclusive, 0-indexed)
+        :param int stop: the stop position of the interval (not inclusive)
+        :param strand: the strand the interval is on
+        :type strand: '+' or '-'
+        """
+        super(Interval, self).__init__(start, stop)
+        self.chr = chm
         self.strand = strand
-        self.context = context
     
     def __str__(self):
         return '%s:%s-%s'%(self.chr, self.start, self.stop)
     
-    def __eq__(self, other):
-        return self.chr == other.chr and self.start == other.start and self.strand == other.strand
+    def __repr__(self):
+        return 'GenomicInterval({s})'.format(s=str(self))
     
-    def isOverlapping(self, other):
-        if self.chr != other.chr:
-            return False
-        return self.stop >= other.start and other.stop >= self.start
+    def __eq__(self, other):
+        return super(Interval, self).__eq__(other) and\
+            self.chr == other.chr and\
+            self.strand == other.strand
+    
+    def __lt__(self, other):
+        return self.chr < other.chr and\
+            super(Interval, self).__lt__(other)
+    
+    # Set-like operation functions
+
+    def union(self, other):
+        ivl = super(Interval, self).union(other)\
+            if self.chr == other.chr and self.strand == other.strand else None
+        return Interval(self.chr, ivl.start, ivl.stop, self.strand)
+    
+    def intersect(self, other):
+        ivl = super(Interval, self).intersect(other)\
+            if self.chr == other.chr and self.strand == other.strand else None
+        return Interval(self.chr, ivl.start, ivl.stop, self.strand)
+    
+    def difference(self, other):
+        ivl = super(Interval, self).difference(other)\
+            if self.chr == other.chr and self.strand == other.strand else None
+        return Interval(self.chr, ivl.start, ivl.stop, self.strand)
+    
+    # Interval arithmetic functions
+    
+    def add(self, other):
+        ivl = super(Interval, self).add(other)\
+            if self.chr == other.chr and self.strand == other.strand else None
+        return Interval(self.chr, ivl.start, ivl.stop, self.strand)
+    
+    def subtract(self, other):
+        ivl = super(Interval, self).subtract(other)\
+            if self.chr == other.chr and self.strand == other.strand else None
+        return Interval(self.chr, ivl.start, ivl.stop, self.strand)
+    
+    def multiply(self, other):
+        ivl = super(Interval, self).multiply(other)\
+            if self.chr == other.chr and self.strand == other.strand else None
+        return Interval(self.chr, ivl.start, ivl.stop, self.strand)
+    
+    def divide(self, other):
+        ivl = super(Interval, self).divide(other)\
+            if self.chr == other.chr and self.strand == other.strand else None
+        return Interval(self.chr, ivl.start, ivl.stop, self.strand)
     
     def getSubSeq(self, seq):
-        return seq[self.start:self.stop]
-    
-    def getAbsPos(self, pos):
-        pass
-    
-    def getRelPos(self, pos):
-        pass
+        res = super(Interval, self).getSubSeq(seq)
+        if self.strand == '-':
+            res = seq.translate(Interval.REVCMP)[::-1]
+        return res
