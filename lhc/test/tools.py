@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 
-from lhc.tools import enum, window
+from lhc.tools import enum, argsort, window
 
 class TestTools(TestCase):
     def test_enum(self):
@@ -20,6 +20,21 @@ class TestTools(TestCase):
         self.assertEquals(values['B'], 'B')
         self.assertEquals(values['C'], 'C')
         self.assertEquals(values['D'], 'D')
+    
+    def test_argsort(self):
+        values = [9, 8, 1, 2, 7, 6, 3, 4, 5]
+        
+        res = argsort(values)
+        
+        self.assertEquals(res, [2, 3, 6, 7, 8, 5, 4, 1, 0])
+    
+    def test_argsortInterval(self):
+        from lhc.binf.genomic_coordinate import Interval
+        values = [Interval('1', 10, 20), Interval('1', 5, 15), Interval('1', 15, 25)]
+        
+        res = argsort(values)
+        
+        self.assertEquals(res, [1, 0, 2])
 
     def test_windowWinltSeq(self):
         seq = 'atacgtagt'
