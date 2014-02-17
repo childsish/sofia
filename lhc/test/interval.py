@@ -67,7 +67,20 @@ class TestSliceTools(unittest.TestCase):
         self.assertEquals(a.getRelPos(10), 5)
         self.assertEquals(a.getRelPos(14), 9)
         self.assertRaises(IndexError, a.getRelPos, 15)
+    
+    def test_comparisons(self):
+        a = Interval(0, 10)
+        b = Interval(5, 10)
+        c = Interval(5, 15)
+
+        self.assertTrue(a == a)
+        self.assertFalse(a == b)
+        self.assertFalse(b == a)
         
+        self.assertTrue(a < b)
+        self.assertFalse(b < a)
+        self.assertTrue(b < c)
+        self.assertFalse(c < b)
 
 if __name__ == '__main__':
     unittest.main()

@@ -46,12 +46,13 @@ class Interval(BaseInterval):
         return 'GenomicInterval({s})'.format(s=str(self))
     
     def __eq__(self, other):
-        return super(Interval, self).__eq__(other) and\
-            self.chr == other.chr and\
+        return self.chr == other.chr and\
+            super(Interval, self).__eq__(other) and\
             self.strand == other.strand
     
     def __lt__(self, other):
-        return self.chr < other.chr and\
+        return self.chr < other.chr or\
+            self.chr == other.chr and\
             super(Interval, self).__lt__(other)
     
     # Set-like operation functions
