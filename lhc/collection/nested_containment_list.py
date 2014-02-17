@@ -3,6 +3,7 @@ import numpy as np
 from bisect import bisect_left
 from collections import Counter
 from netCDF4 import Dataset
+from lhc.tools import argsort
 
 class NestedContainmentList(object):
     def __init__(self, root, ivls=None):
@@ -17,7 +18,7 @@ class NestedContainmentList(object):
         self.root = Dataset(root, mode) if isinstance(root, basestring) else root
         self.closed = False
         if mode == 'w':
-            ivl_table, grp_table = getTables(ivls)
+            ivl_table, grp_table, ordering = getTables(ivls)
             self._populateRoot(ivl_table, grp_table)
     
     def intersect(self, ivl, grp_id=0):
@@ -56,36 +57,43 @@ class NestedContainmentList(object):
         self.root.createVariable('ivls', 'i4', ('ivls', 'ivl_col'))[:] = ivl_table
         self.root.createVariable('grps', 'i4', ('grps', 'grp_col'))[:] = grp_table
 
-def getTables(ivls, prior=None):
+def getTables(ivls):
     """Compute the interval and group tables of a nested containment list.
     
-    :param ivls: the intervals to be stored in the table
-    :type ivls: a sorted iterable of intervals with .start and .stop
-    :param prior: the known structure of the intervals
-    :type prior: list of integer pairs
-    
-    The parameter prior describes pre-existing structure in the intervals. The
-    index of the integer pairs become group ids. The first integer of a pair
-    is the index of the interval at the start of the group and the second
-    integer is the length of the group.
+    :param ivls: the intervals to be stored in the table. Intervals are any object with .start and .stop members
+    :type ivls: iterable of intervals
     """
-    parent_ids = _getParentIds(ivls, prior)
+    ivls, idx1 = _sortIntervals(ivls)
+    parent_ids = _getParentIds(ivls)
     grp_table, pnt2grp = _getGroupTable(parent_ids)
-    ivl_table = _getIntervalTable(ivls, pnt2grp, parent_ids)
-    return ivl_table, grp_table
+    ivl_table, idx2 = _getIntervalTable(ivls, pnt2grp, parent_ids)
     
-def _getParentIds(ivls, prior=None):
+    return ivl_table, grp_table, np.argsort(idx2)[np.argsort(idx1)]
+
+def _sortIntervals(ivls):
+    def cmp(x, y):
+        if x.start < y.start:
+            return -1
+        elif x.start > y.start:
+            return 1
+        elif x.stop > y.stop:
+            return -1
+        return 1
+    
+    idxs = np.array(argsort(ivls, cmp=cmp))
+    ivls = [ivls[idx] for idx in idxs]
+    return ivls, idxs
+
+def _getParentIds(ivls):
     """Get the parent ids of the given intervals
     """
-    prior = [(0, len(ivls))] if prior is None else prior
-    group_starts = set(grp[0] for grp in prior)
-    parent_ids = np.hstack([-(len(prior) - i) * np.ones(sz, dtype='i4') for i, (fr, sz) in enumerate(prior)])
+    parent_ids = -1 * np.ones(len(ivls), dtype='i4')
     i = 0
     while i < len(ivls):
         parent = i
         i += 1
         while i < len(ivls) and parent >= 0:
-            if ivls[i].stop > ivls[parent].stop or ivls[i] == ivls[parent] or i in group_starts:
+            if ivls[i].stop > ivls[parent].stop or ivls[i] == ivls[parent]:
                 parent = parent_ids[parent]
             else:
                 parent_ids[i] = parent
@@ -104,15 +112,13 @@ def _getGroupTable(parent_ids):
         grp_table[group_id,0] = cpos
         grp_table[group_id,1] = group_size
         cpos += group_size
-    for k in cnts:
-        if k < 0:
-            del pnt2grp[k]
     return grp_table, pnt2grp
 
 def _getIntervalTable(ivls, pnt2grp, parent_ids):
     ivl_table = np.array([[ivl.start, ivl.stop, -1] for ivl in ivls], dtype='i4')
     for pnt_id, grp_id in pnt2grp.iteritems():
-        ivl_table[pnt_id,2] = grp_id
+        if pnt_id >= 0:
+            ivl_table[pnt_id,2] = grp_id
     idxs = np.argsort(parent_ids)
     ivl_table = ivl_table[idxs]
-    return ivl_table
+    return ivl_table, idxs
