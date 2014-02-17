@@ -63,12 +63,25 @@ def getTables(ivls):
     :param ivls: the intervals to be stored in the table. Intervals are any object with .start and .stop members
     :type ivls: iterable of intervals
     """
+    ivls, idx0 = _reduceIntervals(ivls)
     ivls, idx1 = _sortIntervals(ivls)
-    parent_ids = _getParentIds(ivls)
+    parent_ids = _getParentIdxs(ivls)
     grp_table, pnt2grp = _getGroupTable(parent_ids)
     ivl_table, idx2 = _getIntervalTable(ivls, pnt2grp, parent_ids)
     
-    return ivl_table, grp_table, np.argsort(idx2)[np.argsort(idx1)]
+    return ivl_table, grp_table, np.argsort(idx2)[np.argsort(idx1)[idx0]]
+
+def _reduceIntervals(ivls):
+    visited = {}
+    reduced_ivls = []
+    reduced_idxs = np.empty(len(ivls), dtype='i4')
+    for i, ivl in enumerate(ivls):
+        key = (ivl.start, ivl.stop)
+        if key not in visited:
+            visited[key] = len(visited)
+            reduced_ivls.append(ivl)
+        reduced_idxs[i] = visited[key]
+    return reduced_ivls, reduced_idxs 
 
 def _sortIntervals(ivls):
     def cmp(x, y):
@@ -80,26 +93,26 @@ def _sortIntervals(ivls):
             return -1
         return 1
     
-    idxs = np.array(argsort(ivls, cmp=cmp))
-    ivls = [ivls[idx] for idx in idxs]
-    return ivls, idxs
+    sorted_idxs = np.array(argsort(ivls, cmp=cmp), dtype='i4')
+    sorted_ivls = [ivls[idx] for idx in sorted_idxs]
+    return sorted_ivls, sorted_idxs
 
-def _getParentIds(ivls):
+def _getParentIdxs(ivls):
     """Get the parent ids of the given intervals
     """
-    parent_ids = -1 * np.ones(len(ivls), dtype='i4')
+    parent_idxs = -1 * np.ones(len(ivls), dtype='i4')
     i = 0
     while i < len(ivls):
         parent = i
         i += 1
         while i < len(ivls) and parent >= 0:
             if ivls[i].stop > ivls[parent].stop or ivls[i] == ivls[parent]:
-                parent = parent_ids[parent]
+                parent = parent_idxs[parent]
             else:
-                parent_ids[i] = parent
+                parent_idxs[i] = parent
                 parent = i
                 i += 1
-    return parent_ids
+    return parent_idxs
     
 def _getGroupTable(parent_ids):
     pnt2grp = {}

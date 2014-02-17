@@ -10,40 +10,55 @@ class Test(unittest.TestCase):
         self.hndl, self.fname = mkstemp()
         os.close(self.hndl)
     
+    def test__reduceIntervals(self):
+        ivls = [slice(150, 350), slice(50, 100), slice(250, 300), slice(0, 200), slice(0, 75), slice(150, 350), slice(250, 300)]
+        
+        ivls, idxs = ncl._reduceIntervals(ivls)
+        
+        self.assertEquals(idxs.tolist(), [0, 1, 2, 3, 4, 0, 2])
+        self.assertEquals(ivls, [slice(150, 350, None), slice(50, 100, None), slice(250, 300, None), slice(0, 200, None), slice(0, 75, None)])
+    
     def test__sortIntervals(self):
-        ivls = [slice(150, 350), slice(50, 100), slice(250, 300), slice(0, 200), slice(0, 75)]
+        ivls = [slice(150, 350), slice(50, 100), slice(250, 300), slice(0, 200), slice(0, 75), slice(150, 350), slice(250, 300)]
         
-        ivls, idxs = ncl._sortIntervals(ivls)
+        ivls, idx0 = ncl._reduceIntervals(ivls)
+        ivls, idx1 = ncl._sortIntervals(ivls)
         
-        self.assertEquals(idxs.tolist(), [3, 4, 1, 0, 2])
+        self.assertEquals(idx1.tolist(), [3, 4, 1, 0, 2])
+        self.assertEquals(np.argsort(idx1)[idx0].tolist(), [3, 2, 4, 0, 1, 3, 4]) # Index into reduced and sorted set
+        self.assertEquals(ivls, [slice(0, 200, None), slice(0, 75, None), slice(50, 100, None), slice(150, 350, None), slice(250, 300, None)])
     
     def test__getParentIds(self):
-        ivls = [slice(150, 350), slice(50, 100), slice(250, 300), slice(0, 200), slice(0, 75)]
+        ivls = [slice(150, 350), slice(50, 100), slice(250, 300), slice(0, 200), slice(0, 75), slice(150, 350), slice(250, 300)]
         
-        ivls, idxs = ncl._sortIntervals(ivls)
-        parent_ids = ncl._getParentIds(ivls)
+        ivls, idx0 = ncl._reduceIntervals(ivls)
+        ivls, idx1 = ncl._sortIntervals(ivls)
+        parent_idxs = ncl._getParentIdxs(ivls)
         
-        self.assertEquals(parent_ids.tolist(), [-1, 0, 0, -1, 3])
+        self.assertEquals(parent_idxs.tolist(), [-1, 0, 0, -1, 3])
     
     def test__getGroupTable(self):
-        ivls = [slice(150, 350), slice(50, 100), slice(250, 300), slice(0, 200), slice(0, 75)]
+        ivls = [slice(150, 350), slice(50, 100), slice(250, 300), slice(0, 200), slice(0, 75), slice(150, 350), slice(250, 300)]
         
-        ivls, idxs = ncl._sortIntervals(ivls)
-        parent_ids = ncl._getParentIds(ivls)
-        grp_table, pnt2grp = ncl._getGroupTable(parent_ids)
+        ivls, idx0 = ncl._reduceIntervals(ivls)
+        ivls, idx1 = ncl._sortIntervals(ivls)
+        parent_idxs = ncl._getParentIdxs(ivls)
+        grp_table, pnt2grp = ncl._getGroupTable(parent_idxs)
         
         self.assertEquals(grp_table.tolist(), [[0, 2], [2, 2], [4, 1]])
         self.assertEquals(pnt2grp, {-1: 0, 0: 1, 3: 2})
     
     def test__getIntervalTable(self):
-        ivls = [slice(150, 350), slice(50, 100), slice(250, 300), slice(0, 200), slice(0, 75)]
+        ivls = [slice(150, 350), slice(50, 100), slice(250, 300), slice(0, 200), slice(0, 75), slice(150, 350), slice(250, 300)]
         
+        ivls, idx0 = ncl._reduceIntervals(ivls)
         ivls, idx1 = ncl._sortIntervals(ivls)
-        parent_ids = ncl._getParentIds(ivls)
-        grp_table, pnt2grp = ncl._getGroupTable(parent_ids)
-        ivl_table, idx2 = ncl._getIntervalTable(ivls, pnt2grp, parent_ids)
+        parent_idxs = ncl._getParentIdxs(ivls)
+        grp_table, pnt2grp = ncl._getGroupTable(parent_idxs)
+        ivl_table, idx2 = ncl._getIntervalTable(ivls, pnt2grp, parent_idxs)
         
         self.assertEquals(idx2.tolist(), [0, 3, 1, 2, 4])
+        self.assertEquals(np.argsort(idx2)[np.argsort(idx1)[idx0]].tolist(), [1, 3, 4, 0, 2, 1, 4])
         self.assertEquals(ivl_table.tolist(), [[0, 200, 1], [150, 350, 2], [0, 75, -1], [50, 100, -1], [250, 300, -1]])
 
     def test_getTables(self):
