@@ -47,8 +47,9 @@ def gmean(seq):
     """ Calculate the geometric mean. """
     return np.exp(np.mean(np.log(np.array(seq))))
 
-def argsort(seq):
-    return sorted(range(len(seq)), key=seq.__getitem__)
+def argsort(seq, cmp=None, key=None):
+    key = seq.__getitem__ if key is None else lambda x:key(seq[x])
+    return sorted(range(len(seq)), cmp=cmp, key=key)
 
 def loadPlugins(indir, cls):
     sys.path.append(indir)
