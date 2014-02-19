@@ -32,3 +32,6 @@ class sortedset(object):
     def add(self, item):
         if item not in self:
             insort_left(self.container, item)
+
+    def pop(self):
+        return self.container.pop()
