@@ -1,6 +1,21 @@
 from collections import OrderedDict
 from lhc.tools import enum
 
+def iterGenes(fname, it):
+    gene = None
+    transcript = None
+    for row in it(fname):
+        if row.type == 'gene':
+            if gene is not None:
+                yield gene
+            gene = Gene(row.attr['ID'], row.ivl)
+        elif row.type == 'mRNA':
+            transcript = Transcript(row.attr['ID'], row.ivl)
+            gene.transcripts[row.attr['ID']] = transcript
+        elif row.type in ('CDS', 'five_prime_UTR', 'three_prime_UTR'):
+            transcript.exons.append(Exon(row.ivl, row.type))
+    yield gene
+
 class Gene(object):
     def __init__(self, name, ivl, transcripts=None):
         self.name = name
