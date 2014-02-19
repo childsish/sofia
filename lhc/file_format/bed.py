@@ -1,5 +1,5 @@
 from csv import iterCsv, ColumnBuilder, FieldBuilder
-from lhc.binf.genomic_interval import interval
+from lhc.binf.genomic_coordinate import Interval
 
 def iterBed(fname):
     column_builder = ColumnBuilder()
@@ -20,5 +20,5 @@ def iterBed(fname):
         yield fields
 
 def parseInterval(cols):
-    return interval(cols.chr, cols.fr, cols.to)
+    return Interval(cols.chr, cols.fr, cols.to)
 

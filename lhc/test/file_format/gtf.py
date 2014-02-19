@@ -6,7 +6,7 @@ Created on 06/08/2013
 import unittest
 
 from lhc.file_format.gtf import iterGtf
-from lhc.binf.genomic_interval import interval
+from lhc.binf.genomic_coordinate import Interval
 
 class Test(unittest.TestCase):
 

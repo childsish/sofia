@@ -1,5 +1,5 @@
 from csv import iterCsv, ColumnBuilder, FieldBuilder
-from lhc.binf.genomic_interval import interval
+from lhc.binf.genomic_coordinate import Interval
 
 def iterGff(fname):
     column_builder = ColumnBuilder()
@@ -19,13 +19,13 @@ def iterGff(fname):
         yield fields
 
 def parseInterval(cols):
-    return interval(cols.chr, cols.fr - 1, cols.to, cols.strand)
+    return Interval(cols.chr, cols.fr - 1, cols.to, cols.strand)
 
 def parseAttributes(cols):
     parts = [part.strip().split('=', 1) for part in cols.attr.split(';') if part != '']
-    for i in xrange(len(parts)):
-        if parts[i][1].startswith('"'):
-            parts[i][1] = parts[i][1][1:-1]
-        else:
-            parts[i][1] = int(parts[i][1])
+    for part in parts:
+        if part[1].startswith('"'):
+            part[1] = part[1][1:-1]
+        elif part[1].isdigit():
+            part[1] = int(part[1])
     return dict(parts)

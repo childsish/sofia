@@ -1,5 +1,5 @@
 from csv import iterCsv, ColumnBuilder, FieldBuilder
-from lhc.binf.genomic_interval import interval
+from lhc.binf.genomic_coordinate import Interval
 
 def iterMaf(fname):
     column_builder = ColumnBuilder()
