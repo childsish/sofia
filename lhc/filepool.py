@@ -27,3 +27,10 @@ class FilePool(object):
                 raise IOError('Unable to open another file')
         self.last_access[key] = time.time()
         return self.files[key]
+    
+    def close(self, key=None):
+        if key is None:
+            for file in self.files.itervalues():
+                file.close()
+        else:
+            self.files[key].close()
