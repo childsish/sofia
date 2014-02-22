@@ -1,5 +1,16 @@
+import os
+
 from csv import iterCsv, ColumnBuilder, FieldBuilder
 from lhc.binf.genomic_coordinate import Interval
+
+CHR = 0
+POS = 1
+ID = 2
+REF = 3
+ALT1 = 4
+ALT2 = 4
+QUAL = 5
+ATTR = 7
 
 def iterVcf(fname):
     column_builder = ColumnBuilder()
@@ -18,12 +29,13 @@ def iterVcf(fname):
     field_builder.registerField('alt')
     field_builder.registerField('qual', parseQuality)
     field_builder.registerField('attr', parseAttributes)
+    field_builder.registerField('genotype_id', lambda cols:os.basename(fname).rsplit('.')[0])
     
     for fields in iterCsv(fname, column_builder, field_builder, skip=1):
         yield fields
 
 def parseInterval(cols):
-    return interval(cols.chr, cols.pos, cols.pos)
+    return Interval(cols.chr, cols.pos, cols.pos)
 
 def parseQuality(cols):
     if cols.qual == '.':
