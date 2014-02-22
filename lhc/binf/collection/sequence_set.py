@@ -1,6 +1,17 @@
 from netCDF4 import Dataset
 from itertools import izip
 
+def loadDiskless(fname):
+    """Load into a dictionary of numpy arrays
+    
+    This is only in place till netCDF4 diskless works.
+    """
+    res = {}
+    root = Dataset(fname)
+    for k, v in root.variables.iteritems():
+        res[k] = v[:]
+    return res
+
 class Sequence(object):
     def __init__(self, sequence_id=None, var=''):
         self.id = sequence_id
