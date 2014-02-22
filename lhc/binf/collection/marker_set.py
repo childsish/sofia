@@ -22,15 +22,16 @@ class MarkerSet(object):
         self.gen2idx = self.__initGenotypeMap()
     
     def __initNewFile(self, ref):
-        npos = sum(map(len, ref.poss.itervalues()))
+        ploidy, npos = ref.ref.shape
         
         self.data.createDimension('pos', npos)
+        self.data.createDimension('ploidy', ploidy)
         self.data.createDimension('gen', None)
         
         chm_var = self.data.createVariable('chms', 'u1', ('pos',))
         pos_var = self.data.createVariable('poss', 'u4', ('pos',))
-        self.data.createVariable('ref', 'S1', ('pos',))[:] = ref.ref
-        self.data.createVariable('snps', 'S1', ('gen', 'pos'))
+        self.data.createVariable('ref', 'S1', ('pos', 'ploidy'))[:] = ref.ref
+        self.data.createVariable('snps', 'S1', ('gen', 'pos', 'ploidy'))
 
         idx_grp = self.data.createGroup('idxs')
         idx_grp.createDimension('rng', 2)
@@ -72,10 +73,10 @@ class MarkerSet(object):
         if markers is not None:
             self.data.variables['snps'][idx,:] = markers
         
-        return Genotype(self, idx)
+        return Genotype(self, idx, name)
     
     def getGenotype(self, name):
-        return Genotype(self, int(self.gen2idx[name]))
+        return Genotype(self, int(self.gen2idx[name]), name)
     
     def getMarkerAtPosition(self, pos):
         return self.getMarkerAtIndex(self.getIndexAtPosition(pos))
@@ -89,7 +90,7 @@ class MarkerSet(object):
         return poss_idx
 
     def getMarkerAtIndex(self, idx):
-        return self.data.variables['snps'][:,idx]
+        return self.data.variables['snps'][:,idx,:]
     
     def getPositionAtIndex(self, idx):
         chm_idx = self.data.variables['chms'][idx]
@@ -107,7 +108,7 @@ class MarkerSet(object):
         return np.arange(pos_fr, pos_to, dtype='u4')
     
     def getMarkersAtIndices(self, idxs):
-        return self.data.variables['snps'][:,idxs]
+        return self.data.variables['snps'][:,idxs,:]
     
     def getPositionsAtIndices(self, idxs):
         return map(self.getPositionAtIndex, idxs)
@@ -171,7 +172,8 @@ class MarkerSet(object):
             self.closed = True
 
 class Genotype(object):
-    def __init__(self, mrk_set, idx):
+    def __init__(self, mrk_set, idx, name):
+        self.name = name
         self.mrk_set = mrk_set
         self.idx = idx
     
