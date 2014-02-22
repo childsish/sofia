@@ -2,6 +2,13 @@ import errno
 import time
 
 class FilePool(object):
+    """A pool of files
+    
+    FilePool should be used if you think you might be opening more files than
+    allowed by the operating system (2048 on many systems). If too many files
+    are opened, this pool will close the one that was used the longest time
+    ago.
+    """
     def __init__(self, mode='r'):
         self.mode = mode
         self.last_access = {}
