@@ -27,11 +27,11 @@ class AugmentedTree(object):
         for k, v in state.iteritems():
             setattr(self, k, v)
     
-    def intersect(self, qry):
-        """Find all intervals intersecting the given interval
+    def getOverlapping(self, qry):
+        """Find all overlapping intervals
         
         Keyword arguments:
-        :param slice qry: query interval. This does not have to be a slice, simply an object with .start and .stop members where start < stop.
+        :param interval qry: find intervals overlapping this interval
         """
         res = []
         stk = [(0, len(self.ivls))]

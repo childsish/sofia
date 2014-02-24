@@ -21,8 +21,8 @@ class NestedContainmentList(object):
             ivl_table, grp_table, ordering = getTables(ivls)
             self._populateRoot(ivl_table, grp_table)
     
-    def intersect(self, ivl, grp_id=0):
-        """Find all intersecting intervals
+    def getOverlapping(self, ivl, grp_id=0):
+        """Find all overlapping intervals
         
         :param interval ivl: find intervals intersecting this interval
         :param integer grp_id: the group to begin looking in

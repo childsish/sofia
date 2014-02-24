@@ -32,7 +32,11 @@ class IntervalTree(object):
         self.right = IntervalTree(rights, depth, _extent=(mid, right)) if len(rights) > 0 else None
         self.mid = mid
  
-    def intersect(self, qry):
+    def getOverlapping(self, qry):
+        """Find all overlapping intervals
+        
+        :param interval ivl: find intervals overlapping this interval
+        """
         overlapping = [ivl for ivl in self.ivls if qry.overlaps(ivl)]\
             if self.ivls and not qry.stop < self.ivls[0].start\
             else []
