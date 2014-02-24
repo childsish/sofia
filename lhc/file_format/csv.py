@@ -37,8 +37,7 @@ class FieldBuilder(object):
 
 def iterCsv(fname, column_builder=None, field_builder=None, skip=0):
     it = iterDir if os.path.isdir(fname) else iterFile
-    for row in it(fname, column_builder, field_builder, skip):
-        yield row
+    return it(fname, column_builder, field_builder, skip)
 
 def iterDir(dname, column_builder, field_builder, skip):
     for fname in os.path.listdir(dname):
