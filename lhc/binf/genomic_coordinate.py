@@ -6,15 +6,17 @@ from lhc.tools import enum
 
 @total_ordering
 class Position(object):
-    def __init__(self, chromosome, position):
+    def __init__(self, chromosome, position, strand='+'):
         self.chr = chromosome
         self.pos = position
+        self.strand = strand
     
     def __str__(self):
         return '%s:%s'%(self.chr, self.pos)
     
     def __eq__(self, other):
-        return self.chr == other.chr and self.pos == other.pos
+        return self.chr == other.chr and self.pos == other.pos and\
+            self.strand == other.strand
 
     def __lt__(self, other):
         return (self.chm < other.chm) or\
