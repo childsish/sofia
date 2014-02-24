@@ -4,6 +4,9 @@ from collections import deque
 from itertools import repeat
 
 class enum(set):
+    def __contains__(self, key):
+        return super(enum, self).__contains__(key)
+    
     def __getitem__(self, key):
         if key in self:
             return key
@@ -52,6 +55,9 @@ def argsort(seq, cmp=None, key=None):
     return sorted(range(len(seq)), cmp=cmp, key=key)
 
 def loadPlugins(indir, cls):
+    import os
+    import sys
+    
     sys.path.append(indir)
     plugins = {}
 
@@ -75,3 +81,4 @@ def accumulate(xs):
     for x in xs:
         ttl += x
         yield ttl
+
