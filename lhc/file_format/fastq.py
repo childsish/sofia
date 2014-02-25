@@ -1,5 +1,23 @@
-def quality(qua, offset=33):
-    return [ord(char) - offset for char in qua]
+import argparse
+import sys
+
+def main(argv):
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+    
+    parser_rmdup = subparsers.add_parser('rmdup')
+    parser_rmdup.add_argument('input')
+    parser_rmdup.add_argument('output', nargs='?', default=None)
+    parser_rmdup.set_defaults(func=lambda args:rmdup(args.input, args.output))
+    
+    parser_interleave = subparser.add_parser('interleave')
+    parser_interleave.add_argument('fastq1')
+    parser_interleave.add_argument('fastq2')
+    parser_interleave.set_defaults(\
+        func=lambda args:interleave(args.fastq1, args.fastq2))
+    
+    args = parser.parse_args(argv[1:])
+    args.func(args)
 
 def iterFastq(fname):
     infile = open(fname)
@@ -13,7 +31,7 @@ def iterFastq(fname):
         pass
     infile.close()
 
-def removeDuplicates(infname, outfname=None):
+def rmdup(infname, outfname=None):
     def meanQuality(v):
         return mean(quality(v[2]))
         
@@ -36,23 +54,26 @@ def removeDuplicates(infname, outfname=None):
         outfile.write('\n')
     outfile.close()
 
-def main(argv):
-    def rmdup(args):
-        return removeDuplicates(args.input, args.output)
-    
-    import argparse
-    
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers()
-    
-    parser_rmdup = subparsers.add_parser('rmdup')
-    parser_rmdup.add_argument('input')
-    parser_rmdup.add_argument('output', nargs='?', default=None)
-    parser_rmdup.set_defaults(func=rmdup)
-    
-    args = parser.parse_args(argv[1:])
-    args.func(args)
+def quality(qua, offset=33):
+    return [ord(char) - offset for char in qua]
+
+def interleave(fastq1, fastq2, outfile=sys.stdout):
+    infile1 = open(fastq1)
+    infile2 = open(fastq2)
+
+    try:
+        while True:
+            for i in xrange(4):
+                outfile.write(infile1.next())
+            for i in xrange(4):
+                outfile.write(infile2.next())
+    except StopIteration:
+        pass
+
+    infile1.close()
+    infile2.close()
 
 if __name__ == '__main__':
     import sys
     sys.exit(main(sys.argv))
+
