@@ -10,7 +10,7 @@ def main(argv):
     parser_rmdup.add_argument('output', nargs='?', default=None)
     parser_rmdup.set_defaults(func=lambda args:rmdup(args.input, args.output))
     
-    parser_interleave = subparser.add_parser('interleave')
+    parser_interleave = subparsers.add_parser('interleave')
     parser_interleave.add_argument('fastq1')
     parser_interleave.add_argument('fastq2')
     parser_interleave.set_defaults(\
