@@ -7,7 +7,7 @@ A = 2 # Area under curve
 T = 3 # Threshold
 M = 4 # Matthews correlation coefficient
 
-def roc(clss, vals):
+def roc(clss, vals, reverse=False):
     """
     :param clss: known classes. 1 if positive case, -1 if the negative case
     :type class: list of boolean
@@ -18,6 +18,8 @@ def roc(clss, vals):
     global X, Y, A, T, M
     
     order = numpy.argsort(vals)
+    if reverse:
+        order = order[::-1]
     clss = numpy.array(clss)[order]
     vals = numpy.array(vals)[order]
     
