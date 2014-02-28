@@ -14,6 +14,9 @@ class FilePool(object):
         self.last_access = {}
         self.files = {}
     
+    def __contains__(self, key):
+        return key in self.files
+    
     def __getitem__(self, key):
         if key not in self.files or self.files[key].closed:
             attempt = 0
