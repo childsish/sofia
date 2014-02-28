@@ -447,4 +447,3 @@ try:
     Interval.REVCMP[numpy.ndarray] = seq_revcmp
 except:
     pass
-

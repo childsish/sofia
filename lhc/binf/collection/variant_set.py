@@ -1,10 +1,13 @@
 import sqlite3
+
+from lhc.binf.variant import Variant
 from lhc.binf.genomic_coordinate import Interval
 
 class VariantSet(object):
     
     MINBIN = 3
     MAXBIN = 7
+    ALTSEP = '/'
     
     def __init__(self, fname, vnts=None):
         self.conn = sqlite3.connect(fname)
@@ -17,24 +20,26 @@ class VariantSet(object):
         cur = self.conn.cursor()
         getOverlappingBins = self._getOverlappingBins
         
-        qry1 = '''SELECT genotype, chr, start, stop, alt, quality, allele, type, bin
+        qry1 = '''SELECT genotype, chr, start, stop, alt, type, quality
             FROM variant
             WHERE bin == {bin} AND
                 chr == "{chr}"'''
-        qry2 = '''SELECT genotype, chr, start, stop, alt, quality, allele, type, bin
+        qry2 = '''SELECT genotype, chr, start, stop, alt, type, quality
             FROM variant
             WHERE bin BETWEEN {lower} AND {upper} AND
                 chr == "{chr}"'''
         
         qry = []
-        bins = getOverlappingBins(ivl.start, ivl.stop)
+        bins = getOverlappingBins(ivl)
         for bin in bins:
             if bin[0] == bin[1]:
                 qry.append(qry1.format(chr=ivl.chr, bin=bin[0]))
             else:
                 qry.append(qry2.format(chr=ivl.chr, lower=bin[0], upper=bin[1]))
         rows = cur.execute(' UNION '.join(qry))
-        return [Interval(chr, start, stop) for genotype, chr, start, stop, alt, quality, allele, type, bin in rows if start <= ivl.stop and ivl.start < stop]
+        return [Variant(Interval(chr, start, stop), alt.split(VariantSet.ALTSEP), type, quality, genotype)\
+            for genotype, chr, start, stop, alt, type, quality in rows\
+            if start < ivl.stop and ivl.start < stop]
     
     def _createTables(self):
         cur = self.conn.cursor()
@@ -44,31 +49,32 @@ class VariantSet(object):
         )''')
         cur.execute('''CREATE TABLE variant (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            genotype REFERENCES genotype(id),
             chr TEXT,
             start INTEGER,
             stop INTEGER,
             alt TEXT,
-            quality REAL,
-            allele INTEGER,
             type TEXT,
+            quality REAL,
+            genotype REFERENCES genotype(id),
             bin INTEGER
         )''')
     
     def _insertVariants(self, vnts):
         cur = self.conn.cursor()
         getBin = self._getBin
-        genotypes = {}
+        genotypes = {None: None}
         for vnt in vnts:
             if vnt.genotype not in genotypes:
                 cur.execute('INSERT INTO genotype VALUES (NULL, :name)',
-                    {'genotype': vnt.genotype})
+                    {'name': vnt.genotype})
                 genotypes[vnt.genotype] = cur.lastrowid
             genotype = genotypes[vnt.genotype]
-            cur.execute('''INSERT INTO variant VALUES (NULL, :genotype, :chr,
-                    :start, :stop, :bin)''',
-                {'genotype': genotype, 'chr': vnt.chr, 'start': vnt.start,
-                    'stop': vnt.stop, 'bin': getBin(vnt.start, vnt.stop)})
+            cur.execute('''INSERT INTO variant VALUES (NULL, :chr, :start,
+                    :stop, :alt, :type, :quality, :genotype, :bin)''',
+                {'chr': vnt.ivl.chr, 'start': vnt.ivl.start,
+                 'stop': vnt.ivl.stop, 'alt': VariantSet.ALTSEP.join(vnt.alt),
+                 'type': vnt.type, 'quality': vnt.quality,
+                 'genotype': genotype, 'bin': getBin(vnt.ivl)})
     
     def _createIndices(self):
         cur = self.conn.cursor()
@@ -77,7 +83,7 @@ class VariantSet(object):
     def _getBin(self, ivl):
         for i in range(VariantSet.MINBIN, VariantSet.MAXBIN + 1):
             binLevel = 10 ** i
-            if int(ivl.start / binLevel) == int(ivl.end / binLevel):
+            if int(ivl.start / binLevel) == int(ivl.stop / binLevel):
                 return int(i * 10 ** (VariantSet.MAXBIN + 1) + int(ivl.start / binLevel))
         return int((VariantSet.MAXBIN + 1) * 10 ** (VariantSet.MAXBIN + 1))
     
@@ -87,6 +93,6 @@ class VariantSet(object):
         for i in range(VariantSet.MINBIN, VariantSet.MAXBIN + 1):
             binLevel = 10 ** i
             res.append((int(i * 10 ** (VariantSet.MAXBIN + 1) + int(ivl.start / binLevel)),
-                        int(i * 10 ** (VariantSet.MAXBIN + 1) + int(ivl.end / binLevel))))
+                        int(i * 10 ** (VariantSet.MAXBIN + 1) + int(ivl.stop / binLevel))))
         res.append((bigBin, bigBin))
         return res
