@@ -6,7 +6,6 @@ from lhc.filepool import FilePool
 from lhc.tools import enum
 from lhc.binf.genomic_coordinate import Interval, Position
 
-    
 def main(argv):
     def splitMafWrapper(args):
         splitMaf(args.input_file, args.output_directory)
@@ -21,22 +20,6 @@ def main(argv):
     
     args = parser.parse_args(argv[1:])
     args.func(args)
-
-def splitMaf(fname, outdir=None):
-    if outdir is None:
-        outdir = fname.rsplit('.', 1)[0]
-    if not os.path.exists(outdir):
-        os.mkdir(outdir)
-    
-    infile = open(fname)
-    file_pool = FilePool('w')
-    for line in infile:
-        if line[0] == '#':
-            continue
-        
-        genotype_id = line.split('\t')[15]
-        file_pool[os.path.join(outdir, genotype_id + '.maf')].write(line)
-    file_pool.close()
 
 VARIANT_TYPE = enum(['VARIANT', 'SNP'])
 
@@ -84,7 +67,7 @@ class MafParser(object):
             self.snp_field_builder.registerField('alt2')
             self.snp_field_builder.registerField('genotype_id')
     
-    def iterVariants(self, fname, skip=0):
+    def iterFile(self, fname, skip=1):
         it = iterCsv(fname, self.column_builder, self.field_builder, skip)
         if self.type == VARIANT_TYPE.VARIANT:
             for row in it:
@@ -112,6 +95,25 @@ class MafParser(object):
     def _parsePosition(self, cols):
         return Position(cols.chr, cols.fr - 1, cols.strand)
     
+def splitMaf(fname, outdir=None):
+    if outdir is None:
+        outdir = fname.rsplit('.', 1)[0]
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+    
+    infile = open(fname)
+    hdr = infile.readline()
+    file_pool = FilePool('w')
+    for line in infile:
+        if line[0] == '#':
+            continue
+        
+        genotype_id = line.split('\t')[15]
+        key = os.path.join(outdir, genotype_id + '.maf')
+        if key not in file_pool:
+            file_pool[key].write(hdr)
+        file_pool[key].write(line)
+    file_pool.close()
 
 if __name__ == '__main__':
     import sys
