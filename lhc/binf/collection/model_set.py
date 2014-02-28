@@ -15,66 +15,59 @@ class ModelSet(object):
             self._insertModels(mdls)
             self._createIndices()
     
-    def get(self, key, fetch_type=Exon.TYPE.gene):
+    def get(self, name, fetch_type=Exon.TYPE.gene):
         assert fetch_type in (Exon.TYPE.gene, Exon.TYPE.transcript)
         
         cur = self.conn.cursor()
-        qry = '''SELECT model.id, model.chromosome, interval.start, interval.stop, model.strand, model.type, model.name, model.parent
-        FROM model AS gene, model, interval
-        WHERE gene.name = ? AND
-            gene.type = "{}" AND
+        qry = '''SELECT m.id, m.chr, m.start, m.stop, m.strand, m.type, m.name, m.parent
+        FROM model AS gene, model AS m
+        WHERE gene.name = :name AND
+            gene.type = :type AND
             model.left >= gene.left AND
             model.right <= gene.right AND
-            interval.id = model.interval
         ORDER BY model.id, model.ordering'''.format(fetch_type)
         
         res = {}
         res_id = None
-        for id, chm, start, stop, strand, type_, name, parent in cur.execute(qry, (key,)):
-            if type_ == fetch_type:
+        for id, chr, start, stop, strand, type, name, parent in cur.execute(qry, {'name': name, 'type': fetch_type}):
+            if type == fetch_type:
                 res_id = id
-            ivl = Interval(chm, start, stop, strand)
-            if type_ == Exon.TYPE.gene:
+            ivl = Interval(chr, start, stop, strand)
+            if type == Exon.TYPE.gene:
                 res[id] = Gene(name, ivl)
-            elif type_ == Exon.TYPE.transcript:
+            elif type == Exon.TYPE.transcript:
                 res[id] = Transcript(name, ivl)
                 res[parent].transcripts[name] = res[id]
             else:
-                res[id] = Exon(ivl, type_)
+                res[id] = Exon(ivl, type)
                 res[parent].exons.append(res[id])
         return res[res_id]
     
     def intersect(self, ivl, fetch_type=Exon.TYPE.gene):
         cur = self.conn.cursor()
+        getOverlappingBins = self._getOverlappingBins
         
-        qry = '''
-            WITH RECURSIVE
-                cumulative_intervals(interval, sublist) AS (
-                    SELECT i.id, i.sublist
-                    FROM interval AS i, sublist AS s
-                    WHERE s.id = 1 AND
-                        i.id >= s.interval AND
-                        i.id < s.interval + s.size AND
-                        i.start < ? AND
-                        ? < i.stop
-                    UNION
-                    SELECT i.id, i.sublist
-                    FROM interval AS i, sublist AS s, cumulative_intervals
-                    WHERE s.id = cumulative_intervals.sublist AND
-                        i.id >= s.interval AND
-                        i.id < s.interval + s.size AND
-                        i.start < ? AND
-                        ? < i.stop
-                )
-            SELECT model.name
-            FROM model, cumulative_intervals
-            WHERE model.interval = cumulative_intervals.interval AND
-                model.chromosome = ? AND
-                model.type == ?
-        '''
+        qry1 = '''SELECT name
+            FROM variant
+            WHERE bin = {bin} AND
+                type = :type AND
+                chr = "{chr}"'''
+        qry2 = '''SELECT name
+            FROM variant
+            WHERE bin BETWEEN {lower} AND {upper} AND
+                type = :type AND
+                chr = "{chr}"'''
         
-        return [self.get(name, fetch_type) for name, in\
-            cur.execute(qry, (ivl.stop, ivl.start, ivl.stop, ivl.start, ivl.chr, fetch_type))]
+        qry = []
+        bins = getOverlappingBins(ivl.start, ivl.stop)
+        for bin in bins:
+            if bin[0] == bin[1]:
+                qry.append(qry1.format(chr=ivl.chr, bin=bin[0]))
+            else:
+                qry.append(qry2.format(chr=ivl.chr, lower=bin[0], upper=bin[1]))
+        rows = cur.execute(' UNION '.join(qry), {'type': fetch_type})
+        
+        return [self.get(name, fetch_type) for name, in rows]
 
     def __del__(self):
         if hasattr(self, 'conn'):
@@ -83,19 +76,11 @@ class ModelSet(object):
     
     def _createTables(self):
         cur = self.conn.cursor()
-        cur.execute('''CREATE TABLE interval (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            start INTEGER,
-            stop INTEGER,
-            sublist INTEGER REFERENCES sublist(id) DEFERRABLE INITIALLY DEFERRED)''')
-        cur.execute('''CREATE TABLE sublist (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            interval INTEGER REFERENCES interval(id),
-            size INTEGER)''')
         cur.execute('''CREATE TABLE IF NOT EXISTS model (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            interval INTEGER REFERENCES interval(id),
-            chromosome TEXT,
+            chr TEXT,
+            start INTEGER,
+            stop INTEGER,
             strand TEXT,
             type TEXT,
             name TEXT,
@@ -103,63 +88,78 @@ class ModelSet(object):
             parent INTEGER,
             left INTEGER,
             right INTEGER,
+            bin INTEGER,
             FOREIGN KEY (parent) REFERENCES model(id)
         )''')
     
     def _insertModels(self, mdls):
-        flat_mdls, ivls = self._flattenModels(mdls)
-        ivl_table, grp_table, idxs = getTables(ivls)
-        for mdl, idx in itertools.izip(flat_mdls, idxs):
-            mdl[0] = idx
-        
-        self.conn.executemany('INSERT INTO interval VALUES (NULL, ?, ?, ? + 1)', ivl_table)
-        self.conn.executemany('INSERT INTO sublist VALUES (NULL, ? + 1, ?)', grp_table)
-        self.conn.executemany('INSERT INTO model VALUES (NULL, ? + 1, ?, ?, ?, ?, ?, ? + 1, ?, ?)', flat_mdls)
-    
-    def _flattenModels(self, mdls):
-        def insertTranscripts(gene, gene_id):
-            for transcript_ordering, transcript in enumerate(gene.transcripts.itervalues()):
-                ivl_idx = insertInterval(transcript.ivl)
-                flat_mdls.append([ivl_idx, transcript.ivl.chr, transcript.ivl.strand, 'transcript', transcript.name, transcript_ordering, gene_id, 0, 0])
-                transcript_idx = len(flat_mdls) - 1
-                updateLeft(flat_mdls[transcript_idx])
-                insertExons(transcript, transcript_idx)
-                updateRight(flat_mdls[transcript_idx])
-        
-        def insertExons(transcript, transcript_id):
-            for exon_ordering, exon in enumerate(transcript.exons):
-                ivl_idx = insertInterval(exon.ivl)
-                flat_mdls.append([ivl_idx, exon.ivl.chr, exon.ivl.strand, exon.type, None, exon_ordering, transcript_id, 0, 0])
-                exon_id = len(flat_mdls) - 1
-                updateLeft(flat_mdls[exon_id])
-                updateRight(flat_mdls[exon_id])
-        
-        def insertInterval(interval):
-            ivls.append(interval)
-            return len(ivls) - 1
-        
-        def updateLeft(flat_mdl):
-            flat_mdl[7] = idx_generator.next()
-        
-        def updateRight(flat_mdl):
-            flat_mdl[8] = idx_generator.next()
-        
-        flat_mdls = []
-        ivls = []
-        idx_generator = itertools.count()
-        
-        for gene_ordering, gene in enumerate(mdls):
-            ivl_idx = insertInterval(gene.ivl)
-            flat_mdls.append([ivl_idx, gene.ivl.chr, gene.ivl.strand, 'gene', gene.name, gene_ordering, None, 0, 0])
-            gene_idx = len(flat_mdls) - 1
-            updateLeft(flat_mdls[gene_idx])
-            insertTranscripts(gene, gene_idx)
-            updateRight(flat_mdls[gene_idx])
-        return flat_mdls, ivls
+        cur = self.conn.cursor()
+        insert_qry = '''INSERT INTO model VALUES (NULL, :chr, :start, :stop,
+            :strand, :type, :name, :ordering, :parent, :left, :right, :bin)'''
+        update_qry = '''UPDATE model SET right = :right WHERE id = :id'''
+        counter = itertools.count()
+        for gene_idx, gene in enumerate(mdls):
+            self.conn.execute(insert_qry, {
+                'chr': gene.ivl.chr,
+                'start': gene.ivl.start,
+                'stop': gene.ivl.stop,
+                'strand': gene.ivl.strand,
+                'type': 'gene',
+                'name': gene.name,
+                'ordering': gene_idx,
+                'parent': None,
+                'left': counter.next(),
+                'right': counter.next(),
+                'bin': self._getBin(gene.ivl)})
+            gene_id = cur.lastrowid
+            for transcript_idx, transcript in enumerate(gene.transcripts):
+                self.conn.execute(insert_qry, {
+                    'chr': transcript.ivl.chr,
+                    'start': transcript.ivl.start,
+                    'stop': transcript.ivl.stop,
+                    'strand': transcript.ivl.strand,
+                    'type': 'transcript',
+                    'name': transcript.name,
+                    'ordering': transcript_idx,
+                    'parent': gene_id,
+                    'left': counter.next(),
+                    'right': counter.next(),
+                    'bin': self._getBin(transcript.ivl)})
+                transcript_id = cur.lastrowid
+                for exon_idx, exon in enumerate(transcript.exons):
+                    self.conn.execute(insert_qry, {
+                        'chr': exon.ivl.chr,
+                        'start': exon.ivl.start,
+                        'stop': exon.ivl.stop,
+                        'strand': exon.ivl.strand,
+                        'type': exon.type,
+                        'name': None,
+                        'ordering': exon_idx,
+                        'parent': transcript_id,
+                        'left': counter.next(),
+                        'right': counter.next(),
+                        'bin': self._getBin(exon.ivl)})
+                cur.execute(update_qry, {'right': counter.next(), 'id': transcript_id})
+            cur.execute(update_qry, {'right': counter.next(), 'id': gene_id})
     
     def _createIndices(self):
         cur = self.conn.cursor()
-        cur.execute('CREATE INDEX IF NOT EXISTS model_name_idx ON model(name)')
-        cur.execute('CREATE INDEX IF NOT EXISTS model_position_idx ON model(interval, chromosome, type)')
-        cur.execute('CREATE INDEX IF NOT EXISTS model_extent_idx ON model(left, right)')
-        cur.execute('CREATE INDEX IF NOT EXISTS interval_idx ON interval(id, start, stop)')
+        cur.execute('CREATE INDEX IF NOT EXISTS model_name_idx ON model(name, type, left, right)')
+        cur.execute('CREATE INDEX IF NOT EXISTS variant_idx ON model(bin, type, chr)')
+    
+    def _getBin(self, ivl):
+        for i in range(ModelSet.MINBIN, ModelSet.MAXBIN + 1):
+            binLevel = 10 ** i
+            if int(ivl.start / binLevel) == int(ivl.end / binLevel):
+                return int(i * 10 ** (ModelSet.MAXBIN + 1) + int(ivl.start / binLevel))
+        return int((ModelSet.MAXBIN + 1) * 10 ** (ModelSet.MAXBIN + 1))
+    
+    def _getOverlappingBins(self, ivl):
+        res = []
+        bigBin = int((ModelSet.MAXBIN + 1) * 10 ** (ModelSet.MAXBIN + 1))
+        for i in range(ModelSet.MINBIN, ModelSet.MAXBIN + 1):
+            binLevel = 10 ** i
+            res.append((int(i * 10 ** (ModelSet.MAXBIN + 1) + int(ivl.start / binLevel)), int(i * 10 ** (ModelSet.MAXBIN + 1) + int(ivl.end / binLevel))))
+        res.append((bigBin, bigBin))
+        return res
+    

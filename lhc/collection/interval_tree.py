@@ -1,7 +1,5 @@
 import operator
 
-from lhc import intervaltools
-
 class IntervalTree(object):
     __slots__ = ('ivls', 'left', 'right', 'mid')
 
