@@ -1,4 +1,4 @@
-xbecs
+ebias
 =====
 
-eXtensible BioEntity Collation System
+Extensible BioInformation Aggregation System
