@@ -1,16 +1,22 @@
+import os
 import sqlite3
 import itertools
 
-from operator import attrgetter
-from lhc.tools import argsort
 from lhc.binf.genomic_coordinate import Interval
 from lhc.binf.gene_model import Gene, Transcript, Exon
-from lhc.collection.nested_containment_list import getTables
 
 class ModelSet(object):
-    def __init__(self, fname, mdls=[]):
-        self.conn = sqlite3.connect(fname)
-        if len(mdls) > 0:
+
+    MINBIN = 2
+    MAXBIN = 7
+
+    def __init__(self, fname, mdls=None):
+        if mdls is None:
+            self.conn = sqlite3.connect(fname)
+        if mdls is not None:
+            if os.path.exists(fname):
+                os.remove(fname)
+            self.conn = sqlite3.connect(fname)
             self._createTables()
             self._insertModels(mdls)
             self._createIndices()
@@ -23,13 +29,14 @@ class ModelSet(object):
         FROM model AS gene, model AS m
         WHERE gene.name = :name AND
             gene.type = :type AND
-            model.left >= gene.left AND
-            model.right <= gene.right AND
-        ORDER BY model.id, model.ordering'''.format(fetch_type)
+            m.left >= gene.left AND
+            m.right <= gene.right
+        ORDER BY m.id, m.ordering'''.format(fetch_type)
         
         res = {}
         res_id = None
-        for id, chr, start, stop, strand, type, name, parent in cur.execute(qry, {'name': name, 'type': fetch_type}):
+        for id, chr, start, stop, strand, type, name, parent in\
+                cur.execute(qry, {'name': name, 'type': fetch_type}):
             if type == fetch_type:
                 res_id = id
             ivl = Interval(chr, start, stop, strand)
@@ -48,18 +55,18 @@ class ModelSet(object):
         getOverlappingBins = self._getOverlappingBins
         
         qry1 = '''SELECT name
-            FROM variant
+            FROM model
             WHERE bin = {bin} AND
                 type = :type AND
                 chr = "{chr}"'''
         qry2 = '''SELECT name
-            FROM variant
+            FROM model
             WHERE bin BETWEEN {lower} AND {upper} AND
                 type = :type AND
                 chr = "{chr}"'''
         
         qry = []
-        bins = getOverlappingBins(ivl.start, ivl.stop)
+        bins = getOverlappingBins(ivl)
         for bin in bins:
             if bin[0] == bin[1]:
                 qry.append(qry1.format(chr=ivl.chr, bin=bin[0]))
@@ -96,10 +103,10 @@ class ModelSet(object):
         cur = self.conn.cursor()
         insert_qry = '''INSERT INTO model VALUES (NULL, :chr, :start, :stop,
             :strand, :type, :name, :ordering, :parent, :left, :right, :bin)'''
-        update_qry = '''UPDATE model SET right = :right WHERE id = :id'''
+        update_qry = 'UPDATE model SET right = :right WHERE id = :id'
         counter = itertools.count()
         for gene_idx, gene in enumerate(mdls):
-            self.conn.execute(insert_qry, {
+            cur.execute(insert_qry, {
                 'chr': gene.ivl.chr,
                 'start': gene.ivl.start,
                 'stop': gene.ivl.stop,
@@ -109,11 +116,12 @@ class ModelSet(object):
                 'ordering': gene_idx,
                 'parent': None,
                 'left': counter.next(),
-                'right': counter.next(),
+                'right': None,
                 'bin': self._getBin(gene.ivl)})
             gene_id = cur.lastrowid
-            for transcript_idx, transcript in enumerate(gene.transcripts):
-                self.conn.execute(insert_qry, {
+            for transcript_idx, transcript_key in enumerate(gene.transcripts):
+                transcript = gene.transcripts[transcript_key]
+                cur.execute(insert_qry, {
                     'chr': transcript.ivl.chr,
                     'start': transcript.ivl.start,
                     'stop': transcript.ivl.stop,
@@ -123,11 +131,11 @@ class ModelSet(object):
                     'ordering': transcript_idx,
                     'parent': gene_id,
                     'left': counter.next(),
-                    'right': counter.next(),
+                    'right': None,
                     'bin': self._getBin(transcript.ivl)})
                 transcript_id = cur.lastrowid
                 for exon_idx, exon in enumerate(transcript.exons):
-                    self.conn.execute(insert_qry, {
+                    cur.execute(insert_qry, {
                         'chr': exon.ivl.chr,
                         'start': exon.ivl.start,
                         'stop': exon.ivl.stop,
@@ -150,7 +158,7 @@ class ModelSet(object):
     def _getBin(self, ivl):
         for i in range(ModelSet.MINBIN, ModelSet.MAXBIN + 1):
             binLevel = 10 ** i
-            if int(ivl.start / binLevel) == int(ivl.end / binLevel):
+            if int(ivl.start / binLevel) == int(ivl.stop / binLevel):
                 return int(i * 10 ** (ModelSet.MAXBIN + 1) + int(ivl.start / binLevel))
         return int((ModelSet.MAXBIN + 1) * 10 ** (ModelSet.MAXBIN + 1))
     
@@ -159,7 +167,7 @@ class ModelSet(object):
         bigBin = int((ModelSet.MAXBIN + 1) * 10 ** (ModelSet.MAXBIN + 1))
         for i in range(ModelSet.MINBIN, ModelSet.MAXBIN + 1):
             binLevel = 10 ** i
-            res.append((int(i * 10 ** (ModelSet.MAXBIN + 1) + int(ivl.start / binLevel)), int(i * 10 ** (ModelSet.MAXBIN + 1) + int(ivl.end / binLevel))))
+            res.append((int(i * 10 ** (ModelSet.MAXBIN + 1) + int(ivl.start / binLevel)), int(i * 10 ** (ModelSet.MAXBIN + 1) + int(ivl.stop / binLevel))))
         res.append((bigBin, bigBin))
         return res
     
