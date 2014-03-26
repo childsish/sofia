@@ -15,7 +15,8 @@ class IntervalIndex(Index):
         self.index = {}
         if os.path.exists(iname):
             infile = open(iname)
-            self.index = cPickle.load(infile)
+            self.bins = cPickle.load(infile)
+            self.values = cPickle.load(infile)
             infile.close()
     
     def __getitem__(self, key):
@@ -34,11 +35,17 @@ class IntervalIndex(Index):
             if ivl.overlaps(key))
     
     def __setitem__(self, key, value):
-        pass
+        bin = self._getBin(key)
+        idx = bisect(self.bins, bin)
+        if self.bins[idx] != bin:
+            self.bins.insert(idx, bin)
+            self.values.insert(idx, [])
+        self.values[idx].append((key, value))
     
     def __del__(self):
         outfile = open(self.iname, 'w')
-        cPickle.dump(self.index, outfile)
+        cPickle.dump(self.bins, outfile)
+        cPickle.dump(self.values, outfile)
         outfile.close()
 
     @classmethod
@@ -46,7 +53,7 @@ class IntervalIndex(Index):
         for i in range(cls.MINBIN, cls.MAXBIN + 1):
             binLevel = 10 ** i
             if int(ivl.start / binLevel) == int(ivl.end / binLevel):
-                return int(i * 10 ** (self.MAXBIN + 1) + int(ivl.start / binLevel))
+                return int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.start / binLevel))
         return int((cls.MAXBIN + 1) * 10 ** (cls.MAXBIN + 1))
     
     @classmethod

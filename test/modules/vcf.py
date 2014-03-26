@@ -2,7 +2,7 @@ import unittest
 
 from modules import vcf
 
-class Test(unittest.TestCase):
+class TestVcf(unittest.TestCase):
     def test_parseSamples(self):
         parts = ['GT:GQ:DP:HQ', '0|0:48:1:51,51', '1|0:48:8:51,51', '1/1:43:5:.,.']
 

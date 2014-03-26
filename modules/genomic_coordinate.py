@@ -1,7 +1,6 @@
 import string
 
 from functools import total_ordering
-from lhc.interval import Interval as BaseInterval
 from lhc.tools import enum
 
 @total_ordering
@@ -23,7 +22,9 @@ class Point(object):
             (self.chm == other.chm) and (self.pos < other.pos)
    
 @total_ordering 
-class Interval(BaseInterval):
+class Interval(object):
+    
+    __slots__ = ('')
     
     REVCMP = string.maketrans('acgtuwrkysmbhdvnACGTUWRKYSMBHDVN',
                               'tgcaawymrskvdhbnTGCAAWYMRSKVDHBN')
@@ -37,8 +38,9 @@ class Interval(BaseInterval):
         :param strand: the strand the interval is on
         :type strand: '+' or '-'
         """
-        super(Interval, self).__init__(start, stop)
         self.chr = chm
+        self.start = start
+        self.stop = stop
         self.strand = strand
     
     def __str__(self):
@@ -49,12 +51,15 @@ class Interval(BaseInterval):
     
     def __eq__(self, other):
         return self.chr == other.chr and\
-            super(Interval, self).__eq__(other) and\
+            self.start == other.start and\
+            self.stop == other.stop and\
             self.strand == other.strand
     
     def __lt__(self, other):
         return self.chr < other.chr or\
             self.chr == other.chr and\
+            (self.start < other.start or\
+             self.start == other.start and self.stop < other.stop)
             super(Interval, self).__lt__(other)
     
     # Set-like operation functions
