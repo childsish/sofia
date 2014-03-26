@@ -1,5 +1,5 @@
 from modules.feature import Feature
-from resource import StaticResource
+from modules.resource import Resource
 from codon_usage_table import CodonUsageTable
 
 class CodonAdaptationIndex(Feature):
@@ -8,7 +8,7 @@ class CodonAdaptationIndex(Feature):
     RESOURCES = ['cut', 'seq', 'mdl']
     DEPENDENCIES = [
         {'name': 'cut1',
-         'feature': StaticResource,
+         'feature': Resource,
          'resource_map': {'name': 'cut'}
         },
         {'name': 'cut2',

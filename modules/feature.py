@@ -10,7 +10,7 @@ class Feature(object):
         self.resource_map = resource_map
         self.name = self._resolve(resource_map)
         self.dependencies = []
-        for dep in self.DEPENDENCIES: #FIXME: similar to eva.py:55
+        for dep in self.DEPENDENCIES:
             dep_map = {k:resource_map[v] for k,v in dep['resource_map'].iteritems()}
             self.dependencies.append(dep['feature']._resolve(dep_map))
     

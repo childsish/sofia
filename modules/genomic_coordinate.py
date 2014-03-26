@@ -24,7 +24,7 @@ class Point(object):
 @total_ordering 
 class Interval(object):
     
-    __slots__ = ('')
+    __slots__ = ('chr', 'start', 'stop', 'strand')
     
     REVCMP = string.maketrans('acgtuwrkysmbhdvnACGTUWRKYSMBHDVN',
                               'tgcaawymrskvdhbnTGCAAWYMRSKVDHBN')
@@ -60,7 +60,6 @@ class Interval(object):
             self.chr == other.chr and\
             (self.start < other.start or\
              self.start == other.start and self.stop < other.stop)
-            super(Interval, self).__lt__(other)
     
     # Set-like operation functions
 
@@ -108,3 +107,12 @@ class Interval(object):
         if self.strand == '-':
             res = seq.translate(Interval.REVCMP)[::-1]
         return res
+    
+    def __getstate__(self):
+        return dict(chr=self.chr,
+            start=self.start,
+            stop=self.stop,
+            strand=self.strand)
+    
+    def __setstate__(self, state):
+        self.__dict__.update(state)

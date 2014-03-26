@@ -13,10 +13,10 @@ REF = 3
 ALT = 4
 QUAL = 5
 FILTER = 6
-ATTR = 7
+INFO = 7
 FORMAT = 8
 
-VcfEntry = namedtuple('VcfEntry', ['chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'attr', 'samples'])
+VcfEntry = namedtuple('VcfEntry', ['chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'samples'])
 
 class Vcf(Resource):
     
@@ -71,8 +71,8 @@ class Vcf(Resource):
                 continue
             parts = line.split('\t')
             parts[POS] = int(parts[POS]) - 1
-            parts[ATTR] = self._parseAttributes(parts[ATTR])
-            parts[FORMAT:] = self._parseSamples(parts[FORMAT:])
+            parts[INFO] = self._parseInfo(parts[INFO])
+            parts[FORMAT:] = [self._parseSamples(parts[FORMAT:])]
             yield VcfEntry(*parts)
     
     def _parseHeaders(self, fhndl):
@@ -84,6 +84,9 @@ class Vcf(Resource):
             hdrs.append(line)
         hdrs.append(line)
         return hdrs
+    
+    def _parseInfo(self, info):
+        return dict(part.split('=') for part in info.split(';'))
     
     def _parseSamples(self, parts):
         res = []
