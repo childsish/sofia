@@ -86,7 +86,9 @@ class Vcf(Resource):
         return hdrs
     
     def _parseInfo(self, info):
-        return dict(part.split('=') for part in info.split(';'))
+        return dict(part.split('=') for part in info.split(';'))\
+            if '=' in info else {}
+            
     
     def _parseSamples(self, parts):
         res = []

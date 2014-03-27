@@ -24,11 +24,11 @@ class Feature(object):
         :param features: available features
         :type features: dict of features
         """
-        local_entities = {'target': entities['target']}
+        local_entities = {}
         for dep, DEP in izip(self.dependencies, self.DEPENDENCIES):
             if dep not in entities:
                 entities[dep] = features[dep].generate(entities, features)
-            local_entities[dep] = entities[DEP]
+            local_entities[DEP['name']] = entities[dep]
         return self.calculate(**local_entities)
     
     def calculate(self, target, **kwargs):

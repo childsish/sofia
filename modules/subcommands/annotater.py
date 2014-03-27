@@ -5,8 +5,6 @@ class Annotater(object):
         self.resources = resources
     
     def annotate(self):
-        print self.target_features
-        print self.features
         print '\t'.join(self.features[name].name for name in self.target_features)
         for entity in self.resources['target']:
             entities = {}

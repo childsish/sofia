@@ -1,15 +1,16 @@
 from modules.feature import Feature
+from resource import DynamicResource
 
 class Chromosome(Feature):
     
     NAME = 'chr'
-    RESOURCES = ['target']
+    RESOURCES = ['locus']
     DEPENDENCIES = [
-        {'name': 'target',
-         'feature': Target,
-         'resource_map': {'name': 'seq'}
+        {'name': 'locus',
+         'feature': DynamicResource,
+         'resource_map': {'name': 'locus'}
         }
     ]
     
-    def calculate(self, target):
-        return target.chr
+    def calculate(self, locus):
+        return locus.chr

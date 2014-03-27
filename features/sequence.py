@@ -17,5 +17,5 @@ class Sequence(Feature):
         }
     ]
     
-    def calculate(self, target, seq, mdl):
+    def calculate(self, seq, mdl):
         return mdl.getSubSeq(seq)

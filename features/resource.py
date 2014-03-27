@@ -1,6 +1,8 @@
 from modules.feature import Feature
 
 class Resource(Feature):
+    """Biological information stored on the disk
+    """
     
     NAME = 'resource'
     RESOURCES = ['name']
@@ -12,11 +14,37 @@ class Resource(Feature):
     @classmethod
     def _resolve(cls, resource_map):
         return resource_map['name']
+
+class Target(Resource):
+    """The targetted feature
+    """
     
-class DynamicResource(Resource):
-    def calculate(self, entities):
-        return self.resource[entities['target']]
+    NAME = 'target'
+    
+    def calculate(self):
+        return self.resource.next()
 
 class StaticResource(Resource):
-    def calculate(self, entities):
+    """A resource that can be accessed by key
+    """
+    
+    NAME = 'static_resource'
+    
+    def calculate(self):
         return self.resource
+
+class DynamicResource(Resource):
+    """A resource that stays in step with the target
+    """
+    
+    NAME = 'dynamic_resource'
+    RESOURCES = ['target']
+    DEPENDENCIES = [
+        {'name': 'target',
+         'feature': Target,
+         'resource_map': {'name': 'name'}
+        }
+    ]
+    
+    def calculate(self, target):
+        return self.resource[target]

@@ -16,7 +16,7 @@ def getParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('input', metavar='TARGET',
         help='the VCF files to annotate')
-    parser.add_argument('-f', '--features', nargs='*',
+    parser.add_argument('features', nargs='+',
         help='features take the form <feature_name>[:<resource_key>[=<resource_name>]]') # ftr1:key1=res1 ftr2:key2=res2
     parser.add_argument('-r', '--resources', nargs='*', action=MakeDict, default={})
     parser.add_argument('-t', '--types', nargs='*', action=MakeDict, default={})
@@ -31,36 +31,67 @@ def aggregate(args):
     res_dir = os.path.join(prog_dir, 'resources')
     res_clss = loadPlugins(res_dir, Resource)
     
-    args.resources['target'] = args.input
+    req_ress = {'target': args.input}
+    req_ress.update(args.resources)
+    ress = loadResources(req_ress, res_clss, args.types)
     
-    resources = {}
-    for name, fname in args.resources.iteritems():
-        if name in args.types:
-            resources[name] = parsers[args.types[name]](fname)
-        else:
-            for parser in parsers:
-                if fname.endswith(parser):
-                    resources[name] = parsers[parser](fname)
-            if name not in resources:
-                raise TypeError('Unrecognised file format: %s'%\
-                    os.path.basename(fname))
+    top_level_features = instantiateTopLevelFeatures(args.features, ftr_clss, ress)
+    ftrs = generateDependencies(top_level_features, ress)
     
-    features = instantiateFeatures(args.features, available)
-    features = generateDependencies(features, resources)
-    
-    annotater = Annotater(args.features, features, resources)
+    annotater = Annotater([ftr.name for ftr in top_level_features], ftrs, ress)
     annotater.annotate()
+
+def loadResources(req_ress, res_clss, types):
+    ress = {}
+    for name, fname in req_ress.iteritems():
+        ress[name] = loadResource(name, fname, res_clss, types)
+    return ress
+
+def loadResource(name, fname, res_clss, types):
+    if name in types:
+        return res_clss[types[name]](fname)
+    for res_cls in res_clss:
+        if fname.endswith(res_cls):
+            return res_clss[res_cls](fname)
+    raise TypeError('Unrecognised file format: %s'%\
+        os.path.basename(fname))
     
-def instantiateFeatures(features, available):
-    regx = re.compile('(?P<name>\w+)(=(?P<header>\w+))?(:(?P<map>[\w=,]+))?')
+def instantiateTopLevelFeatures(features, available, resources):
+    """Instantiate the top level features
+    
+    Instantiates the top level features and makes sure that the resource maps
+    all fully filled and don't reference undefined resources. If one resource
+    remains undefined, then assume it refers to the target resource.
+    
+    :param list features: the feature string from the command line
+    :param dict available: all features extensions
+    :param dict resources: all defined resources
+    """
+    regx = re.compile('(?P<name>\w+)(:(?P<map>[\w=,]+))?')
     res = []
-    for ftr_str in features:
-        match = regx.match(ftr_str).groupdict()
+    for feature in features:
+        match = regx.match(feature).groupdict()
         feature_class = available[match['name']]
-        resource_map = {res:res for res in feature_class.RESOURCES}
-        match['map'] = {} if match['map'] is None else\
+        defined_resource_map = {} if match['map'] is None else\
             OrderedDict(m.split('=') for m in match['map'].split(','))
-        resource_map.update(match['map'])
+        
+        resource_map = {}
+        undefined = set()
+        for resource in feature_class.RESOURCES:
+            k = v = resource
+            if k in defined_resource_map:
+                v = defined_resource_map[k]
+            if v not in resources:
+                undefined.add((k, v))
+            else:
+                resource_map[k] = v
+        if len(undefined) > 1:
+            msg = 'Attempting to use undefined resources: %s'
+            raise Exception(msg%','.join(v for k, v in undefined))
+        elif len(undefined) == 1:
+            k, v = undefined.pop()
+            resource_map[k] = 'target'
+        
         res.append(feature_class(resource_map))
     return res
 
@@ -68,7 +99,7 @@ def generateDependencies(features, resources):
     res = {feature.name: feature for feature in features}
     stk = features[:]
     while len(stk) > 0:
-        parent = stk.pop()
+        parent = stk.pop(0)
         for dep in parent.DEPENDENCIES:
             resource_map = {k:parent.resource_map[v]\
                 for k,v in dep['resource_map'].iteritems()}
