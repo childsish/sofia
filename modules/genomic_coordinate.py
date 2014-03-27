@@ -1,7 +1,6 @@
 import string
 
 from functools import total_ordering
-from lhc.tools import enum
 
 @total_ordering
 class Point(object):
