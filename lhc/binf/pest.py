@@ -15,8 +15,7 @@ class Pest(object):
     
     def iterPest(self, seq):
         """ Algorithm copied from EMBOSS:
-            http://emboss.bioinformatics.nl/cgi-bin/emboss/help/epestfind
-            emboss/epestfind.c:278
+            https://github.com/pjotrp/EMBOSS/blob/master/emboss/epestfind.c:278
         """
         ltkdhi = dict(izip('ABCDEFGHIJKLMNOPQRSTUVWXYZ',
             [63, 10, 70, 10, 10, 72, 41, 13, 90, 0, 6, 82, 64, 10, 0, 29, 10,
@@ -27,8 +26,8 @@ class Pest(object):
             if self.isValidPest(cnt):
                 molwt = sum(self.molwt[seq[i]][self.mono]\
                     for i in xrange(fr, to))
-                pstsum = sum(v * self.molwt[k][self.mono]\
-                    for k, v in cnt.iteritems())
+                pstsum = sum(cnt[k] * self.molwt[k][self.mono]\
+                    for k in 'DEPST')
                 pstsum -= sum(self.molwt[k][self.mono] for k in 'EPT')
                 pstpct = pstsum / molwt
                 hydind = sum(v * self.molwt[k][self.mono] * ltkdhi[k] / molwt\
