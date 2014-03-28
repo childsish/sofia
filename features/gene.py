@@ -13,5 +13,5 @@ class Gene(Feature):
         }
     ]
     
-    def calculate(self, target, mdl):
+    def calculate(self, mdl):
         return mdl.name
