@@ -17,5 +17,5 @@ class CodonAdaptationIndex(Feature):
         }
     ]
     
-    def calculate(self, target, cut1, cut2):
+    def calculate(self, cut1, cut2):
         return cai(cut1, cut2)

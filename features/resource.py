@@ -11,9 +11,8 @@ class Resource(Feature):
         super(Resource, self).__init__(resource_map, resources)
         self.resource = resources[self.name]
     
-    @classmethod
-    def _resolve(cls, resource_map):
-        return resource_map['name']
+    def _resolveName(self):
+        return self.resource_map['name']
 
 class Target(Resource):
     """The targetted feature
@@ -23,6 +22,9 @@ class Target(Resource):
     
     def calculate(self):
         return self.resource.next()
+    
+    def _resolveName(self):
+        return 'target'
 
 class StaticResource(Resource):
     """A resource that can be accessed by key
@@ -38,13 +40,15 @@ class DynamicResource(Resource):
     """
     
     NAME = 'dynamic_resource'
-    RESOURCES = ['target']
+    RESOURCES = ['name']
     DEPENDENCIES = [
         {'name': 'target',
          'feature': Target,
-         'resource_map': {'name': 'name'}
+         'resource_map': {}
         }
     ]
     
     def calculate(self, target):
+        if self.name == self.dependencies[0]:
+            return target
         return self.resource[target]

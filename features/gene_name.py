@@ -1,14 +1,13 @@
 from modules.feature import Feature
-from modules.resource import Resource
-from sequence import Sequence
+from resource import DynamicResource
 
 class Gene(Feature):
     
-    NAME = 'gene'
+    NAME = 'gene_name'
     RESOURCES = ['mdl']
     DEPENDENCIES = [
         {'name': 'mdl',
-         'feature': Resource,
+         'feature': DynamicResource,
          'resource_map': {'name': 'mdl'}
         }
     ]
