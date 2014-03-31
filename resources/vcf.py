@@ -60,7 +60,7 @@ class VcfFile(object):
     
     def __getitem__(self, key):
         if self.entries is None:
-            self.entries = iterEntries(self.fname)
+            self.entries = list(iterEntries(self.fname))
             self.index = self._createIndex(self.entries)
         return [self.entries[idx] for idx in self.index[key]]
     
@@ -128,7 +128,7 @@ def parseHeaders(infile):
     hdrs.append(line)
     return hdrs
 
-def parseInfo(self, info):
+def parseInfo(info):
     return dict(part.split('=') for part in info.split(';'))\
         if '=' in info else {}
 
