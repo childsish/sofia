@@ -32,6 +32,8 @@ class GtfParser(Resource):
         return iter(self.parser)
     
     def __getitem__(self, key):
+        if hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
+            key = Interval(key.chr, key.pos, key.pos + len(key.ref))
         return self.parser[key]
     
     def index(self, iname):
@@ -61,19 +63,18 @@ class GtfFile(object):
         self.index = None
     
     def __iter__(self):
-        return iterEntries(self.fname)
+        return iterModels(self.fname)
     
     def __getitem__(self, key):
         if self.entries is None:
-            self.entries = list(iterEntries(self.fname))
+            self.entries = list(iterModels(self.fname))
             self.index = self._createIndex(self.entries)
         return [self.entries[idx] for idx in self.index[key]]
     
     def _createIndex(self, entries):
         index = IntervalIndex()
         for i, entry in enumerate(entries):
-            ivl = Interval(entry.chr, entry.start, entry.stop)
-            index[ivl] = i
+            index[entry.ivl] = i
         return index
 
 class IndexedGtfFile(object):
@@ -83,10 +84,7 @@ class IndexedGtfFile(object):
             self.stridx = StringIndex(os.path.join(iname, 'str.%s'%StringIndex.EXT))
     
     def __iter__(self):
-        infile = open(self.fname)
-        for gene in self._iterModels(infile):
-            yield gene
-        infile.close
+        return iterModels(self.fname)
     
     def __getitem__(self, key):
         infile = open(self.fname)
@@ -104,7 +102,8 @@ class IndexedGtfFile(object):
         infile.close()
         return res
     
-def iterModels(infile):
+def iterModels(fname):
+    infile = open(fname)
     gene = None
     for entry in iterEntries(infile):
         ivl = Interval(entry.chr, entry.start, entry.stop)
@@ -115,11 +114,13 @@ def iterModels(infile):
         elif entry.type == 'transcript':
             gene.transcripts[entry.attr['transcript_name']] =\
                 Transcript(entry.attr['transcript_name'], ivl)
-        elif entry.type == 'exon':
-            gene.transcripts.values[-1].exons.append(Exon(ivl, 'CDS'))
+        elif entry.type == 'CDS':
+            gene.transcripts.values()[-1].exons.append(Exon(ivl, 'CDS'))
         else:
+            continue
             raise TypeError('Unknown type: %s'%entry.type)
     yield gene
+    infile.close()
 
 def iterEntries(infile):
     for line in infile:
@@ -132,10 +133,10 @@ def iterEntries(infile):
         yield GtfEntry(*parts)
 
 def parseAttributes(attr):
-    parts = [part.strip().split(' ', 1) for part in attr.split(';') if part != '']
-    for i in xrange(len(parts)):
-        if parts[i][1].startswith('"'):
-            parts[i][1] = parts[i][1][1:-1]
+    parts = [part.strip().split(' ', 1) for part in attr.strip().split(';') if part != '']
+    for i, part in enumerate(parts):
+        if part[1].startswith('"'):
+            parts[i][1] = part[1][1:-1]
         else:
-            parts[i][1] = int(parts[i][1])
+            parts[i][1] = int(part[1])
     return dict(parts)
