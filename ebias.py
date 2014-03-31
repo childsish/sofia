@@ -106,7 +106,7 @@ def generateDependencies(features, resources):
     return res
 
 def loadPlugins(indir, cls):
-    sys.path.append(indir)
+    sys.path.insert(0, indir)
     plugins = {}
 
     mnames = (fname[:-3] for fname in os.listdir(indir)\

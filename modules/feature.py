@@ -24,7 +24,6 @@ class Feature(object):
         local_entities = {}
         for dep, DEP in izip(self.dependencies, self.DEPENDENCIES):
             if dep not in entities:
-                print self.NAME
                 entities[dep] = features[dep].generate(entities, features)
             local_entities[DEP['name']] = entities[dep]
         return self.calculate(**local_entities)

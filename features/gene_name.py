@@ -1,3 +1,5 @@
+import sys
+
 from modules.feature import Feature
 from resource import DynamicResource
 
@@ -13,4 +15,4 @@ class Gene(Feature):
     ]
     
     def calculate(self, mdl):
-        return mdl.name
+        return ','.join(m.name for m in mdl)
