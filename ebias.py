@@ -100,10 +100,7 @@ def generateDependencies(features, resources):
     stk = features[:]
     while len(stk) > 0:
         parent = stk.pop(0)
-        for dep in parent.DEPENDENCIES:
-            resource_map = {k:parent.resource_map[v]\
-                for k,v in dep['resource_map'].iteritems()}
-            feature = dep['feature'](resource_map, resources)
+        for feature in parent.generateDependencies(resources):
             res[feature.name] = feature
             stk.append(feature)
     return res
