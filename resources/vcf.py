@@ -129,8 +129,8 @@ def parseHeaders(infile):
     return hdrs
 
 def parseInfo(info):
-    return dict(part.split('=') for part in info.split(';'))\
-        if '=' in info else {}
+    return dict(part.split('=') if '=' in part else (part, part)
+        for part in info.split(';'))
 
 def parseSamples(parts, samples):
     res = []
