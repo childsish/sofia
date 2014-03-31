@@ -7,8 +7,7 @@ class Annotater(object):
     def annotate(self):
         print '\t'.join(self.features[name].name for name in self.target_features)
         for entity in self.resources['target']:
-            entities = {}
-            entities['target'] = entity
+            entities = {'target': entity}
             res = [self.features[name].generate(entities, self.features)\
                 for name in self.target_features]
             print '\t'.join(map(str, res))

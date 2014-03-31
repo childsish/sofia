@@ -8,11 +8,8 @@ class Feature(object):
     
     def __init__(self, resource_map, resources=None):
         self.resource_map = resource_map
-        self.name = self._resolve(resource_map)
+        self.name = self._resolveName()
         self.dependencies = []
-        for dep in self.DEPENDENCIES:
-            dep_map = {k:resource_map[v] for k,v in dep['resource_map'].iteritems()}
-            self.dependencies.append(dep['feature']._resolve(dep_map))
     
     def generate(self, entities, features):
         """Generate a feature
@@ -27,6 +24,7 @@ class Feature(object):
         local_entities = {}
         for dep, DEP in izip(self.dependencies, self.DEPENDENCIES):
             if dep not in entities:
+                print self.NAME
                 entities[dep] = features[dep].generate(entities, features)
             local_entities[DEP['name']] = entities[dep]
         return self.calculate(**local_entities)
@@ -48,12 +46,20 @@ class Feature(object):
         :param object entity: convert this entity
         """
         return str(entity)
+
+    def generateDependencies(self, resources=None):
+        res = []
+        for dep in self.DEPENDENCIES:
+            resource_map = {k:self.resource_map[v]\
+                for k,v in dep['resource_map'].iteritems()}
+            res.append(dep['feature'](resource_map, resources))
+        self.dependencies = [feature.name for feature in res]
+        return res
     
-    @classmethod
-    def _resolve(cls, resource_map):
-        if len(cls.RESOURCES) == 0:
-            return cls.NAME
+    def _resolveName(self):
+        if len(self.RESOURCES) == 0:
+            return self.NAME
         return '{name}:{res}'.format(
-            name=cls.NAME,
-            res=','.join(resource_map[res] for res in cls.RESOURCES)
+            name=self.NAME,
+            res=','.join(self.resource_map[res] for res in self.RESOURCES)
         )
