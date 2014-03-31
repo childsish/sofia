@@ -1,7 +1,7 @@
 import cPickle
 import os
 
-from bisect import bisect
+from bisect import bisect, bisect_left
 from operator import add
 from index import Index
 
@@ -10,49 +10,36 @@ class IntervalIndex(Index):
     MINBIN = 2
     MAXBIN = 7
     
-    def __init__(self, iname):
-        self.iname = iname
-        self.index = {}
-        if os.path.exists(iname):
-            infile = open(iname)
-            self.bins = cPickle.load(infile)
-            self.values = cPickle.load(infile)
-            infile.close()
+    def __init__(self):
+        self.bins = []
+        self.values = []
     
     def __getitem__(self, key):
         res = []
-        bins = self._getOverlappngBins(key)
+        bins = self._getOverlappingBins(key)
         for bin in bins:
             if bin[0] == bin[1]:
                 fr = to = bisect(self.bins, bin[0])
             else:
-                fr = bisect(self.bins[0], bin[0])
-                to = bisect(self.bins[1], bin[1])
+                fr = bisect(self.bins, bin[0])
+                to = bisect(self.bins, bin[1])
             res.extend(self.values[idx] for idx in xrange(fr, to))
-        return (fpos
-            for fpos, ivl in
-                (self.values[idx] for idx in reduce(add, res))
-            if ivl.overlaps(key))
+        return [value for key, value in reduce(add, res, [])]
     
     def __setitem__(self, key, value):
         bin = self._getBin(key)
-        idx = bisect(self.bins, bin)
-        if self.bins[idx] != bin:
+        idx = bisect_left(self.bins, bin)
+        if idx >= len(self.bins) or self.bins[idx] != bin:
             self.bins.insert(idx, bin)
             self.values.insert(idx, [])
+        print key, bin, idx, value
         self.values[idx].append((key, value))
-    
-    def __del__(self):
-        outfile = open(self.iname, 'w')
-        cPickle.dump(self.bins, outfile)
-        cPickle.dump(self.values, outfile)
-        outfile.close()
 
     @classmethod
     def _getBin(cls, ivl):
         for i in range(cls.MINBIN, cls.MAXBIN + 1):
             binLevel = 10 ** i
-            if int(ivl.start / binLevel) == int(ivl.end / binLevel):
+            if int(ivl.start / binLevel) == int(ivl.stop / binLevel):
                 return int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.start / binLevel))
         return int((cls.MAXBIN + 1) * 10 ** (cls.MAXBIN + 1))
     
@@ -62,6 +49,6 @@ class IntervalIndex(Index):
         bigBin = int((cls.MAXBIN + 1) * 10 ** (cls.MAXBIN + 1))
         for i in range(cls.MINBIN, cls.MAXBIN + 1):
             binLevel = 10 ** i
-            res.append((int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.start / binLevel)), int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.end / binLevel))))
+            res.append((int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.start / binLevel)), int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.stop / binLevel))))
             res.append((bigBin, bigBin))
         return res
