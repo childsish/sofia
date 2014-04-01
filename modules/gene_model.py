@@ -27,8 +27,8 @@ class Transcript(object):
         self.ivl = ivl
         self.exons = [] if exons is None else exons
     
-    def getSubSeq(self, seq, valid_types=set(['CDS', 'UTR5', 'UTR3'])):
-        return ''.join([exon.getSubSeq(seq) for exon in self.exons if exon.type in valid_types])
+    def getSubSeq(self, seq, fr=None, to=None, valid_types=set(['CDS', 'UTR5', 'UTR3'])):
+        return ''.join([exon.getSubSeq(seq, fr, to) for exon in self.exons if exon.type in valid_types])
 
 class Exon(object):
     
@@ -38,8 +38,5 @@ class Exon(object):
         self.ivl = ivl
         self.type = type_
     
-    def getSubSeq(self, seq):
-        return self.ivl.getSubSeq(seq)
-    
-    def getBounds(self):
-        return self.ivl
+    def getSubSeq(self, seq, fr=None, to=None):
+        return self.ivl.getSubSeq(seq, fr, to)

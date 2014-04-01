@@ -114,10 +114,11 @@ def iterModels(fname):
         elif entry.type == 'transcript':
             gene.transcripts[entry.attr['transcript_name']] =\
                 Transcript(entry.attr['transcript_name'], ivl)
-        elif entry.type == 'CDS':
-            gene.transcripts.values()[-1].exons.append(Exon(ivl, 'CDS'))
-        else:
+        elif entry.type in ('exon', 'CDS', 'UTR'):
+            gene.transcripts.values()[-1].exons.append(Exon(ivl, entry.type))
+        elif entry.type in ('start_codon', 'stop_codon'):
             continue
+        else:
             raise TypeError('Unknown type: %s'%entry.type)
     yield gene
     infile.close()

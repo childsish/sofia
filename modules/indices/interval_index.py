@@ -1,7 +1,7 @@
 import cPickle
 import os
 
-from bisect import bisect, bisect_left
+from bisect import bisect_left, bisect_right
 from operator import add
 from index import Index
 
@@ -18,13 +18,10 @@ class IntervalIndex(Index):
         res = []
         bins = self._getOverlappingBins(key)
         for bin in bins:
-            if bin[0] == bin[1]:
-                fr = to = bisect(self.bins, bin[0])
-            else:
-                fr = bisect(self.bins, bin[0])
-                to = bisect(self.bins, bin[1])
+            fr = bisect_left(self.bins, bin[0])
+            to = bisect_right(self.bins, bin[1])
             res.extend(self.values[idx] for idx in xrange(fr, to))
-        return [value for key, value in reduce(add, res, [])]
+        return [value for c_key, value in reduce(add, res, []) if key.overlaps(c_key)]
     
     def __setitem__(self, key, value):
         bin = self._getBin(key)
@@ -32,7 +29,6 @@ class IntervalIndex(Index):
         if idx >= len(self.bins) or self.bins[idx] != bin:
             self.bins.insert(idx, bin)
             self.values.insert(idx, [])
-        print key, bin, idx, value
         self.values[idx].append((key, value))
 
     @classmethod
@@ -50,5 +46,5 @@ class IntervalIndex(Index):
         for i in range(cls.MINBIN, cls.MAXBIN + 1):
             binLevel = 10 ** i
             res.append((int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.start / binLevel)), int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.stop / binLevel))))
-            res.append((bigBin, bigBin))
+        res.append((bigBin, bigBin))
         return res

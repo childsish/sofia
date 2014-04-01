@@ -59,6 +59,32 @@ class Interval(object):
             self.chr == other.chr and\
             (self.start < other.start or\
              self.start == other.start and self.stop < other.stop)
+        
+    # Relative location functions
+    
+    def overlaps(self, other):
+        """Test if self and other overlap
+        
+        :param Interval other: the interval being tested
+        :rtype: bool
+        """
+        return self.chr == other.chr and self.start < other.stop and other.start < self.stop
+    
+    def contains(self, other):
+        """Test if self wholly contains 
+    
+        :param Interval other: the interval being tested
+        :rtype: bool
+        """
+        return self.chr == other.chr and self.start <= other.start and other.stop <= self.stop
+    
+    def touches(self, other):
+        """Test if self touches (but doesn't overlap) other
+        
+        :param Interval other: the interval being tested
+        :rtype: bool
+        """
+        return self.chr == other.chr and self.start == other.stop or self.stop == other.start
     
     # Set-like operation functions
 
@@ -101,8 +127,11 @@ class Interval(object):
     
     # Sequence operations
     
-    def getSubSeq(self, seq):
-        res = super(Interval, self).getSubSeq(seq)
+    def getSubSeq(self, seq, fr=None, to=None):
+        fr = self.start if fr is None else max(self.start, fr)
+        to = self.stop if to is None else min(self.stop, to)
+        
+        res = seq[self.chr][fr:to]
         if self.strand == '-':
             res = seq.translate(Interval.REVCMP)[::-1]
         return res
