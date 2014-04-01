@@ -8,6 +8,6 @@ class Annotater(object):
         print '\t'.join(self.features[name].name for name in self.target_features)
         for entity in self.resources['target']:
             entities = {'target': entity}
-            res = [self.features[name].generate(entities, self.features)\
-                for name in self.target_features]
-            print '\t'.join(map(str, res))
+            res = [ftr.format(ftr.generate(entities, self.features))\
+                for ftr in (self.features[name] for name in self.target_features)]
+            print '\t'.join(res)
