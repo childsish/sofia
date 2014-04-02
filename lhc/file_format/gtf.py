@@ -15,7 +15,7 @@ ATTR = 8
 def iterModels(fname):
     gene = None
     for entry in iterEntries(fname):
-        ivl = Interval(entry.chr, entry.start, entry.stop)
+        ivl = Interval(entry.chr, entry.start, entry.stop, entry.strand)
         if entry.type == 'gene':
             if gene is not None:
                 yield gene
@@ -23,7 +23,7 @@ def iterModels(fname):
         elif entry.type == 'transcript':
             gene.transcripts[entry.attr['transcript_name']] =\
                 Transcript(entry.attr['transcript_name'], ivl)
-        elif entry.type == 'exon':
+        elif entry.type == 'CDS':
             gene.transcripts.values()[-1].exons.append(Exon(ivl, 'CDS'))
         
 GtfEntry = namedtuple('GtfEntry', ('chr', 'src', 'type', 'start', 'stop',

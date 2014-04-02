@@ -152,7 +152,8 @@ class ModelSet(object):
     
     def _createIndices(self):
         cur = self.conn.cursor()
-        cur.execute('CREATE INDEX IF NOT EXISTS model_name_idx ON model(name, type, left, right)')
+        cur.execute('CREATE INDEX IF NOT EXISTS model_name_idx ON model(name, type)')
+        cur.execute('CREATE INDEX IF NOT EXISTS model_nest_idx ON model(left, right)')
         cur.execute('CREATE INDEX IF NOT EXISTS variant_idx ON model(bin, type, chr)')
     
     def _getBin(self, ivl):

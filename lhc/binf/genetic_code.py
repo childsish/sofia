@@ -72,6 +72,8 @@ class GeneticCode:
         return GeneticCode.REDUNDANT_CODE.validCodon(key)
     
     def __getitem__(self, key):
+        if isinstance(key, list):
+            key = ''.join(key)
         if not isinstance(key, str):
             raise TypeError('Expected codon or amino acid. Got ' + str(type(key)) + ': ' + str(key))
         elif len(key) != 1 and len(key) != 3:
