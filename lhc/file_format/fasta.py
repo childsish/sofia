@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import gzip
 import os
 import stat
 import cPickle
@@ -145,14 +146,17 @@ class FastaIterator(object):
         self.fname = fname
     
     def __iter__(self):
-        infile = open(self.fname, 'rU')
+        if self.fname.endswith('.gz'):
+            infile = gzip.open(self.fname)
+        else:
+            infile = open(self.fname, 'rU')
         hdr = None
         seq = None
         for line in infile:
             if line[0] == '>':
                 if hdr != None:
                     yield (hdr, ''.join(seq))
-                hdr = line.strip()[1:]
+                hdr = line.strip().split()[0][1:]
                 seq = []
             else:
                 seq.append(line.strip())
