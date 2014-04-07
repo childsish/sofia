@@ -97,7 +97,7 @@ class Interval(BaseInterval):
         return Interval(self.chr, ivl.start, ivl.stop, self.strand)
     
     def getSubSeq(self, seq):
-        res = super(Interval, self).getSubSeq(seq)
+        res = super(Interval, self).getSubSeq(seq[self.chr])
         if self.strand == '-':
-            res = seq.translate(Interval.REVCMP)[::-1]
+            res = res.translate(Interval.REVCMP)[::-1]
         return res

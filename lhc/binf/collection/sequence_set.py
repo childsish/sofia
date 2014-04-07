@@ -41,6 +41,9 @@ class Sequence(object):
         raise NotImplementedError('Sequence addition not implemented for type: %s'%(type(other)))
 
 class SequenceSet(object):
+
+    CHUNK = 1000000
+
     def __init__(self, fname, mode='r'):
         self.root = Dataset(fname, mode)
 
@@ -58,7 +61,8 @@ class SequenceSet(object):
     def __setitem__(self, key, value):
         dim = self.root.createDimension(key, len(value))
         var = self.root.createVariable(key, '|S1', (key,))
-        var[:] = list(value)
+        for i in xrange(len(value)):
+            var[i:i + self.CHUNK] = list(value[i:i + self.CHUNK])
     
     def __iter__(self):
         return self.root.variables.iteritems()
