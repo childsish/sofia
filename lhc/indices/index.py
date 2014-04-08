@@ -1,4 +1,9 @@
+from collections import namedtuple
+
+KeyValuePair = namedtuple('KeyValuePair', ('key', 'value'))
+
 class Index(object):
+    
     def __init__(self, accessors):
         self.accessors = accessors
         self.index = self.accessors[0]()
@@ -31,18 +36,29 @@ class Index(object):
         for i, accessor in enumerate(self.accessors):
             next_level = []
             for index in indices:
-                index[key[i]] = (stored_key, value)\
-                    if accessor is self.accessors[-1]\
-                    else self.accessors[i + 1]()
+                if accessor is self.accessors[-1]:
+                    index[key[i]] = KeyValuePair(stored_key, value)
+                elif key[i] not in index:
+                    index[key[i]] = self.accessors[i + 1]()
                 next_level.append(index[key[i]])
             indices = next_level
+    
+    def __getstate__(self):
+        return {'accessors': self.accessors,
+            'index': self.index}
+    
+    def __setstate_(self, state):
+        self.__dict__.update(state)
 
 
 class Accessor(object):
     
     RETURN = ''
     
-    def __getitem__(self):
+    def __contains__(self, key):
+        raise NotImplementedError()
+    
+    def __getitem__(self, key):
         raise NotImplementedError()
     
     def __setitem__(self, key, value):

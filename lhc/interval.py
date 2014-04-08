@@ -20,6 +20,9 @@ class Interval(object):
     
     def __lt__(self, other):
         return self.stop < other.stop if self.start == other.start else self.start < other.start
+    
+    def __hash__(self):
+        return hash((self.start, self.stop))
         
     # Relative location functions
     
