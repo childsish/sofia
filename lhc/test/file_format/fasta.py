@@ -18,11 +18,25 @@ class TestFasta(unittest.TestCase):
         self.assertEquals(tuple(it.next()), ('a', 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee'))
         self.assertEquals(tuple(it.next()), ('b', 'ffffffffffgggggggggghhhhh'))
     
-    def test_getItem(self):
+    def test_getItemByKey(self):
         parser = fasta.FastaParser(self.fname)
         
         self.assertEquals(parser['a'], 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee')
         self.assertEquals(parser['b'], 'ffffffffffgggggggggghhhhh')
+    
+    def test_getItemSinglePosition(self):
+        parser = fasta.FastaParser(self.fname)
+        
+        self.assertEquals(parser[Position('a', 10)], 'b')
+        self.assertEquals(parser[Position('b', 10)], 'g')
+    
+    def test_getItemInterval(self):
+        parser = fasta.FastaParser(self.fname)
+        
+        self.assertEquals(parser[Interval('a', 10, 20)], 'bbbbbbbbbb')
+        self.assertEquals(parser[Interval('b', 10, 20)], 'gggggggggg')
+        self.assertEquals(parser[Interval('a', 5, 15)], 'aaaaabbbbb')
+        self.assertEquals(parser[Interval('b', 5, 15)], 'fffffggggg')
 
     def test_getItemIndexedByKey(self):
         fasta.index(self.fname)

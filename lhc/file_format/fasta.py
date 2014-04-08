@@ -1,5 +1,4 @@
 import cPickle
-import gzip
 import os
 
 from argparse import ArgumentParser
