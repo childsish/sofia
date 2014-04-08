@@ -160,3 +160,9 @@ class Interval(object):
         return seq[self.start:self.stop]
     
     INTERVAL_PAIR = namedtuple('IntervalPair', ('left', 'right'))
+    
+    def __getstate__(self):
+        return {'start': self.start, 'stop': self.stop}
+    
+    def __setstate__(self, state):
+        self.__dict__.update(state)

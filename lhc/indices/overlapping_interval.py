@@ -1,6 +1,6 @@
 from bisect import bisect_left, bisect_right
-
-from index import Accessor
+from lhc.indices.index import Accessor
+from lhc.interval import Interval
 
 class OverlappingIntervalIndex(Accessor):
     
@@ -44,7 +44,7 @@ class OverlappingIntervalIndex(Accessor):
         if idx == len(self.bins) or self.bins[idx] != bin:
             self.bins.insert(idx, bin)
             self.items.insert(idx, {})
-        self.items[idx][key] = value
+        self.items[idx][Interval(key.start, key.stop)] = value
     
     def _getBin(self, key):
         for i in range(self.MINBIN, self.MAXBIN + 1):
