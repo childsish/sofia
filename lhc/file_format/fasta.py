@@ -14,30 +14,29 @@ FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
 class FastaParser(EntrySet):
     def __init__(self, fname, iname=None):
         self.fname = fname
-        iname = self.getIndexName(fname) if iname is None else iname
-        if os.path.exists(iname):
-            infile = open(iname, 'rb')
-            self.key_index = cPickle.load(infile)
-            self.seq_index = cPickle.load(infile)
-            infile.close()
-        else:
-            self.key_index = None
-            self.seq_index = None
+        self.iname = self.getIndexName(fname) if iname is None else iname
+        self.key_index = None
+        self.seq_index = None
         self.data = None
     
-    def __iter__(self):
-        infile = gzip.open(self.fname) if self.fname.endswith('.gz')\
-            else open(self.fname)
-        for entry in self._iterHandle(infile):
-            yield entry
-        infile.close()
-    
     def __getitem__(self, key):
-        if self.key_index is not None:
+        if os.path.exists(self.iname):
+            if self.key_index is None:
+                infile = open(self.iname)
+                self.key_index = cPickle.load(infile)
+                self.seq_index = cPickle.load(infile)
+                infile.close()
             return self._getIndexedData(key)
         elif self.data is None:
             self.data = dict(iter(self))
-        return self.data[key]
+        
+        if isinstance(key, basestring):
+            return self.data[key]
+        elif hasattr(key, 'chr') and hasattr(key, 'pos'):
+            return self.data[key.chr][key.pos]
+        elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
+            return self.data[key.chr][key.start:key.stop]
+        raise NotImplementedError('Random access not implemented for %s'%type(key))
     
     def _iterHandle(self, infile):
         hdr = None
