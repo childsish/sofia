@@ -9,6 +9,10 @@ class PointBelowIndex(Accessor):
         self.keys = []
         self.values = []
     
+    def __contains__(self, key):
+        idx = bisect_right(self.keys, key) - 1
+        return self.keys[idx] == key
+    
     def __getitem__(self, key):
         idx = bisect_right(self.keys, key) - 1
         return None if idx == -1 else self.values[idx]
@@ -19,4 +23,4 @@ class PointBelowIndex(Accessor):
             self.keys.insert(idx, key)
             self.values.insert(idx, value)
         else:
-            self.value[idx] = value
+            self.values[idx] = value

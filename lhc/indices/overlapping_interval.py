@@ -13,6 +13,13 @@ class OverlappingIntervalIndex(Accessor):
         self.bins = []
         self.items = []
     
+    def __contains__(self, key):
+        bin = self._getBin(key)
+        idx = bisect_left(self.bins, bin)
+        if idx == len(self.bins) or self.bins[idx] != bin:
+            return False
+        return key in self.items[idx]
+    
     def __getitem__(self, key):
         res = []
         bins = self._getOverlappingBins(key)

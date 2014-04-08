@@ -5,6 +5,13 @@ from lhc.indices.overlapping_interval import OverlappingIntervalIndex
 
 class TestOverlappingIntervalIndex(unittest.TestCase):
     
+    def test_contains(self):
+        index = OverlappingIntervalIndex()
+        index[Interval(10, 20)] = 'interval 1'
+        
+        self.assertTrue(Interval(10, 20) in index)
+        self.assertFalse(Interval(30, 40) in index)
+    
     def test_getitem(self):
         index = OverlappingIntervalIndex()
         index[Interval(10, 20)] = 'interval 1'

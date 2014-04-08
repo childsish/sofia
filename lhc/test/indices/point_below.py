@@ -4,6 +4,13 @@ from lhc.indices.point_below import PointBelowIndex
 
 class Test(unittest.TestCase):
     
+    def test_contains(self):
+        index = PointBelowIndex()
+        index[10] = [4, 5, 6]
+        
+        self.assertTrue(10 in index)
+        self.assertFalse(20 in index)
+    
     def test_getitem(self):
         index = PointBelowIndex()
         index[10] = [4, 5, 6]
