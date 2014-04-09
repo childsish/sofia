@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from collections import namedtuple
 from lhc.file_format.entry_set import EntrySet
 from lhc.indices.index import Index
-from lhc.indices.exact_string import ExactStringIndex
+from lhc.indices.exact_key import ExactKeyIndex
 from lhc.indices.point_below import PointBelowIndex
 
 FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
@@ -90,7 +90,7 @@ def index(fname, iname=None):
     outfile.close()
 
 def _createKeyIndex(fname):
-    index = ExactStringIndex()
+    index = ExactKeyIndex()
     infile = open(fname, 'rb')
     while True:
         fpos = infile.tell()
@@ -103,7 +103,7 @@ def _createKeyIndex(fname):
     return index
 
 def _createSeqIndex(fname):
-    index = Index((ExactStringIndex, PointBelowIndex))
+    index = Index((ExactKeyIndex, PointBelowIndex))
     infile = open(fname, 'rb')
     while True:
         fpos = infile.tell()

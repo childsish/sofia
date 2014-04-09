@@ -6,7 +6,7 @@ from lhc.binf.genomic_coordinate import Interval
 from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.file_format.entry_set import EntrySet
 from lhc.indices.index import Index
-from lhc.indices.exact_string import ExactStringIndex
+from lhc.indices.exact_key import ExactKeyIndex
 from lhc.indices.overlapping_interval import OverlappingIntervalIndex
 
 GtfEntry = namedtuple('GtfEntry', ('chr', 'src', 'type', 'start', 'stop',
@@ -40,8 +40,8 @@ class GtfParser(EntrySet):
                 infile.close()
             return self._getIndexedData(key)
         elif self.data is None:
-            self.key_index = ExactStringIndex()
-            self.ivl_index = Index((ExactStringIndex, OverlappingIntervalIndex))
+            self.key_index = ExactKeyIndex()
+            self.ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
             self.data = list(iter(self))
             for i, entry in enumerate(self.data):
                 self.key_index[entry.name] = i
@@ -123,7 +123,7 @@ def index(fname, iname=None):
     outfile.close()
 
 def _createKeyIndex(fname):
-    index = ExactStringIndex()
+    index = ExactKeyIndex()
     infile = open(fname, 'rb')
     while True:
         fpos = infile.tell()
@@ -139,7 +139,7 @@ def _createKeyIndex(fname):
     return index
 
 def _createIvlIndex(fname):
-    index = Index((ExactStringIndex, OverlappingIntervalIndex))
+    index = Index((ExactKeyIndex, OverlappingIntervalIndex))
     infile = open(fname, 'rb')
     while True:
         fpos = infile.tell()

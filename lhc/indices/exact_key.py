@@ -1,6 +1,6 @@
 from index import Accessor
 
-class ExactStringIndex(Accessor):
+class ExactKeyIndex(Accessor):
     
     RETURN = 'single'
     

@@ -17,6 +17,7 @@ class TestFasta(unittest.TestCase):
         
         self.assertEquals(tuple(it.next()), ('a', 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee'))
         self.assertEquals(tuple(it.next()), ('b', 'ffffffffffgggggggggghhhhh'))
+        self.assertRaises(StopIteration, it.next)
     
     def test_getItemByKey(self):
         parser = fasta.FastaParser(self.fname)

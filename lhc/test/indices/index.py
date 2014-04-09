@@ -3,14 +3,14 @@ import unittest
 from lhc.interval import Interval
 
 from lhc.indices.index import Index, KeyValuePair
-from lhc.indices.exact_string import ExactStringIndex
+from lhc.indices.exact_key import ExactKeyIndex
 from lhc.indices.point_below import PointBelowIndex
 from lhc.indices.overlapping_interval import OverlappingIntervalIndex
 
 class Test(unittest.TestCase):
 
-    def testExactString(self):
-        index = Index((ExactStringIndex,))
+    def testExactKey(self):
+        index = Index((ExactKeyIndex,))
         index['a'] = 10
         index['a'] = 20
         
@@ -33,7 +33,7 @@ class Test(unittest.TestCase):
         self.assertEquals(index[Interval(1111195, 1111205)], [(Interval(1111190, 1111200), 'a')])
     
     def testESandPB(self):
-        index = Index((ExactStringIndex, PointBelowIndex))
+        index = Index((ExactKeyIndex, PointBelowIndex))
         index[('x', 0)] = 'a'
         index[('x', 10)] = 'b'
         index[('x', 20)] = 'c'
@@ -51,7 +51,7 @@ class Test(unittest.TestCase):
         self.assertEquals(index[('y', 10)], [KeyValuePair(('y', 10), 'c')])
     
     def testESandOI(self):
-        index = Index((ExactStringIndex, OverlappingIntervalIndex))
+        index = Index((ExactKeyIndex, OverlappingIntervalIndex))
         index[('chr1', Interval(1111190, 1111200))] = 'a'
         index[('chr2', Interval(1111190, 1111200))] = 'b'
         

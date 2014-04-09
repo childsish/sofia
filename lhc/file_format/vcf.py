@@ -6,7 +6,7 @@ from collections import namedtuple
 from itertools import izip
 from lhc.file_format.entry_set import EntrySet
 from lhc.indices.index import Index
-from lhc.indices.exact_string import ExactStringIndex
+from lhc.indices.exact_key import ExactKeyIndex
 from lhc.indices.overlapping_interval import OverlappingIntervalIndex
 from lhc.interval import Interval
 
@@ -44,8 +44,8 @@ class VcfParser(EntrySet):
                 infile.close()
             return self._getIndexedData(key)
         elif self.data is None:
-            self.pos_index = Index((ExactStringIndex, ExactStringIndex))
-            self.ivl_index = Index((ExactStringIndex, OverlappingIntervalIndex))
+            self.pos_index = Index((ExactKeyIndex, ExactKeyIndex))
+            self.ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
             self.data = list(iter(self))
             for i, entry in enumerate(self.data):
                 self.pos_index[(entry.chr, entry.pos)] = i
@@ -147,7 +147,7 @@ def index(fname, iname=None):
     outfile.close()
 
 def _createPosIndex(fname):
-    index = Index((ExactStringIndex, ExactStringIndex))
+    index = Index((ExactKeyIndex, ExactKeyIndex))
     infile = open(fname, 'rb')
     while True:
         fpos = infile.tell()
@@ -162,7 +162,7 @@ def _createPosIndex(fname):
     return index
 
 def _createIvlIndex(fname):
-    index = Index((ExactStringIndex, OverlappingIntervalIndex))
+    index = Index((ExactKeyIndex, OverlappingIntervalIndex))
     infile = open(fname, 'rb')
     while True:
         fpos = infile.tell()
