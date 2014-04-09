@@ -142,8 +142,8 @@ def iterEntries(fname):
 def index(fname, iname=None):
     iname = VcfParser.getIndexName(fname) if iname is None else iname
     outfile = open(iname, 'wb')
-    cPickle.dump(_createPosIndex(fname), outfile)
-    cPickle.dump(_createIvlIndex(fname), outfile)
+    cPickle.dump(_createPosIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(_createIvlIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
     outfile.close()
 
 def _createPosIndex(fname):

@@ -1,3 +1,4 @@
+import argparse
 import cPickle
 import os
 
@@ -118,8 +119,8 @@ def iterEntries(fname):
 def index(fname, iname=None):
     iname = GtfParser.getIndexName(fname) if iname is None else iname
     outfile = open(iname, 'wb')
-    cPickle.dump(_createKeyIndex(fname), outfile)
-    cPickle.dump(_createIvlIndex(fname), outfile)
+    cPickle.dump(_createKeyIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(_createIvlIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
     outfile.close()
 
 def _createKeyIndex(fname):
@@ -130,7 +131,7 @@ def _createKeyIndex(fname):
         line = infile.readline()
         if line == '':
             break
-        elif line.strip() == '':
+        elif line.startswith('#') or line.strip() == '':
             continue
         entry = GtfParser._parseLine(line)
         if entry.type == 'gene':
@@ -146,11 +147,12 @@ def _createIvlIndex(fname):
         line = infile.readline()
         if line == '':
             break
-        elif line.strip() == '':
+        elif line.startswith('#') or line.strip() == '':
             continue
         entry = GtfParser._parseLine(line)
         if entry.type == 'gene':
-            index[(entry.chr, entry)] = fpos
+            ivl = Interval(entry.start, entry.stop)
+            index[(entry.chr, ivl)] = fpos
     infile.close()
     return index
 
@@ -160,7 +162,7 @@ def main():
     args.func(args)
 
 def getArgumentParser():
-    parser = ArgumentParser()
+    parser = argparse.ArgumentParser()
     return parser
 
 if __name__ == '__main__':
