@@ -23,7 +23,7 @@ def aggregate(args):
     
     req_ress = {'target': args.input}
     req_ress.update(args.resources)
-    ress = loadResources(req_ress, res_clss, args.types)
+    ress = loadResources(req_ress, res_clss, args.formats)
     
     top_level_features = instantiateTopLevelFeatures(args.features, ftr_clss, ress)
     ftrs = generateDependencies(top_level_features, ress)
@@ -131,13 +131,13 @@ def getParser():
     agg_parser.add_argument('features', nargs='+',
         help='features take the form <feature_name>[:<resource_key>[=<resource_name>]]')
     agg_parser.add_argument('-r', '--resources', nargs='*', action=MakeDict, default={})
-    agg_parser.add_argument('-t', '--types', nargs='*', action=MakeDict, default={})
+    agg_parser.add_argument('-f', '--formats', nargs='*', action=MakeDict, default={})
     agg_parser.set_defaults(func=aggregate)
     
     idx_parser = subparsers.add_parser('index')
     idx_parser.add_argument('input',
         help='the file to index')
-    idx_parser.add_argument('-t', '--type',
+    idx_parser.add_argument('-f', '--format',
         help='the file format of the resource')
     idx_parser.set_defaults(func=index)
     return parser
