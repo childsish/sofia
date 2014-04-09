@@ -1,4 +1,5 @@
 import cPickle
+import gzip
 import os
 
 from argparse import ArgumentParser
@@ -13,6 +14,7 @@ FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
 class FastaParser(EntrySet):
     def __init__(self, fname, iname=None):
         self.fname = fname
+        self.fhndl = open(fname)
         self.iname = self.getIndexName(fname) if iname is None else iname
         self.key_index = None
         self.seq_index = None
@@ -85,13 +87,16 @@ def iterEntries(fname):
 def index(fname, iname=None):
     iname = FastaParser.getIndexName(fname) if iname is None else iname
     outfile = open(iname, 'wb')
-    cPickle.dump(_createKeyIndex(fname), outfile)
-    cPickle.dump(_createSeqIndex(fname), outfile)
+    cPickle.dump(_createKeyIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(_createSeqIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
     outfile.close()
 
 def _createKeyIndex(fname):
     index = ExactKeyIndex()
-    infile = open(fname, 'rb')
+    if fname.endswith('.gz'):
+        infile = gzip.open(fname, 'rb')
+    else:
+        infile = open(fname, 'rb')
     while True:
         fpos = infile.tell()
         line = infile.readline()
@@ -104,7 +109,10 @@ def _createKeyIndex(fname):
 
 def _createSeqIndex(fname):
     index = FastaIndex(fname)
-    infile = open(fname, 'rb')
+    if fname.endswith('.gz'):
+        infile = gzip.open(fname, 'rb')
+    else:
+        infile = open(fname, 'rb')
     while True:
         line = infile.readline()
         fpos = infile.tell()
