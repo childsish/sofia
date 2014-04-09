@@ -53,7 +53,7 @@ class TestVcf(unittest.TestCase):
         
         vars = parser[Interval('chr1', 50, 150)]
         self.assertEquals(len(vars), 1)
-        self.assertEquals(vars[0].id, 'a1')
+        self.assertEquals(vars[0].id, 'a0')
         
         vars = parser[Interval('chr1', 50, 250)]
         self.assertEquals(len(vars), 2)
@@ -79,7 +79,7 @@ class TestVcf(unittest.TestCase):
         
         vars = parser[Interval('chr1', 50, 150)]
         self.assertEquals(len(vars), 1)
-        self.assertEquals(vars[0].id, 'a1')
+        self.assertEquals(vars[0].id, 'a0')
         
         vars = parser[Interval('chr1', 50, 250)]
         self.assertEquals(len(vars), 2)
