@@ -82,8 +82,9 @@ def iterEntries(fname):
     parser = FastaParser(fname)
     return iter(parser)
 
-def index(fname):
-    outfile = open(FastaParser.getIndexName(fname), 'wb')
+def index(fname, iname=None):
+    iname = FastaParser.getIndexName(fname) if iname is None else iname
+    outfile = open(iname, 'wb')
     cPickle.dump(_createKeyIndex(fname), outfile)
     cPickle.dump(_createSeqIndex(fname), outfile)
     outfile.close()

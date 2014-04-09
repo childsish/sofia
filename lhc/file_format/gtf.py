@@ -115,8 +115,9 @@ def iterEntries(fname):
     parser = GtfParser(fname)
     return iter(parser)
 
-def index(fname):
-    outfile = open(GtfParser.getIndexName(fname), 'wb')
+def index(fname, iname=None):
+    iname = GtfParser.getIndexName(fname) if iname is None else iname
+    outfile = open(iname, 'wb')
     cPickle.dump(_createKeyIndex(fname), outfile)
     cPickle.dump(_createIvlIndex(fname), outfile)
     outfile.close()
