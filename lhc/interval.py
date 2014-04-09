@@ -165,4 +165,5 @@ class Interval(object):
         return {'start': self.start, 'stop': self.stop}
     
     def __setstate__(self, state):
-        self.__dict__.update(state)
+        for key, value in state.iteritems():
+            setattr(self, key, value)

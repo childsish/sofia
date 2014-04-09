@@ -2,7 +2,7 @@ import unittest
 
 from lhc.interval import Interval
 
-class TestSliceTools(unittest.TestCase):
+class TestInterval(unittest.TestCase):
     
     def test_overlaps(self):
         a = Interval(0, 10)
