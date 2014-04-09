@@ -6,7 +6,7 @@ class VcfParser(Resource):
     NAME = 'vcf'
     
     def __init__(self, fname, iname=None):
-        super(VcfParser, self).__int__(fname, iname)
+        super(VcfParser, self).__init__(fname, iname)
         self.parser = vcf.VcfParser(fname, iname)
     
     def __iter__(self):

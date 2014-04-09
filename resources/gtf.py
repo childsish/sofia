@@ -6,7 +6,7 @@ class GtfParser(Resource):
     NAME = 'gtf'
     
     def __init__(self, fname, iname=None):
-        super(GtfParser, self).__int__(fname, iname)
+        super(GtfParser, self).__init__(fname, iname)
         self.parser = gtf.GtfParser(fname, iname)
     
     def __iter__(self):

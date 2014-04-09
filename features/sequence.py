@@ -4,7 +4,7 @@ from resource import StaticResource, DynamicResource
 class Sequence(Feature):
     
     NAME = 'seq'
-    RESOURCES = ['seq', 'mdl']
+    RESOURCES = ['mdl', 'seq']
     DEPENDENCIES = [
         {'name': 'mdl',
          'feature': DynamicResource,

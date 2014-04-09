@@ -6,7 +6,7 @@ class FastaParser(Resource):
     NAME = 'fasta'
     
     def __init__(self, fname, iname=None):
-        super(FastaParser, self).__int__(fname, iname)
+        super(FastaParser, self).__init__(fname, iname)
         self.parser = fasta.FastaParser(fname, iname)
     
     def __iter__(self):

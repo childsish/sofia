@@ -10,17 +10,7 @@ from modules.resource import Resource
 def main(argv):
     parser = getParser()
     args = parser.parse_args()
-    aggregate(args)
-
-def getParser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('input', metavar='TARGET',
-        help='the VCF files to annotate')
-    parser.add_argument('features', nargs='+',
-        help='features take the form <feature_name>[:<resource_key>[=<resource_name>]]') # ftr1:key1=res1 ftr2:key2=res2
-    parser.add_argument('-r', '--resources', nargs='*', action=MakeDict, default={})
-    parser.add_argument('-t', '--types', nargs='*', action=MakeDict, default={})
-    return parser
+    args.func(args)
 
 def aggregate(args):
     from modules.subcommands.annotater import Annotater
@@ -41,18 +31,25 @@ def aggregate(args):
     annotater = Annotater([ftr.name for ftr in top_level_features], ftrs, ress)
     annotater.annotate()
 
-def loadResources(req_ress, res_clss, types):
-    ress = {}
-    for name, fname in req_ress.iteritems():
-        ress[name] = loadResource(name, fname, res_clss, types)
-    return ress
+def index(args):
+    prog_dir = os.path.dirname(os.path.abspath(__file__))
+    indir = os.path.join(prog_dir, 'resources')
+    parsers = loadPlugins(indir, Resource)
+    resource = loadResource(args.input, parsers, args.format)
+    resource.index()
 
-def loadResource(name, fname, res_clss, types):
-    if name in types:
-        return res_clss[types[name]](fname)
-    for res_cls in res_clss:
-        if fname.endswith(res_cls):
-            return res_clss[res_cls](fname)
+def loadResources(requested, parsers, formats):
+    resources = {}
+    for name, fname in requested.iteritems():
+        resources[name] = loadResource(fname, parsers, formats.get(name, None))
+    return resources
+
+def loadResource(fname, parsers, format=None):
+    if format is not None and format in parsers:
+        return parsers[format](fname)
+    for format in parsers:
+        if fname.endswith(format):
+            return parsers[format](fname)
     raise TypeError('Unrecognised file format: %s'%\
         os.path.basename(fname))
     
@@ -123,6 +120,27 @@ def loadPlugins(indir, cls):
             except TypeError:
                 continue
     return plugins
+
+def getParser():
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+    
+    agg_parser = subparsers.add_parser('aggregate')
+    agg_parser.add_argument('input', metavar='TARGET',
+        help='the file to annotate')
+    agg_parser.add_argument('features', nargs='+',
+        help='features take the form <feature_name>[:<resource_key>[=<resource_name>]]')
+    agg_parser.add_argument('-r', '--resources', nargs='*', action=MakeDict, default={})
+    agg_parser.add_argument('-t', '--types', nargs='*', action=MakeDict, default={})
+    agg_parser.set_defaults(func=aggregate)
+    
+    idx_parser = subparsers.add_parser('index')
+    idx_parser.add_argument('input',
+        help='the file to index')
+    idx_parser.add_argument('-t', '--type',
+        help='the file format of the resource')
+    idx_parser.set_defaults(func=index)
+    return parser
 
 class MakeDict(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
