@@ -3,10 +3,10 @@ import os
 
 from argparse import ArgumentParser
 from collections import namedtuple
+from lhc.binf.genomic_coordinate import Position
 from lhc.file_format.entry_set import EntrySet
-from lhc.indices.index import Index
 from lhc.indices.exact_key import ExactKeyIndex
-from lhc.indices.point_below import PointBelowIndex
+from lhc.indices.fasta import FastaIndex
 
 FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
 
@@ -63,14 +63,14 @@ class FastaParser(EntrySet):
                 seq.append(line.strip())
             res = ''.join(seq)
         elif hasattr(key, 'chr') and hasattr(key, 'pos'):
-            fpos = self.seq_index[(key.chr, key.pos)][0]
-            infile.seek(fpos.value + key.pos - fpos.key[1])
+            fpos = self.seq_index[key]
+            infile.seek(fpos)
             res = infile.read(1)
+            while res in self.seq_index.newlines:
+                res = infile.read(1)
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            key_fr, fpos_fr = self.seq_index[(key.chr, key.start)][0]
-            key_to, fpos_to = self.seq_index[(key.chr, key.stop)][0]
-            fpos_fr = fpos_fr + key.start - key_fr[1]
-            fpos_to = fpos_to + key.stop - key_to[1]
+            fpos_fr = self.seq_index[Position(key.chr, key.start)]
+            fpos_to = self.seq_index[Position(key.chr, key.stop)]
             infile.seek(fpos_fr)
             res = ''.join(infile.read(fpos_to - fpos_fr).split())
         else:
@@ -103,19 +103,16 @@ def _createKeyIndex(fname):
     return index
 
 def _createSeqIndex(fname):
-    index = Index((ExactKeyIndex, PointBelowIndex))
+    index = FastaIndex(fname)
     infile = open(fname, 'rb')
     while True:
-        fpos = infile.tell()
         line = infile.readline()
+        fpos = infile.tell()
         if line == '':
             break
         elif line.startswith('>'):
             hdr = line.split()[0][1:]
-            pos = 0
-            continue
-        index[(hdr, pos)] = fpos
-        pos += len(line.strip())
+            index[hdr] = fpos
     return index
 
 def main():
