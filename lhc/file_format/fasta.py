@@ -1,4 +1,5 @@
 import cPickle
+import gzip
 import os
 
 from argparse import ArgumentParser
@@ -13,6 +14,7 @@ FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
 class FastaParser(EntrySet):
     def __init__(self, fname, iname=None):
         self.fname = fname
+        self.fhndl = open(fname)
         self.iname = self.getIndexName(fname) if iname is None else iname
         self.key_index = None
         self.seq_index = None
@@ -91,7 +93,10 @@ def index(fname, iname=None):
 
 def _createKeyIndex(fname):
     index = ExactKeyIndex()
-    infile = open(fname, 'rb')
+    if fname.endswith('.gz'):
+        infile = gzip.open(fname, 'rb')
+    else:
+        infile = open(fname, 'rb')
     while True:
         fpos = infile.tell()
         line = infile.readline()
@@ -104,7 +109,10 @@ def _createKeyIndex(fname):
 
 def _createSeqIndex(fname):
     index = Index((ExactKeyIndex, PointBelowIndex))
-    infile = open(fname, 'rb')
+    if fname.endswith('.gz'):
+        infile = gzip.open(fname, 'rb')
+    else:
+        infile = open(fname, 'rb')
     while True:
         fpos = infile.tell()
         line = infile.readline()
@@ -113,9 +121,9 @@ def _createSeqIndex(fname):
         elif line.startswith('>'):
             hdr = line.split()[0][1:]
             pos = 0
-            continue
-        index[(hdr, pos)] = fpos
-        pos += len(line.strip())
+        else:
+            index[(hdr, pos)] = fpos
+            pos += len(line.strip())
     return index
 
 def main():

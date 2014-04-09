@@ -101,3 +101,8 @@ class TestGtf(unittest.TestCase):
     
     def tearDown(self):
         os.remove(self.fname)
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(unittest.main())
+

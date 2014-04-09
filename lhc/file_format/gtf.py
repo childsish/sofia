@@ -3,12 +3,13 @@ import cPickle
 import os
 
 from collections import namedtuple
-from lhc.binf.genomic_coordinate import Interval
+from lhc.binf.genomic_coordinate import Interval as GenomicInterval
 from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.file_format.entry_set import EntrySet
 from lhc.indices.index import Index
 from lhc.indices.exact_key import ExactKeyIndex
 from lhc.indices.overlapping_interval import OverlappingIntervalIndex
+from lhc.interval import Interval
 
 GtfEntry = namedtuple('GtfEntry', ('chr', 'src', 'type', 'start', 'stop',
     'score', 'strand', 'phase', 'attr'))
@@ -50,6 +51,9 @@ class GtfParser(EntrySet):
         
         if isinstance(key, basestring):
             return self.data[self.key_index[key]]
+        elif hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
+            ivl = Interval(key.pos, key.pos + len(key.ref))
+            return [self.data[v] for k, v in self.ivl_index[(key.chr, ivl)]]
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             return [self.data[v] for k, v in self.ivl_index[(key.chr, key)]]
         raise NotImplementedError('Random access not implemented for %s'%type(key))
@@ -57,7 +61,7 @@ class GtfParser(EntrySet):
     def _iterHandle(self, infile):
         gene = None
         for line in self._iterLines(infile):
-            ivl = Interval(line.chr, line.start, line.stop, line.strand)
+            ivl = GenomicInterval(line.chr, line.start, line.stop, line.strand)
             if line.type == 'gene':
                 if gene is not None:
                     yield gene
@@ -82,6 +86,12 @@ class GtfParser(EntrySet):
             fpos = self.key_index[key]
             infile.seek(fpos)
             res = self._iterHandle(infile).next()
+        elif hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
+            ivl = Interval(key.pos, key.pos + len(key.ref))
+            fposs = self.ivl_index[(key.chr, ivl)]
+            for fpos in fposs:
+                infile.seek(fpos.value)
+                res.append(self._iterHandle(infile).next())
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             fposs = self.ivl_index[(key.chr, key)]
             for fpos in fposs:

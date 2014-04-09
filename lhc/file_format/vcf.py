@@ -71,7 +71,7 @@ class VcfParser(EntrySet):
         hdrs = self._parseHeaders(infile) if hdrs is None else hdrs
         if len(hdrs[-1]) <= self.FORMAT:
             return self._iterUnsampledVcf(infile)
-        return self._iterSampledVcf(infile, hdrs[-1].split('\t')[self.FORMAT + 1:])
+        return self._iterSampledVcf(infile, hdrs[-1][self.FORMAT + 1:])
 
     def _getIndexedData(self, key):
         infile = open(self.fname)
@@ -110,7 +110,6 @@ class VcfParser(EntrySet):
     
     @classmethod
     def _iterSampledVcf(cls, infile, sample_names):
-        Samples = namedtuple('Samples', sample_names)
         for line in infile:
             parts = line.split('\t')
             yield Variant(parts[cls.CHR],
@@ -121,11 +120,12 @@ class VcfParser(EntrySet):
                 int(parts[cls.QUAL]) if parts[cls.QUAL].isdigit() else parts[cls.QUAL],
                 parts[cls.FILTER],
                 cls._parseAttributes(parts[cls.ATTR]),
-                Samples(*cls._parseSamples(parts)))
+                dict(izip(sample_names, cls._parseSamples(parts))))
     
     @classmethod
     def _parseAttributes(cls, attr_line):
-        return dict(attr.split(':') for attr in attr_line.strip().split(','))
+        return dict(attr.split('=') if '=' in attr else (attr, attr)\
+            for attr in attr_line.strip().split(';'))
     
     @classmethod
     def _parseSamples(cls, parts):
