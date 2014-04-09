@@ -33,10 +33,10 @@ class Index(object):
         stored_key = key[0] if len(self.accessors) == 1 else key
         
         indices = [self.index]
-        for i, accessor in enumerate(self.accessors):
+        for i in xrange(len(self.accessors)):
             next_level = []
             for index in indices:
-                if accessor is self.accessors[-1]:
+                if i + 1 == len(self.accessors):
                     index[key[i]] = KeyValuePair(stored_key, value)
                 elif key[i] not in index:
                     index[key[i]] = self.accessors[i + 1]()
