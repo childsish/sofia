@@ -2,7 +2,7 @@ from modules.feature import Feature
 from resource import DynamicResource, StaticResource
 from lhc.binf.genetic_code import GeneticCodes
 
-class Gene(Feature):
+class AAMut(Feature):
     
     NAME = 'aa_mut'
     RESOURCES = ['locus', 'mdl', 'seq']
@@ -21,8 +21,11 @@ class Gene(Feature):
         }
     ]
     
+    def __init__(self, resource_map, resources=None):
+        super(AAMut, self).__init__(resource_map, resources)
+        self.gc = GeneticCodes()[1]
+    
     def calculate(self, locus, mdl, seq):
-        gcode = GeneticCodes()[1]
         transcripts = {}
         for m in mdl:
             for k, v in m.transcripts.iteritems():
@@ -39,9 +42,9 @@ class Gene(Feature):
                 continue
             cdnpos = relpos - relpos % 3
             cdn = list(subseq[cdnpos:cdnpos + 3])
-            fr = gcode[''.join(cdn).lower()]
+            fr = self.gc[''.join(cdn).lower()]
             cdn[relpos % 3] = locus.alt
-            to = gcode[''.join(cdn).lower()]
+            to = self.gc[''.join(cdn).lower()]
             res[name] = '%s%s%s'%(fr, cdnpos, to)
         return res
 
