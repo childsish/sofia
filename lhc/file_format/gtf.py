@@ -93,6 +93,16 @@ class GtfParser(EntrySet):
         raise NotImplementedError('Random access not implemented for %s'%type(key))
     
     def _getEntryAtFilePosition(self, fposs):
+        """Get the entry at the given positions
+        
+        Accessing the gene models is usually done sequentially over the
+        chromosome. Because of this, the requested file position is checked
+        to see if it accessed previously. This avoids calling the expensive
+        funcion _parseAttributes.
+        
+        :param fposs: the file positions to get the GTF entries from
+        :type fposs: list of int
+        """
         if fposs == self.prv_fposs:
             return self.prv_res
         else:
