@@ -25,11 +25,9 @@ class VcfParser(EntrySet):
     FORMAT = 8
     
     def __init__(self, fname, iname=None):
-        self.fname = fname
-        self.iname = self.getIndexName(fname) if iname is None else iname
+        super(VcfParser, self).__init__(fname, iname)
         self.pos_index = None
         self.ivl_index = None
-        self.data = None
         
         infile = open(fname)
         self.hdrs = self._parseHeaders(infile)
@@ -74,20 +72,18 @@ class VcfParser(EntrySet):
         return self._iterSampledVcf(infile, hdrs[-1][self.FORMAT + 1:])
 
     def _getIndexedData(self, key):
-        infile = open(self.fname)
         res = []
         if hasattr(key, 'chr') and hasattr(key, 'pos'):
             fpos = self.pos_index[(key.chr, key.pos)][0]
-            infile.seek(fpos.value)
-            res = self._iterHandle(infile, self.hdrs).next()
+            self.fhndl.seek(fpos.value)
+            res = self._iterHandle(self.fhndl, self.hdrs).next()
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             fposs = self.ivl_index[(key.chr, key)]
             for fpos in fposs:
-                infile.seek(fpos.value)
-                res.append(self._iterHandle(infile, self.hdrs).next())
+                self.fhndl.seek(fpos.value)
+                res.append(self._iterHandle(self.fhndl, self.hdrs).next())
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
-        infile.close()
         return res
     
     @classmethod

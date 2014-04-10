@@ -13,11 +13,8 @@ FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
 
 class FastaParser(EntrySet):
     def __init__(self, fname, iname=None):
-        self.fname = fname
-        self.fhndl = open(fname)
-        self.iname = self.getIndexName(fname) if iname is None else iname
+        super(FastaParser, self).__init__(fname, iname)
         self.key_index = None
-        self.data = None
     
     def __getitem__(self, key):
         if os.path.exists(self.iname):
@@ -51,31 +48,29 @@ class FastaParser(EntrySet):
         yield FastaEntry(hdr, ''.join(seq))
     
     def _getIndexedData(self, key):
-        infile = open(self.fname)
         if isinstance(key, basestring):
             fpos = self.key_index[Position(key, 0)]
-            infile.seek(fpos)
-            infile.readline()
+            self.fhndl.seek(fpos)
+            self.fhndl.readline()
             seq = []
-            for line in infile:
+            for line in self.fhndl:
                 if line.startswith('>'):
                     break
                 seq.append(line.strip())
             res = ''.join(seq)
         elif hasattr(key, 'chr') and hasattr(key, 'pos'):
             fpos = self.key_index[key]
-            infile.seek(fpos)
-            res = infile.read(1)
+            self.fhndl.seek(fpos)
+            res = self.fhndl.read(1)
             while res in self.key_index.newlines:
-                res = infile.read(1)
+                res = self.fhndl.read(1)
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             fpos_fr = self.key_index[Position(key.chr, key.start)]
             fpos_to = self.key_index[Position(key.chr, key.stop)]
-            infile.seek(fpos_fr)
-            res = ''.join(infile.read(fpos_to - fpos_fr).split())
+            self.fhndl.seek(fpos_fr)
+            res = ''.join(self.fhndl.read(fpos_to - fpos_fr).split())
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
-        infile.close()
         return res
 
 def iterEntries(fname):

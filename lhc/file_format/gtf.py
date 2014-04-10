@@ -27,11 +27,11 @@ class GtfParser(EntrySet):
     ATTR = 8
     
     def __init__(self, fname, iname=None):
-        self.fname = fname
-        self.iname = self.getIndexName(fname) if iname is None else iname
+        super(GtfParser, self).__init__(fname, iname)
         self.key_index = None
         self.ivl_index = None
-        self.data = None
+        self.prv_fposs = None
+        self.prv_res = None
     
     def __getitem__(self, key):
         if os.path.exists(self.iname):
@@ -80,26 +80,30 @@ class GtfParser(EntrySet):
             yield self._parseLine(line)
 
     def _getIndexedData(self, key):
-        infile = open(self.fname)
-        res = []
         if isinstance(key, basestring):
-            fpos = self.key_index[key]
-            infile.seek(fpos)
-            res = self._iterHandle(infile).next()
+            fposs = [self.key_index[key]]
+            return self._getEntryAtFilePosition(fposs)[0]
         elif hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
             ivl = Interval(key.pos, key.pos + len(key.ref))
             fposs = self.ivl_index[(key.chr, ivl)]
-            for fpos in fposs:
-                infile.seek(fpos.value)
-                res.append(self._iterHandle(infile).next())
+            return self._getEntryAtFilePosition(fposs)
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             fposs = self.ivl_index[(key.chr, key)]
-            for fpos in fposs:
-                infile.seek(fpos.value)
-                res.append(self._iterHandle(infile).next())
+            return self._getEntryAtFilePosition(fposs)
+        raise NotImplementedError('Random access not implemented for %s'%type(key))
+    
+    def _getEntryAtFilePosition(self, fposs):
+        if fposs == self.prv_fposs:
+            return self.prv_res
         else:
-            raise NotImplementedError('Random access not implemented for %s'%type(key))
-        infile.close()
+            self.prv_fposs = fposs
+        
+        res = []
+        for fpos in fposs:
+            self.fhndl.seek(fpos.value)
+            res.append(self._iterHandle(self.fhndl).next())
+        
+        self.prv_res = res
         return res
     
     @classmethod
@@ -112,14 +116,10 @@ class GtfParser(EntrySet):
     
     @classmethod
     def _parseAttributes(cls, attr):
-        parts = [part.strip().split(' ', 1)
-            for part in attr.split(';')
-            if part.strip() != '']
-        for i in xrange(len(parts)):
-            if parts[i][1].startswith('"'):
-                parts[i][1] = parts[i][1][1:-1]
-            else:
-                parts[i][1] = int(parts[i][1])
+        parts = (part.strip() for part in attr.split(';'))
+        parts = [part.split(' ', 1) for part in parts if part != '']
+        for part in parts:
+            part[1] = part[1][1:-1] if part[1].startswith('"') else int(part[1])
         return dict(parts)
 
 def iterEntries(fname):
