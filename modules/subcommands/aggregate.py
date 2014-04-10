@@ -3,7 +3,7 @@ import os
 import re
 
 from collections import OrderedDict
-from common import loadPlugins, loadResource
+from common import loadPlugins, loadResource, getProgramDirectory
 from itertools import izip
 from modules.feature import Feature
 from modules.resource import Resource
@@ -28,7 +28,7 @@ def defineParser(parser):
     parser.set_defaults(func=aggregate)
 
 def aggregate(args):
-    program_dir = os.path.dirname(os.path.abspath(__file__))
+    program_dir = getProgramDirectory()
     feature_dir = os.path.join(program_dir, 'features')
     feature_types = loadPlugins(feature_dir, Feature)
     resource_dir = os.path.join(program_dir, 'resources')

@@ -2,7 +2,7 @@ import argparse
 import os
 
 from modules.resource import Resource
-from common import loadPlugins, loadResource
+from common import loadPlugins, loadResource, getProgramDirectory
 
 def main():
     parser = getParser()
@@ -17,13 +17,13 @@ def getParser():
 def defineParser(parser):
     parser.add_argument('input',
         help='the file to index')
-    parser.add_argument('-t', '--type',
+    parser.add_argument('-f', '--format',
         help='the file format of the resource')
     parser.set_defaults(func=index)
 
 def index(args):
-    prog_dir = os.path.dirname(os.path.abspath(__file__))
-    indir = os.path.join(prog_dir, 'resources')
+    program_dir = getProgramDirectory()
+    indir = os.path.join(program_dir, 'resources')
     parsers = loadPlugins(indir, Resource)
     resource = loadResource(args.input, parsers, args.format)
     resource.index()

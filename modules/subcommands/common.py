@@ -28,3 +28,6 @@ def loadPlugins(indir, cls):
             except TypeError:
                 continue
     return plugins
+
+def getProgramDirectory():
+    return os.path.dirname(os.path.abspath(__file__)).rsplit(os.sep, 2)[0]
