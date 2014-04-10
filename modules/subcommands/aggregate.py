@@ -1,3 +1,4 @@
+import argparse
 import os
 import re
 
@@ -6,6 +7,25 @@ from common import loadPlugins, loadResource
 from itertools import izip
 from modules.feature import Feature
 from modules.resource import Resource
+
+def main(argv):
+    parser = getParser()
+    args = parser.parse_args()
+    args.func(args)
+
+def getParser():
+    parser = argparse.ArgumentParser()
+    defineParser(parser)
+    return parser
+
+def defineParser(parser):
+    parser.add_argument('input', metavar='TARGET',
+        help='the file to annotate')
+    parser.add_argument('features', nargs='+',
+        help='features take the form <feature_name>[:<resource_key>[=<resource_name>]]')
+    parser.add_argument('-r', '--resources', nargs='*', action=MakeDict, default={})
+    parser.add_argument('-f', '--formats', nargs='*', action=MakeDict, default={})
+    parser.set_defaults(func=aggregate)
 
 def aggregate(args):
     program_dir = os.path.dirname(os.path.abspath(__file__))
@@ -82,3 +102,11 @@ def generateDependencies(features, resources):
             res[feature.name] = feature
             stk.append(feature)
     return res
+
+class MakeDict(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, OrderedDict(v.split('=') for v in values))
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(main(sys.argv))
