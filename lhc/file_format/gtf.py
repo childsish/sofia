@@ -128,14 +128,17 @@ def iterEntries(fname):
 
 def index(fname, iname=None):
     iname = GtfParser.getIndexName(fname) if iname is None else iname
+    key_index, ivl_index = _createIndices(fname)
     outfile = open(iname, 'wb')
-    cPickle.dump(_createKeyIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(_createIvlIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(key_index, outfile, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(ivl_index, outfile, cPickle.HIGHEST_PROTOCOL)
     outfile.close()
 
-def _createKeyIndex(fname):
-    index = ExactKeyIndex()
+def _createIndices(fname):
+    key_index = ExactKeyIndex()
+    ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
     infile = open(fname, 'rb')
+    chr = None
     while True:
         fpos = infile.tell()
         line = infile.readline()
@@ -145,26 +148,14 @@ def _createKeyIndex(fname):
             continue
         entry = GtfParser._parseLine(line)
         if entry.type == 'gene':
-            index[entry.attr['gene_name']] = fpos
-    infile.close()
-    return index
-
-def _createIvlIndex(fname):
-    index = Index((ExactKeyIndex, OverlappingIntervalIndex))
-    infile = open(fname, 'rb')
-    while True:
-        fpos = infile.tell()
-        line = infile.readline()
-        if line == '':
-            break
-        elif line.startswith('#') or line.strip() == '':
-            continue
-        entry = GtfParser._parseLine(line)
-        if entry.type == 'gene':
+            key_index[entry.attr['gene_name']] = fpos
             ivl = Interval(entry.start, entry.stop)
-            index[(entry.chr, ivl)] = fpos
+            ivl_index[(entry.chr, ivl)] = fpos
+            if entry.chr != chr:
+                print entry.chr
+                chr = entry.chr
     infile.close()
-    return index
+    return key_index, ivl_index
 
 def main():
     parser = getArgumentParser()

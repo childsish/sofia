@@ -124,7 +124,7 @@ class VcfParser(EntrySet):
     
     @classmethod
     def _parseAttributes(cls, attr_line):
-        return dict(attr.split('=') if '=' in attr else (attr, attr)\
+        return dict(attr.split('=', 1) if '=' in attr else (attr, attr)\
             for attr in attr_line.strip().split(';'))
     
     @classmethod
@@ -142,13 +142,16 @@ def iterEntries(fname):
 def index(fname, iname=None):
     iname = VcfParser.getIndexName(fname) if iname is None else iname
     outfile = open(iname, 'wb')
-    cPickle.dump(_createPosIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(_createIvlIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
+    pos_index, ivl_index = _createIndices(fname)
+    cPickle.dump(pos_index, outfile, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(ivl_index, outfile, cPickle.HIGHEST_PROTOCOL)
     outfile.close()
 
-def _createPosIndex(fname):
-    index = Index((ExactKeyIndex, ExactKeyIndex))
+def _createIndices(fname):
+    pos_index = Index((ExactKeyIndex, ExactKeyIndex))
+    ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
     infile = open(fname, 'rb')
+    chr = None
     while True:
         fpos = infile.tell()
         line = infile.readline()
@@ -157,25 +160,14 @@ def _createPosIndex(fname):
         elif line.strip() == '' or line.startswith('#'):
             continue
         entry = VcfParser._parseUnsampledLine(line)
-        index[(entry.chr, entry.pos)] = fpos
-    infile.close()
-    return index
-
-def _createIvlIndex(fname):
-    index = Index((ExactKeyIndex, OverlappingIntervalIndex))
-    infile = open(fname, 'rb')
-    while True:
-        fpos = infile.tell()
-        line = infile.readline()
-        if line == '':
-            break
-        elif line.strip() == '' or line.startswith('#'):
-            continue
-        entry = VcfParser._parseUnsampledLine(line)
+        pos_index[(entry.chr, entry.pos)] = fpos
         ivl = Interval(entry.pos, entry.pos + len(entry.ref))
-        index[(entry.chr, ivl)] = fpos
+        ivl_index[(entry.chr, ivl)] = fpos
+        if entry.chr != chr:
+            print entry.chr
+            chr = entry.chr
     infile.close()
-    return index
+    return pos_index, ivl_index
 
 def main():
     parser = getArgumentParser()

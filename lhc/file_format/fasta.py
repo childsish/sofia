@@ -90,17 +90,17 @@ def index(fname, iname=None):
 
 def _createKeyIndex(fname):
     index = FastaIndex(fname)
-    if fname.endswith('.gz'):
-        infile = gzip.open(fname, 'rb')
-    else:
-        infile = open(fname, 'rb')
+    infile = gzip.open(fname, 'rb') if fname.endswith('.gz') else\
+        open(fname, 'rb')
     while True:
         line = infile.readline()
         fpos = infile.tell()
         if line == '':
             break
         elif line.startswith('>'):
-            index[line.split()[0][1:]] = fpos
+            hdr = line.split()[0][1:]
+            print hdr
+            index[hdr] = fpos
     return index
 
 def main():
