@@ -42,8 +42,9 @@ def aggregate(args):
     features = generateDependencies(top_level_features, resources)
     
     print '\t'.join(feature.name for feature in top_level_features)
+    entities = {}
     for entity in resources['target']:
-        entities = {'target': entity}
+        entities['target'] = entity
         cols = [feature.generate(entities, features) for feature in top_level_features]
         out = [ftr.format(col) for ftr, col in izip(top_level_features, cols)]
         print '\t'.join(out)

@@ -21,12 +21,28 @@ class Feature(object):
         :param features: available features
         :type features: dict of features
         """
+        if not self.needsUpdate(entities, features):
+            return entities[self.name]
         local_entities = {}
         for dep, DEP in izip(self.dependencies, self.DEPENDENCIES):
-            if dep not in entities:
-                entities[dep] = features[dep].generate(entities, features)
+            entities[dep] = features[dep].generate(entities, features)
             local_entities[DEP['name']] = entities[dep]
-        return self.calculate(**local_entities)
+        res = self.calculate(**local_entities)
+        return res
+    
+    def needsUpdate(self, entities, features):
+        """Check if this features needs to be updated since the last iteration
+        
+        :param dict entities: currently calculated entities
+        :param features: available features
+        :type features: dict of features
+        """
+        if self.name not in entities:
+            return True
+        for dep in self.dependencies:
+            if features[dep].needsUpdate(entities, features):
+                return True
+        return False
     
     def calculate(self, target, **kwargs):
         """Calculate this feature
