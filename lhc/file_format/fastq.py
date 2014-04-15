@@ -1,6 +1,8 @@
 import argparse
 import sys
 
+from itertools import izip_longest
+
 def main(argv):
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -21,14 +23,9 @@ def main(argv):
 
 def iterFastq(fname):
     infile = open(fname)
-    try:
-        while True:
-            yield (infile.next().strip(),
-                infile.next().strip(),
-                infile.next().strip(),
-                infile.next().strip())
-    except StopIteration:
-        pass
+    it = izip_longest([infile] * 4)
+    for entry in it:
+        yield entry
     infile.close()
 
 def rmdup(infname, outfname=None):
