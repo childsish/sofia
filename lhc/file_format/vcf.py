@@ -12,6 +12,10 @@ from lhc.interval import Interval
 
 Variant = namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'attr', 'samples'))
 
+def iterEntries(fname):
+    parser = VcfParser(fname)
+    return iter(parser)
+
 class VcfParser(EntrySet):
 
     CHR = 0
@@ -135,10 +139,6 @@ class VcfParser(EntrySet):
             res.append(dict(izip(keys, parts[i].strip().split(':'))))
         return res
 
-def iterEntries(fname):
-    parser = VcfParser(fname)
-    return iter(parser)
-
 def index(fname, iname=None):
     iname = VcfParser.getIndexName(fname) if iname is None else iname
     outfile = open(iname, 'wb')
@@ -184,6 +184,12 @@ def main():
 
 def getArgumentParser():
     parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+    
+    index_parser = subparsers.add_parser('index')
+    index_parser.add_argument('input')
+    index.set_default(func=lambda args:index(args.input))
+    
     return parser
 
 if __name__ == '__main__':

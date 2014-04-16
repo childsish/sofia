@@ -1,6 +1,8 @@
 import argparse
 import sys
 
+class FastqParser():
+
 def main(argv):
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
