@@ -13,19 +13,14 @@ FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
 
 class FastaParser(EntrySet):
     def __init__(self, fname, iname=None):
-        self.fname = fname
-        self.fhndl = open(fname)
-        self.iname = self.getIndexName(fname) if iname is None else iname
+        super(FastaParser, self).__init__(fname, iname)
         self.key_index = None
-        self.seq_index = None
-        self.data = None
     
     def __getitem__(self, key):
         if os.path.exists(self.iname):
             if self.key_index is None:
                 infile = open(self.iname)
                 self.key_index = cPickle.load(infile)
-                self.seq_index = cPickle.load(infile)
                 infile.close()
             return self._getIndexedData(key)
         elif self.data is None:
@@ -53,31 +48,29 @@ class FastaParser(EntrySet):
         yield FastaEntry(hdr, ''.join(seq))
     
     def _getIndexedData(self, key):
-        infile = open(self.fname)
         if isinstance(key, basestring):
-            fpos = self.key_index[key]
-            infile.seek(fpos)
-            infile.readline()
+            fpos = self.key_index[Position(key, 0)]
+            self.fhndl.seek(fpos)
+            self.fhndl.readline()
             seq = []
-            for line in infile:
+            for line in self.fhndl:
                 if line.startswith('>'):
                     break
                 seq.append(line.strip())
             res = ''.join(seq)
         elif hasattr(key, 'chr') and hasattr(key, 'pos'):
-            fpos = self.seq_index[key]
-            infile.seek(fpos)
-            res = infile.read(1)
-            while res in self.seq_index.newlines:
-                res = infile.read(1)
+            fpos = self.key_index[key]
+            self.fhndl.seek(fpos)
+            res = self.fhndl.read(1)
+            while res in self.key_index.newlines:
+                res = self.fhndl.read(1)
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            fpos_fr = self.seq_index[Position(key.chr, key.start)]
-            fpos_to = self.seq_index[Position(key.chr, key.stop)]
-            infile.seek(fpos_fr)
-            res = ''.join(infile.read(fpos_to - fpos_fr).split())
+            fpos_fr = self.key_index[Position(key.chr, key.start)]
+            fpos_to = self.key_index[Position(key.chr, key.stop)]
+            self.fhndl.seek(fpos_fr)
+            res = ''.join(self.fhndl.read(fpos_to - fpos_fr).split())
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
-        infile.close()
         return res
 
 def iterEntries(fname):
@@ -88,31 +81,12 @@ def index(fname, iname=None):
     iname = FastaParser.getIndexName(fname) if iname is None else iname
     outfile = open(iname, 'wb')
     cPickle.dump(_createKeyIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(_createSeqIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
     outfile.close()
 
 def _createKeyIndex(fname):
-    index = ExactKeyIndex()
-    if fname.endswith('.gz'):
-        infile = gzip.open(fname, 'rb')
-    else:
-        infile = open(fname, 'rb')
-    while True:
-        fpos = infile.tell()
-        line = infile.readline()
-        if line == '':
-            break
-        elif line.startswith('>'):
-            index[line.split()[0][1:]] = fpos
-    infile.close()
-    return index
-
-def _createSeqIndex(fname):
     index = FastaIndex(fname)
-    if fname.endswith('.gz'):
-        infile = gzip.open(fname, 'rb')
-    else:
-        infile = open(fname, 'rb')
+    infile = gzip.open(fname, 'rb') if fname.endswith('.gz') else\
+        open(fname, 'rb')
     while True:
         line = infile.readline()
         fpos = infile.tell()
@@ -120,6 +94,7 @@ def _createSeqIndex(fname):
             break
         elif line.startswith('>'):
             hdr = line.split()[0][1:]
+            print hdr
             index[hdr] = fpos
     return index
 

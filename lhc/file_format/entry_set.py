@@ -4,12 +4,20 @@ class EntrySet(object):
     
     EXT = '.idx'
     
-    def __iter__(self):
-        infile = gzip.open(self.fname) if self.fname.endswith('.gz')\
+    def __init__(self, fname, iname=None):
+        self.fname = fname
+        self.fhndl = gzip.open(self.fname, 'rb') if self.fname.endswith('.gz')\
             else open(self.fname)
-        for entry in self._iterHandle(infile):
+        self.iname = self.getIndexName(fname) if iname is None else iname
+        self.data = None
+    
+    def __del__(self):
+        if hasattr(self, 'fhndl') and not self.fhndl.closed:
+            self.fhndl.close()
+    
+    def __iter__(self):
+        for entry in self._iterHandle(self.fhndl):
             yield entry
-        infile.close()
     
     @classmethod
     def getIndexName(cls, fname):

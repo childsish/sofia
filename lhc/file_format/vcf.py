@@ -31,11 +31,9 @@ class VcfParser(EntrySet):
     FORMAT = 8
     
     def __init__(self, fname, iname=None):
-        self.fname = fname
-        self.iname = self.getIndexName(fname) if iname is None else iname
+        super(VcfParser, self).__init__(fname, iname)
         self.pos_index = None
         self.ivl_index = None
-        self.data = None
         
         infile = open(fname)
         self.hdrs = self._parseHeaders(infile)
@@ -80,20 +78,18 @@ class VcfParser(EntrySet):
         return self._iterSampledVcf(infile, hdrs[-1][self.FORMAT + 1:])
 
     def _getIndexedData(self, key):
-        infile = open(self.fname)
         res = []
         if hasattr(key, 'chr') and hasattr(key, 'pos'):
             fpos = self.pos_index[(key.chr, key.pos)][0]
-            infile.seek(fpos.value)
-            res = self._iterHandle(infile, self.hdrs).next()
+            self.fhndl.seek(fpos.value)
+            res = self._iterHandle(self.fhndl, self.hdrs).next()
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             fposs = self.ivl_index[(key.chr, key)]
             for fpos in fposs:
-                infile.seek(fpos.value)
-                res.append(self._iterHandle(infile, self.hdrs).next())
+                self.fhndl.seek(fpos.value)
+                res.append(self._iterHandle(self.fhndl, self.hdrs).next())
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
-        infile.close()
         return res
     
     @classmethod
@@ -130,7 +126,7 @@ class VcfParser(EntrySet):
     
     @classmethod
     def _parseAttributes(cls, attr_line):
-        return dict(attr.split('=') if '=' in attr else (attr, attr)\
+        return dict(attr.split('=', 1) if '=' in attr else (attr, attr)\
             for attr in attr_line.strip().split(';'))
     
     @classmethod
@@ -144,13 +140,16 @@ class VcfParser(EntrySet):
 def index(fname, iname=None):
     iname = VcfParser.getIndexName(fname) if iname is None else iname
     outfile = open(iname, 'wb')
-    cPickle.dump(_createPosIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(_createIvlIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
+    pos_index, ivl_index = _createIndices(fname)
+    cPickle.dump(pos_index, outfile, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(ivl_index, outfile, cPickle.HIGHEST_PROTOCOL)
     outfile.close()
 
-def _createPosIndex(fname):
-    index = Index((ExactKeyIndex, ExactKeyIndex))
+def _createIndices(fname):
+    pos_index = Index((ExactKeyIndex, ExactKeyIndex))
+    ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
     infile = open(fname, 'rb')
+    chr = None
     while True:
         fpos = infile.tell()
         line = infile.readline()
@@ -159,25 +158,14 @@ def _createPosIndex(fname):
         elif line.strip() == '' or line.startswith('#'):
             continue
         entry = VcfParser._parseUnsampledLine(line)
-        index[(entry.chr, entry.pos)] = fpos
-    infile.close()
-    return index
-
-def _createIvlIndex(fname):
-    index = Index((ExactKeyIndex, OverlappingIntervalIndex))
-    infile = open(fname, 'rb')
-    while True:
-        fpos = infile.tell()
-        line = infile.readline()
-        if line == '':
-            break
-        elif line.strip() == '' or line.startswith('#'):
-            continue
-        entry = VcfParser._parseUnsampledLine(line)
+        pos_index[(entry.chr, entry.pos)] = fpos
         ivl = Interval(entry.pos, entry.pos + len(entry.ref))
-        index[(entry.chr, ivl)] = fpos
+        ivl_index[(entry.chr, ivl)] = fpos
+        if entry.chr != chr:
+            print entry.chr
+            chr = entry.chr
     infile.close()
-    return index
+    return pos_index, ivl_index
 
 def merge(fnames):
     infiles = [open(fname) for fname in fnames]

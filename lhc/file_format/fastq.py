@@ -45,7 +45,7 @@ def rmdup(infname, outfname=None):
     if outfname is None:
         outfname = '%s.unq.fastq'%infname.rsplit('.', 1)[1]
     visited = defaultdict(list)
-    for hdr, seq, plus, qua in iterFastq(infname):
+    for hdr, seq, plus, qua in iterEntries(infname):
         visited[seq].append((hdr, seq, qua))
     print visited.values()[0]
     outfile = open(outfname, 'w')

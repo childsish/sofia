@@ -27,11 +27,11 @@ class GtfParser(EntrySet):
     ATTR = 8
     
     def __init__(self, fname, iname=None):
-        self.fname = fname
-        self.iname = self.getIndexName(fname) if iname is None else iname
+        super(GtfParser, self).__init__(fname, iname)
         self.key_index = None
         self.ivl_index = None
-        self.data = None
+        self.prv_fposs = None
+        self.prv_res = None
     
     def __getitem__(self, key):
         if os.path.exists(self.iname):
@@ -80,26 +80,40 @@ class GtfParser(EntrySet):
             yield self._parseLine(line)
 
     def _getIndexedData(self, key):
-        infile = open(self.fname)
-        res = []
         if isinstance(key, basestring):
-            fpos = self.key_index[key]
-            infile.seek(fpos)
-            res = self._iterHandle(infile).next()
+            fposs = [self.key_index[key]]
+            return self._getEntryAtFilePosition(fposs)[0]
         elif hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
             ivl = Interval(key.pos, key.pos + len(key.ref))
             fposs = self.ivl_index[(key.chr, ivl)]
-            for fpos in fposs:
-                infile.seek(fpos.value)
-                res.append(self._iterHandle(infile).next())
+            return self._getEntryAtFilePosition(fposs)
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             fposs = self.ivl_index[(key.chr, key)]
-            for fpos in fposs:
-                infile.seek(fpos.value)
-                res.append(self._iterHandle(infile).next())
+            return self._getEntryAtFilePosition(fposs)
+        raise NotImplementedError('Random access not implemented for %s'%type(key))
+    
+    def _getEntryAtFilePosition(self, fposs):
+        """Get the entry at the given positions
+        
+        Accessing the gene models is usually done sequentially over the
+        chromosome. Because of this, the requested file position is checked
+        to see if it accessed previously. This avoids calling the expensive
+        funcion _parseAttributes.
+        
+        :param fposs: the file positions to get the GTF entries from
+        :type fposs: list of int
+        """
+        if fposs == self.prv_fposs:
+            return self.prv_res
         else:
-            raise NotImplementedError('Random access not implemented for %s'%type(key))
-        infile.close()
+            self.prv_fposs = fposs
+        
+        res = []
+        for fpos in fposs:
+            self.fhndl.seek(fpos.value)
+            res.append(self._iterHandle(self.fhndl).next())
+        
+        self.prv_res = res
         return res
     
     @classmethod
@@ -112,14 +126,10 @@ class GtfParser(EntrySet):
     
     @classmethod
     def _parseAttributes(cls, attr):
-        parts = [part.strip().split(' ', 1)
-            for part in attr.split(';')
-            if part.strip() != '']
-        for i in xrange(len(parts)):
-            if parts[i][1].startswith('"'):
-                parts[i][1] = parts[i][1][1:-1]
-            else:
-                parts[i][1] = int(parts[i][1])
+        parts = (part.strip() for part in attr.split(';'))
+        parts = [part.split(' ', 1) for part in parts if part != '']
+        for part in parts:
+            part[1] = part[1][1:-1] if part[1].startswith('"') else int(part[1])
         return dict(parts)
 
 def iterEntries(fname):
@@ -128,14 +138,17 @@ def iterEntries(fname):
 
 def index(fname, iname=None):
     iname = GtfParser.getIndexName(fname) if iname is None else iname
+    key_index, ivl_index = _createIndices(fname)
     outfile = open(iname, 'wb')
-    cPickle.dump(_createKeyIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(_createIvlIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(key_index, outfile, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(ivl_index, outfile, cPickle.HIGHEST_PROTOCOL)
     outfile.close()
 
-def _createKeyIndex(fname):
-    index = ExactKeyIndex()
+def _createIndices(fname):
+    key_index = ExactKeyIndex()
+    ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
     infile = open(fname, 'rb')
+    chr = None
     while True:
         fpos = infile.tell()
         line = infile.readline()
@@ -145,26 +158,14 @@ def _createKeyIndex(fname):
             continue
         entry = GtfParser._parseLine(line)
         if entry.type == 'gene':
-            index[entry.attr['gene_name']] = fpos
-    infile.close()
-    return index
-
-def _createIvlIndex(fname):
-    index = Index((ExactKeyIndex, OverlappingIntervalIndex))
-    infile = open(fname, 'rb')
-    while True:
-        fpos = infile.tell()
-        line = infile.readline()
-        if line == '':
-            break
-        elif line.startswith('#') or line.strip() == '':
-            continue
-        entry = GtfParser._parseLine(line)
-        if entry.type == 'gene':
+            key_index[entry.attr['gene_name']] = fpos
             ivl = Interval(entry.start, entry.stop)
-            index[(entry.chr, ivl)] = fpos
+            ivl_index[(entry.chr, ivl)] = fpos
+            if entry.chr != chr:
+                print entry.chr
+                chr = entry.chr
     infile.close()
-    return index
+    return key_index, ivl_index
 
 def main():
     parser = getArgumentParser()

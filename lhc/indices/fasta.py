@@ -1,3 +1,5 @@
+import gzip
+
 from index import Accessor
 
 class FastaIndex(Accessor):
@@ -6,12 +8,13 @@ class FastaIndex(Accessor):
     
     def __init__(self, fname):
         self.chrs = {}
-        infile = open(fname, 'rU')
+        infile = gzip.open(fname, 'rb') if fname.endswith('.gz') else\
+            open(fname, 'rU')
         for line in infile:
             if line[0] not in '#>':
                 self.wrap = len(line.strip())
+                self.newlines = line[self.wrap:]
                 break
-        self.newlines = infile.newlines
         infile.close()
     
     def __contains__(self, key):
