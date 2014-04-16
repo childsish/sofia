@@ -1,7 +1,21 @@
 import argparse
 import sys
 
-class FastqParser():
+from collections import namedtuple
+from itertools import izip_longest
+from lhc.file_format.entry_set import EntrySet
+
+FastqEntry = namedtuple('FastqEntry', ('seq_hdr', 'seq', 'qual_hdr', 'qual'))
+
+def iterEntries(fname):
+    parser = FastqParser(fname)
+    return iter(parser)
+
+class FastqParser(EntrySet):
+    def _iterHandle(self, infile):
+        it = izip_longest([infile] * 4)
+        for entry in it:
+            yield(FastqEntry(*entry))
 
 def main(argv):
     parser = argparse.ArgumentParser()
@@ -20,18 +34,6 @@ def main(argv):
     
     args = parser.parse_args(argv[1:])
     args.func(args)
-
-def iterFastq(fname):
-    infile = open(fname)
-    try:
-        while True:
-            yield (infile.next().strip(),
-                infile.next().strip(),
-                infile.next().strip(),
-                infile.next().strip())
-    except StopIteration:
-        pass
-    infile.close()
 
 def rmdup(infname, outfname=None):
     def meanQuality(v):
