@@ -4,11 +4,13 @@ import os
 
 from collections import namedtuple
 from itertools import izip
+from lhc.collection.sorted_dict import SortedDict
 from lhc.file_format.entry_set import EntrySet
 from lhc.indices.index import Index
 from lhc.indices.exact_key import ExactKeyIndex
 from lhc.indices.overlapping_interval import OverlappingIntervalIndex
 from lhc.interval import Interval
+from numpy.core.fromnumeric import sort
 
 Variant = namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'attr', 'samples'))
 
@@ -177,6 +179,33 @@ def _createIvlIndex(fname):
     infile.close()
     return index
 
+def merge(fnames):
+    infiles = [open(fname) for fname in fnames]
+    tops = [infile.next().strip().split('\t') for infile in infiles]
+    sorted_tops = _initSorting(tops)
+    
+    print '#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tATTR\tFORMAT\t' + '\t'.join(fnames)
+    while len(sorted_tops) > 0:
+        idxs = sorted_tops.popLowest()
+        entry = tops[idxs[0]]
+        print '\t'.join(entry) + '\t' + '\t'.join()
+        print [tops[idx] for idx in idxs]
+        for idx in idxs:
+            tops[idx] = infiles[idx].next().strip().split('\t')
+            _updateSorting(sorted_tops, tops[idx], idx)
+
+def _initSorting(tops):
+    sorted_tops = SortedDict()
+    for idx, entry in enumerate(tops):
+        _updateSorting(sorted_tops, entry, idx)
+    return sorted_tops
+
+def _updateSorting(sorted_tops, entry, idx):
+    key = (entry[0], entry[1])
+    if key not in sorted_tops:
+        sorted_tops[key] = []
+    sorted_tops[key].append(idx)
+
 def main():
     parser = getArgumentParser()
     args = parser.parse_args()
@@ -188,7 +217,11 @@ def getArgumentParser():
     
     index_parser = subparsers.add_parser('index')
     index_parser.add_argument('input')
-    index.set_default(func=lambda args:index(args.input))
+    index_parser.set_default(func=lambda args:index(args.input))
+    
+    merge_parser = subparsers.add_parser('merge')
+    merge_parser.add_argument('inputs', narg='+')
+    merge_parser.set_default(func=lambda args:)
     
     return parser
 
