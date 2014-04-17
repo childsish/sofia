@@ -209,7 +209,7 @@ def getArgumentParser():
     
     merge_parser = subparsers.add_parser('merge')
     merge_parser.add_argument('inputs', narg='+')
-    merge_parser.set_default(func=lambda args:)
+    merge_parser.set_default(func=lambda args: merge(args.input))
     
     return parser
 
