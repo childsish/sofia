@@ -1,6 +1,9 @@
 import numpy
 import math
 
+from collections import Counter
+from itertools import izip
+
 TP = (1, 1)
 TN = (0, 0)
 FP = (0, 1)
@@ -85,30 +88,12 @@ def mse(exp, obs):
 def mui(X, Y):
     """MUtial Information"""
     assert len(X) == len(Y)
-    
-    # Calculate the joint and marginal probabilities
     l = len(X)
-    pX = {}
-    pY = {}
-    pXY = {}
-    for i in xrange(l):
-        pX.setdefault(X[i], 0)
-        pX[X[i]] += 1
-        pY.setdefault(Y[i], 0)
-        pY[Y[i]] += 1
-        pXY.setdefault((X[i], Y[i]), 0)
-        pXY[(X[i], Y[i])] += 1
-    for x in pX:
-        pX[x] = pX[x] / float(l)
-    for y in pY:
-        pY[y] = pY[y] / float(l)
-    for xy in pXY:
-        pXY[xy] = pXY[xy] / float(l)
-    
-    ttl = 0
-    for x, y in pXY:
-        ttl += pXY[(x, y)] * math.log(pXY[(x, y)] / (pX[x] * pY[y]), 2)
-    return ttl
+    pX = Counter(X)
+    pY = Counter(Y)
+    pXY = Counter(izip(X, Y))
+    return sum(pXY[(x, y)] * math.log((pXY[(x, y)] * l) / float(pX[x] * pY[y]), 2) / l\
+        for x, y in pXY)
 
 def roc(clss, vals, reverse=False):
     """

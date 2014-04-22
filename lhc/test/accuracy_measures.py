@@ -32,6 +32,27 @@ class TestAccuracyMeasures(unittest.TestCase):
         self.assertAlmostEqual(-1, mcc(0, 0, 10, 10))
         self.assertAlmostEqual(-1, mcc(0, 0, 10, 100))
         self.assertAlmostEqual(-1, mcc(0, 0, 100, 10))
+    
+    def test_mse(self):
+        self.assertAlmostEqual(0, mse([10, 20, 30, 40, 50], [10, 20, 30, 40, 50]))
+        self.assertAlmostEqual(4, mse([10, 20, 30, 40, 50], [12, 18, 32, 38, 52]))
+    
+    def test_mui(self):
+        self.assertAlmostEqual(0, mui([0, 0, 1, 1], [0, 0, 0, 0]))
+        self.assertAlmostEqual(0.3112781, mui([0, 0, 1, 1], [0, 0, 0, 1]))
+        self.assertAlmostEqual(0.3112781, mui([0, 0, 1, 1], [0, 0, 1, 0]))
+        self.assertAlmostEqual(1, mui([0, 0, 1, 1], [0, 0, 1, 1]))
+        self.assertAlmostEqual(0.3112781, mui([0, 0, 1, 1], [0, 1, 0, 0]))
+        self.assertAlmostEqual(0, mui([0, 0, 1, 1], [0, 1, 0, 1]))
+        self.assertAlmostEqual(0, mui([0, 0, 1, 1], [0, 1, 1, 0]))
+        self.assertAlmostEqual(0.3112781, mui([0, 0, 1, 1], [0, 1, 1, 1]))
+        self.assertAlmostEqual(0.3112781, mui([0, 0, 1, 1], [1, 0, 0, 0]))
+        self.assertAlmostEqual(0, mui([0, 0, 1, 1], [1, 0, 0, 1]))
+        self.assertAlmostEqual(0, mui([0, 0, 1, 1], [1, 0, 1, 0]))
+        self.assertAlmostEqual(1, mui([0, 0, 1, 1], [1, 1, 0, 0]))
+        self.assertAlmostEqual(0.3112781, mui([0, 0, 1, 1], [1, 1, 0, 1]))
+        self.assertAlmostEqual(0.3112781, mui([0, 0, 1, 1], [1, 1, 1, 0]))
+        self.assertAlmostEqual(0, mui([0, 0, 1, 1], [1, 1, 1, 1]))
 
 if __name__ == '__main__':
     import sys
