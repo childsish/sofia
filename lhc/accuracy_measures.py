@@ -101,6 +101,7 @@ def roc(clss, vals, reverse=False):
     :type class: list of boolean
     :param vals: classification probabilites etc...
     :type vals: list of real numbers
+    :param bool reverse: whether the values should be sorted in reverse order
     """
     assert len(clss) == len(vals)
     global X, Y, A, T, M, B

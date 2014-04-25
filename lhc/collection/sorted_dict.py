@@ -2,9 +2,19 @@ from bisect import bisect_left
 from itertools import izip
 
 class SortedDict(object):
-    def __init__(self):
+    def __init__(self, enumerable=[]):
+        """Create a sorted dictionary
+        
+        :param enumerable: the initial key:value pairs to put in the dictionary
+        :type enumerable: list of tuple
+        """
         self.keys = []
         self.values = []
+        for item in enumerable:
+            self[item[0]] = item[1]
+    
+    def __str__(self):
+        return '{%s}'%', '.join(['%s:%s'%entry for entry in self.iteritems()])
     
     def __iter__(self):
         return self.iterkeys()
@@ -14,21 +24,21 @@ class SortedDict(object):
     
     def __contains__(self, key):
         idx = bisect_left(self.keys, key)
-        return self.keys[idx] == key
+        return idx < len(self.keys) and self.keys[idx] == key
     
     def __getitem__(self, key):
         idx = bisect_left(self.keys, key)
         if self.keys[idx] != key:
             raise KeyError(key)
-        return self.keys[idx]
+        return self.values[idx]
 
     def __setitem__(self, key, value):
         idx = bisect_left(self.keys, key)
-        if self.keys[idx] == key:
-            self.values[idx] = value
-        else:
+        if idx >= len(self.keys) or self.keys[idx] != key:
             self.keys.insert(idx, key)
             self.values.insert(idx, value)
+        else:
+            self.values[idx] = value
     
     def iterkeys(self):
         return iter(self.keys)

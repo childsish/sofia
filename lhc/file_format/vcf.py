@@ -1,5 +1,6 @@
 import argparse
 import cPickle
+import gzip
 import os
 
 from collections import namedtuple
@@ -168,19 +169,25 @@ def _createIndices(fname):
     return pos_index, ivl_index
 
 def merge(fnames):
-    infiles = [open(fname) for fname in fnames]
+    infiles = [gzip.open(fname) if fname.endswith('gz') else open(fname) for fname in fnames]
     tops = [infile.next().strip().split('\t') for infile in infiles]
+    while '#' in [top[0][0] for top in tops]:
+        for i in xrange(len(tops)):
+            if tops[i][0][0] == '#':
+                tops[i] = infiles[i].next().strip().split('\t')
     sorted_tops = _initSorting(tops)
     
     print '#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tATTR\tFORMAT\t' + '\t'.join(fnames)
     while len(sorted_tops) > 0:
-        idxs = sorted_tops.popLowest()
+        key, idxs = sorted_tops.popLowest()
         entry = tops[idxs[0]]
-        print '\t'.join(entry) + '\t' + '\t'.join()
-        print [tops[idx] for idx in idxs]
+        print '\t'.join(entry[:9]) + '\t' + '\t'.join('\t'.join(tops[idx][9:]) for idx in idxs)
         for idx in idxs:
-            tops[idx] = infiles[idx].next().strip().split('\t')
-            _updateSorting(sorted_tops, tops[idx], idx)
+            try:
+                tops[idx] = infiles[idx].next().strip().split('\t')
+                _updateSorting(sorted_tops, tops[idx], idx)
+            except StopIteration:
+                pass
 
 def _initSorting(tops):
     sorted_tops = SortedDict()
@@ -205,11 +212,11 @@ def getArgumentParser():
     
     index_parser = subparsers.add_parser('index')
     index_parser.add_argument('input')
-    index_parser.set_default(func=lambda args:index(args.input))
+    index_parser.set_defaults(func=lambda args:index(args.input))
     
     merge_parser = subparsers.add_parser('merge')
-    merge_parser.add_argument('inputs', narg='+')
-    merge_parser.set_default(func=lambda args: merge(args.input))
+    merge_parser.add_argument('inputs', nargs='+')
+    merge_parser.set_defaults(func=lambda args: merge(args.inputs))
     
     return parser
 
