@@ -14,13 +14,13 @@ FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
 class FastaParser(EntrySet):
     def __init__(self, fname, iname=None):
         super(FastaParser, self).__init__(fname, iname)
-        self.key_index = None
+        self.index = None
     
     def __getitem__(self, key):
         if os.path.exists(self.iname):
-            if self.key_index is None:
+            if self.index is None:
                 infile = open(self.iname)
-                self.key_index = cPickle.load(infile)
+                self.index = cPickle.load(infile)
                 infile.close()
             return self._getIndexedData(key)
         elif self.data is None:
@@ -49,24 +49,38 @@ class FastaParser(EntrySet):
     
     def _getIndexedData(self, key):
         if isinstance(key, basestring):
-            fpos = self.key_index[Position(key, 0)]
-            self.fhndl.seek(fpos)
-            self.fhndl.readline()
-            seq = []
-            for line in self.fhndl:
-                if line.startswith('>'):
-                    break
-                seq.append(line.strip())
-            res = ''.join(seq)
+            res = FastaEntry(key, self.fhndl, self.index)
         elif hasattr(key, 'chr') and hasattr(key, 'pos'):
-            fpos = self.key_index[key]
+            fpos = self.index[key]
             self.fhndl.seek(fpos)
             res = self.fhndl.read(1)
-            while res in self.key_index.newlines:
+            while res in self.index.newlines:
                 res = self.fhndl.read(1)
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            fpos_fr = self.key_index[Position(key.chr, key.start)]
-            fpos_to = self.key_index[Position(key.chr, key.stop)]
+            fpos_fr = self.index[Position(key.chr, key.start)]
+            fpos_to = self.index[Position(key.chr, key.stop)]
+            self.fhndl.seek(fpos_fr)
+            res = ''.join(self.fhndl.read(fpos_to - fpos_fr).split())
+        else:
+            raise NotImplementedError('Random access not implemented for %s'%type(key))
+        return res
+
+class FastaEntry(object):
+    def __init__(self, chr, fhndl, index):
+        self.chr = chr
+        self.fhndl = fhndl
+        self.index = index
+    
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            fpos = self.index[key]
+            self.fhndl.seek(fpos)
+            res = self.fhndl.read(1)
+            while res in self.index.newlines:
+                res = self.fhndl.read(1)
+        elif hasattr(key, 'start') and hasattr(key, 'stop'):
+            fpos_fr = self.index[Position(self.chr, key.start)]
+            fpos_to = self.index[Position(self.chr, key.stop)]
             self.fhndl.seek(fpos_fr)
             res = ''.join(self.fhndl.read(fpos_to - fpos_fr).split())
         else:

@@ -96,6 +96,10 @@ class Interval(BaseInterval):
             if self.chr == other.chr and self.strand == other.strand else None
         return Interval(self.chr, ivl.start, ivl.stop, self.strand)
     
+    def getRelPos(self, pos):
+        return pos - self.start if self.strand == '+'\
+            else self.stop - pos - 1
+    
     def getSubSeq(self, seq):
         res = super(Interval, self).getSubSeq(seq[self.chr])
         if self.strand == '-':

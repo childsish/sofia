@@ -32,7 +32,7 @@ class Transcript(object):
         rel_pos = 0
         for exon in self.exons:
             if exon.ivl.start <= pos and exon.ivl.stop > pos:
-                return pos - exon.ivl.start + rel_pos
+                return rel_pos + exon.getRelPos(pos)
             rel_pos += exon.ivl.stop - exon.ivl.start
         raise IndexError('Position %s not in %s'%(pos, self.name))
     
@@ -50,3 +50,5 @@ class Exon(object):
     def getSubSeq(self, seq):
         return self.ivl.getSubSeq(seq)
 
+    def getRelPos(self, pos):
+        return self.ivl.getRelPos(pos)
