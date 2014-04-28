@@ -2,7 +2,7 @@ from bisect import bisect_left
 from itertools import izip
 
 class SortedDict(object):
-    def __init__(self, enumerable=[]):
+    def __init__(self, iterable=[]):
         """Create a sorted dictionary
         
         :param enumerable: the initial key:value pairs to put in the dictionary
@@ -10,7 +10,7 @@ class SortedDict(object):
         """
         self.keys = []
         self.values = []
-        for item in enumerable:
+        for item in iterable:
             self[item[0]] = item[1]
     
     def __str__(self):
