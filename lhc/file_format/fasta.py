@@ -70,6 +70,11 @@ class IndexedFastaEntry(object):
         self.chr = chr
         self.fname = fname
         self.index = index
+        self.fhndl = open(fname)
+    
+    def __del__(self):
+        if hasattr(self, 'fhndl') and not self.fhndl.closed:
+            self.fhndl.close()
     
     def __getitem__(self, key):
         if isinstance(key, int):
@@ -88,14 +93,12 @@ class IndexedFastaEntry(object):
         return res
     
     def __iter__(self):
-        infile = open(self.fname)
-        infile.seek(self.index)
-        for line in infile:
+        self.fhndl.seek(self.index)
+        for line in self.fhndl:
             if line[0] == '>':
                 break
             for char in line.strip():
                 yield char
-        infile.close()
 
 def iterEntries(fname):
     parser = FastaParser(fname)

@@ -148,22 +148,17 @@ def _createIndices(fname):
     key_index = ExactKeyIndex()
     ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
     infile = open(fname, 'rb')
-    chr = None
-    while True:
-        fpos = infile.tell()
-        line = infile.readline()
-        if line == '':
-            break
-        elif line.startswith('#') or line.strip() == '':
+    fpos = 0
+    for line in infile:
+        if line.startswith('#') or line.strip() == '':
+            fpos += len(line)
             continue
         entry = GtfParser._parseLine(line)
         if entry.type == 'gene':
             key_index[entry.attr['gene_name']] = fpos
             ivl = Interval(entry.start, entry.stop)
             ivl_index[(entry.chr, ivl)] = fpos
-            if entry.chr != chr:
-                print entry.chr
-                chr = entry.chr
+        fpos += len(line)
     infile.close()
     return key_index, ivl_index
 

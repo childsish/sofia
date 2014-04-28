@@ -1,13 +1,10 @@
-import gzip
-
 class EntrySet(object):
     
     EXT = '.idx'
     
     def __init__(self, fname, iname=None):
         self.fname = fname
-        self.fhndl = gzip.open(self.fname, 'rb') if self.fname.endswith('.gz')\
-            else open(self.fname)
+        self.fhndl = open(self.fname)
         self.iname = self.getIndexName(fname) if iname is None else iname
         self.data = None
     
@@ -16,6 +13,7 @@ class EntrySet(object):
             self.fhndl.close()
     
     def __iter__(self):
+        self.fhndl.seek(0)
         for entry in self._iterHandle(self.fhndl):
             yield entry
     
