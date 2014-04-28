@@ -1,9 +1,9 @@
 import cPickle
-import gzip
 import os
 
 from argparse import ArgumentParser
 from collections import namedtuple
+from itertools import izip
 from lhc.binf.genomic_coordinate import Position
 from lhc.file_format.entry_set import EntrySet
 from lhc.indices.exact_key import ExactKeyIndex
@@ -49,7 +49,7 @@ class FastaParser(EntrySet):
     
     def _getIndexedData(self, key):
         if isinstance(key, basestring):
-            res = FastaEntry(key, self.fhndl, self.index)
+            res = IndexedFastaEntry(key, self.fname, self.index)
         elif hasattr(key, 'chr') and hasattr(key, 'pos'):
             fpos = self.index[key]
             self.fhndl.seek(fpos)
@@ -65,10 +65,10 @@ class FastaParser(EntrySet):
             raise NotImplementedError('Random access not implemented for %s'%type(key))
         return res
 
-class FastaEntry(object):
-    def __init__(self, chr, fhndl, index):
+class IndexedFastaEntry(object):
+    def __init__(self, chr, fname, index):
         self.chr = chr
-        self.fhndl = fhndl
+        self.fname = fname
         self.index = index
     
     def __getitem__(self, key):
@@ -86,6 +86,16 @@ class FastaEntry(object):
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
         return res
+    
+    def __iter__(self):
+        infile = open(self.fname)
+        infile.seek(self.index)
+        for line in infile:
+            if line[0] == '>':
+                break
+            for char in line.strip():
+                yield char
+        infile.close()
 
 def iterEntries(fname):
     parser = FastaParser(fname)
@@ -99,18 +109,39 @@ def index(fname, iname=None):
 
 def _createKeyIndex(fname):
     index = FastaIndex(fname)
-    infile = gzip.open(fname, 'rb') if fname.endswith('.gz') else\
-        open(fname, 'rb')
-    while True:
-        line = infile.readline()
-        fpos = infile.tell()
-        if line == '':
-            break
-        elif line.startswith('>'):
-            hdr = line.split()[0][1:]
-            print hdr
+    infile = open(fname, 'rb')
+    fpos = 0
+    for line in infile:
+        if line.startswith('>'):
+            hdr = line.strip().split()[0][1:]
             index[hdr] = fpos
+        fpos += len(line)
     return index
+
+def compare(a_fname, b_fname):
+    a_index = _createKeyIndex(a_fname)
+    b_index = _createKeyIndex(b_fname)
+    a_chrs = set(a_index.chrs)
+    b_chrs = set(b_index.chrs)
+    
+    a_only = sorted(a_chrs - b_chrs)
+    print '%d headers unique to first fasta:'%len(a_only)
+    print '\n'.join(a_only)
+    b_only = sorted(b_chrs - a_chrs)
+    print '%d headers unique to second fasta:'%len(b_only)
+    print '\n'.join(b_only)
+    both = sorted(a_chrs & b_chrs)
+    print '%d headers common to both fastas:'%len(both)
+    print '\n'.join(both)
+    
+    print 'The common headers differ at the following positions:'
+    a_parser = FastaParser(a_fname)
+    b_parser = FastaParser(b_fname)
+    for hdr in both:
+        for i, (a, b) in enumerate(izip(a_parser[hdr], b_parser[hdr])):
+            if a.lower() != b.lower():
+                print '%s starts to differ at position %d: %s %s'%(hdr, i, a, b)
+                break
 
 def main():
     parser = getArgumentParser()
@@ -119,6 +150,13 @@ def main():
 
 def getArgumentParser():
     parser = ArgumentParser()
+    subparsers = parser.add_subparsers()
+    
+    compare_parser = subparsers.add_parser('compare')
+    compare_parser.add_argument('input_a')
+    compare_parser.add_argument('input_b')
+    compare_parser.set_defaults(func=lambda args: compare(args.input_a, args.input_b))
+    
     return parser
 
 if __name__ == '__main__':

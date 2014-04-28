@@ -186,7 +186,7 @@ def _iterMerge(fnames):
     while len(sorted_tops) > 0:
         key, idxs = sorted_tops.popLowest()
         entry = tops[idxs[0]]
-        yield entry[:9] + reduce(add, tops[idx][9:] for idx in idxs)
+        yield entry[:9] + reduce(add, (tops[idx][9:] for idx in idxs))
         for idx in idxs:
             try:
                 tops[idx] = infiles[idx].next().strip().split('\t')
