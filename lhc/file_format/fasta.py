@@ -15,24 +15,41 @@ class FastaParser(EntrySet):
     def __init__(self, fname, iname=None):
         super(FastaParser, self).__init__(fname, iname)
         self.index = None
+        self.prv_key = None
+        self.prv_value = None
     
     def __getitem__(self, key):
+        """Get the sequence at a genomic point or interval
+        
+        A quick check is made to see if the key used in the previous access
+        
+        :param key: the sequence to get
+        :type key: sequence name, genomic point or genomic interval
+        """
+        if self.prv_key == key:
+            return self.prv_value
+        else:
+            self.prv_key = key
+        
         if os.path.exists(self.iname):
             if self.index is None:
                 infile = open(self.iname)
                 self.index = cPickle.load(infile)
                 infile.close()
-            return self._getIndexedData(key)
+            self.prv_value = self._getIndexedData(key)
+            return self.prv_value
         elif self.data is None:
             self.data = dict(iter(self))
         
         if isinstance(key, basestring):
-            return self.data[key]
+            self.prv_value = self.data[key]
         elif hasattr(key, 'chr') and hasattr(key, 'pos'):
-            return self.data[key.chr][key.pos]
+            self.prv_value =  self.data[key.chr][key.pos]
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            return self.data[key.chr][key.start:key.stop]
-        raise NotImplementedError('Random access not implemented for %s'%type(key))
+            self.prv_value =  self.data[key.chr][key.start:key.stop]
+        else:
+            raise NotImplementedError('Random access not implemented for %s'%type(key))
+        return self.prv_value
     
     def _iterHandle(self, infile):
         hdr = None
