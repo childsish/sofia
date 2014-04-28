@@ -12,6 +12,7 @@ from lhc.indices.exact_key import ExactKeyIndex
 from lhc.indices.overlapping_interval import OverlappingIntervalIndex
 from lhc.interval import Interval
 from numpy.core.fromnumeric import sort
+from operator import add
 
 Variant = namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'attr', 'samples'))
 
@@ -169,6 +170,11 @@ def _createIndices(fname):
     return pos_index, ivl_index
 
 def merge(fnames):
+    print '#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tATTR\tFORMAT\t' + '\t'.join(fnames)
+    for entry in _iterMerge(fnames):
+        print '\t'.join(fnames)
+
+def _iterMerge(fnames):
     infiles = [gzip.open(fname) if fname.endswith('gz') else open(fname) for fname in fnames]
     tops = [infile.next().strip().split('\t') for infile in infiles]
     while '#' in [top[0][0] for top in tops]:
@@ -177,11 +183,10 @@ def merge(fnames):
                 tops[i] = infiles[i].next().strip().split('\t')
     sorted_tops = _initSorting(tops)
     
-    print '#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tATTR\tFORMAT\t' + '\t'.join(fnames)
     while len(sorted_tops) > 0:
         key, idxs = sorted_tops.popLowest()
         entry = tops[idxs[0]]
-        print '\t'.join(entry[:9]) + '\t' + '\t'.join('\t'.join(tops[idx][9:]) for idx in idxs)
+        yield entry[:9] + reduce(add, tops[idx][9:] for idx in idxs)
         for idx in idxs:
             try:
                 tops[idx] = infiles[idx].next().strip().split('\t')
