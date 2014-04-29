@@ -7,6 +7,10 @@ class Index(object):
     def __init__(self, accessors):
         self.accessors = accessors
         self.index = self.accessors[0]()
+        self.return_ = 'multiple' if 'multiple' in\
+            (accessor.RETURN for accessor in accessors) else 'single'
+        self.type = 'inexact' if 'inexact' in\
+            (accessor.TYPE for accessor in accessors) else 'exact'
     
     def __getitem__(self, key):
         if not isinstance(key, tuple) and len(self.accessors) == 1:
@@ -25,6 +29,11 @@ class Index(object):
                     msg = 'Can not handle indices with %s returns'%index.RETURN
                     raise NotImplementedError(msg)
             indices = next_level
+        if self.type == 'exact':
+            indices = [index.value for index in indices]
+        if self.return_ == 'single':
+            assert len(indices) == 1
+            return indices[0]
         return indices
     
     def __setitem__(self, key, value):

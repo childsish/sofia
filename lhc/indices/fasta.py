@@ -5,6 +5,7 @@ from index import Accessor
 class FastaIndex(Accessor):
     
     RETURN = 'single'
+    TYPE = 'exact'
     
     def __init__(self, fname):
         self.chrs = {}

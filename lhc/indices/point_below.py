@@ -4,6 +4,7 @@ from index import Accessor
 class PointBelowIndex(Accessor):
     
     RETURN = 'single'
+    TYPE = 'inexact'
     
     def __init__(self):
         self.keys = []

@@ -3,6 +3,7 @@ from index import Accessor
 class ExactKeyIndex(Accessor):
     
     RETURN = 'single'
+    TYPE = 'exact'
     
     def __init__(self):
         self.index = {}

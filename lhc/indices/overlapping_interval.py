@@ -5,6 +5,7 @@ from lhc.interval import Interval
 class OverlappingIntervalIndex(Accessor):
     
     RETURN = 'multiple'
+    TYPE = 'inexact'
     
     MINBIN = 2
     MAXBIN = 7
