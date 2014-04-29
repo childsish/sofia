@@ -1,4 +1,4 @@
-from bisect import insort_left, bisect_left
+from bisect import bisect_left
 
 class SortedSet(object):
     def __init__(self, iterable=[]):
