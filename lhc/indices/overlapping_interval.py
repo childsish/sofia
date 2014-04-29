@@ -4,6 +4,8 @@ from lhc.interval import Interval
 
 class OverlappingIntervalIndex(Accessor):
     
+    __slots__ = ('bins', 'items')
+    
     RETURN = 'multiple'
     TYPE = 'inexact'
     
@@ -64,3 +66,13 @@ class OverlappingIntervalIndex(Accessor):
         bigBin = int((self.MAXBIN + 1) * 10 ** (self.MAXBIN + 1))
         res.append((bigBin, bigBin))
         return res
+
+
+    def __getstate__(self):
+        return dict((attr, getattr(self, attr)) for attr in self.__slots__)
+
+    def __setstate_(self, state):
+        for attr in self.__slots__:
+            setattr(self, state[attr])
+
+

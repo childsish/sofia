@@ -4,6 +4,8 @@ from index import Accessor
 
 class FastaIndex(Accessor):
     
+    __slots__ = ('chrs',)
+    
     RETURN = 'single'
     TYPE = 'exact'
     
@@ -26,3 +28,12 @@ class FastaIndex(Accessor):
     
     def __setitem__(self, key, value):
         self.chrs[key] = value
+
+
+    def __getstate__(self):
+        return dict((attr, getattr(self, attr)) for attr in self.__slots__)
+
+    def __setstate_(self, state):
+        for attr in self.__slots__:
+            setattr(self, state[attr])
+

@@ -3,14 +3,16 @@ from collections import namedtuple
 KeyValuePair = namedtuple('KeyValuePair', ('key', 'value'))
 
 class Index(object):
+
+    __slots__ = ('accessors', 'index', 'type', 'return_')
     
     def __init__(self, accessors):
         self.accessors = accessors
         self.index = self.accessors[0]()
-        self.return_ = 'multiple' if 'multiple' in\
-            (accessor.RETURN for accessor in accessors) else 'single'
         self.type = 'inexact' if 'inexact' in\
             (accessor.TYPE for accessor in accessors) else 'exact'
+        self.return_ = 'multiple' if 'multiple' in\
+            (accessor.RETURN for accessor in accessors) else 'single'
     
     def __getitem__(self, key):
         if not isinstance(key, tuple) and len(self.accessors) == 1:
@@ -52,12 +54,13 @@ class Index(object):
                 next_level.append(index[key[i]])
             indices = next_level
     
+
     def __getstate__(self):
-        return {'accessors': self.accessors,
-            'index': self.index}
+        return dict((attr, getattr(self, attr)) for attr in self.__slots__)
     
     def __setstate_(self, state):
-        self.__dict__.update(state)
+        for attr in self.__slots__:
+            setattr(self, state[attr])
 
 
 class Accessor(object):
