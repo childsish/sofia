@@ -22,3 +22,9 @@ class Sequence(Feature):
             for k, v in m.transcripts.iteritems():
                 res[k] = v.getSubSeq(seq, valid_types=set(['CDS']))
         return res
+    
+    def format(self, entity):
+        if len(entity) == 0:
+            return ''
+        return str(entity)
+
