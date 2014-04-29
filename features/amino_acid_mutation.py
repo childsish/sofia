@@ -1,3 +1,4 @@
+from collections import defaultdict
 from modules.feature import Feature
 from resource import DynamicResource, StaticResource
 from lhc.binf.genetic_code import GeneticCodes
@@ -21,32 +22,41 @@ class AAMut(Feature):
         }
     ]
     
+    REVCMP = {'a': 't', 'c': 'g', 'g': 'c', 't': 'a',
+              'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
+    
     def __init__(self, resource_map, resources=None):
         super(AAMut, self).__init__(resource_map, resources)
         self.gc = GeneticCodes()[1]
     
     def calculate(self, locus, mdl, seq):
-        transcripts = {}
+        if len(locus.alt) > 1 or len(locus.ref) > 1:
+            return  {}
+        muts = {}
         for m in mdl:
+            mdl_muts = defaultdict(set)
             for k, v in m.transcripts.iteritems():
+                subseq = v.getSubSeq(seq)
+                if subseq == '':
+                    continue
                 try:
-                    subseq = seq[v.ivl]
-                    if subseq == '':
-                        continue
-                    transcripts[k] = (v.getRelPos(locus.pos), subseq)
+                    relpos = v.getRelPos(locus.pos)
                 except IndexError:
-                    pass
-        res = {}
-        for name, (relpos, subseq) in transcripts.iteritems():
-            if len(locus.alt) > 1 or len(locus.ref) > 1:
-                continue
-            cdnpos = relpos - relpos % 3
-            cdn = list(subseq[cdnpos:cdnpos + 3])
-            fr = self.gc[''.join(cdn).lower()]
-            cdn[relpos % 3] = locus.alt
-            to = self.gc[''.join(cdn).lower()]
-            res[name] = '%s%s%s'%(fr, cdnpos, to)
-        return res
+                    continue
+                cdnpos = relpos - relpos % 3
+                cdn = list(subseq[cdnpos:cdnpos + 3])
+                fr = self.gc[''.join(cdn).lower()]
+                cdn[relpos % 3] = locus.alt if v.ivl.strand == '+' else self.REVCMP[locus.alt]
+                to = self.gc[''.join(cdn).lower()]
+                mut = '%s%s%s'%(fr, cdnpos / 3 + 1, to)
+                mdl_muts[mut].add(k)
+            if len(mdl_muts) == 1:
+                muts[m.name] = mdl_muts.keys()[0]
+            else:
+                for k, vs in mdl_muts.iteritems():
+                    for v in vs:
+                        muts[v] = k
+        return muts
 
     def format(self, entity):
         if len(entity) == 1:
