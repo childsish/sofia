@@ -1,3 +1,6 @@
+import cPickle
+import os
+import tempfile
 import unittest
 
 from lhc.interval import Interval
@@ -42,6 +45,23 @@ class TestOverlappingIntervalIndex(unittest.TestCase):
         self.assertEquals(index[Interval(65, 70)], ['interval 3b'])
         self.assertEquals(index[Interval(55, 70)], ['interval 3a', 'interval 3b'])
         self.assertEquals(index[Interval(57, 68)], ['interval 3a', 'interval 3b'])
+
+    def test_pickle(self):
+        index = OverlappingIntervalIndex()
+        index[Interval(10, 20)] = 'interval 1'
+        index[Interval(30, 40)] = 'interval 2a'
+
+        fhndl, fname = tempfile.mkstemp()
+        fhndl = os.fdopen(fhndl, 'w')
+        cPickle.dump(index, fhndl)
+        fhndl.close()
+
+        infile = open(fname)
+        index = cPickle.load(infile)
+        infile.close()
+        self.assertEquals(index[Interval(15, 35)], ['interval 1', 'interval 2a'])
+        os.remove(fname)
+
 
 if __name__ == "__main__":
     unittest.main()

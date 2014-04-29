@@ -71,8 +71,8 @@ class OverlappingIntervalIndex(Accessor):
     def __getstate__(self):
         return dict((attr, getattr(self, attr)) for attr in self.__slots__)
 
-    def __setstate_(self, state):
+    def __setstate__(self, state):
         for attr in self.__slots__:
-            setattr(self, state[attr])
+            setattr(self, attr, state[attr])
 
 

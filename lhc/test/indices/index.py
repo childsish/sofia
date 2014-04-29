@@ -1,3 +1,6 @@
+import cPickle
+import os
+import tempfile
 import unittest
 
 from lhc.interval import Interval
@@ -70,6 +73,23 @@ class Test(unittest.TestCase):
         self.assertEquals(index[('chr1', 200)], 'c')
         self.assertEquals(index[('chr2', 100)], 'd')
         self.assertEquals(index[('chr2', 200)], 'e')
+    
+    def test_pickleEKEK(self):
+        index = Index((ExactKeyIndex, ExactKeyIndex))
+        index[('chr1', 100)] = 'a'
+        index[('chr1', 200)] = 'b'
+
+        fhndl, fname = tempfile.mkstemp()
+        fhndl = os.fdopen(fhndl, 'w')
+        cPickle.dump(index, fhndl)
+        fhndl.close()
+
+        infile = open(fname)
+        index = cPickle.load(infile)
+        self.assertEquals(index[('chr1', 100)], 'a')
+        self.assertEquals(index[('chr1', 200)], 'b')
+        infile.close()
+        os.remove(fname)
 
 if __name__ == "__main__":
     unittest.main()

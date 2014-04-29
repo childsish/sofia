@@ -20,19 +20,20 @@ class Test(unittest.TestCase):
         
         self.assertEquals(index['a'], [1, 2, 3])
     
-    def test_pickle(self)
-        self.fhndl, self.fname = tempfile.mkstemp()
-        self.fhndl = os.open(self.fhndl)
+    def test_pickle(self):
         index = ExactKeyIndex()
         index['a'] = [1, 2, 3]
-        cPickle.dump(index, self.fhndl)
-        os.close(self.fhndl)
+
+        fhndl, fname = tempfile.mkstemp()
+        fhndl = os.fdopen(fhndl, 'w')
+        cPickle.dump(index, fhndl)
+        fhndl.close()
         
-        infile = open(self.fname)
+        infile = open(fname)
         index = cPickle.load(infile)
         infile.close()
         self.assertEquals(index['a'], [1, 2, 3])
-        os.remove(self.fname)
+        os.remove(fname)
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,18 +1,17 @@
-import gzip
+import itertools
 
 from index import Accessor
 
 class FastaIndex(Accessor):
     
-    __slots__ = ('chrs',)
+    __slots__ = ('chrs', 'wrap', 'newlines')
     
     RETURN = 'single'
     TYPE = 'exact'
     
     def __init__(self, fname):
         self.chrs = {}
-        infile = gzip.open(fname, 'rb') if fname.endswith('.gz') else\
-            open(fname, 'rU')
+        infile = open(fname, 'rU')
         for line in infile:
             if line[0] not in '#>':
                 self.wrap = len(line.strip())
@@ -31,9 +30,9 @@ class FastaIndex(Accessor):
 
 
     def __getstate__(self):
-        return dict((attr, getattr(self, attr)) for attr in self.__slots__)
+        res = dict((attr, getattr(self, attr)) for attr in self.__slots__)
 
-    def __setstate_(self, state):
-        for attr in self.__slots__:
-            setattr(self, state[attr])
+    def __setstate__(self, state):
+        for attr in itertools.chain(self.__slots__):
+            setattr(self, attr, state[attr])
 
