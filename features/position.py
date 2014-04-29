@@ -14,8 +14,8 @@ class Position(Feature):
     
     def calculate(self, locus):
         if hasattr(locus, 'pos'):
-            return locus.pos
+            return locus.pos + 1
         elif hasattr(locus, 'start'):
-            return locus.start
+            return locus.start + 1
         msg = 'Can not extract position feature from type: {type}'
         raise TypeError(msg.format(type=type(locus)))
