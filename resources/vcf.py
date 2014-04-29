@@ -13,7 +13,11 @@ class VcfParser(Resource):
         return iter(self.parser)
     
     def __getitem__(self, key):
-        return self.parser[key]
+        try:
+            return self.parser[key]
+        except KeyError:
+            pass
+        return None
     
     def index(self, iname=None):
         vcf.index(self.fname, iname)
