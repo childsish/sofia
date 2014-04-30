@@ -59,7 +59,7 @@ class VcfParser(EntrySet):
                 self.ivl_index[(entry.chr, ivl)] = i
         
         if hasattr(key, 'chr') and hasattr(key, 'pos'):
-            return self.data[self.pos_index[(key.chr, key.pos)][0].value]
+            return self.data[self.pos_index[(key.chr, key.pos)]]
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             return [self.data[v] for k, v in self.ivl_index[(key.chr, key)]]
         raise NotImplementedError('Random access not implemented for %s'%type(key))
