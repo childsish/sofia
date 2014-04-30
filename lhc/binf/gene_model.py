@@ -36,8 +36,8 @@ class Transcript(object):
             rel_pos += exon.ivl.stop - exon.ivl.start
         raise IndexError('Position %s not in %s'%(pos, self.name))
     
-    def getSubSeq(self, seq, valid_types=set(['CDS', 'UTR5', 'UTR3'])):
-        return ''.join([exon.getSubSeq(seq) for exon in self.exons if exon.type in valid_types])
+    def getSubSeq(self, seq, fr=None, to=None, valid_types=set(['CDS', 'UTR5', 'UTR3'])):
+        return ''.join([exon.getSubSeq(seq, fr, to) for exon in self.exons if exon.type in valid_types])
 
 class Exon(object):
     
@@ -47,8 +47,8 @@ class Exon(object):
         self.ivl = ivl
         self.type = type_
     
-    def getSubSeq(self, seq):
-        return self.ivl.getSubSeq(seq)
+    def getSubSeq(self, seq, fr=None, to=None):
+        return self.ivl.getSubSeq(seq, fr, to)
 
     def getRelPos(self, pos):
         return self.ivl.getRelPos(pos)
