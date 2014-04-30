@@ -42,12 +42,17 @@ def aggregate(args):
     features = generateDependencies(top_level_features, resources)
     
     print '\t'.join(feature.name for feature in top_level_features)
+    from collections import Counter
+    for cols in iterOutput(features, resources, top_level_features):
+        print '\t'.join(ftr.format(col) for ftr, col in izip(top_level_features, cols))
+
+def iterOutput(features, resources, top_level_features):
     entities = {}
     for entity in resources['target']:
         entities['target'] = entity
-        cols = [feature.generate(entities, features) for feature in top_level_features]
-        out = [ftr.format(col) for ftr, col in izip(top_level_features, cols)]
-        print '\t'.join(out)
+        cols = [feature.generate(entities, features)\
+            for feature in top_level_features]
+        yield cols
 
 def loadResources(requested, parsers, formats):
     resources = {}
