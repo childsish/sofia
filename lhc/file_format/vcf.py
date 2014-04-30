@@ -4,7 +4,7 @@ import gzip
 import os
 
 from collections import namedtuple
-from itertools import izip
+from itertools import izip, count
 from lhc.collection.sorted_dict import SortedDict
 from lhc.file_format.entry_set import EntrySet
 from lhc.indices.index import Index
@@ -64,15 +64,6 @@ class VcfParser(EntrySet):
             return [self.data[v] for k, v in self.ivl_index[(key.chr, key)]]
         raise NotImplementedError('Random access not implemented for %s'%type(key))
     
-    def _parseHeaders(self, infile):
-        hdrs = []
-        line = infile.next().strip()
-        while line.startswith('##'):
-            hdrs.append(line)
-            line = infile.next().strip()
-        hdrs.append(line.strip().split('\t'))
-        return hdrs
-    
     def _iterHandle(self, infile, hdrs=None):
         hdrs = self._parseHeaders(infile) if hdrs is None else hdrs
         if len(hdrs[-1]) <= self.FORMAT:
@@ -93,6 +84,16 @@ class VcfParser(EntrySet):
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
         return res
+    
+    @classmethod
+    def _parseHeaders(cls, infile):
+        hdrs = []
+        line = infile.next().strip()
+        while line.startswith('##'):
+            hdrs.append(line)
+            line = infile.next().strip()
+        hdrs.append(line.strip().split('\t'))
+        return hdrs
     
     @classmethod
     def _iterUnsampledVcf(cls, infile):
@@ -169,30 +170,54 @@ def _createIndices(fname):
     infile.close()
     return pos_index, ivl_index
 
-def merge(fnames):
-    print '#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tATTR\tFORMAT\t' + '\t'.join(fnames)
-    for entry in _iterMerge(fnames):
-        print '\t'.join(fnames)
+def merge(fnames, quality=0):
+    """TODO: apply a quality filter
+    """
+    #print '#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tATTR\tFORMAT\t' + '\t'.join(fnames)
+    for entry in _iterMerge(fnames, quality):
+        print '\t'.join(map(str, entry))
 
-def _iterMerge(fnames):
+def _iterMerge(fnames, quality=0):
     infiles = [gzip.open(fname) if fname.endswith('gz') else open(fname) for fname in fnames]
-    tops = [infile.next().strip().split('\t') for infile in infiles]
-    while '#' in [top[0][0] for top in tops]:
-        for i in xrange(len(tops)):
-            if tops[i][0][0] == '#':
-                tops[i] = infiles[i].next().strip().split('\t')
+    hdrs = [VcfParser._parseHeaders(infile) for infile in infiles]
+    sample_namess = [hdr[-1][9:] for hdr in hdrs]
+    n_samples = sum(map(len, sample_namess))
+    it = count()
+    sample_idxs = []
+    for sample_names in sample_namess:
+        sample_idxs.append([it.next() for i in xrange(len(sample_names))])
+    tops = [_nextLine(infiles, idx, quality) for idx in xrange(len(infiles))]
     sorted_tops = _initSorting(tops)
     
     while len(sorted_tops) > 0:
         key, idxs = sorted_tops.popLowest()
-        entry = tops[idxs[0]]
-        yield entry[:9] + reduce(add, (tops[idx][9:] for idx in idxs))
+        samples = n_samples *  ['0/0']
+        for idx in idxs:
+            for i, sample in enumerate(tops[idx][9:]):
+                samples[sample_idxs[idx][i]] = sample[:3]
+        entry = tops[idxs[0]][:9]
+        entry[4] = ','.join(set(reduce(add, [tops[idx][4].split(',') for idx in idxs])))
+        entry[5] = '>%.2f'%min(tops[idx][5] for idx in idxs)
+        entry[7] = ''
+        entry[8] = 'GT'
+        yield entry + samples
         for idx in idxs:
             try:
-                tops[idx] = infiles[idx].next().strip().split('\t')
+                tops[idx] = _nextLine(infiles, idx, quality)
                 _updateSorting(sorted_tops, tops[idx], idx)
             except StopIteration:
                 pass
+    for infile in infiles:
+        infile.close()
+
+def _nextLine(infiles, idx, quality=0):
+    while True:
+        top = infiles[idx].next().strip().split('\t')
+        top[1] = int(top[1])
+        top[5] = float(top[5])
+        if top[5] >= quality:
+            break
+    return top
 
 def _initSorting(tops):
     sorted_tops = SortedDict()
@@ -202,9 +227,7 @@ def _initSorting(tops):
 
 def _updateSorting(sorted_tops, entry, idx):
     key = (entry[0], entry[1])
-    if key not in sorted_tops:
-        sorted_tops[key] = []
-    sorted_tops[key].append(idx)
+    sorted_tops.get(key, []).append(idx)
 
 def main():
     parser = getArgumentParser()
@@ -221,7 +244,9 @@ def getArgumentParser():
     
     merge_parser = subparsers.add_parser('merge')
     merge_parser.add_argument('inputs', nargs='+')
-    merge_parser.set_defaults(func=lambda args: merge(args.inputs))
+    merge_parser.add_argument('-q', '--quality', type=float)
+    merge_parser.set_defaults(func=lambda args: merge(args.inputs,
+                                                      args.quality))
     
     return parser
 
