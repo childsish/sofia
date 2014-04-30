@@ -132,10 +132,10 @@ def _createKeyIndex(fname):
     infile = open(fname, 'rb')
     fpos = 0
     for line in infile:
+        fpos += len(line)
         if line.startswith('>'):
             hdr = line.strip().split()[0][1:]
             index[hdr] = fpos
-        fpos += len(line)
     return index
 
 def compare(a_fname, b_fname):
@@ -182,3 +182,4 @@ def getArgumentParser():
 if __name__ == '__main__':
     import sys
     sys.exit(main())
+
