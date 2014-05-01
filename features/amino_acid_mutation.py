@@ -39,7 +39,7 @@ class AminoAcidMutation(Feature):
         for m in mdl:
             mdl_muts = defaultdict(set)
             for k, v in m.transcripts.iteritems():
-                subseq = v.getSubSeq(seq)
+                subseq = v.getSubSeq(seq, valid_types=set(['CDS']))
                 if subseq == '':
                     continue
                 try:
@@ -48,7 +48,10 @@ class AminoAcidMutation(Feature):
                     continue
                 cdnpos = relpos - relpos % 3
                 cdn = list(subseq[cdnpos:cdnpos + 3])
-                fr = self.gc[''.join(cdn).lower()]
+                try:
+                    fr = self.gc[''.join(cdn).lower()]
+                except TypeError:
+                    continue
                 cdn[relpos % 3] = locus.alt if v.ivl.strand == '+' else self.REVCMP[locus.alt]
                 to = self.gc[''.join(cdn).lower()]
                 mut = '%s%s%s'%(fr, cdnpos / 3 + 1, to)
