@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import argparse
 
-from modules.subcommands import aggregate, index
+from modules.subcommands import aggregate, index, list_
 
 def main(argv):
     parser = getParser()
@@ -15,6 +15,8 @@ def getParser():
     aggregate.defineParser(agg_parser)
     idx_parser = subparsers.add_parser('index')
     index.defineParser(idx_parser)
+    list_parser = subparsers.add_parser('list')
+    list_.defineParser(list_parser)
     return parser
 
 if __name__ == '__main__':

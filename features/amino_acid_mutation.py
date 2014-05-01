@@ -3,7 +3,7 @@ from modules.feature import Feature
 from resource import DynamicResource, StaticResource
 from lhc.binf.genetic_code import GeneticCodes
 
-class AAMut(Feature):
+class AminoAcidMutation(Feature):
     
     NAME = 'aa_mut'
     RESOURCES = ['locus', 'mdl', 'seq']
@@ -21,6 +21,9 @@ class AAMut(Feature):
          'resource_map': {'name': 'seq'}
         }
     ]
+    DESCRIPTION = '''Calculate the amino acid mutation in the form
+    <reference_amino_acid><protein_position><alternate_amino_acid>
+    eg. K12V'''
     
     REVCMP = {'a': 't', 'c': 'g', 'g': 'c', 't': 'a',
               'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}

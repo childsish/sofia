@@ -1,7 +1,7 @@
 from modules.feature import Feature
 from resource import DynamicResource
 
-class Gene(Feature):
+class ChromosomeMutation(Feature):
     
     NAME = 'chr_mut'
     RESOURCES = ['locus']

@@ -6,12 +6,12 @@ class NucleotideFrequency(Feature):
     
     NAME = 'nt_freq'
     RESOURCE = ['mdl', 'seq']
-    DEPENDENCIES = {
+    DEPENDENCIES = [
         {'name': 'seq',
          'feature': Sequence,
          'resource_map': {'mdl': 'mdl', 'seq': 'seq'}
         }
-    }
+    ]
     
     def calculate(self, seq):
         res = {}
@@ -24,14 +24,14 @@ class NucleotideFrequency(Feature):
 
 class NucleotideSkew(Feature):
     
-    name = 'nt_skew'
+    NAME = 'nt_skew'
     RESOURCE = ['mdl', 'seq']
-    DEPENDENCIES = {
+    DEPENDENCIES = [
         {'name': 'nt_freq',
          'feature': NucleotideFrequency,
          'resource_map': {'mdl': 'mdl', 'seq': 'seq'}
         }
-    }
+    ]
     
     def calculate(self, nt_freq):
         res = {}

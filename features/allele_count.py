@@ -4,6 +4,7 @@ from modules.resource import Resource
 
 class AlleleCount(Feature):
     
+    NAME = 'allele_count'
     RESOURCES = ['db']
     DEPENDENCIES = [
         {'name': 'db',

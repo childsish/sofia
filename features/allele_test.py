@@ -3,6 +3,7 @@ from allele_count import AlleleCount
 
 class AlleleTest(Feature):
     
+    NAME = 'allele_test'
     RESOURCES = ['db1', 'db2']
     DEPENDENCIES = [
         {'name': 'alf1',
