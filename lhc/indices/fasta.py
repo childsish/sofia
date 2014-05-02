@@ -33,7 +33,6 @@ class FastaIndex(Accessor):
         return dict((attr, getattr(self, attr)) for attr in self.__slots__)
 
     def __setstate__(self, state):
-        print 'setstate'
         for attr in self.__slots__:
             setattr(self, attr, state[attr])
 
