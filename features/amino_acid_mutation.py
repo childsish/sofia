@@ -29,7 +29,7 @@ class AminoAcidMutation(Feature):
               'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
     
     def __init__(self, resource_map, resources=None):
-        super(AAMut, self).__init__(resource_map, resources)
+        super(AminoAcidMutation, self).__init__(resource_map, resources)
         self.gc = GeneticCodes()[1]
     
     def calculate(self, locus, mdl, seq):
@@ -54,7 +54,7 @@ class AminoAcidMutation(Feature):
                     continue
                 cdn[relpos % 3] = locus.alt if v.ivl.strand == '+' else self.REVCMP[locus.alt]
                 to = self.gc[''.join(cdn).lower()]
-                mut = '%s%s%s'%(fr, cdnpos / 3 + 1, to)
+                mut = (fr, cdnpos / 3 + 1, to)
                 mdl_muts[mut].add(k)
             if len(mdl_muts) == 1:
                 muts[m.name] = mdl_muts.keys()[0]
@@ -67,4 +67,26 @@ class AminoAcidMutation(Feature):
     def format(self, entity):
         if len(entity) == 1:
             return entity.values()[0]
-        return ','.join('%s:%s'%item for item in entity.iteritems())
+        return ','.join('%s:%s%s%s'%(name, b4, pos, af)\
+            for name, (b4, pos, af) in entity.iteritems())
+
+class AminoAcidMutationType(Feature):
+    
+    NAME = 'aa_mut_type'
+    RESOURCES = ['locus', 'mdl', 'seq']
+    DEPENDENCIES = [
+        {'name': 'aa_mut',
+         'type': AminoAcidMutation,
+         'resource_map': {'locus': 'locus', 'mdl': 'mdl', 'seq': 'seq'}
+        }
+    ]
+    DESCRIPTION = 'Returns the mutation with greatest effect. nonsynonymous > synonymous > intergenic'
+    
+    def calculate(self, aa_mut):
+        if len(aa_mut) == 0:
+            return 'intergenic'
+        res = set()
+        for v in aa_mut.itervalues():
+            if v[0] != v[2]:
+                return 'nonsynonymous'
+        return 'synonymous'
