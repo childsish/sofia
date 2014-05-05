@@ -20,8 +20,8 @@ class Target(Resource):
     
     NAME = 'target'
     
-    def calculate(self):
-        return self.resource.next()
+    def generate(self, entities, features):
+        return entities['target']
     
     def _resolveName(self):
         return 'target'
@@ -35,9 +35,6 @@ class StaticResource(Resource):
     def calculate(self):
         return self.resource
     
-    def needsUpdate(self, entities, features):
-        return self.name not in entities
-
 class DynamicResource(Resource):
     """A resource that stays in step with the target
     """
@@ -51,16 +48,14 @@ class DynamicResource(Resource):
         }
     ]
     
-    
     def __init__(self, resource_map, resources):
         super(DynamicResource, self).__init__(resource_map, resources)
         self.entity = None
     
     def calculate(self, target):
+        nxt_entity = self.resource[target]
+        self.changed = self.entity != nxt_entity
+        if self.changed:
+            self.entity = nxt_entity
         return self.entity
 
-    def needsUpdate(self, entities, features):
-        if self.name == self.dependencies[0]:
-            return False
-        self.entity = self.resource[entities['target']]
-        return self.name not in entities or self.entity is not entities[self.name]

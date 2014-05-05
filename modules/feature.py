@@ -10,6 +10,7 @@ class Feature(object):
         self.resource_map = resource_map
         self.name = self._resolveName()
         self.dependencies = []
+        self.changed = True
     
     def generate(self, entities, features):
         """Generate a feature
@@ -21,7 +22,8 @@ class Feature(object):
         :param features: available features
         :type features: dict of features
         """
-        if not self.needsUpdate(entities, features):
+        self.changed = self.needsUpdate(entities, features)
+        if not self.changed:
             return entities[self.name]
         local_entities = {}
         for dep, DEP in izip(self.dependencies, self.DEPENDENCIES):
@@ -40,7 +42,7 @@ class Feature(object):
         if self.name not in entities:
             return True
         for dep in self.dependencies:
-            if features[dep].needsUpdate(entities, features):
+            if features[dep].changed:
                 return True
         return False
     
