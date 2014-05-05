@@ -1,3 +1,5 @@
+import sys
+
 from lhc.file_format import gtf
 from modules.resource import Resource
 
@@ -13,7 +15,12 @@ class GtfParser(Resource):
         return iter(self.parser)
     
     def __getitem__(self, key):
-        return self.parser[key]
+        try:
+            return self.parser[key]
+        except:
+            sys.stderr.write('Missing chromosome: %s\n'%str(key.chr))
+        return None
     
     def index(self, iname=None):
         gtf.index(self.fname, iname)
+
