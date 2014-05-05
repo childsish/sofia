@@ -66,7 +66,7 @@ class AminoAcidMutation(Feature):
 
     def format(self, entity):
         if len(entity) == 1:
-            return entity.values()[0]
+            return '%s%s%s'%entity.values()[0]
         return ','.join('%s:%s%s%s'%(name, b4, pos, af)\
             for name, (b4, pos, af) in entity.iteritems())
 
@@ -76,17 +76,26 @@ class AminoAcidMutationType(Feature):
     RESOURCES = ['locus', 'mdl', 'seq']
     DEPENDENCIES = [
         {'name': 'aa_mut',
-         'type': AminoAcidMutation,
+         'feature': AminoAcidMutation,
          'resource_map': {'locus': 'locus', 'mdl': 'mdl', 'seq': 'seq'}
+        },
+        {'name': 'mdl',
+         'feature': DynamicResource,
+         'resource_map': {'name': 'mdl'}
         }
     ]
     DESCRIPTION = 'Returns the mutation with greatest effect. nonsynonymous > synonymous > intergenic'
     
-    def calculate(self, aa_mut):
+    def calculate(self, aa_mut, mdl):
         if len(aa_mut) == 0:
-            return 'intergenic'
+            if len(mdl) == 0:
+                return 'intergenic'
+            return 'intronic'
         res = set()
         for v in aa_mut.itervalues():
             if v[0] != v[2]:
-                return 'nonsynonymous'
+                if v[0] == '*' or v[2] == '*':
+                    return 'nonsense'
+                return 'missense'
         return 'synonymous'
+
