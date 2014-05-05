@@ -16,6 +16,8 @@ class MinorAlleleFrequency(Feature):
     def calculate(self, locus):
         cnt = Counter()
         for v in locus.samples.itervalues():
+            if v['GT'] == '.':
+                continue
             a1, a2 = v['GT'].split('/')
             cnt[a1] += 1
             cnt[a2] += 1
