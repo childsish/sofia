@@ -3,7 +3,7 @@ import sys
 from modules.feature import Feature
 from resource import DynamicResource
 
-class Gene(Feature):
+class GeneName(Feature):
     
     NAME = 'gene_name'
     RESOURCES = ['mdl']
@@ -15,4 +15,7 @@ class Gene(Feature):
     ]
     
     def calculate(self, mdl):
-        return ','.join(m.name for m in mdl)
+        if mdl is not None:
+            return ','.join(m.name for m in mdl)
+        return ''
+
