@@ -1,18 +1,15 @@
 import argparse
 import cPickle
-import gzip
 import os
 
 from collections import namedtuple
-from itertools import izip, count
-from lhc.collection.sorted_dict import SortedDict
+from itertools import izip
 from lhc.file_format.entry_set import EntrySet
 from lhc.indices.index import Index
 from lhc.indices.exact_key import ExactKeyIndex
 from lhc.indices.overlapping_interval import OverlappingIntervalIndex
 from lhc.interval import Interval
-from numpy.core.fromnumeric import sort
-from operator import add
+from vcf_.merger import VcfMerger
 
 Variant = namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'attr', 'samples'))
 
@@ -170,64 +167,11 @@ def _createIndices(fname):
     infile.close()
     return pos_index, ivl_index
 
-def merge(fnames, quality=0):
-    """TODO: apply a quality filter
-    """
+def merge(fnames, quality=50.0):
+    merger = VcfMerger(fnames, quality)
     #print '#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tATTR\tFORMAT\t' + '\t'.join(fnames)
-    for entry in _iterMerge(fnames, quality):
+    for entry in merger:
         print '\t'.join(map(str, entry))
-
-def _iterMerge(fnames, quality=0):
-    infiles = [gzip.open(fname) if fname.endswith('gz') else open(fname) for fname in fnames]
-    hdrs = [VcfParser._parseHeaders(infile) for infile in infiles]
-    sample_namess = [hdr[-1][9:] for hdr in hdrs]
-    n_samples = sum(map(len, sample_namess))
-    it = count()
-    sample_idxs = []
-    for sample_names in sample_namess:
-        sample_idxs.append([it.next() for i in xrange(len(sample_names))])
-    tops = [_nextLine(infiles, idx, quality) for idx in xrange(len(infiles))]
-    sorted_tops = _initSorting(tops)
-    
-    while len(sorted_tops) > 0:
-        key, idxs = sorted_tops.popLowest()
-        samples = n_samples *  ['0/0']
-        for idx in idxs:
-            for i, sample in enumerate(tops[idx][9:]):
-                samples[sample_idxs[idx][i]] = sample[:3]
-        entry = tops[idxs[0]][:9]
-        entry[4] = ','.join(set(reduce(add, [tops[idx][4].split(',') for idx in idxs])))
-        entry[5] = '>%.2f'%min(tops[idx][5] for idx in idxs)
-        entry[7] = ''
-        entry[8] = 'GT'
-        yield entry + samples
-        for idx in idxs:
-            try:
-                tops[idx] = _nextLine(infiles, idx, quality)
-                _updateSorting(sorted_tops, tops[idx], idx)
-            except StopIteration:
-                pass
-    for infile in infiles:
-        infile.close()
-
-def _nextLine(infiles, idx, quality=0):
-    while True:
-        top = infiles[idx].next().strip().split('\t')
-        top[1] = int(top[1])
-        top[5] = float(top[5])
-        if top[5] >= quality:
-            break
-    return top
-
-def _initSorting(tops):
-    sorted_tops = SortedDict()
-    for idx, entry in enumerate(tops):
-        _updateSorting(sorted_tops, entry, idx)
-    return sorted_tops
-
-def _updateSorting(sorted_tops, entry, idx):
-    key = (entry[0], entry[1])
-    sorted_tops.get(key, []).append(idx)
 
 def main():
     parser = getArgumentParser()
