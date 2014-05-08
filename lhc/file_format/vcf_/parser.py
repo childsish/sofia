@@ -9,7 +9,7 @@ from lhc.indices.index import Index
 from lhc.indices.exact_key import ExactKeyIndex
 from lhc.indices.overlapping_interval import OverlappingIntervalIndex
 
-Variant = namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'format', 'samples'))
+Variant = namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'samples'))
 
 class VcfParser(EntrySet):
 

@@ -53,7 +53,9 @@ def merge(fnames, quality=50.0):
             print '%s=%s'%(key, value)
     print '#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tATTR\tFORMAT\t' + '\t'.join(reduce(add, merger.samples))
     for entry in merger:
-        print '%s\t%s'%('\t'.join(map(str, entry[:-1])), '\t'.join(entry.samples.itervalues()))
+        print '%s\t%s\t%s'%('\t'.join(map(str, entry[:-1])),
+            ':'.join(entry.samples[0].iterkeys()),
+            '\t'.join(entry.samples.itervalues()))
 
 def main():
     parser = getArgumentParser()

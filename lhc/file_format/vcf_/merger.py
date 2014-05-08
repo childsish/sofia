@@ -28,13 +28,13 @@ class VcfMerger(object):
             key, idxs = sorted_tops.popLowest()
             merged_alleles = [tops[idxs[0]][3]] + sorted(set(reduce(add, [tops[idx][4].split(',') for idx in idxs])))
             
-            entry = tops[idxs[0]][:10]
+            entry = tops[idxs[0]][:9]
             entry[4] = ','.join(merged_alleles[1:])
             entry[5] = '%.2f'%min(tops[idx][5] for idx in idxs)
             entry[7] = ''
-            entry[8] = 'GT'
             
-            samples = len(self.sample_names) *  [{'GT': '0/0'}]
+            samples = [OrderedDict([('GT', '0/0')])\
+                for name in self.sample_names]
             for idx in idxs:
                 for i, sample in enumerate(tops[idx][9:]):
                     gt, sample = sample.split(':', 1)
@@ -44,7 +44,7 @@ class VcfMerger(object):
                     alleles = [tops[idx][3]] + tops[idx][4].split(',')
                     sample = '/'.join(map(str, (merged_alleles.index(alleles[a1]), merged_alleles.index(alleles[a2]))))
                     samples[self.sample_idxs[idx][i]]['GT'] = sample
-            entry[9] = OrderedDict(izip(self.sample_names, samples))
+            entry[8] = OrderedDict(izip(self.sample_names, samples))
             yield Variant(*entry)
             for idx in idxs:
                 try:
