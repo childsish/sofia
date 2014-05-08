@@ -1,12 +1,17 @@
 import gzip
+import re
 
 from collections import OrderedDict, defaultdict
 from itertools import count, izip
+from lhc.binf.identifier import Chromosome
 from lhc.collection.sorted_dict import SortedDict
 from parser import VcfParser, Variant
 from operator import add
 
 class VcfMerger(object):
+    
+    CHR_REGX = re.compile('\d+$|X$|Y$|M$')
+    
     def __init__(self, fnames, quality=0):
         self.fnames = fnames
         self.quality = quality
@@ -54,6 +59,7 @@ class VcfMerger(object):
     def _nextLine(self, idx):
         while True:
             top = self.infiles[idx].next().strip().split('\t')
+            top[0] = Chromosome(top[0])
             top[1] = int(top[1]) - 1
             top[5] = float(top[5])
             if top[5] >= self.quality:
