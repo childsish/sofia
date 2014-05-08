@@ -16,16 +16,11 @@ class VcfMerger(object):
         self.fnames = fnames
         self.quality = quality
         self.infiles = [gzip.open(fname) if fname.endswith('gz') else open(fname) for fname in fnames]
-        self.hdrs, self.samples = self._mergeHeaders(list(VcfParser._parseHeaders(infile) for infile in self.infiles))
+        hdrs = [VcfParser._parseHeaders(infile) for infile in self.infiles]
+        self.hdrs = self._mergeHeaders(hdrs)
+        self.sample_names, self.sample_idxs = self._mergeSamples(hdrs)
 
     def __iter__(self):
-        n_samples = sum(map(len, self.samples))
-        it = count()
-        sample_names = []
-        sample_idxs = []
-        for samples in self.samples:
-            sample_idxs.append([it.next() for sample in samples])
-            sample_names.extend(samples)
         tops = [self._nextLine(idx) for idx in xrange(len(self.infiles))]
         sorted_tops = self._initSorting(tops)
         
@@ -39,15 +34,17 @@ class VcfMerger(object):
             entry[7] = ''
             entry[8] = 'GT'
             
-            samples = n_samples *  ['0/0']
+            samples = len(self.sample_names) *  [{'GT': '0/0'}]
             for idx in idxs:
                 for i, sample in enumerate(tops[idx][9:]):
                     gt, sample = sample.split(':', 1)
+                    if gt == '0/0':
+                        continue
                     a1, a2 = map(int, gt.split('/'))
                     alleles = [tops[idx][3]] + tops[idx][4].split(',')
                     sample = '/'.join(map(str, (merged_alleles.index(alleles[a1]), merged_alleles.index(alleles[a2]))))
-                    samples[sample_idxs[idx][i]] = sample
-            entry[9] = OrderedDict(izip(sample_names, samples))
+                    samples[self.sample_idxs[idx][i]]['GT'] = sample
+            entry[9] = OrderedDict(izip(self.sample_names, samples))
             yield Variant(*entry)
             for idx in idxs:
                 try:
@@ -59,7 +56,7 @@ class VcfMerger(object):
     def _nextLine(self, idx):
         while True:
             top = self.infiles[idx].next().strip().split('\t')
-            top[0] = Chromosome(top[0])
+            top[0] = Chromosome.getIdentifier(top[0])
             top[1] = int(top[1]) - 1
             top[5] = float(top[5])
             if top[5] >= self.quality:
@@ -89,8 +86,12 @@ class VcfMerger(object):
             for hdr in hdrs:
                 values.update((value, None) for value in hdr[k])
             res[k] = list(values)
-        samples = [hdr['##SAMPLES'] for hdr in hdrs]
-        return res, samples
+        return res
+    
+    def _mergeSamples(self, hdrs):
+        sample_names = defaultdict(count().next)
+        sample_idxs = [[sample_names[name] for name in hdr['##SAMPLES']] for hdr in hdrs] 
+        return [k for k, v in sorted(sample_names.iteritems(), key=lambda x:x[1])], sample_idxs
     
     def __del__(self):
         if hasattr(self, 'infiles'):
