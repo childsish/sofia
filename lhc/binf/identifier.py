@@ -3,6 +3,7 @@ import re
 class Chromosome(object):
     
     CHR_REGX = re.compile('\d+$|X$|Y$|M$|C$')
+    CREATED = {}
     
     def __init__(self, name):
         self.name = name
@@ -20,3 +21,9 @@ class Chromosome(object):
     
     def __lt__(self, other):
         return self.suffix < other.suffix
+
+    @classmethod
+    def getIdentifier(cls, name):
+        if name not in cls.CREATED:
+            cls.CREATED[name] = Chromosome(name)
+        return cls.CREATED[name]
