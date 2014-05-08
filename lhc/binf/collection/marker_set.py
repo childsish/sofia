@@ -8,70 +8,12 @@ from lhc.binf.genomic_coordinate import Position, Interval
 Reference = namedtuple('Reference', ['ref', 'poss'])
 
 class MarkerSet(object):
-    def __init__(self, fname, ref=None):
-        self.fname = fname
-        self.mode = 'r' if ref is None else 'w'
-        self.closed = False
-        self.data = Dataset(self.fname, self.mode)
+    def __init__(self, fname):
+        self.data = Dataset(fname)
         
-        if self.mode == 'w':
-            self.__initNewFile(ref)
-        
-        self.gen2idx = self.__initGenotypeMap()
-    
-    def __initNewFile(self, ref):
-        ploidy, npos = ref.ref.shape
-        
-        self.data.createDimension('pos', npos)
-        self.data.createDimension('ploidy', ploidy)
-        self.data.createDimension('gen', None)
-        
-        chm_var = self.data.createVariable('chms', 'u1', ('pos',))
-        pos_var = self.data.createVariable('poss', 'u4', ('pos',))
-        self.data.createVariable('ref', 'S1', ('pos', 'ploidy'))[:] = ref.ref
-        self.data.createVariable('snps', 'S1', ('gen', 'pos', 'ploidy'))
-
-        idx_grp = self.data.createGroup('idxs')
-        idx_grp.createDimension('rng', 2)
-        fr = 0
-        for chm_idx, (chm, chm_poss) in enumerate(ref.poss.iteritems()):
-            to = fr + len(chm_poss)
-            idx_grp.createVariable(chm, 'u4', ('rng',))[:] = [fr, to]
-            chm_var[fr:to] = chm_idx
-            pos_var[fr:to] = chm_poss
-            fr = to
-        
-        gen_grp = self.data.createGroup('gens')
-        gen_grp.createDimension('idx', 1)
-    
-    def __initGenotypeMap(self):
-        idx2gen = {}
-        for gen, idx in self.data.groups['gens'].variables.iteritems():
-            idx = idx[0]
-            if idx not in idx2gen:
-                idx2gen[idx] = gen
-        return OrderedDict([(gen, idx)\
-            for idx, gen in sorted(idx2gen.iteritems())])
-    
-    def registerGenotype(self, name, markers=None, main_name=None):
-        gens_grp = self.data.groups['gens']
-        if main_name is not None and main_name not in gens_grp.variables:
-            raise KeyError('Main name %s has not yet been registered'%main_name)
-        
-        if name in gens_grp.variables:
-            idx = int(gens_grp.variables[name][0])
-        else:
-            idx = len(self.data.dimensions['gen']) if main_name is None\
-                else int(gens_grp.variables[main_name][0])
-            gens_grp.createVariable(name, 'u4', ('idx',))[0] = idx
-            self.gen2idx[name] = idx
-        
-        if main_name is None and markers is None:
-            markers = self.data.variables['ref'][:]
-        if markers is not None:
-            self.data.variables['snps'][idx,:] = markers
-        
-        return Genotype(self, idx, name)
+        self.indices = self._initIndices(self.data)
+        self.gen2idx, self.idx2gen = self._initGenotypes(self.data)
+        self.muts = self._initMutations(self.data)
     
     def getGenotype(self, name):
         return Genotype(self, int(self.gen2idx[name]), name)
@@ -142,32 +84,22 @@ class MarkerSet(object):
                 malvar[i] = sorted(cnt.iterkeys(), key=lambda x:cnt[x])[0]
                 mafvar[i] = min(cnt.itervalues()) / float(sum(cnt.itervalues()))
 
-    def processNumerical(self):
-        """ The numerical SNP matrix is represents the SNPs in numerical form,
-            where each polymorphism is the sum of it's minor allele.
-        """
-        # Need the minor alleles to calculate
-        if 'mal' not in self.data.variables:
-            self.processAlleles()
-        mal = self.data.variables['mal']
-
-        # Initialise the numerical array
-        if 'nsnps' in self.data.variables:
-            nsnp = self.data.variables['nsnps']
-        else:
-            nsnp = self.data.createVariable('nsnps', 'f4', ('gens', 'poss'))
-            nsnp.missing_value = default_fillvals['f4']
-
-        # Calculate the numerical matrix
-        csnp = self.data.variables['snps']
-        nsnp[:] = np.sum(csnp[:] == mal[:][np.newaxis,:,np.newaxis], 2,
-            dtype=np.dtype('f4'))
-
-    def close(self):
-        if hasattr(self, 'closed') and not self.closed and\
-         hasattr(self, 'mode') and self.mode in 'wa':
-            self.data.close()
-            self.closed = True
+    def _initIndices(self, data):
+        idx_grp = data.groups['indices']
+        return OrderedDict((k, tuple(v[:]))\
+            for k, v in idx_grp.variables.iteritems())
+    
+    def _initGenotypes(self, data):
+        gen_grp = data.groups['genotypes']
+        gen2idx = {k: v[0] for k, v in gen_grp.variables.iteritems()}
+        idx2gen = [k for k, v in sorted(gen2idx.iteritems(), key=lambda x:x[1])]
+        return gen2idx, idx2gen
+    
+    def _initMutations(self, data):
+        muts = data.groups['mutations'].variables['muts'][:]
+        np.ma.set_fill_value(muts, ' ')
+        return [(ref.tostring().strip(), alt.tostring().strip())\
+            for ref, alt in muts]
 
 class Genotype(object):
     def __init__(self, mrk_set, idx, name):
