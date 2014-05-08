@@ -1,5 +1,3 @@
-import os
-import codecs
 import numpy as np
 
 from bisect import bisect_left, bisect_right
