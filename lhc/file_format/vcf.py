@@ -51,11 +51,12 @@ def merge(fnames, quality=50.0):
     for key, values in merger.hdrs.iteritems():
         for value in values:
             print '%s=%s'%(key, value)
-    print '#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tATTR\tFORMAT\t' + '\t'.join(reduce(add, merger.samples))
+    print '#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tATTR\tFORMAT\t' + '\t'.join(merger.sample_names)
     for entry in merger:
         print '%s\t%s\t%s'%('\t'.join(map(str, entry[:-1])),
-            ':'.join(entry.samples[0].iterkeys()),
-            '\t'.join(entry.samples.itervalues()))
+            ':'.join(entry.samples.values()[0].iterkeys()),
+            '\t'.join(':'.join(sample.itervalues())\
+                for sample in entry.samples.itervalues()))
 
 def main():
     parser = getArgumentParser()

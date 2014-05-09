@@ -49,6 +49,8 @@ class PseqParser(EntrySet):
         for line in infile:
             parts = line.strip().split('\t')
             chr, pos = parts[self.POS].split(':')
+            if '..' in pos:
+                pos = pos.split('..')[0]
             yield Association(chr,
                 int(pos) - 1,
                 parts[self.REF],

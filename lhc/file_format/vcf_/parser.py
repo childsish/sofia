@@ -46,7 +46,7 @@ class VcfParser(EntrySet):
             self.data = list(iter(self))
             for i, entry in enumerate(self.data):
                 self.pos_index[(entry.chr, entry.pos)] = i
-                ivl = Interval(entry.pos, entry.pos + len(entry.ref))
+                ivl = Interval(entry.chr, entry.pos, entry.pos + len(entry.ref))
                 self.ivl_index[(entry.chr, ivl)] = i
         
         if hasattr(key, 'chr') and hasattr(key, 'pos'):
@@ -57,9 +57,9 @@ class VcfParser(EntrySet):
     
     def _iterHandle(self, fhndl, hdrs=None):
         hdrs = self._parseHeaders(fhndl) if hdrs is None else hdrs
-        if len(hdrs[-1]) <= self.FORMAT:
+        if len(hdrs['##SAMPLES']) <= self.FORMAT:
             return self._iterUnsampledVcf(fhndl)
-        return self._iterSampledVcf(fhndl, hdrs[-1][self.FORMAT + 1:])
+        return self._iterSampledVcf(fhndl, hdrs['##SAMPLES'])
 
     def _getIndexedData(self, key):
         res = []

@@ -31,7 +31,7 @@ class VcfMerger(object):
             entry = tops[idxs[0]][:9]
             entry[4] = ','.join(merged_alleles[1:])
             entry[5] = '%.2f'%min(tops[idx][5] for idx in idxs)
-            entry[7] = ''
+            entry[7] = '.'
             
             samples = [OrderedDict([('GT', '0/0')])\
                 for name in self.sample_names]
