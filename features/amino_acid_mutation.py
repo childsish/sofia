@@ -1,3 +1,5 @@
+import sys
+
 from collections import defaultdict
 from modules.feature import Feature
 from resource import DynamicResource, StaticResource
@@ -33,14 +35,18 @@ class AminoAcidMutation(Feature):
         self.gc = GeneticCodes()[1]
     
     def calculate(self, locus, mdl, seq):
-        if len(locus.alt) > 1 or len(locus.ref) > 1:
+        if mdl is None or len(locus.alt) > 1 or len(locus.ref) > 1:
             return  {}
         muts = {}
         for m in mdl:
             mdl_muts = defaultdict(set)
             for k, v in m.transcripts.iteritems():
                 subseq = v.getSubSeq(seq, valid_types=set(['CDS']))
-                if subseq == '':
+                if len(subseq) % 3 != 0:
+                    msg = 'Could not properly translate %s (length: %d)\n'
+                    sys.stderr.write(msg%(k, len(subseq)))
+                    continue
+                elif subseq == '':
                     continue
                 try:
                     relpos = v.getRelPos(locus.pos)
