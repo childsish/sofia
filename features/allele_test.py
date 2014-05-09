@@ -1,5 +1,5 @@
 from modules.feature import Feature
-from allele_count import AlleleCount
+from allele import AlleleCount
 
 class AlleleTest(Feature):
     
