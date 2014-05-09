@@ -37,13 +37,13 @@ def filter(args):
     filters = []
     for filter in args.filters:
         match = op_regx.match(filter)
-        if match:
+        if match is None:
+            raise ValueError('Invalid filter definition: %s'%filter)
+        else:
             op, type = ops[match.group('op')]
             key = match.group('key')
-            value = match.group('value')
-            filters.append((headers.index(key), type, type(value), op))
-        else:
-            raise ValueError('Invalid filter definition: %s'%filter)
+            value = type(match.group('value'))
+            filters.append((headers.index(key), type, value, op))
     sys.stdout.write(header_line)
     for line in infile:
         parts = line.strip().split('\t')
