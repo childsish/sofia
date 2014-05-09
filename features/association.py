@@ -20,5 +20,5 @@ class AssociationPvalue(Feature):
     def format(self, entity):
         if isinstance(entity, basestring):
             return entity
-        return '%.3f'%entity
+        return '%.3e'%entity
  
