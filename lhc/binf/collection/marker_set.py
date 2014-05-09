@@ -8,12 +8,60 @@ from lhc.binf.genomic_coordinate import Position, Interval
 Reference = namedtuple('Reference', ['ref', 'poss'])
 
 class MarkerSet(object):
+    '''A reader for the netCDF marker set format
+    
+    Expected format:
+    dimensions:
+        pos: the number of positions
+        ploidy: the ploidy of the organism
+        gen: the number of genotypes
+    variables:
+        u1 chrs(pos): the chromosome ids (names found in indices subgroup)
+        u4 poss(pos): the position on the chromosome
+        S1 ref(pos, ploidy): the reference sequence
+        u4 muts(gen, pos, ploidy): the mutation ids (mutations found in mutations subgroup)
+    
+    group: indices {
+        dimensions:
+            rng: always 2 (from and to)
+        variables: each variable name is a chromosome name and the values are the range in the chrs, poss, ref and muts variables which the chromosome covers.
+    }
+    
+    group: genotypes {
+        dimensions:
+            idx: always 1 (the index)
+        variables: each variable name is a genotype name and the values are the index in the muts variable to which the genotype maps
+    }
+
+    group: mutations {
+        dimensions:
+            change: always 2 (ref and alt)
+            mut: the number of unique mutations
+            nchar: the maximum length of a mutation (indels can be >1)
+        variables:
+            S1 umuts(mut, change, nchar): the reference and alternate alleles of the unique mutations (eg. [('ACCG', 'A'), ('G', 'C')] is a deletion then a snp with idxs of 0 and 1 respectively. These indices are used in the muts variable)
+    }
+    '''
     def __init__(self, fname):
         self.data = Dataset(fname)
         
         self.indices = self._initIndices(self.data)
         self.gen2idx, self.idx2gen = self._initGenotypes(self.data)
         self.muts = self._initMutations(self.data)
+    
+    def iterPositions(self, convert=False):
+        chrs = self.indices.keys()
+        chr_var = self.data.variables['chrs']
+        pos_var = self.data.variables['poss']
+        mut_var = self.data.variables['muts']
+        if convert:
+            umuts = self.muts
+            for i in xrange(len(self.data.dimensions['pos'])):
+                muts = [(umuts[a][1], umuts[b][1]) for a, b in mut_var[:,i,:]]
+                yield (chrs[chr_var[i]], pos_var[i], muts)
+        else:
+            for i in xrange(len(self.data.dimensions['pos'])):
+                yield (chrs[chr_var[i]], pos_var[i], mut_var[:,i,:])
     
     def getGenotype(self, name):
         return Genotype(self, int(self.gen2idx[name]), name)
@@ -30,7 +78,7 @@ class MarkerSet(object):
         return poss_idx
 
     def getMarkerAtIndex(self, idx):
-        return self.data.variables['snps'][:,idx,:]
+        return self.data.variables['muts'][:,idx,:]
     
     def getPositionAtIndex(self, idx):
         chm_idx = self.data.variables['chms'][idx]
@@ -48,7 +96,7 @@ class MarkerSet(object):
         return np.arange(pos_fr, pos_to, dtype='u4')
     
     def getMarkersAtIndices(self, idxs):
-        return self.data.variables['snps'][:,idxs,:]
+        return self.data.variables['muts'][:,idxs,:]
     
     def getPositionsAtIndices(self, idxs):
         return map(self.getPositionAtIndex, idxs)
@@ -58,7 +106,7 @@ class MarkerSet(object):
             (1/True)
         """
         zygvar = self.data.variables['zygs']
-        snpvar = self.data.variables['snps']
+        snpvar = self.data.variables['muts']
         for i in xrange(len(self.data.dimensions['gen'])):
             zyg_per_pos = snpvar[i,:,:] != np.matrix(snpvar[i,:,0]).T
             zygvar[i] = np.any(zyg_per_pos)
@@ -70,7 +118,7 @@ class MarkerSet(object):
         malvar = self.data.variables['mal']
         mafvar = self.data.variables['maf']
         # Populate the variables
-        snpvar = self.data.variables['snps']
+        snpvar = self.data.variables['muts']
         for i in xrange(len(self.data.dimensions['pos'])):
             cnt = Counter(snpvar[:,i,:].flatten())
             if np.ma.masked in cnt:
@@ -96,7 +144,7 @@ class MarkerSet(object):
         return gen2idx, idx2gen
     
     def _initMutations(self, data):
-        muts = data.groups['mutations'].variables['muts'][:]
+        muts = data.groups['mutations'].variables['umuts'][:]
         np.ma.set_fill_value(muts, ' ')
         return [(ref.tostring().strip(), alt.tostring().strip())\
             for ref, alt in muts]
@@ -114,4 +162,5 @@ class Genotype(object):
             idx = self.mrk_set.getIndicesInInterval(key)
         else:
             raise ValueError('Expected a Position or Interval from the genomic_coordinate package. Got %s.'%type(key))
-        return self.mrk_set.data.variables['snps'][self.idx,idx]
+        return self.mrk_set.data.variables['muts'][self.idx,idx]
+
