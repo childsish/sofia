@@ -2,25 +2,14 @@ from modules.feature import Feature
 
 class Resource(Feature):
     
-    NAME = ''
+    EXT = ''
     
-    def __init__(self, fname, iname=None):
+    def __init__(self, name, fname):
         self.fname = fname
-        self.iname = iname
-        self.name = self._resolve()
-    
-    def __iter__(self):
-        msg = 'This resource can not be used as the query resource'
-        raise NotImplementedError(msg)
-    
-    def __getitem__(self, entities):
-        msg = 'This resource can not be used as a target resource'
-        raise NotImplementedError(msg)
+        self.in_ = self.IN[:]
+        self.out = self.OUT[:]
 
-    def index(self, iname):
-        msg = 'This resource can not be indexed'
-        raise NotImplementedError(msg)
+class Target(Resource):
     
-    @classmethod
-    def _resolve(cls, resource_map=None):
-        return cls.NAME
+    def calculate(self):
+        return self.data.next()
