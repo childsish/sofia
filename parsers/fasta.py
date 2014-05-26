@@ -1,9 +1,9 @@
 from lhc.file_format import fasta
-from modules.resource import Resource
+from modules.parser import Parser
 
-class FastaParser(Resource):
+class FastaParser(Parser):
     
-    NAME = 'fasta'
+    EXT = 'fasta'
     
     def __init__(self, fname, iname=None):
         super(FastaParser, self).__init__(fname, iname)

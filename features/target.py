@@ -15,3 +15,6 @@ class Position(Feature):
     
     def calculate(self, genomic_position):
         return genomic_position.pos
+
+    def format(self, genomic_position):
+        return str(genomic_position + 1)

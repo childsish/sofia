@@ -1,9 +1,11 @@
 import json
+import pprint
 
 from collections import defaultdict
 from itertools import izip, product, chain
 from modules.encoder import Encoder
 from modules.feature import Feature
+from modules.parser import Parser
 from modules.resource import Resource, Target
 from modules.feature_wrapper import FeatureWrapper
 from modules.graph import Graph
@@ -11,9 +13,13 @@ from modules.hyper_graph import HyperGraph
 from lhc.tools import loadPlugins
 
 def main():
+    parsers = loadPlugins('parsers', Parser)
+    for parser in parsers.itervalues():
+        Resource.registerParser(parser)
+    
     resource_types = {'vcf': ['variant', 'genomic_position'], 'gtf': ['model']}
     # -r name[:type]=fname
-    resources = [('target', None, 'D:\data\tmp.vcf')]
+    resources = [('target', None, r'D:\data\tmp.vcf')]
     # -f name:[resource[,resource]*]
     requested_features = [('Chromosome', frozenset()), ('Position', frozenset())]
     
@@ -73,18 +79,23 @@ def iterFeatureGraphs(feature, graph, visited=None):
     edge_dependencies = []
     for name, dependencies in graph.vs[feature].iteritems():
         edge_names.append(name)
-        edge_dependencies.append(list(chain.from_iterable(iterFeatureGraphs(dep, graph, visited) for dep in dependencies)))
+        tmp = []
+        for dependency in dependencies:
+            for dependency_graph in iterFeatureGraphs(dependency, graph, visited):
+                tmp.append((dependency, dependency_graph))
+        edge_dependencies.append(tmp)
+        #edge_dependencies.append(list(chain.from_iterable(iterFeatureGraphs(dep, graph, visited) for dep in dependencies)))
     for cmb in product(*edge_dependencies):
         res = Graph()
         res.addVertex(feature)
         keep = True
-        for edge, dependee in izip(edge_names, cmb):
+        for edge, (dependee, dependee_graph) in izip(edge_names, cmb):
             if dependee is None:
                 keep = False
                 break
             res.addEdge(edge, feature, dependee)
-            res.vs.update(dependee.vs)
-            res.es.update(dependee.es)
+            res.vs.update(dependee_graph.vs)
+            res.es.update(dependee_graph.es)
         if keep:
             yield res
 
@@ -107,8 +118,9 @@ def aggregate(requested_features, features):
 
 def iterRows(requested_features, features):
     kwargs = {}
-    for entity in features['Target']:
-        kwargs['Target'] = entity
+    key = [key for key in features if 'Target' in key][0]
+    for entity in features[key]:
+        kwargs[key] = entity
         yield [features[feature].generate(kwargs, features) for feature in requested_features]
 
 if __name__ == '__main__':

@@ -5,7 +5,8 @@ class Feature(object):
     IN = []
     OUT = []
     
-    def __init__(self, dependencies):
+    def __init__(self, name, dependencies):
+        self.name = name
         self.dependencies = dependencies
         self.changed = True
     

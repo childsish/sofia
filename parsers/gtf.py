@@ -1,11 +1,11 @@
 import sys
 
 from lhc.file_format import gtf
-from modules.resource import Resource
+from modules.parser import Parser
 
-class GtfParser(Resource):
+class GtfParser(Parser):
     
-    NAME = 'gtf'
+    EXT = 'gtf'
     
     def __init__(self, fname, iname=None):
         super(GtfParser, self).__init__(fname, iname)

@@ -1,10 +1,10 @@
 import json
 
-from modules.resource import Resource
+from modules.parser import Parser
 
-class JsonParser(Resource):
+class JsonParser(Parser):
     
-    NAME = 'json'
+    EXT = 'json'
     
     def __init__(self, fname, iname=None):
         super(JsonParser, self).__init__(fname, iname)

@@ -1,13 +1,13 @@
-from lhc.file_format import vcf
-from modules.resource import Resource
+from lhc.file_format import pseq
+from modules.parser import Parser
 
-class VcfParser(Resource):
+class PseqParser(Parser):
     
-    NAME = 'vcf'
+    EXT = 'pseq'
     
     def __init__(self, fname, iname=None):
-        super(VcfParser, self).__init__(fname, iname)
-        self.parser = vcf.VcfParser(fname, iname)
+        super(PseqParser, self).__init__(fname, iname)
+        self.parser = pseq.PseqParser(fname, iname)
     
     def __iter__(self):
         return iter(self.parser)
@@ -20,4 +20,4 @@ class VcfParser(Resource):
         return None
     
     def index(self, iname=None):
-        vcf.index(self.fname, iname)
+        pseq.index(self.fname, iname)

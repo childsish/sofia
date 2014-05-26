@@ -11,14 +11,15 @@ class FeatureWrapper(object):
     def instantiate(self, dependencies, requested_resources, resources):
         if len(self.out) == 0:
             raise RuntimeError('You must specify output types for %s'%self.name)
+        feature_name = (self.name, requested_resources)
         if issubclass(self.feature, Target):
-            return self.feature('target', resources['target'])\
-                if resources['target'][2].endswith(self.feature.EXT)\
-                else None
+            name, out, fname = resources['target']
+            feature = self.feature(feature_name, dependencies, fname)
         elif issubclass(self.feature, Resource):
-            for resource in requested_resources:
-                name, out, fname = resources[resource]
-                if resource != 'target' and fname.endswith(self.feature.EXT):
-                    return self.feature(resource, fname)
-            return None
-        return self.feature(dependencies)
+            name, out, fname = resources[self.name]
+            feature = self.feature(feature_name, dependencies, fname)
+        else:
+            feature = self.feature(feature_name, dependencies)
+        feature.in_ = self.in_
+        feature.out = self.out
+        return feature
