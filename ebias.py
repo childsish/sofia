@@ -1,21 +1,21 @@
 import json
 
 from collections import defaultdict
+from itertools import izip, product, chain
 from modules.encoder import Encoder
 from modules.feature import Feature
 from modules.resource import Resource, Target
 from modules.feature_wrapper import FeatureWrapper
 from modules.graph import Graph
 from modules.hyper_graph import HyperGraph
-from modules.dependency_graph import DependencyGraph
 from lhc.tools import loadPlugins
 
 def main():
     resource_types = {'vcf': ['variant', 'genomic_position'], 'gtf': ['model']}
     # -r name[:type]=fname
-    resources = [('target', None, 'tmp.vcf'), ('1000genomes', None, '1000genomes.vcf'), ('6200exomes', None, '6200exomes.vcf')]
-    # -f match_vcf:1000genomes match_vcf:6200exomes
-    requested_features = [('MatchVcf', frozenset(['1000genomes'])), ('MatchVcf', frozenset(['6200exomes']))]
+    resources = [('target', None, 'D:\data\tmp.vcf')]
+    # -f name:[resource[,resource]*]
+    requested_features = [('Chromosome', frozenset()), ('Position', frozenset())]
     
     available_features = loadPlugins('features', Feature)
     del available_features['Resource']
@@ -28,17 +28,8 @@ def main():
             type = [ext] if type is None else type
             wrappers.append(FeatureWrapper(Resource, '%sResource'%ext.capitalize(), type))
     graph = getHyperGraph(wrappers)
-    resolved_graph = Graph()
-    resources = dict((r[0], r) for r in resources)
-    for feature, requested_resources in requested_features:
-        feature_graph = getFeatureGraph(feature, graph)
-        labeled_features = labelFeatures(feature_graph, [(resource, resources[resource][2]) for resource in requested_resources])
-        for v in feature_graph.vs:
-            resolved_graph.addVertex((v, frozenset(labeled_features[v])))
-        for e, vs in feature_graph.es.iteritems():
-            for v1, v2 in vs:
-                resolved_graph.addEdge(e, (v1, frozenset(labeled_features[v1])), (v2, frozenset(labeled_features[v2])))
-    aggregate(resolved_graph, requested_features)
+    for resolved_graph, resolved_features in iterGraphPossibilities(requested_features, graph, resources, wrappers):
+        aggregate(requested_features, resolved_features)
 
 def getHyperGraph(wrappers):
     graph = HyperGraph()
@@ -56,25 +47,46 @@ def getHyperGraph(wrappers):
                     graph.addEdge(in_, wrapper.name, child)
     return graph
 
-def getFeatureGraph(feature, graph, visited=None):
+def iterGraphPossibilities(requested_features, graph, resources, wrappers):
+    resources = dict((r[0], r) for r in resources)
+    feature_graphs = [list(iterFeatureGraphs(requested_feature, graph)) for requested_feature, requested_resources in requested_features]
+    for (requested_feature, requested_resources), cmb in izip(requested_features, product(*feature_graphs)):
+        resolved_graph = Graph()
+        for feature_graph in cmb:
+            labeled_features = labelFeatures(feature_graph, [(resource, resources[resource][2]) for resource in requested_resources])
+            for v in feature_graph.vs:
+                resolved_graph.addVertex((v, frozenset(labeled_features[v])))
+            for e, vs in feature_graph.es.iteritems():
+                for v1, v2 in vs:
+                    resolved_graph.addEdge(e, (v1, frozenset(labeled_features[v1])), (v2, frozenset(labeled_features[v2])))
+        available_features = {wrapper.name: wrapper for wrapper in wrappers}
+        resolved_features = {feature: available_features[feature[0]].instantiate(dependencies, requested_resources, resources) for feature, dependencies in resolved_graph.vs.iteritems()}
+        yield resolved_graph, resolved_features
+
+def iterFeatureGraphs(feature, graph, visited=None):
     if visited is None:
         visited = set()
-    if feature in visited:
-        return
+    if feature != 'Target' and feature in visited:
+        raise StopIteration()
     visited.add(feature)
-    res = Graph()
-    res.addVertex(feature)
-    for edge, dependees in graph.vs[feature].iteritems():
-        for dependee in dependees:
-            dependencies = getFeatureGraph(dependee, graph, visited)
-            if dependencies is not None:
-                res.addEdge(edge, feature, dependee)
-                res.vs.update(dependencies.vs)
-                res.es.update(dependencies.es)
+    edge_names = []
+    edge_dependencies = []
+    for name, dependencies in graph.vs[feature].iteritems():
+        edge_names.append(name)
+        edge_dependencies.append(list(chain.from_iterable(iterFeatureGraphs(dep, graph, visited) for dep in dependencies)))
+    for cmb in product(*edge_dependencies):
+        res = Graph()
+        res.addVertex(feature)
+        keep = True
+        for edge, dependee in izip(edge_names, cmb):
+            if dependee is None:
+                keep = False
                 break
-        if dependencies is None:
-            return
-    return res
+            res.addEdge(edge, feature, dependee)
+            res.vs.update(dependee.vs)
+            res.es.update(dependee.es)
+        if keep:
+            yield res
 
 def labelFeatures(graph, requested_resources):
     labeled_features = defaultdict(set)
@@ -89,19 +101,15 @@ def labelFeatures(graph, requested_resources):
             stk.extend(graph.getParents(feature))
     return labeled_features
 
-def aggregate(graph, features):
-    for row in iterRows(graph, features):
+def aggregate(requested_features, features):
+    for row in iterRows(requested_features, features):
         print row
 
-def iterRows(graph, features):
+def iterRows(requested_features, features):
     kwargs = {}
-    for entity in features['target']:
-        kwargs['target'] = entity
-        yield [resolveFeature(graph, feature, kwargs) for feature in features]
-
-def resolveFeature(graph, feature):
-    kwargs = {edge: resolveFeature(dependee) for edge, dependee in graph.vs[feature]}
-    return all_features[feature].calculate(**kwargs)
+    for entity in features['Target']:
+        kwargs['Target'] = entity
+        yield [features[feature].generate(kwargs, features) for feature in requested_features]
 
 if __name__ == '__main__':
     import sys
