@@ -57,9 +57,9 @@ class VcfParser(EntrySet):
     
     def _iterHandle(self, fhndl, hdrs=None):
         hdrs = self._parseHeaders(fhndl) if hdrs is None else hdrs
-        if len(hdrs['##SAMPLES']) <= self.FORMAT:
-            return self._iterUnsampledVcf(fhndl)
-        return self._iterSampledVcf(fhndl, hdrs['##SAMPLES'])
+        if len(hdrs['##SAMPLES']) > 0:
+            return self._iterSampledVcf(fhndl, hdrs['##SAMPLES'])
+        return self._iterUnsampledVcf(fhndl)
 
     def _getIndexedData(self, key):
         res = []
