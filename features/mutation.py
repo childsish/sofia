@@ -1,6 +1,6 @@
 from modules.feature import Feature
 
-class GetAminoAcidMutation(Feature):
+class AminoAcidMutation(Feature):
     
     IN = ['coding_sequence', 'gene_position', 'variant']
     OUT = ['amino_acid_mutation']

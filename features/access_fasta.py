@@ -1,18 +1,16 @@
-from modules.resource import Resource
+from modules.feature import Feature
 
-class AccessFastaByModel(Resource):
+class AccessFastaByModel(Feature):
     
-    EXT = 'fasta'
-    IN = ['fasta', 'model']
+    IN = ['fasta', 'gene_model']
     OUT = ['nucleotide_sequence']
 
-    def calculate(self, model):
-        return model.getSubSeq(self.data)
+    def calculate(self, fasta, gene_model):
+        return gene_model.getSubSeq(fasta)
 
-class AccessFastaByHeader(Resource):
+class AccessFastaByHeader(Feature):
     
-    EXT = 'fasta'
     IN = ['fasta', 'header']
 
-    def calculate(self, string):
-        return self.data[string]
+    def calculate(self, fasta, gene_model):
+        return fasta[gene_model]

@@ -1,10 +1,12 @@
-from modules.resource import Resource
+from modules.feature import Feature
 
-class AccessGtfByPosition(Resource):
+class AccessGtfByPosition(Feature):
     
-    EXT = 'gtf'
     IN = ['gtf', 'genomic_position']
-    OUT = ['model']
+    OUT = ['gene_model']
 
-    def calculate(self, genomic_position):
-        return self.data[genomic_position]
+    def calculate(self, gtf, genomic_position):
+        res = gtf[genomic_position]
+        if res is None or len(res) == 0:
+            return None 
+        return res[0]
