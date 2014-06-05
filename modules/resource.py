@@ -13,6 +13,9 @@ class Resource(Feature):
             if fname.endswith(key):
                 self.data = self.PARSERS[key](fname)
     
+    def calculate(self):
+        return self.data
+    
     @classmethod
     def registerParser(cls, parser):
         cls.PARSERS[parser.EXT] = parser
