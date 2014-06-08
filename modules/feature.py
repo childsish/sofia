@@ -10,6 +10,9 @@ class Feature(object):
         self.dependencies = dependencies
         self.changed = True
     
+    def init(self):
+        pass
+    
     def calculate(self, **kwargs):
         """Calculate this feature
         
@@ -45,10 +48,10 @@ class Feature(object):
         for name, feature in self.dependencies.iteritems():
             entities[name] = features[feature].generate(entities, features)
             local_entities[name] = entities[name]
-        try:
-            res = self.calculate(**local_entities)
-        except TypeError, e:
-            raise TypeError(type(self).__name__  + ' ' + e.message.split(' ', 1)[1])
+        #try:
+        res = self.calculate(**local_entities)
+        #except TypeError, e:
+        #    raise TypeError(type(self).__name__  + ' ' + e.message.split(' ', 1)[1])
         return res
     
     def needsUpdate(self, entities, features):

@@ -6,7 +6,7 @@ class AccessFastaByModel(Feature):
     OUT = ['nucleotide_sequence']
 
     def calculate(self, fasta, gene_model):
-        return gene_model.getSubSeq(fasta)
+        return gene_model.transcripts.values()[0].getSubSeq(fasta)
 
 class AccessFastaByHeader(Feature):
     

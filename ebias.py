@@ -1,6 +1,4 @@
 import argparse
-import json
-import pprint
 import re
 
 from collections import defaultdict
@@ -42,15 +40,13 @@ def aggregate(args):
         Resource.registerParser(parser)
     
     available_features = loadPlugins('features', Feature)
-    if 'Feature' in available_features:
-        del available_features['Feature']
     if 'Resource' in available_features:
         del available_features['Resource']
     wrappers = [FeatureWrapper(feature) for feature in available_features.itervalues()]
     
     resource_types = {'vcf': ['variant', 'genomic_position'], 'gtf': ['model']}
     #requested_features = parseFeatures(args.features)
-    requested_features = [('Chromosome', frozenset()), ('Position', frozenset()), ('GeneName', frozenset(['gtf'])), ('GenePosition', frozenset(['gtf'])), ('AminoAcidMutation', frozenset(['gtf', 'fasta']))]
+    requested_features = [('Chromosome', frozenset()), ('Position', frozenset()), ('GeneName', frozenset(['gtf'])), ('CodingSequenceMutation', frozenset([])), ('AminoAcidMutation', frozenset(['gtf', 'fasta']))]
     #provided_resources = parseResources(args.resources)
     provided_resources = [('target', None, r'D:\data\tmp.KRAS.vcf'), ('gtf', None, r'D:\data\tmp.KRAS.gtf'), ('fasta', None, r'D:\data\tmp.fasta')]
     
@@ -59,11 +55,12 @@ def aggregate(args):
         wrappers.append(TargetWrapper(fname, resource_types[ext]) if name == 'target' else\
                         ResourceWrapper(fname, out))
     graph = getHyperGraph(wrappers)
+    print graph
     resolutions = list(iterGraphPossibilities(requested_features, graph, provided_resources, wrappers))
     if len(resolutions) == 1:
         resolved_graph, resolved_features = resolutions[0]
         for row in iterRows(requested_features, resolved_features):
-            print '\t'.join(resolved_features[feature].format(col) for feature, col in izip(requested_features, row))
+            print '\t'.join('' if col is None else resolved_features[feature].format(col) for feature, col in izip(requested_features, row))
     else:
         print 'Multiple resolutions were found'
     

@@ -9,6 +9,7 @@ class FeatureWrapper(object):
         if len(self.out) == 0:
             raise RuntimeError('You must specify output types for %s'%type(self.feature).__name__)
         feature = self.feature(name, dependencies)
+        feature.init()
         feature.in_ = self.in_
         feature.out = self.out
         return feature
