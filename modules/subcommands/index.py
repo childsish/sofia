@@ -2,7 +2,8 @@ import argparse
 import os
 
 from modules.resource import Resource
-from common import loadPlugins, loadResource, getProgramDirectory
+from common import loadResource, getProgramDirectory
+from lhc.tools import loadPlugins
 
 def main():
     parser = getParser()
