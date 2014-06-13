@@ -10,7 +10,6 @@ from modules.feature import Feature
 from modules.resource import Resource
 from modules.parser import Parser
 from modules.feature_wrapper import FeatureWrapper
-from modules.resource_wrapper import ResourceWrapper, TargetWrapper
 from lhc.graph.graph import Graph
 from lhc.graph.hyper_graph import HyperGraph
 from lhc.tools import loadPlugins
@@ -33,17 +32,23 @@ class Aggregator(object):
         requested_features = parseFeatures(args.features)
         #requested_features = [('Chromosome', frozenset()), ('Position', frozenset()), ('GeneName', frozenset(['gtf'])), ('VariantType', frozenset([])), ('CodingVariation', frozenset([])), ('AminoAcidVariation', frozenset(['gtf', 'fasta']))]
         provided_resources = self.resource_parser.parseResources(args.resources)
-        provided_resources.append(self.resource_parser.parseResource(args.input, 'target', args.type))
+        provided_resources.append(self.resource_parser.parseTarget(args.input))
         wrappers.extend(provided_resources)
+        
         graph = getHyperGraph(wrappers)
         print graph
         resolutions = list(iterGraphPossibilities(requested_features, graph, provided_resources, wrappers))
         if len(resolutions) == 1:
+            print resolutions[0]
             resolved_graph, resolved_features = resolutions[0]
             for row in iterRows(requested_features, resolved_features):
                 print '\t'.join('' if col is None else resolved_features[feature].format(col) for feature, col in izip(requested_features, row))
+        elif len(resolutions) == 0:
+            print 'No resolutions were found'
         else:
             print 'Multiple resolutions were found'
+            for r in resolutions:
+                print r
 
 def main(argv):
     parser = getParser()
@@ -88,12 +93,12 @@ def getHyperGraph(wrappers):
     return graph
 
 def iterGraphPossibilities(requested_features, graph, resources, wrappers):
-    resources = dict((r[0], r) for r in resources)
+    resources = dict((r.name, r) for r in resources)
     feature_graphs = [list(iterFeatureGraphs(requested_feature, graph, set())) for requested_feature, requested_resources in requested_features]
     for cmb in product(*feature_graphs):
         resolved_graph = Graph()
         for (requested_feature, requested_resources), feature_graph in izip(requested_features, cmb):
-            labeled_features = labelFeatures(feature_graph, [(resource, resources[resource][2]) for resource in requested_resources])
+            labeled_features = labelFeatures(feature_graph, [(r, resources[r].parser.fname) for r in requested_resources])
             for v in feature_graph.vs:
                 resolved_graph.addVertex((v, frozenset(labeled_features[v])))
             for e, vs in feature_graph.es.iteritems():
@@ -143,8 +148,8 @@ def labelFeatures(graph, requested_resources):
 
 def iterRows(requested_features, features):
     kwargs = {}
-    key = [key for key in features if 'Target' in key][0]
-    for entity in features[key]:
+    key = [key for key in features if 'target' in key][0]
+    for entity in features[key].parser:
         kwargs[key] = entity
         yield [features[feature].generate(kwargs, features) for feature in requested_features]
         
