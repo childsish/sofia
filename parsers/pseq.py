@@ -3,7 +3,7 @@ from modules.parser import Parser
 
 class PseqParser(Parser):
     
-    EXT = 'pseq'
+    EXT = '.pseq'
     
     def __init__(self, fname, iname=None):
         super(PseqParser, self).__init__(fname, iname)

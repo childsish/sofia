@@ -3,7 +3,7 @@ from modules.parser import Parser
 
 class FastaParser(Parser):
     
-    EXT = 'fasta'
+    EXT = '.fasta'
     
     def __init__(self, fname, iname=None):
         super(FastaParser, self).__init__(fname, iname)

@@ -4,7 +4,7 @@ from modules.parser import Parser
 
 class JsonParser(Parser):
     
-    EXT = 'json'
+    EXT = '.json'
     
     def __init__(self, fname, iname=None):
         super(JsonParser, self).__init__(fname, iname)

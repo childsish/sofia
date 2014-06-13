@@ -3,7 +3,9 @@ from modules.parser import Parser
 
 class VcfParser(Parser):
     
-    EXT = 'vcf'
+    EXT = '.vcf'
+    IN = []
+    OUT = ['genomic_position', 'variant']
     
     def __init__(self, fname, iname=None):
         super(VcfParser, self).__init__(fname, iname)

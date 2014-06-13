@@ -5,7 +5,7 @@ from modules.parser import Parser
 
 class GtfParser(Parser):
     
-    EXT = 'gtf'
+    EXT = '.gtf'
     
     def __init__(self, fname, iname=None):
         super(GtfParser, self).__init__(fname, iname)
