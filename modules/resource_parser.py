@@ -30,8 +30,14 @@ class ResourceParser(object):
             raise ValueError('No parsers exist for resource type "%s"'%type)
         parser = self.parsers[type](fname)
         return ResourceWrapper(parser,
-            os.path.splitext(os.path.split(fname)[1])[0] if name is None else name,
-            out=type)
+            os.path.split(fname)[1] if name is None else name,
+            out=[type])
+    
+    def parseTarget(self, fname, type=None):
+        types = {'vcf': ['variant', 'genomic_position'], 'gtf': ['gene_model']}
+        type = self.getType(fname) if type is None else type
+        parser = self.parsers[type](fname)
+        return ResourceWrapper(parser, 'target', out=types[type])
     
     def getType(self, fname):
         if not os.path.isdir(fname):
