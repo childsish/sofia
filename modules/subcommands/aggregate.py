@@ -5,6 +5,7 @@ import re
 from collections import defaultdict
 from common import getProgramDirectory
 from itertools import izip, product
+from modules.resource_parser import ResourceParser
 from modules.feature import Feature
 from modules.resource import Resource
 from modules.parser import Parser
@@ -13,6 +14,36 @@ from modules.resource_wrapper import ResourceWrapper, TargetWrapper
 from lhc.graph.graph import Graph
 from lhc.graph.hyper_graph import HyperGraph
 from lhc.tools import loadPlugins
+
+class Aggregator(object):
+    def __init__(self):
+        program_dir = getProgramDirectory()
+        parsers = loadPlugins(os.path.join(program_dir, 'parsers'), Parser)
+        self.resource_parser = ResourceParser({parser.EXT: parser\
+            for parser in parsers.itervalues()})
+
+    def aggregate(self, args):
+        program_dir = getProgramDirectory()
+        
+        available_features = loadPlugins(os.path.join(program_dir, 'features'), Feature)
+        if 'Resource' in available_features:
+            del available_features['Resource']
+        wrappers = [FeatureWrapper(feature) for feature in available_features.itervalues()]
+        
+        requested_features = parseFeatures(args.features)
+        #requested_features = [('Chromosome', frozenset()), ('Position', frozenset()), ('GeneName', frozenset(['gtf'])), ('VariantType', frozenset([])), ('CodingVariation', frozenset([])), ('AminoAcidVariation', frozenset(['gtf', 'fasta']))]
+        provided_resources = self.resource_parser.parseResources(args.resources)
+        provided_resources.append(self.resource_parser.parseResource(args.input, 'target', args.type))
+        wrappers.extend(provided_resources)
+        graph = getHyperGraph(wrappers)
+        print graph
+        resolutions = list(iterGraphPossibilities(requested_features, graph, provided_resources, wrappers))
+        if len(resolutions) == 1:
+            resolved_graph, resolved_features = resolutions[0]
+            for row in iterRows(requested_features, resolved_features):
+                print '\t'.join('' if col is None else resolved_features[feature].format(col) for feature, col in izip(requested_features, row))
+        else:
+            print 'Multiple resolutions were found'
 
 def main(argv):
     parser = getParser()
@@ -33,38 +64,12 @@ def defineParser(parser):
         help='name[:type]=fname')
     parser.add_argument('-o', '--output')
     parser.add_argument('-t', '--template')
+    parser.add_argument('-y', '--type')
     parser.set_defaults(func=aggregate)
 
 def aggregate(args):
-    program_dir = getProgramDirectory()
-    parsers = loadPlugins(os.path.join(program_dir, 'parsers'), Parser)
-    for parser in parsers.itervalues():
-        Resource.registerParser(parser)
-    
-    available_features = loadPlugins(os.path.join(program_dir, 'features'), Feature)
-    if 'Resource' in available_features:
-        del available_features['Resource']
-    wrappers = [FeatureWrapper(feature) for feature in available_features.itervalues()]
-    
-    resource_types = {'vcf': ['variant', 'genomic_position'], 'gtf': ['model']}
-    requested_features = parseFeatures(args.features)
-    #requested_features = [('Chromosome', frozenset()), ('Position', frozenset()), ('GeneName', frozenset(['gtf'])), ('VariantType', frozenset([])), ('CodingVariation', frozenset([])), ('AminoAcidVariation', frozenset(['gtf', 'fasta']))]
-    provided_resources = parseResources(args.resources)
-    #provided_resources = [('target', None, r'D:\data\tmp.KRAS.vcf'), ('gtf', None, r'D:\data\tmp.KRAS.gtf'), ('fasta', None, r'D:\data\tmp.fasta')]
-    
-    for name, out, fname in provided_resources:
-        ext = fname.rsplit('.', 1)[-1]
-        wrappers.append(TargetWrapper(fname, resource_types[ext]) if name == 'target' else\
-                        ResourceWrapper(fname, out))
-    graph = getHyperGraph(wrappers)
-    print graph
-    resolutions = list(iterGraphPossibilities(requested_features, graph, provided_resources, wrappers))
-    if len(resolutions) == 1:
-        resolved_graph, resolved_features = resolutions[0]
-        for row in iterRows(requested_features, resolved_features):
-            print '\t'.join('' if col is None else resolved_features[feature].format(col) for feature, col in izip(requested_features, row))
-    else:
-        print 'Multiple resolutions were found'
+    aggregator = Aggregator()
+    aggregator.aggregate(args)
 
 def getHyperGraph(wrappers):
     graph = HyperGraph()
@@ -153,15 +158,6 @@ def parseFeatures(features):
         resources = frozenset() if match.group('resources') is None\
             else frozenset(match.group('resources').split(','))
         res.append((name, resources))
-    return res
-
-def parseResources(resources):
-    """ -r name[:type]=fname """
-    regx = re.compile('(?P<name>\w+)(?::(?P<type>\w+))?=(?P<fname>.+)')
-    res = []
-    for resource in resources:
-        match = regx.match(resource)
-        res.append(match.groups())
     return res
 
 if __name__ == '__main__':
