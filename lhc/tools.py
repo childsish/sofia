@@ -1,3 +1,4 @@
+import imp
 import numpy as np
 
 from collections import deque
@@ -61,11 +62,12 @@ def loadPlugins(indir, cls):
     sys.path.append(indir)
     plugins = {}
 
-    mnames = (fname[:-3] for fname in os.listdir(indir)\
+    fnames = (fname for fname in os.listdir(indir)\
         if fname[0] != '.' and fname.endswith('.py'))
 
-    for mname in mnames:
-        d = __import__(mname).__dict__
+    for fname in fnames:
+        module_name, ext = os.path.splitext(fname)
+        d = imp.load_source(module_name, os.path.join(indir, fname)).__dict__
         for k, v in d.iteritems():
             if k == cls.__name__:
                 continue
