@@ -16,7 +16,7 @@ class HyperGraph(object):
                 edges.add((v1, e))
                 for v2 in v2s:
                     edges.add((e, v2))
-        res.extend('    %s -> %s'%edge for edge in edges)
+        res.extend('    %s -> %s;'%edge for edge in edges)
         res.append('}')
         return '\n'.join(res)
     
