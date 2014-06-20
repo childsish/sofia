@@ -80,6 +80,8 @@ class VcfParser(EntrySet):
     def _parseHeaders(cls, fhndl):
         hdrs = OrderedDict()
         line = fhndl.next().strip()
+        if not 'VCF' in line:
+            raise ValueError('Invalid VCF file. Line 1: %s'%line.strip())
         while line.startswith('##'):
             key, value = line.split('=', 1)
             if key not in hdrs:
