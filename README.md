@@ -16,3 +16,47 @@ New features are implemented by creating a new Python class that inherits from t
 4. **Calculating the feature.** The function to actually calculate the desired feature also needs to be defined. The arguments that are passed to it are determined by the names of the given dependencies. The function is defined by the class member "calculate".
 5. **Formatting the results (optional).** The output of "calculate" can be formatted before the final output by the "format" function.
 
+Design Philosophy
+-----------------
+
+Batteries included.
+
+ * There should be as few library dependencies as possible.
+
+The user has to change the resource data as little as possible.
+
+ * This means that gzipped files can not be indexed as gzip indexing requires the file to be unzipped and re-zipped using tabix. Using tabix would also require an extra library
+
+The tool should be easily extended.
+
+ * The default state is not a one-size-fits-all solution. Different groups have different needs. However, it should be easily extended to accomodate new types of resources and features.
+ * As much adaptation as possible should be carried out on the command line.
+
+
+Other considerations
+--------------------
+
+It is not intended to be a workflow engine.
+
+It should be able to annotate any set of bioloical entities.
+
+
+
+resource
+ - name
+ - in
+ - out
+ - filename
+
+
+Somehow need to specify how to index the resource
+
+Give the resource types with initialisation?
+
+-t name:TableResource:
+
+
+Multiple VCFs
+-------------
+
+-r name:dname -t name:multivcf
