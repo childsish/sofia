@@ -1,5 +1,5 @@
 from lhc.file_format import pseq
-from modules.parser import Parser
+from ebias.parser import Parser
 
 class PseqParser(Parser):
     

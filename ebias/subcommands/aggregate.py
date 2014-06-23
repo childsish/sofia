@@ -6,11 +6,11 @@ import json
 from collections import defaultdict
 from common import getProgramDirectory
 from itertools import izip, product
-from modules.resource_parser import ResourceParser
-from modules.feature import Feature
-from modules.resource import Resource
-from modules.parser import Parser
-from modules.feature_wrapper import FeatureWrapper
+from ebias.resource_parser import ResourceParser
+from ebias.feature import Feature
+from ebias.resource import Resource
+from ebias.parser import Parser
+from ebias.feature_wrapper import FeatureWrapper
 from lhc.graph.graph import Graph
 from lhc.graph.hyper_graph import HyperGraph
 from lhc.tools import loadPlugins

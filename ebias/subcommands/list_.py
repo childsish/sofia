@@ -2,7 +2,7 @@ import argparse
 import os
 
 from common import loadPlugins, getProgramDirectory
-from modules.feature import Feature
+from ebias.feature import Feature
 
 def main():
     parser = getParser()

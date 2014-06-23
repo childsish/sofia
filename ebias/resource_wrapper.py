@@ -1,6 +1,6 @@
 import os
 
-from modules.resource import Resource, Target
+from ebias.resource import Resource, Target
 
 class ResourceWrapper(object):
     def __init__(self, parser, name=None, out=None):

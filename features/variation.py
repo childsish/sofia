@@ -1,7 +1,7 @@
 from collections import namedtuple
 from lhc.binf.genetic_code import GeneticCodes
 from lhc.binf.sequence import revcmp
-from modules.feature import Feature
+from ebias.feature import Feature
 
 CodingVariant = namedtuple('CodingVariant', ('pos', 'ref', 'alt'))
 

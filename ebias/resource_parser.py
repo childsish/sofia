@@ -1,7 +1,7 @@
 import os
 import re
 
-from modules.resource_wrapper import ResourceWrapper
+from ebias.resource_wrapper import ResourceWrapper
 
 class ResourceParser(object):
     """ -r <fname>[;type=<type>][;<name>]

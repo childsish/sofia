@@ -1,6 +1,6 @@
 import json
 
-from modules.parser import Parser
+from ebias.parser import Parser
 
 class JsonParser(Parser):
     

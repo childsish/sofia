@@ -1,4 +1,4 @@
-from modules.feature import Feature
+from ebias.feature import Feature
 
 class Chromosome(Feature):
     
