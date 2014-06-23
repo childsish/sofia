@@ -14,8 +14,8 @@ def getParser():
     aggregate_parser = subparsers.add_parser('aggregate')
     aggregate.defineParser(aggregate_parser)
     
-    index_parser = subparsers.add_parser('index')
-    index_parser.defineParser(index_parser)
+    #index_parser = subparsers.add_parser('index')
+    #index_parser.defineParser(index_parser)
     
     return parser
 
