@@ -41,6 +41,8 @@ def _createIndices(fname):
     return pos_index, ivl_index
 
 def merge(fnames, quality=50.0, out=None):
+    import sys
+    
     out = sys.stdout if out is None else open(out, 'w')
     if len(fnames) == 1 and os.path.isdir(fnames[0]):
         fnames = [os.path.join(fnames[0], fname) for fname in os.listdir(fnames[0])]
