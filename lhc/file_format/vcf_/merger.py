@@ -33,17 +33,22 @@ class VcfMerger(object):
             entry[5] = '%.2f'%min(tops[idx][5] for idx in idxs)
             entry[7] = '.'
             
-            samples = [OrderedDict([('GT', '0/0')])\
+            samples = [OrderedDict([('GT', '0/0'), ('GQ', '0'), ('RO', '0'), ('AO', '0')])\
                 for name in self.sample_names]
             for idx in idxs:
-                for i, sample in enumerate(tops[idx][9:]):
-                    gt, sample = sample.split(':', 1)
-                    if gt == '0/0':
-                        continue
-                    a1, a2 = map(int, gt.split('/'))
-                    alleles = [tops[idx][3]] + tops[idx][4].split(',')
-                    sample = '/'.join(map(str, (merged_alleles.index(alleles[a1]), merged_alleles.index(alleles[a2]))))
-                    samples[self.sample_idxs[idx][i]]['GT'] = sample
+                top = tops[idx]
+                sample_idx = self.sample_idxs[idx]
+                format = top[8].split(':')
+                for i, sample in enumerate(top[9:]):
+                    sample = {k: v for k, v in izip(format, sample.split(':'))}
+                    if sample['GT'] != '0/0':
+                        a1, a2 = map(int, sample['GT'].split('/'))
+                        alleles = [top[3]] + top[4].split(',')
+                        sample['GT'] = '/'.join(map(str, (merged_alleles.index(alleles[a1]), merged_alleles.index(alleles[a2]))))
+                    samples[sample_idx[i]]['GT'] = sample['GT']
+                    samples[sample_idx[i]]['GQ'] = sample['GQ']
+                    samples[sample_idx[i]]['RO'] = sample['RO']
+                    samples[sample_idx[i]]['AO'] = sample['AO']
             entry[8] = OrderedDict(izip(self.sample_names, samples))
             yield Variant(*entry)
             for idx in idxs:

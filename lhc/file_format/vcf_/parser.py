@@ -57,9 +57,9 @@ class VcfParser(EntrySet):
     
     def _iterHandle(self, fhndl, hdrs=None):
         hdrs = self._parseHeaders(fhndl) if hdrs is None else hdrs
-        if len(hdrs['##SAMPLES']) <= self.FORMAT:
-            return self._iterUnsampledVcf(fhndl)
-        return self._iterSampledVcf(fhndl, hdrs['##SAMPLES'])
+        if len(hdrs['##SAMPLES']) > 0:
+            return self._iterSampledVcf(fhndl, hdrs['##SAMPLES'])
+        return self._iterUnsampledVcf(fhndl)
 
     def _getIndexedData(self, key):
         res = []
@@ -80,6 +80,8 @@ class VcfParser(EntrySet):
     def _parseHeaders(cls, fhndl):
         hdrs = OrderedDict()
         line = fhndl.next().strip()
+        if not 'VCF' in line:
+            raise ValueError('Invalid VCF file. Line 1: %s'%line.strip())
         while line.startswith('##'):
             key, value = line.split('=', 1)
             if key not in hdrs:
