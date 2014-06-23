@@ -41,7 +41,10 @@ class ResourceParser(object):
     
     def getType(self, fname):
         if not os.path.isdir(fname):
-            return fname.rsplit('.', 1)[1]
+            parts = fname.split('.')
+            if parts[-1] == 'gz':
+                return parts[-2]
+            return parts[-1]
         exts = set(f.rsplit('.', 1)[1] for f in os.listdir(fname))
         if len(exts) > 1:
             raise ValueError('Can not determine type of resource %s. Multiple types (file extensions) found in %s'%(name, fname))
