@@ -1,6 +1,7 @@
 import argparse
 import os
 import re
+import json
 
 from collections import defaultdict
 from common import getProgramDirectory
@@ -20,6 +21,7 @@ class Aggregator(object):
         parsers = loadPlugins(os.path.join(program_dir, 'parsers'), Parser)
         self.resource_parser = ResourceParser({parser.EXT: parser\
             for parser in parsers.itervalues()})
+        #self.resource_parser.parsers.update(self._loadParsers(os.path.join(program_dir, 'parsers.json'), parsers))
 
     def aggregate(self, args):
         program_dir = getProgramDirectory()
@@ -30,13 +32,14 @@ class Aggregator(object):
         wrappers = [FeatureWrapper(feature) for feature in available_features.itervalues()]
         
         requested_features = parseFeatures(args.features)
-        #requested_features = [('Chromosome', frozenset()), ('Position', frozenset()), ('GeneName', frozenset(['gtf'])), ('VariantType', frozenset([])), ('CodingVariation', frozenset([])), ('AminoAcidVariation', frozenset(['gtf', 'fasta']))]
         provided_resources = self.resource_parser.parseResources(args.resources)
         provided_resources.append(self.resource_parser.parseTarget(args.input))
         wrappers.extend(provided_resources)
         
         graph = getHyperGraph(wrappers)
-        print graph
+        #if args.graph and len(requested_features) == 0:
+        #    print graph
+        #    sys.exit(1)
         resolutions = list(iterGraphPossibilities(requested_features, graph, provided_resources, wrappers))
         if len(resolutions) == 1:
             print resolutions[0]
@@ -48,7 +51,17 @@ class Aggregator(object):
         else:
             print 'Multiple resolutions were found'
             for r in resolutions:
-                print r
+                print r[0]
+
+    def _loadParsers(self, fname, parsers):
+        fhndl = open(fname)
+        parser_types = json.load(fhndl)
+        fhndl.close()
+        res = {}
+        for type in parser_types:
+            parser = parsers[type['parser']](**type['args'])
+            res[type['name']] = parser
+        return res
 
 def main(argv):
     parser = getParser()
@@ -66,10 +79,11 @@ def defineParser(parser):
     parser.add_argument('features', nargs='+',
         help='name:[resource[,resource]*]')
     parser.add_argument('-r', '--resources', nargs='+',
-        help='name[:type]=fname')
+        help='name[:type]=fname', default=[])
     parser.add_argument('-o', '--output')
     parser.add_argument('-t', '--template')
     parser.add_argument('-y', '--type')
+    #parser.add_argument('-g', '--graph', action='StoreTrue')
     parser.set_defaults(func=aggregate)
 
 def aggregate(args):
@@ -95,6 +109,9 @@ def getHyperGraph(wrappers):
 def iterGraphPossibilities(requested_features, graph, resources, wrappers):
     resources = dict((r.name, r) for r in resources)
     feature_graphs = [list(iterFeatureGraphs(requested_feature, graph, set())) for requested_feature, requested_resources in requested_features]
+    missing_features = [requested_feature for feature_graph, (requested_feature, requested_resources) in izip(feature_graphs, requested_features) if len(feature_graph) == 0]
+    if len(missing_features) > 0:
+        raise ValueError('Unable to resolve a graph for requested feature: %s'%','.join(missing_features))
     for cmb in product(*feature_graphs):
         resolved_graph = Graph()
         for (requested_feature, requested_resources), feature_graph in izip(requested_features, cmb):
@@ -164,6 +181,13 @@ def parseFeatures(features):
             else frozenset(match.group('resources').split(','))
         res.append((name, resources))
     return res
+
+def parseType(type):
+    """ Parses the target type from the command line (if specified).
+    
+    -t out[,out]*:
+    """
+    return None
 
 if __name__ == '__main__':
     import sys
