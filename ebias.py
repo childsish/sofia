@@ -1,6 +1,6 @@
 import argparse
 
-from modules.subcommands import aggregate, index
+from modules.subcommands import aggregate, list_
 
 def main():
     parser = getParser()
@@ -14,8 +14,8 @@ def getParser():
     aggregate_parser = subparsers.add_parser('aggregate')
     aggregate.defineParser(aggregate_parser)
     
-    #index_parser = subparsers.add_parser('index')
-    #index_parser.defineParser(index_parser)
+    list_parser = subparsers.add_parser('list')
+    list_.defineParser(list_parser)
     
     return parser
 
