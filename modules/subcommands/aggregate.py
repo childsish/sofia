@@ -3,12 +3,11 @@ import os
 import re
 import json
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 from common import getProgramDirectory
-from itertools import izip, product
+from itertools import izip, product, chain
 from modules.resource_parser import ResourceParser
 from modules.feature import Feature
-from modules.resource import Resource
 from modules.parser import Parser
 from modules.feature_wrapper import FeatureWrapper
 from lhc.graph.graph import Graph
@@ -41,6 +40,7 @@ class Aggregator(object):
         #    print graph
         #    sys.exit(1)
         resolutions = list(iterGraphPossibilities(requested_features, graph, provided_resources, wrappers))
+        resolutions = [r for r in resolutions if isValid(r[0], provided_resources)]
         if len(resolutions) == 1:
             print resolutions[0]
             resolved_graph, resolved_features = resolutions[0]
@@ -150,7 +150,17 @@ def iterDependencies(dependencies, graph, visited):
         for dependency_graph in iterFeatureGraphs(dependency, graph, visited):
             yield (dependency, dependency_graph)
 
+def isValid(graph, resources):
+    count = Counter(e[1][0] for e in chain(*[e for e in graph.es.itervalues()]))
+    for resource in resources:
+        if resource.name == 'target':
+            continue
+        elif count[resource.name] > 1:
+            return False
+    return True
+
 def labelFeatures(graph, requested_resources):
+    #TODO: Currently only working because every feature is based on a resource.
     labeled_features = defaultdict(set)
     for name, fname in requested_resources:
         ext = fname.rsplit('.', 1)[1]
