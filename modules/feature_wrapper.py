@@ -1,9 +1,9 @@
 class FeatureWrapper(object):
-    def __init__(self, feature, out=None):
+    def __init__(self, feature, name=None, out=None):
         self.feature = feature
         self.in_ = feature.IN
         self.out = feature.OUT if out is None else out
-        self.name = feature.__name__
+        self.name = feature.__name__ if name is None else name
 
     def instantiate(self, name, dependencies, requested_resources, resources):
         if len(self.out) == 0:
