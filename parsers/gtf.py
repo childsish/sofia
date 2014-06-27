@@ -1,7 +1,7 @@
 import sys
 
 from lhc.file_format import gtf
-from modules.parser import Parser
+from ebias.parser import Parser
 
 class GtfParser(Parser):
     

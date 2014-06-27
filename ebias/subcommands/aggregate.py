@@ -5,11 +5,12 @@ import json
 
 from collections import defaultdict, Counter
 from common import getProgramDirectory
-from itertools import izip, product, chain
-from modules.resource_parser import ResourceParser
-from modules.feature import Feature
-from modules.parser import Parser
-from modules.feature_wrapper import FeatureWrapper
+from itertools import izip, product
+from ebias.resource_parser import ResourceParser
+from ebias.feature import Feature
+from ebias.resource import Resource
+from ebias.parser import Parser
+from ebias.feature_wrapper import FeatureWrapper
 from lhc.graph.graph import Graph
 from lhc.graph.hyper_graph import HyperGraph
 from lhc.tools import loadPlugins

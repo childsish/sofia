@@ -1,9 +1,8 @@
 import argparse
 import os
 
-from common import getProgramDirectory
-from modules.feature import Feature
-from lhc.tools import loadPlugins
+from common import loadPlugins, getProgramDirectory
+from ebias.feature import Feature
 
 def main():
     parser = getParser()

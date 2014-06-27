@@ -1,5 +1,5 @@
 from lhc.binf.genetic_code import GeneticCodes
-from modules.feature import Feature
+from ebias.feature import Feature
 
 class GetCodingSequenceFromNucleotideSequence(Feature):
     

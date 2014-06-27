@@ -1,6 +1,6 @@
 import argparse
 
-from modules.subcommands import aggregate, list_
+from ebias.subcommands import aggregate, list_
 
 def main():
     parser = getParser()
