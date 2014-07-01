@@ -5,7 +5,7 @@ import json
 
 from collections import defaultdict, Counter
 from common import getProgramDirectory
-from itertools import izip, product
+from itertools import izip, product, chain
 from ebias.resource_parser import ResourceParser
 from ebias.feature import Feature
 from ebias.resource import Resource

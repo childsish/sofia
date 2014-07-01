@@ -1,7 +1,8 @@
 import argparse
 import os
 
-from common import loadPlugins, getProgramDirectory
+from lhc.tools import loadPlugins
+from common import getProgramDirectory
 from ebias.feature import Feature
 
 def main():
