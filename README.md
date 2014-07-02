@@ -5,7 +5,7 @@ Extensible BioInformation Aggregation System
 
 example command:
 
-> python ebias.py D:\data\tmp.vcf chr pos gene_name chr_mut aa_mut -r mdl=D:\data\tmp.gtf seq=D:\data\tmp.fasta gcode=D:\data\tmp.gc
+> python -m run_ebias D:\data\tmp.vcf Chromosome Position GeneName AminoAcidVariant VariantType -r D:\data\tmp.gtf D:\data\tmp.fasta
 
 Creating a new feature
 ----------------------
@@ -40,17 +40,6 @@ It is not intended to be a workflow engine.
 
 It should be able to annotate any set of bioloical entities.
 
-
-
-resource
- - name
- - in
- - out
- - filename
-
-
-Somehow need to specify how to index the resource
-
 Give the resource types with initialisation?
 
 -t name:TableResource:
@@ -60,3 +49,15 @@ Multiple VCFs
 -------------
 
 -r name:dname -t name:multivcf
+
+To Do
+-----
+
+How to give resources types
+How to make resource accessors return the resource type
+
+To Test
+-------
+
+VCF <=> GTF
+GTF <=> VCF
