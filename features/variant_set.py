@@ -1,33 +1,33 @@
 from ebias.feature import Feature
 
-class AccessVcfByPosition(Feature):
+class GetVariantByPosition(Feature):
     
-    IN = ['vcf', 'genomic_position']
+    IN = ['variant_set', 'genomic_position']
     OUT = ['variant', 'genomic_position']
 
-    def calculate(self, vcf, genomic_position):
-        return vcf[genomic_position]
+    def calculate(self, variant_set, genomic_position):
+        return variant_set[genomic_position]
 
-class AccessVcfByInterval(Feature):
+class GetVariantsByInterval(Feature):
     
-    IN = ['vcf', 'genomic_interval']
+    IN = ['variant_set', 'genomic_interval']
     OUT = ['variant', 'genomic_position']
     
-    def calculate(self, vcf, genomic_interval):
-        return vcf[genomic_interval]
+    def calculate(self, variant_set, genomic_interval):
+        return variant_set[genomic_interval]
 
-class AccessVcfByGeneModel(Feature):
+class GetVariantsByGeneModel(Feature):
     
-    IN = ['vcf', 'gene_model']
+    IN = ['variant_set', 'gene_model']
     OUT = ['variant', 'genomic_position']
     
-    def calculate(self, vcf, gene_model):
-        return vcf[gene_model.ivl]
+    def calculate(self, variant_set, gene_model):
+        return variant_set[gene_model.ivl]
 
-class MatchVcf(Feature):
+class MatchVariant(Feature):
     
     IN = ['variant']
-    OUT = ['vcf_match']
+    OUT = ['variant_set_match']
     
     def calculate(self, variant):
         return variant is not None

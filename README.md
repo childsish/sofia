@@ -53,9 +53,6 @@ Multiple VCFs
 To Do
 -----
 
-How to give resources types
-How to make resource accessors return the resource type
-
 To Test
 -------
 
