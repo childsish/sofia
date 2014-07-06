@@ -17,7 +17,8 @@ class EntrySet(object):
     def __iter__(self):
         if not self.fhndl.closed:
             self.fhndl.close()
-        self.fhndl = gzip.open(self.fname) if self.fname.endswith('.gz') else open(self.fname)
+        fname = self.fname
+        self.fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
         for entry in self._iterHandle(self.fhndl):
             yield entry
     

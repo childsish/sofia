@@ -124,7 +124,7 @@ class Interval(BaseInterval):
     
     def getRelPos(self, pos):
         return pos - self.start if self.strand == '+'\
-            else self.stop - pos - 1
+            else self.stop - pos
     
     def getSubSeq(self, seq, fr=None, to=None):
         fr = self.start if fr is None else max(self.start, fr)
