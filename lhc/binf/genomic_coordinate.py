@@ -133,3 +133,4 @@ class Interval(BaseInterval):
         if self.strand == '-':
             res = res.translate(Interval.REVCMP)[::-1]
         return res
+

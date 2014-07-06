@@ -56,3 +56,4 @@ class Exon(object):
 
     def getRelPos(self, pos):
         return self.ivl.getRelPos(pos)
+
