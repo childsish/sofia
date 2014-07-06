@@ -1,5 +1,4 @@
 import imp
-import numpy as np
 
 from collections import deque
 from itertools import repeat
@@ -46,10 +45,6 @@ def combinations_with_replacement(iterable, r):
             yield tuple(top)
         else:
             stk.extend(top + [i] for i in iterable)
-
-def gmean(seq):
-    """ Calculate the geometric mean. """
-    return np.exp(np.mean(np.log(np.array(seq))))
 
 def argsort(seq, cmp=None, key=None):
     key = seq.__getitem__ if key is None else lambda x:key(seq[x])
