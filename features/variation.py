@@ -27,10 +27,13 @@ class CodingVariation(Feature):
     def calculate(self, gene_model, variant):
         if gene_model is None:
             return None
-        coding_position = gene_model.transcripts.values()[0].getRelPos(variant.pos)
+        ref = variant.ref
+        transcript = gene_model.transcripts.values()[0]
+        coding_position = transcript.getRelPos(variant.pos)\
+            if gene_model.ivl.strand == '+'\
+            else transcript.getRelPos(variant.pos + len(ref) - 1)
         if coding_position is None:
             return None
-        ref = variant.ref
         alt = variant.alt.split(',')
         if gene_model.ivl.strand == '-':
             ref = revcmp(ref)
@@ -53,8 +56,8 @@ class CodonVariation(Feature):
         pos = coding_variant.pos
         pos_in_codon = pos % 3
         codon_pos = pos - pos_in_codon
-        ref = coding_variant.ref
         alts = []
+        ref = coding_variant.ref
         for alt in coding_variant.alt:
             seq = list(coding_sequence)
             seq[pos:pos + len(ref)] = list(alt)
@@ -63,7 +66,7 @@ class CodonVariation(Feature):
         return CodonVariant(pos, ref_codon, alts)
     
     def format(self, entity):
-        return ','.join('c.%s%s>%s'%(entity.pos, entity.ref, alt) for alt in entity.alt)
+        return ','.join('c.%s%s>%s'%(entity.pos + 1, entity.ref, alt) for alt in entity.alt)
 
 AminoAcidVariant = namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt'))
 
