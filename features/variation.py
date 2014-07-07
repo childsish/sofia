@@ -3,8 +3,6 @@ from lhc.binf.genetic_code import GeneticCodes
 from lhc.binf.sequence import revcmp
 from ebias.feature import Feature
 
-CodingVariant = namedtuple('CodingVariant', ('pos', 'ref', 'alt'))
-
 class VariantType(Feature):
     
     IN = ['gene_model', 'amino_acid_variant']
@@ -19,6 +17,8 @@ class VariantType(Feature):
             return 'synonymous'
         return 'non-synonymous'
 
+CodingVariant = namedtuple('CodingVariant', ('pos', 'ref', 'alt'))
+
 class CodingVariation(Feature):
     
     IN = ['gene_model', 'variant']
@@ -27,10 +27,13 @@ class CodingVariation(Feature):
     def calculate(self, gene_model, variant):
         if gene_model is None:
             return None
-        coding_position = gene_model.transcripts.values()[0].getRelPos(variant.pos)
+        ref = variant.ref
+        transcript = gene_model.transcripts.values()[0]
+        coding_position = transcript.getRelPos(variant.pos)\
+            if gene_model.ivl.strand == '+'\
+            else transcript.getRelPos(variant.pos + len(ref) - 1)
         if coding_position is None:
             return None
-        ref = variant.ref
         alt = variant.alt.split(',')
         if gene_model.ivl.strand == '-':
             ref = revcmp(ref)
@@ -50,18 +53,20 @@ class CodonVariation(Feature):
     def calculate(self, coding_variant, coding_sequence):
         if coding_variant is None:
             return None
-        codon_pos = coding_variant.pos % 3
-        pos = coding_variant.pos - codon_pos
-        ref = coding_sequence[pos:pos + 3]
-        codon = list(ref)
+        pos = coding_variant.pos
+        pos_in_codon = pos % 3
+        codon_pos = pos - pos_in_codon
         alts = []
+        ref = coding_variant.ref
         for alt in coding_variant.alt:
-            codon[codon_pos] = alt
-            alts.append(''.join(codon))
-        return CodonVariant(pos, ref, alts)
+            seq = list(coding_sequence)
+            seq[pos:pos + len(ref)] = list(alt)
+            alts.append(''.join(seq[codon_pos:codon_pos + 3]))
+        ref_codon = coding_sequence[codon_pos:codon_pos + 3]
+        return CodonVariant(pos, ref_codon, alts)
     
     def format(self, entity):
-        return ','.join('%s%s%s'%(entity.pos, entity.ref, alt) for alt in entity.alt)
+        return ','.join('c.%s%s>%s'%(entity.pos + 1, entity.ref, alt) for alt in entity.alt)
 
 AminoAcidVariant = namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt'))
 
@@ -82,3 +87,4 @@ class AminoAcidVariation(Feature):
     
     def format(self, entity):
         return ','.join('%s%s%s'%(entity.ref, entity.pos + 1, alt) for alt in entity.alt)
+

@@ -43,8 +43,9 @@ class Aggregator(object):
         resolutions = list(iterGraphPossibilities(requested_features, graph, provided_resources, wrappers))
         resolutions = [r for r in resolutions if isValid(r[0], provided_resources)]
         if len(resolutions) == 1:
-            print resolutions[0]
+            #print resolutions[0]
             resolved_graph, resolved_features = resolutions[0]
+            print '\t'.join(args.features)
             for row in iterRows(requested_features, resolved_features):
                 print '\t'.join('' if col is None else resolved_features[feature].format(col) for feature, col in izip(requested_features, row))
         elif len(resolutions) == 0:
