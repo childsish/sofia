@@ -1,5 +1,6 @@
 import cPickle
 import os
+import gzip
 
 from collections import namedtuple, OrderedDict
 from itertools import izip
@@ -28,7 +29,7 @@ class VcfParser(EntrySet):
         self.pos_index = None
         self.ivl_index = None
         
-        fhndl = open(fname)
+        fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
         self.hdrs = self._parseHeaders(fhndl)
         fhndl.close()
     

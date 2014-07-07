@@ -38,7 +38,8 @@ class Transcript(object):
         #raise IndexError('Position %s not in %s'%(pos, self.name))
     
     def getSubSeq(self, seq, fr=None, to=None, valid_types=set(['CDS', 'UTR5', 'UTR3'])):
-        return ''.join([exon.getSubSeq(seq, fr, to) for exon in self.exons if exon.type in valid_types])
+        return ''.join([exon.getSubSeq(seq, fr, to)\
+            for exon in self.exons if exon.type in valid_types])
 
 class Exon(object):
     
