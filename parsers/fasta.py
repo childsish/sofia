@@ -4,6 +4,7 @@ from ebias.parser import Parser
 class FastaParser(Parser):
     
     EXT = 'fasta'
+    DEFAULT_OUT = ['chromosome_sequence_set']
     
     def __init__(self, fname, iname=None):
         super(FastaParser, self).__init__(fname, iname)

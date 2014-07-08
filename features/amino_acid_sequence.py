@@ -1,7 +1,7 @@
 from lhc.binf.genetic_code import GeneticCodes
 from ebias.feature import Feature
 
-class GetAminoAcidSequence(Feature):
+class GetAminoAcidSequenceFromCodingSequence(Feature):
     
     IN = ['coding_sequence']
     OUT = ['amino_acid_sequence']

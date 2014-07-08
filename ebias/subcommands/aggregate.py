@@ -6,9 +6,7 @@ import json
 from collections import defaultdict, Counter
 from common import getProgramDirectory
 from itertools import izip, product, chain
-from ebias.resource_parser import ResourceParser
 from ebias.feature import Feature
-from ebias.resource import Resource
 from ebias.parser import Parser
 from ebias.feature_wrapper import FeatureWrapper
 from lhc.graph.graph import Graph
@@ -37,9 +35,6 @@ class Aggregator(object):
         wrappers.extend(provided_resources)
         
         graph = getHyperGraph(wrappers)
-        #if args.graph and len(requested_features) == 0:
-        #    print graph
-        #    sys.exit(1)
         resolutions = list(iterGraphPossibilities(requested_features, graph, provided_resources, wrappers))
         resolutions = [r for r in resolutions if isValid(r[0], provided_resources)]
         if len(resolutions) == 1:

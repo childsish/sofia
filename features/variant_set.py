@@ -1,5 +1,13 @@
 from ebias.feature import Feature
 
+class IterateVariants(Feature):
+    
+    IN = ['variant_iterator']
+    OUT = ['variant']
+    
+    def calculate(self, variant_set_iterator):
+        return variant_set_iterator.next()
+
 class GetVariantByPosition(Feature):
     
     IN = ['variant_set', 'genomic_position']
@@ -7,14 +15,6 @@ class GetVariantByPosition(Feature):
 
     def calculate(self, variant_set, genomic_position):
         return variant_set[genomic_position]
-
-class GetVariantsByInterval(Feature):
-    
-    IN = ['variant_set', 'genomic_interval']
-    OUT = ['variant', 'genomic_position']
-    
-    def calculate(self, variant_set, genomic_interval):
-        return variant_set[genomic_interval]
 
 class GetVariantsByGeneModel(Feature):
     
