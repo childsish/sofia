@@ -9,6 +9,9 @@ class GtfIterator(ResourceFeature):
     TYPE = 'gene_model'
     PARSER = GtfIteratorParser
     OUT = ['gene_model_iterator']
+    
+    def init(self, **kwargs):
+        self.parser = GtfIteratorParser(self.resource.fname)
 
 class GtfSet(ResourceFeature):
     
@@ -16,3 +19,6 @@ class GtfSet(ResourceFeature):
     TYPE = 'gene_model'
     PARSER = GtfSetParser
     OUT = ['gene_model_set']
+
+    def init(self, **kwargs):
+        self.parser = GtfSetParser(GtfIteratorParser(self.resource.fname))

@@ -9,6 +9,9 @@ class FastaChromosomeSequenceSet(ResourceFeature):
     TYPE = 'chromosome_sequence'
     PARSER = FastaSetParser
     OUT = ['chromosome_sequence_set']
+    
+    def init(self, **kwargs):
+        self.parser = FastaSetParser(FastaIteratorParser(self.resource.fname))
 
 class FastaCodingSequenceSet(ResourceFeature):
     
@@ -16,6 +19,9 @@ class FastaCodingSequenceSet(ResourceFeature):
     TYPE = 'coding_sequence'
     PARSER = FastaSetParser
     OUT = ['coding_sequence_set']
+    
+    def init(self, **kwargs):
+        self.parser = FastaSetParser(FastaIteratorParser(self.resource.fname))
 
 class FastaCodingSequenceIterator(ResourceFeature):
     
@@ -23,6 +29,9 @@ class FastaCodingSequenceIterator(ResourceFeature):
     TYPE = 'coding_sequence'
     PARSER = FastaIteratorParser
     OUT = ['coding_sequence_iterator']
+    
+    def init(self, **kwargs):
+        self.parser = FastaIteratorParser(self.resource.fname)
 
 class FastaProteinSequenceSet(ResourceFeature):
     
@@ -30,6 +39,9 @@ class FastaProteinSequenceSet(ResourceFeature):
     TYPE = 'protein_sequence'
     PARSER = FastaSetParser
     OUT = ['protein_sequence_set']
+    
+    def init(self, **kwargs):
+        self.parser = FastaSetParser(FastaIteratorParser(self.resource.fname))
 
 class FastaProteinSequenceIterator(ResourceFeature):
     
@@ -37,3 +49,6 @@ class FastaProteinSequenceIterator(ResourceFeature):
     TYPE = 'protein_sequence'
     PARSER = FastaIteratorParser
     OUT = ['protein_sequence_iterator']
+    
+    def init(self, **kwargs):
+        self.parser = FastaIteratorParser(self.resource.fname)

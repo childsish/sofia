@@ -9,6 +9,9 @@ class VcfIterator(ResourceFeature):
     TYPE = 'variant'
     PARSER = VcfIteratorParser
     OUT = ['variant_iterator']
+    
+    def init(self, **kwargs):
+        self.parser = VcfIteratorParser(self.resource.fname)
 
 class VcfSet(ResourceFeature):
     """A set of variants parsed from a .vcf file
@@ -18,3 +21,6 @@ class VcfSet(ResourceFeature):
     TYPE = 'variant'
     PARSER = VcfSetParser
     OUT = ['variant_set']
+    
+    def init(self, **kwargs):
+        self.parser = VcfSetParser(VcfIteratorParser(self.resource.fname))

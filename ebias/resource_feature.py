@@ -8,7 +8,9 @@ class ResourceFeature(Feature):
     
     def __init__(self, resource):
         self.resource = resource
-        self.parser = self.PARSER(resource.fname)
+    
+    def init(self, **kwargs):
+        self.parser = self.PARSER(self.resource.fname)
     
     def calculate(self):
         return self.parser
