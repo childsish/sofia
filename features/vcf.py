@@ -1,7 +1,7 @@
 from ebias.resource import Resource
 
-from lhc.file_format.vcf_.iterator import VcfIteratorParser
-from lhc.file_format.vcf_.set_ import VcfSetParser
+from lhc.file_format.vcf_.iterator import VcfIterator as VcfIteratorParser
+from lhc.file_format.vcf_.set_ import VcfSet as VcfSetParser
 
 class VcfIterator(Resource):
     
