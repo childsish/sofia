@@ -1,18 +1,18 @@
-from ebias.resource import ResourceIterator, ResourceSet
+from ebias.resource import Resource
 
-from lhc.file_format.gtf_.iterator import GtfIterator
-from lhc.file_format.gtf_.set_ import GtfSet
+from lhc.file_format.gtf_.iterator import GtfIterator as GtfIteratorParser
+from lhc.file_format.gtf_.set_ import GtfSet as GtfSetParser
 
-class GtfIterator(ResourceIterator):
+class GtfIterator(Resource):
     
     EXT = ['.gtf', '.gtf.gz']
     TYPE = 'gene_model'
-    PARSER = GtfIterator
+    PARSER = GtfIteratorParser
     OUT = ['gene_model_iterator']
 
-class GtfSet(ResourceSet):
+class GtfSet(Resource):
     
     EXT = ['.gtf', '.gtf.gz']
     TYPE = 'gene_model'
-    PARSER = GtfSet
+    PARSER = GtfSetParser
     OUT = ['gene_model_set']

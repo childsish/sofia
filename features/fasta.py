@@ -1,39 +1,39 @@
-from ebias.resource import ResourceSet, ResourceIterator
+from ebias.resource import Resource
 
-from lhc.file_format.fasta_.set_ import FastaSet
-from lhc.file_format.fasta_.iterator import FastaIterator
+from lhc.file_format.fasta_.set_ import FastaSet as FastaSetParser
+from lhc.file_format.fasta_.iterator import FastaIterator as FastaIteratorParser
 
-class FastaChromosomeSequenceSet(ResourceSet):
+class FastaChromosomeSequenceSet(Resource):
     
     EXT = ['.fasta', '.fasta.gz']
     TYPE = 'chromosome_sequence'
-    PARSER = FastaSet
+    PARSER = FastaSetParser
     OUT = ['chromosome_sequence_set']
 
-class FastaCodingSequenceSet(ResourceSet):
+class FastaCodingSequenceSet(Resource):
     
     EXT = ['.fasta', '.fasta.gz']
     TYPE = 'coding_sequence'
-    PARSER = FastaSet
+    PARSER = FastaSetParser
     OUT = ['coding_sequence_set']
 
-class FastaCodingSequenceIterator(ResourceIterator):
+class FastaCodingSequenceIterator(Resource):
     
     EXT = ['.fasta', '.fasta.gz']
     TYPE = 'coding_sequence'
-    PARSER = FastaIterator
+    PARSER = FastaIteratorParser
     OUT = ['coding_sequence_iterator']
 
-class FastaProteinSequenceSet(ResourceSet):
+class FastaProteinSequenceSet(Resource):
     
     EXT = ['.fasta', '.fasta.gz']
     TYPE = 'protein_sequence'
-    PARSER = FastaSet
+    PARSER = FastaSetParser
     OUT = ['protein_sequence_set']
 
-class FastaProteinSequenceIterator(ResourceIterator):
+class FastaProteinSequenceIterator(Resource):
     
     EXT = ['.fasta', '.fasta.gz']
     TYPE = 'protein_sequence'
-    PARSER = FastaIterator
+    PARSER = FastaIteratorParser
     OUT = ['protein_sequence_iterator']

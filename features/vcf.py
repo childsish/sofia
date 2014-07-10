@@ -1,20 +1,20 @@
-from ebias.resource import ResourceIterator, ResourceSet
+from ebias.resource import Resource
 
-from lhc.file_format.vcf_.iterator import VcfIterator
-from lhc.file_format.vcf_.set_ import VcfSet
+from lhc.file_format.vcf_.iterator import VcfIteratorParser
+from lhc.file_format.vcf_.set_ import VcfSetParser
 
-class VcfIterator(ResourceIterator):
+class VcfIterator(Resource):
     
     EXT = ['.vcf', '.vcf.gz']
     TYPE = 'variant'
-    PARSER = VcfIterator
+    PARSER = VcfIteratorParser
     OUT = ['variant_iterator']
 
-class VcfSet(ResourceSet):
+class VcfSet(Resource):
     """A set of variants parsed from a .vcf file
     """
     
     EXT = ['.vcf', '.vcf.gz']
     TYPE = 'variant'
-    PARSER = VcfSet
+    PARSER = VcfSetParser
     OUT = ['variant_set']
