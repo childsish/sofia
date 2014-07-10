@@ -4,3 +4,5 @@
 *.dat
 .project
 .pydevproject
+*.dot
+*.png
