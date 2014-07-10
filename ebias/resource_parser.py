@@ -1,19 +1,19 @@
 import os
 import re
 
-from ebias.resource_wrapper import ResourceWrapper
+from ebias.resource import Resource
 
 class ResourceParser(object):
     """ -r <fname>[;type=<type>][;<name>]
-        -r /tmp/tmp.vcf:tmp:type=vcf
+        -r /tmp/tmp.vcf;type=vcf;tmp
     """
     
     REGX = re.compile('^(?P<fname>[^;]+)' +\
                       '(?:;type=(?P<type>\w+))?' +\
                       '(?:;(?P<name>\w+))?$')
     
-    def __init__(self, parsers):
-        self.parsers = parsers
+    def __init__(self, default_types):
+        self.default_types = default_types
     
     def parseResources(self, resources):
         res = []
@@ -21,31 +21,13 @@ class ResourceParser(object):
             match = self.REGX.match(resource)
             if match is None:
                 raise ValueError('Unable to parse resource string: %s'%resource)
-            res.append(self.parseResource(**match.groupdict()))
+            res.append(self.createResource(**match.groupdict()))
         return res
     
-    def parseResource(self, fname, name=None, type=None):
-        type = self.getType(fname) if type is None else type
-        if type not in self.parsers:
-            raise ValueError('No parsers exist for resource type "%s"'%type)
-        parser = self.parsers[type](fname)
-        return ResourceWrapper(parser,
-            os.path.split(fname)[1] if name is None else name,
-            out=[type])
-    
-    def parseTarget(self, fname, type=None):
-        types = {'vcf': ['variant', 'genomic_position'], 'gtf': ['gene_model']}
-        type = self.getType(fname) if type is None else type
-        parser = self.parsers[type](fname)
-        return ResourceWrapper(parser, 'target', out=types[type])
-    
-    def getType(self, fname):
-        if not os.path.isdir(fname):
-            parts = fname.split('.')
-            if parts[-1] == 'gz':
-                return parts[-2]
-            return parts[-1]
-        exts = set(f.rsplit('.', 1)[1] for f in os.listdir(fname))
-        if len(exts) > 1:
-            raise ValueError('Can not determine type of resource %s. Multiple types (file extensions) found in %s'%(name, fname))
-        return 'multi' + list(exts)[0]
+    def createResource(self, fname, type=None, name=None):
+        tmp_name, ext = fname.rsplit('.', 2)[:2] if fname.endswith('.gz') else fname.rsplit('.', 1)[:2]
+        if type is None and ext not in self.default_types:
+            raise ValueError('Unable to determine type of biological information stored in %s'%fname)
+        type = self.default_types[ext] if type is None else type
+        name = tmp_name if name is None else name
+        return Resource(fname, type, name)

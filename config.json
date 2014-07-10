@@ -1,0 +1,42 @@
+{
+	"default_types": [
+		{ "ext": "vcf", "type": "variant" },
+		{ "ext": "gtf", "type": "gene_model" },
+		{ "ext": "fasta", "type": "chromosome_sequence" }
+	],
+	"parsers": [
+		{
+			"name": "pseq",
+			"in": [["genomic_position"], ["genomic_interval"]],
+			"out": ["pseq_entry"],
+			"parser": "CsvParser",
+			"args": {
+				"output": "PseqEntry",
+				"column_map": [
+					{"index": 0, "name": "chr"},
+					{"index": 1, "name": "pos", "transform": "int(pos) - 1"},
+					{"index": 2, "name": "pval"}
+				],
+				"indices": [
+					{
+						"name": "pos_index",
+						"column_map": [
+							{"name": "chr", "index": "ExactKeyIndex"},
+							{"name": "pos", "index": "ExactKeyIndex"}
+						],
+						"required_attributes": ["chr", "pos"] 
+					},
+					{
+						"name": "ivl_index",
+						"column_map": [
+							{"name": "chr", "index": "ExactKeyIndex"},
+							{"name": "pos", "index": "OverlappingIntervalIndex", "transform": "Interval(pos, pos + 1)"}
+						],
+						"required_attributes": ["chr", "start", "stop"]
+					}
+				],
+				"delimiter": "\t"
+			}
+		}
+	]
+}
