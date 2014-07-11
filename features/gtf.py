@@ -1,9 +1,9 @@
-from ebias.resource_feature import ResourceFeature
+from ebias.resource import Resource
 
 from lhc.file_format.gtf_.iterator import GtfIterator as GtfIteratorParser
 from lhc.file_format.gtf_.set_ import GtfSet as GtfSetParser
 
-class GtfIterator(ResourceFeature):
+class GtfIterator(Resource):
     
     EXT = ['.gtf', '.gtf.gz']
     TYPE = 'gene_model'
@@ -13,7 +13,7 @@ class GtfIterator(ResourceFeature):
     def init(self, **kwargs):
         self.parser = GtfIteratorParser(self.resource.fname)
 
-class GtfSet(ResourceFeature):
+class GtfSet(Resource):
     
     EXT = ['.gtf', '.gtf.gz']
     TYPE = 'gene_model'

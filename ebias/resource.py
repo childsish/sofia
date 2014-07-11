@@ -1,6 +1,6 @@
 from ebias.feature import Feature
 
-class ResourceFeature(Feature):
+class Resource(Feature):
     
     EXT = []
     TYPE = None
