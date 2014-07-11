@@ -1,4 +1,4 @@
-class Resource(object):
+class ProvidedResource(object):
     def __init__(self, fname, type, name=None):
         self.fname = fname
         self.type = type

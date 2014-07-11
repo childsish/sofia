@@ -1,7 +1,7 @@
 import os
 import re
 
-from ebias.resource import Resource
+from ebias.provided_resource import ProvidedResource
 
 class ResourceParser(object):
     """ -r <fname>[;type=<type>][;<name>]
@@ -30,4 +30,4 @@ class ResourceParser(object):
             raise ValueError('Unable to determine type of biological information stored in %s'%fname)
         type = self.default_types[ext] if type is None else type
         name = tmp_name if name is None else name
-        return Resource(fname, type, name)
+        return ProvidedResource(fname, type, name)
