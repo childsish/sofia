@@ -16,12 +16,13 @@ class ResourceParser(object):
         self.default_types = default_types
     
     def parseResources(self, resources):
-        res = []
+        res = {}
         for resource in resources:
             match = self.REGX.match(resource)
             if match is None:
                 raise ValueError('Unable to parse resource string: %s'%resource)
-            res.append(self.createResource(**match.groupdict()))
+            resource = self.createResource(**match.groupdict())
+            res[resource.name] = resource
         return res
     
     def createResource(self, fname, type=None, name=None):
