@@ -12,9 +12,10 @@ class VcfMerger(object):
     
     CHR_REGX = re.compile('\d+$|X$|Y$|M$')
     
-    def __init__(self, fnames, quality=0):
+    def __init__(self, fnames, quality=0, depth=0):
         self.fnames = fnames
         self.quality = quality
+        self.depth = depth
         self.infiles = [gzip.open(fname) if fname.endswith('gz') else open(fname) for fname in fnames]
         hdrs = [VcfParser._parseHeaders(infile) for infile in self.infiles]
         self.hdrs = self._mergeHeaders(hdrs)
@@ -26,8 +27,9 @@ class VcfMerger(object):
         
         while len(sorted_tops) > 0:
             key, idxs = sorted_tops.popLowest()
-            merged_alleles = [tops[idxs[0]][3]] + sorted(set(reduce(add, [tops[idx][4].split(',') for idx in idxs])))
             
+            merged_alleles = [tops[idxs[0]][3]] + sorted(set(reduce(add, [tops[idx][4].split(',') for idx in idxs])))
+            #merged_alleles = sorted(set([top[3] for top in tops])) + sorted(set(reduce(add, [tops[idx][4].split(',') for idx in idxs])))
             entry = tops[idxs[0]][:9]
             entry[4] = ','.join(merged_alleles[1:])
             entry[5] = '%.2f'%min(tops[idx][5] for idx in idxs)
@@ -42,7 +44,11 @@ class VcfMerger(object):
                 for i, sample in enumerate(top[9:]):
                     sample = {k: v for k, v in izip(format, sample.split(':'))}
                     if sample['GT'] != '0/0':
-                        a1, a2 = map(int, sample['GT'].split('/'))
+                        try:
+                            a1, a2 = map(int, sample['GT'].split('/'))
+                        except Exception, e:
+                            print self.infiles[idx].name
+                            raise e
                         alleles = [top[3]] + top[4].split(',')
                         sample['GT'] = '/'.join(map(str, (merged_alleles.index(alleles[a1]), merged_alleles.index(alleles[a2]))))
                     samples[sample_idx[i]]['GT'] = sample['GT']
@@ -61,6 +67,8 @@ class VcfMerger(object):
     def _nextLine(self, idx):
         while True:
             top = self.infiles[idx].next().strip().split('\t')
+            if top[6] != 'PASS':
+                continue
             top[0] = Chromosome.getIdentifier(top[0])
             top[1] = int(top[1]) - 1
             top[5] = float(top[5])
@@ -75,7 +83,7 @@ class VcfMerger(object):
         return sorted_tops
     
     def _updateSorting(self, sorted_tops, entry, idx):
-        key = (entry[0], entry[1])
+        key = (entry[0], entry[1], entry[3])
         sorted_tops.get(key, []).append(idx)
     
     def _mergeHeaders(self, hdrs):
