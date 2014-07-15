@@ -17,31 +17,33 @@ class VcfIterator(object):
     
     def __init__(self, fname):
         self.fname = fname
-        
-        fhndl = open(fname)
+        self.fhndl = open(fname)
         self.hdrs = self._parseHeaders()
-        fhndl.close()
+    
+    def __del__(self):
+        if not self.fhndl.closed:
+            self.fhndl.close()
     
     def __iter__(self):
-        fhndl = open(self.fname)
-        line = fhndl.next()
-        while line.startswith('##'):
-            line = fhndl.next()
-        for line in fhndl:
-            parts = line.strip().split('\t')
-            yield Variant(parts[self.CHR],
-                int(parts[self.POS]) - 1,
-                parts[self.ID],
-                parts[self.REF],
-                parts[self.ALT],
-                int(parts[self.QUAL]) if parts[self.QUAL].isdigit() else parts[self.QUAL],
-                parts[self.FILTER],
-                self._parseAttributes(parts[self.ATTR]),
-                self._parseSamples(parts))
-        fhndl.close()
+        return self
+    
+    def next(self):
+        line = self.fhndl.next()
+        if line == '':
+            raise StopIteration()
+        parts = line.strip().split('\t')
+        return Variant(parts[self.CHR],
+            int(parts[self.POS]) - 1,
+            parts[self.ID],
+            parts[self.REF],
+            parts[self.ALT],
+            int(parts[self.QUAL]) if parts[self.QUAL].isdigit() else parts[self.QUAL],
+            parts[self.FILTER],
+            self._parseAttributes(parts[self.ATTR]),
+            self._parseSamples(parts))
 
     def _parseHeaders(self):
-        fhndl = open(self.fname)
+        fhndl = self.fhndl
         hdrs = OrderedDict()
         line = fhndl.next().strip()
         if not 'VCF' in line:
