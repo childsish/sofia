@@ -1,14 +1,15 @@
-from itertools import izip
-
 class Feature(object):
     
     IN = []
     OUT = []
     
-    def __init__(self, name, dependencies):
-        self.name = name
-        self.dependencies = dependencies
+    def __init__(self, resources=None, dependencies=None):
+        self.resources = set() if resources is None else resources
+        self.dependencies = {} if dependencies is None else dependencies
         self.changed = True
+    
+    def __str__(self):
+        return self.getName()
     
     def init(self):
         pass
@@ -43,7 +44,7 @@ class Feature(object):
         """
         self.changed = self.needsUpdate(entities, features)
         if not self.changed:
-            return entities[self.name]
+            return entities[type(self).__name__]
         local_entities = {}
         for name, feature in self.dependencies.iteritems():
             entities[name] = features[feature].generate(entities, features)
@@ -61,9 +62,14 @@ class Feature(object):
         :param features: available features
         :type features: dict of features
         """
-        if self.name not in entities:
+        if type(self).__name__ not in entities:
             return True
         for dep in self.dependencies:
             if features[dep].changed:
                 return True
         return False
+
+    def getName(self):
+        if len(self.resources) == 0:
+            return type(self).__name__
+        return '%s:%s'%(type(self).__name__, ','.join(resource.name for resource in sorted(self.resources)))

@@ -8,10 +8,8 @@ class GtfIterator(Resource):
     EXT = ['.gtf', '.gtf.gz']
     TYPE = 'gene_model'
     PARSER = GtfIteratorParser
+    TARGET = True
     OUT = ['gene_model_iterator']
-    
-    def init(self, **kwargs):
-        self.parser = GtfIteratorParser(self.resource.fname)
 
 class GtfSet(Resource):
     
@@ -21,4 +19,4 @@ class GtfSet(Resource):
     OUT = ['gene_model_set']
 
     def init(self, **kwargs):
-        self.parser = GtfSetParser(GtfIteratorParser(self.resource.fname))
+        self.parser = GtfSetParser(GtfIteratorParser(self.getFilename()))

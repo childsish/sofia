@@ -11,7 +11,7 @@ class FastaChromosomeSequenceSet(Resource):
     OUT = ['chromosome_sequence_set']
     
     def init(self, **kwargs):
-        self.parser = FastaSetParser(FastaIteratorParser(self.resource.fname))
+        self.parser = FastaSetParser(FastaIteratorParser(self.getFilename()))
 
 class FastaCodingSequenceSet(Resource):
     
@@ -21,17 +21,15 @@ class FastaCodingSequenceSet(Resource):
     OUT = ['coding_sequence_set']
     
     def init(self, **kwargs):
-        self.parser = FastaSetParser(FastaIteratorParser(self.resource.fname))
+        self.parser = FastaSetParser(FastaIteratorParser(self.getFilename()))
 
 class FastaCodingSequenceIterator(Resource):
     
     EXT = ['.fasta', '.fasta.gz']
     TYPE = 'coding_sequence'
     PARSER = FastaIteratorParser
+    TARGET = True
     OUT = ['coding_sequence_iterator']
-    
-    def init(self, **kwargs):
-        self.parser = FastaIteratorParser(self.resource.fname)
 
 class FastaProteinSequenceSet(Resource):
     
@@ -41,14 +39,12 @@ class FastaProteinSequenceSet(Resource):
     OUT = ['protein_sequence_set']
     
     def init(self, **kwargs):
-        self.parser = FastaSetParser(FastaIteratorParser(self.resource.fname))
+        self.parser = FastaSetParser(FastaIteratorParser(self.getFilename()))
 
 class FastaProteinSequenceIterator(Resource):
     
     EXT = ['.fasta', '.fasta.gz']
     TYPE = 'protein_sequence'
     PARSER = FastaIteratorParser
+    TARGET = True
     OUT = ['protein_sequence_iterator']
-    
-    def init(self, **kwargs):
-        self.parser = FastaIteratorParser(self.resource.fname)

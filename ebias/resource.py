@@ -5,18 +5,16 @@ class Resource(Feature):
     EXT = []
     TYPE = None
     PARSER = None
-    
-    def __init__(self, resource):
-        self.resource = resource
+    TARGET = False
     
     def init(self, **kwargs):
-        self.parser = self.PARSER(self.resource.fname)
+        self.parser = self.PARSER(self.getFilename())
     
     def calculate(self):
         return self.parser
     
-    def getName(self):
-        return '%s:%s'%(type(self).__name__, self.resource.name)
+    def getFilename(self):
+        return list(self.resources)[0].fname
     
     @classmethod
     def matches(cls, resource):
