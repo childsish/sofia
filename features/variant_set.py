@@ -5,8 +5,8 @@ class IterateVariants(Feature):
     IN = ['variant_iterator']
     OUT = ['variant', 'genomic_position']
     
-    def calculate(self, variant_set_iterator):
-        return variant_set_iterator.next()
+    def calculate(self, variant_iterator):
+        return variant_iterator.next()
 
 class GetVariantByPosition(Feature):
     
