@@ -15,9 +15,12 @@ class GtfSet(object):
     def __getitem__(self, key):
         if isinstance(key, basestring):
             return self.data[self.key_index[key]]
-        elif hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
-            ivl = Interval(key.pos, key.pos + len(key.ref))
-            return [self.data[v] for k, v in self.ivl_index[(key.chr, ivl)]]
+        elif hasattr(key, 'chr') and hasattr(key, 'pos'):
+            length = len(key.ref) if hasattr(key, 'ref') else 1
+            ivl = Interval(key.pos, key.pos + length)
+            idxs = self.ivl_index[(key.chr, ivl)]
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            return [self.data[v] for k, v in self.ivl_index[(key.chr, key)]]
-        raise NotImplementedError('Random access not implemented for %s'%type(key))
+            return self.ivl_index[(key.chr, key)]
+        else:
+            raise NotImplementedError('Gene model set random access not implemented for %s'%type(key))
+        return [self.data[v] for k, v in idxs]
