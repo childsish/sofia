@@ -12,7 +12,7 @@ class VcfIterator(object):
     ALT = 4
     QUAL = 5
     FILTER = 6
-    ATTR = 7
+    INFO = 7
     FORMAT = 8
     
     def __init__(self, fname):
@@ -29,8 +29,6 @@ class VcfIterator(object):
     
     def next(self):
         line = self.fhndl.next()
-        if line == '':
-            raise StopIteration()
         parts = line.strip().split('\t')
         return Variant(parts[self.CHR],
             int(parts[self.POS]) - 1,
@@ -39,7 +37,7 @@ class VcfIterator(object):
             parts[self.ALT],
             int(parts[self.QUAL]) if parts[self.QUAL].isdigit() else parts[self.QUAL],
             parts[self.FILTER],
-            self._parseAttributes(parts[self.ATTR]),
+            self._parseAttributes(parts[self.INFO]),
             self._parseSamples(parts))
 
     def _parseHeaders(self):
