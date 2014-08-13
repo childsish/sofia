@@ -42,17 +42,20 @@ class Feature(object):
         :param features: available features
         :type features: dict of features
         """
-        self.changed = self.needsUpdate(entities, features)
+        #self.changed = self.needsUpdate(entities, features) #TODO: Take a closer look at self.changed
         if not self.changed:
-            return entities[type(self).__name__]
+            return entities[self.getName()]
         local_entities = {}
         for name, feature in self.dependencies.iteritems():
-            entities[name] = features[feature].generate(entities, features)
-            local_entities[name] = entities[name]
+            if features[feature].changed:
+                entities[feature] = features[feature].generate(entities, features)
+                features[feature].changed = False
+            local_entities[name] = entities[feature]
         #try:
         res = self.calculate(**local_entities)
+        self.changed = True
         #except TypeError, e:
-        #    raise TypeError(type(self).__name__  + ' ' + e.message.split(' ', 1)[1])
+        #    raise TypeError(self.getName()  + ' ' + e.message.split(' ', 1)[1])
         return res
     
     def needsUpdate(self, entities, features):
@@ -62,9 +65,9 @@ class Feature(object):
         :param features: available features
         :type features: dict of features
         """
-        if type(self).__name__ not in entities:
+        if self.getName() not in entities:
             return True
-        for dep in self.dependencies:
+        for dep in self.dependencies.itervalues():
             if features[dep].changed:
                 return True
         return False

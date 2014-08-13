@@ -13,6 +13,9 @@ class Resource(Feature):
     def calculate(self):
         return self.parser
     
+    def getName(self):
+        return 'target' if self.TARGET else super(Resource, self).getName()
+    
     def getFilename(self):
         return list(self.resources)[0].fname
     
