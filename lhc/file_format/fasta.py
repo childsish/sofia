@@ -4,140 +4,25 @@ import os
 from argparse import ArgumentParser
 from collections import namedtuple
 from itertools import izip
-from lhc.binf.genomic_coordinate import Position
-from lhc.file_format.entry_set import EntrySet
-from lhc.indices.exact_key import ExactKeyIndex
 from lhc.indices.fasta import FastaIndex
+from lhc.file_format.fasta_.index import FastaFileIndexer
 
 FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
-
-class FastaParser(EntrySet):
-    def __init__(self, fname, iname=None):
-        super(FastaParser, self).__init__(fname, iname)
-        self.index = None
-        self.prv_key = None
-        self.prv_value = None
-    
-    def __getitem__(self, key):
-        """Get the sequence at a genomic point or interval
-        
-        A quick check is made to see if the key used in the previous access
-        
-        :param key: the sequence to get
-        :type key: sequence name, genomic point or genomic interval
-        """
-        if self.prv_key == key:
-            return self.prv_value
-        else:
-            self.prv_key = key
-        
-        if os.path.exists(self.iname):
-            if self.index is None:
-                infile = open(self.iname)
-                self.index = cPickle.load(infile)
-                infile.close()
-            self.prv_value = self._getIndexedData(key)
-            return self.prv_value
-        elif self.data is None:
-            self.data = dict(iter(self))
-        
-        if isinstance(key, basestring):
-            self.prv_value = self.data[key]
-        elif hasattr(key, 'chr') and hasattr(key, 'pos'):
-            self.prv_value =  self.data[key.chr][key.pos]
-        elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            self.prv_value =  self.data[key.chr][key.start:key.stop]
-        else:
-            raise NotImplementedError('Random access not implemented for %s'%type(key))
-        return self.prv_value
-    
-    def _iterHandle(self, infile):
-        hdr = None
-        seq = None
-        for line in infile:
-            if line.startswith('>'):
-                if hdr is not None:
-                    yield FastaEntry(hdr, ''.join(seq))
-                hdr = line.strip().split()[0][1:]
-                seq = []
-            else:
-                seq.append(line.strip())
-        yield FastaEntry(hdr, ''.join(seq))
-    
-    def _getIndexedData(self, key):
-        if isinstance(key, basestring):
-            res = IndexedFastaEntry(key, self.fname, self.index)
-        elif hasattr(key, 'chr') and hasattr(key, 'pos'):
-            fpos = self.index[key]
-            self.fhndl.seek(fpos)
-            res = self.fhndl.read(1)
-            while res in self.index.newlines:
-                res = self.fhndl.read(1)
-        elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            fpos_fr = self.index[Position(key.chr, key.start)]
-            fpos_to = self.index[Position(key.chr, key.stop)]
-            self.fhndl.seek(fpos_fr)
-            res = ''.join(self.fhndl.read(fpos_to - fpos_fr).split())
-        else:
-            raise NotImplementedError('Random access not implemented for %s'%type(key))
-        return res
-
-class IndexedFastaEntry(object):
-    def __init__(self, chr, fname, index):
-        self.chr = chr
-        self.fname = fname
-        self.index = index
-        self.fhndl = open(fname)
-    
-    def __del__(self):
-        if hasattr(self, 'fhndl') and not self.fhndl.closed:
-            self.fhndl.close()
-    
-    def __getitem__(self, key):
-        if isinstance(key, int):
-            fpos = self.index[key]
-            self.fhndl.seek(fpos)
-            res = self.fhndl.read(1)
-            while res in self.index.newlines:
-                res = self.fhndl.read(1)
-        elif hasattr(key, 'start') and hasattr(key, 'stop'):
-            fpos_fr = self.index[Position(self.chr, key.start)]
-            fpos_to = self.index[Position(self.chr, key.stop)]
-            self.fhndl.seek(fpos_fr)
-            res = ''.join(self.fhndl.read(fpos_to - fpos_fr).split())
-        else:
-            raise NotImplementedError('Random access not implemented for %s'%type(key))
-        return res
-    
-    def __iter__(self):
-        self.fhndl.seek(self.index)
-        for line in self.fhndl:
-            if line[0] == '>':
-                break
-            for char in line.strip():
-                yield char
 
 def iterEntries(fname):
     parser = FastaParser(fname)
     return iter(parser)
 
 def index(fname, iname=None):
-    iname = FastaParser.getIndexName(fname) if iname is None else iname
-    outfile = open(iname, 'wb')
-    cPickle.dump(_createKeyIndex(fname), outfile, cPickle.HIGHEST_PROTOCOL)
-    outfile.close()
-
-def _createKeyIndex(fname):
-    index = FastaIndex(fname)
-    infile = open(fname, 'rb')
-    fpos = 0
-    for line in infile:
-        fpos += len(line)
-        if line.startswith('>'):
-            hdr = line.strip().split()[0][1:]
-            index[hdr] = fpos
-    return index
-
+    indexer = FastaFileIndexer()
+    index = indexer.index(fname)
+    
+    iname = '%s.idx'%fname if iname is None else iname
+    fhndl = open(iname, 'wb')
+    cPickle.dump(fname, fhndl, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(index, fhndl, cPickle.HIGHEST_PROTOCOL)
+    fhndl.close()
+    
 def compare(a_fname, b_fname):
     a_index = _createKeyIndex(a_fname)
     b_index = _createKeyIndex(b_fname)
