@@ -1,5 +1,9 @@
+from collections import namedtuple
 from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.binf.genomic_coordinate import Interval
+
+GtfEntry = namedtuple('GtfEntry', ('chr', 'src', 'type', 'start', 'stop',
+    'score', 'strand', 'phase', 'attr'))
 
 class GtfIterator(object):
     
@@ -16,10 +20,7 @@ class GtfIterator(object):
     def __init__(self, fname):
         self.fname = fname
         self.fhndl = open(fname)
-        
-        line = self.fhndl.next()
-        type, ivl, attr = self._parseLine(line)
-        self.gene = Gene(attr['gene_name'], ivl)
+        self._initGene()
     
     def __del__(self):
         if not self.fhndl.closed:
@@ -47,6 +48,15 @@ class GtfIterator(object):
             res = self.gene
             self.gene = None
         return res
+    
+    def seek(self, fpos):
+        self.fhndl.seek(fpos)
+        line = self.fhndl.next()
+        type, ivl, attr = self._parseLine(line)
+        while type != 'gene':
+            line = self.fhndl.next()
+            type, ivl, attr = self._parseLine(line)
+        self.gene = Gene(attr['gene_name'], ivl)
     
     def _parseLine(self, line):
         parts = line.strip().split('\t')
