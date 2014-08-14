@@ -1,19 +1,18 @@
 import cPickle
-import os
 
 from argparse import ArgumentParser
-from collections import namedtuple
 from itertools import izip
-from lhc.indices.fasta import FastaIndex
 from lhc.file_format.fasta_.index import FastaFileIndexer
-
-FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
+from lhc.file_format.fasta_.iterator import FastaIterator
 
 def iterEntries(fname):
-    parser = FastaParser(fname)
-    return iter(parser)
+    """ Convenience function """
+    return FastaIterator(fname)
 
 def index(fname, iname=None):
+    if fname.endswith('.gz'):
+        raise IOError('Unable to index compressed files.')
+    
     indexer = FastaFileIndexer()
     index = indexer.index(fname)
     
@@ -24,8 +23,10 @@ def index(fname, iname=None):
     fhndl.close()
     
 def compare(a_fname, b_fname):
-    a_index = _createKeyIndex(a_fname)
-    b_index = _createKeyIndex(b_fname)
+    #TODO: Don't index the files to get the chromosomes
+    indexer = FastaFileIndexer()
+    a_index = indexer.index(a_fname)
+    b_index = indexer.index(b_fname)
     a_chrs = set(a_index.chrs)
     b_chrs = set(b_index.chrs)
     
@@ -40,8 +41,8 @@ def compare(a_fname, b_fname):
     print '\n'.join(both)
     
     print 'The common headers differ at the following positions:'
-    a_parser = FastaParser(a_fname)
-    b_parser = FastaParser(b_fname)
+    a_parser = FastaIterator(a_fname)
+    b_parser = FastaIterator(b_fname)
     for hdr in both:
         for i, (a, b) in enumerate(izip(a_parser[hdr], b_parser[hdr])):
             if a.lower() != b.lower():
