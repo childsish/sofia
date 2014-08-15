@@ -1,3 +1,5 @@
+import gzip
+
 from collections import OrderedDict, namedtuple
 from itertools import izip
 
@@ -17,7 +19,7 @@ class VcfIterator(object):
     
     def __init__(self, fname):
         self.fname = fname
-        self.fhndl = open(fname)
+        self.fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
         self.hdrs = self._parseHeaders()
     
     def __del__(self):

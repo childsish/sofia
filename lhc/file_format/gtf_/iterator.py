@@ -1,3 +1,5 @@
+import gzip
+
 from collections import namedtuple
 from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.binf.genomic_coordinate import Interval
@@ -19,7 +21,7 @@ class GtfIterator(object):
     
     def __init__(self, fname):
         self.fname = fname
-        self.fhndl = open(fname)
+        self.fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
         self._initGene()
     
     def __del__(self):
