@@ -2,6 +2,7 @@ from ebias.resource import Resource
 
 from lhc.file_format.gtf_.iterator import GtfIterator as GtfIteratorParser
 from lhc.file_format.gtf_.set_ import GtfSet as GtfSetParser
+from lhc.file_format.gtf_.index import IndexedGtfFile
 
 class GtfIterator(Resource):
     
@@ -13,10 +14,13 @@ class GtfIterator(Resource):
 
 class GtfSet(Resource):
     
-    EXT = ['.gtf', '.gtf.gz']
+    EXT = ['.gtf', '.gtf.gz', '.gtf.idx']
     TYPE = 'gene_model'
     PARSER = GtfSetParser
     OUT = ['gene_model_set']
 
     def init(self, **kwargs):
-        self.parser = GtfSetParser(GtfIteratorParser(self.getFilename()))
+        fname = self.getFilename()
+        self.parser = IndexedGtfFile(fname) if fname.endswith('.gtf.idx') else\
+            GtfSetParser(GtfIteratorParser(fname))
+

@@ -2,26 +2,31 @@ from ebias.resource import Resource
 
 from lhc.file_format.fasta_.set_ import FastaSet as FastaSetParser
 from lhc.file_format.fasta_.iterator import FastaIterator as FastaIteratorParser
+from lhc.file_format.fasta_.index import IndexedFastaFile
 
 class FastaChromosomeSequenceSet(Resource):
     
-    EXT = ['.fasta', '.fasta.gz']
+    EXT = ['.fasta', '.fasta.gz', '.fasta.idx']
     TYPE = 'chromosome_sequence'
     PARSER = FastaSetParser
     OUT = ['chromosome_sequence_set']
     
     def init(self, **kwargs):
-        self.parser = FastaSetParser(FastaIteratorParser(self.getFilename()))
+        fname = self.getFilename()
+        self.parser = IndexedFastaFile(fname) if fname.endswith('.fasta.idx')\
+            else FastaSetParser(FastaIteratorParser(fname))
 
 class FastaCodingSequenceSet(Resource):
     
-    EXT = ['.fasta', '.fasta.gz']
+    EXT = ['.fasta', '.fasta.gz', '.fasta.idx']
     TYPE = 'coding_sequence'
     PARSER = FastaSetParser
     OUT = ['coding_sequence_set']
     
     def init(self, **kwargs):
-        self.parser = FastaSetParser(FastaIteratorParser(self.getFilename()))
+        fname = self.getFilename()
+        self.parser = IndexedFastaFile(fname) if fname.endswith('.fasta.idx')\
+            else FastaSetParser(FastaIteratorParser(fname))
 
 class FastaCodingSequenceIterator(Resource):
     
@@ -33,13 +38,15 @@ class FastaCodingSequenceIterator(Resource):
 
 class FastaProteinSequenceSet(Resource):
     
-    EXT = ['.fasta', '.fasta.gz']
+    EXT = ['.fasta', '.fasta.gz', '.fasta.idx']
     TYPE = 'protein_sequence'
     PARSER = FastaSetParser
     OUT = ['protein_sequence_set']
     
     def init(self, **kwargs):
-        self.parser = FastaSetParser(FastaIteratorParser(self.getFilename()))
+        fname = self.getFilename()
+        self.parser = IndexedFastaFile(fname) if fname.endswith('.fasta.idx')\
+            else FastaSetParser(FastaIteratorParser(fname))
 
 class FastaProteinSequenceIterator(Resource):
     
@@ -48,3 +55,4 @@ class FastaProteinSequenceIterator(Resource):
     PARSER = FastaIteratorParser
     TARGET = True
     OUT = ['protein_sequence_iterator']
+

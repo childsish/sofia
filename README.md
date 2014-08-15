@@ -67,6 +67,8 @@ Multiple VCFs
 To Do
 -----
 
+Add documentation to all functions that raise Exceptions
+
 To Test
 -------
 

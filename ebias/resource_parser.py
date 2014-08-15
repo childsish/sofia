@@ -26,7 +26,12 @@ class ResourceParser(object):
         return res
     
     def createResource(self, fname, type=None, name=None):
-        tmp_name, ext = fname.rsplit('.', 2)[:2] if fname.endswith('.gz') else fname.rsplit('.', 1)[:2]
+        if fname.endswith('.gz'):
+            tmp_name, ext = fname.rsplit('.', 2)[:2]
+        elif fname.endswith('.idx'):
+            tmp_name, ext = fname.rsplit('.', 2)[:2]
+        else:
+            tmp_name, ext =fname.rsplit('.', 1)[:2]
         if type is None and ext not in self.default_types:
             raise ValueError('Unable to determine type of biological information stored in %s'%fname)
         type = self.default_types[ext] if type is None else type
