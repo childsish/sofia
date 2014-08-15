@@ -1,5 +1,10 @@
-import argparse
+#!/usr/bin/env python
 
+import argparse
+import os
+import sys
+
+sys.path.append(os.path.realpath(__file__))
 from ebias.subcommands import aggregate, list_
 
 def main():
@@ -22,3 +27,4 @@ def getParser():
 if __name__ == '__main__':
     import sys
     sys.exit(main())
+

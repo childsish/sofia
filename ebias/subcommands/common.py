@@ -23,4 +23,5 @@ def loadFeatureHyperGraph():
     return res
 
 def getProgramDirectory():
-    return os.path.dirname(os.path.abspath(__file__)).rsplit(os.sep, 2)[0]
+    return os.path.dirname(os.path.realpath(__file__)).rsplit(os.sep, 2)[0]
+
