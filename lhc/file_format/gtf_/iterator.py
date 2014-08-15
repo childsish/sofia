@@ -22,7 +22,7 @@ class GtfIterator(object):
     def __init__(self, fname):
         self.fname = fname
         self.fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
-        self._initGene()
+        self.seek(0)
     
     def __del__(self):
         if not self.fhndl.closed:
@@ -54,6 +54,8 @@ class GtfIterator(object):
     def seek(self, fpos):
         self.fhndl.seek(fpos)
         line = self.fhndl.next()
+        while line[0] == '#':
+            line = self.fhndl.next()
         type, ivl, attr = self._parseLine(line)
         while type != 'gene':
             line = self.fhndl.next()
