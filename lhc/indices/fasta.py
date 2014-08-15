@@ -20,10 +20,13 @@ class FastaIndex(Accessor):
         infile.close()
     
     def __contains__(self, key):
-        return key.chr in self.chrs
+        key = key.chr if hasattr(key, 'chr') else key
+        return key in self.chrs
     
     def __getitem__(self, key):
-        return self.chrs[key.chr] + key.pos + (key.pos / self.wrap) * len(self.newlines)
+        chr = key.chr if hasattr(key, 'chr') else key
+        pos = key.pos if hasattr(key, 'chr') else 0
+        return self.chrs[chr] + pos + (pos / self.wrap) * len(self.newlines)
     
     def __setitem__(self, key, value):
         self.chrs[key] = value

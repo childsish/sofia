@@ -57,6 +57,11 @@ def main():
 def getArgumentParser():
     parser = ArgumentParser()
     subparsers = parser.add_subparsers()
+
+    index_parser = subparsers.add_parser('index')
+    index_parser.add_argument('input', metavar='FILE')
+    index_parser.add_argument('-o', '--output', metavar='FILE')
+    index_parser.set_defaults(func=lambda args:index(args.input))
     
     compare_parser = subparsers.add_parser('compare')
     compare_parser.add_argument('input_a')

@@ -29,6 +29,13 @@ def main():
 
 def getArgumentParser():
     parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    index_parser = subparsers.add_parser('index')
+    index_parser.add_argument('input', metavar='FILE')
+    index_parser.add_argument('-o', '--output', metavar='FILE')
+    index_parser.set_defaults(func=lambda args:index(args.input))
+
     return parser
 
 if __name__ == '__main__':

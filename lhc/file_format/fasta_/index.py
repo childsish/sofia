@@ -88,3 +88,4 @@ class FastaFileIndexer(object):
                 hdr = line.strip().split()[0][1:]
                 index[hdr] = fpos
         return index
+

@@ -1,11 +1,7 @@
 import gzip
 
-from collections import namedtuple
 from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.binf.genomic_coordinate import Interval
-
-GtfEntry = namedtuple('GtfEntry', ('chr', 'src', 'type', 'start', 'stop',
-    'score', 'strand', 'phase', 'attr'))
 
 class GtfIterator(object):
     
@@ -62,13 +58,15 @@ class GtfIterator(object):
             type, ivl, attr = self._parseLine(line)
         self.gene = Gene(attr['gene_name'], ivl)
     
-    def _parseLine(self, line):
+    @classmethod
+    def _parseLine(cls, line):
         parts = line.strip().split('\t')
-        ivl = Interval(parts[self.CHR], int(parts[self.START]) - 1, int(parts[self.STOP]))
-        attr = self._parseAttributes(parts[self.ATTR])
-        return parts[self.TYPE], ivl, attr
+        ivl = Interval(parts[cls.CHR], int(parts[cls.START]) - 1, int(parts[cls.STOP]))
+        attr = cls._parseAttributes(parts[cls.ATTR])
+        return parts[cls.TYPE], ivl, attr
     
-    def _parseAttributes(self, attr):
+    @classmethod
+    def _parseAttributes(cls, attr):
         parts = (part.strip() for part in attr.split(';'))
         parts = [part.split(' ', 1) for part in parts if part != '']
         for part in parts:

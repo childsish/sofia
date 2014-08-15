@@ -16,21 +16,14 @@ class GtfFileIndexer(object):
             if line.startswith('#') or line.strip() == '':
                 fpos += len(line)
                 continue
-            entry = self._parseLine(line)
-            if entry.type == 'gene':
-                key_index[entry.attr['gene_name']] = fpos
-                ivl = Interval(entry.start, entry.stop)
-                ivl_index[(entry.chr, ivl)] = fpos
+            type, ivl, attr = GtfIterator._parseLine(line)
+            if type == 'gene':
+                key_index[attr['gene_name']] = fpos
+                ivl_index[(ivl.chr, Interval(ivl.start, ivl.stop))] = fpos
             fpos += len(line)
         infile.close()
         return key_index, ivl_index
     
-    def _parseLine(self, line):
-        parts = line.strip().split('\t')
-        ivl = Interval(parts[self.CHR], int(parts[self.START]) - 1, int(parts[self.STOP]))
-        attr = self._parseAttributes(parts[self.ATTR])
-        return parts[self.TYPE], ivl, attr
-
 class IndexedGtfFile(object):
     def __init__(self, iname):
         self.iname = iname
@@ -47,14 +40,11 @@ class IndexedGtfFile(object):
     def __getitem__(self, key):
         if isinstance(key, basestring):
             fposs = [self.key_index[key]]
-            return self._getEntryAtFilePosition(fposs)
         elif hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
             ivl = Interval(key.pos, key.pos + len(key.ref))
             fposs = self.ivl_index[(key.chr, ivl)]
-            return self._getEntryAtFilePosition(fposs)
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             fposs = self.ivl_index[(key.chr, key)]
-            return self._getEntryAtFilePosition(fposs)
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
         
