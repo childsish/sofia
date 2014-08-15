@@ -1,3 +1,4 @@
+from itertools import izip
 from lhc.graph.graph import Graph
 
 class FeatureGraph(object):
@@ -30,9 +31,17 @@ class FeatureGraph(object):
 
     def iterRows(self, requested_features):
         kwargs = {}
-        row = [self.features[feature].generate(kwargs, self.features) for feature in requested_features]
-        row = ['' if item is None else self.features[feature].format(item) for item in row]
+        row = self._getNextRow(requested_features, kwargs)
         while kwargs['target'] is not None:
             yield row
-            row = [self.features[feature].generate(kwargs, self.features) for feature in requested_features]
-            row = ['' if item is None else self.features[feature].format(item) for item in row]
+            row = self._getNextRow(requested_features, kwargs)
+    
+    def _getNextRow(self, requested_features, kwargs):
+        self.features['target'].changed = True
+        row = []
+        for feature in requested_features:
+            item = self.features[feature].generate(kwargs, self.features)
+            item = '' if item is None else self.features[feature].format(item)
+            row.append(item)
+        return row
+

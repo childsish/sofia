@@ -33,3 +33,4 @@ class Resource(Feature):
     @classmethod
     def matchesType(cls, resource):
         return cls.TYPE == resource.type
+

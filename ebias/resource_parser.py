@@ -32,3 +32,4 @@ class ResourceParser(object):
         type = self.default_types[ext] if type is None else type
         name = tmp_name if name is None else name
         return ProvidedResource(fname, type, name)
+

@@ -4,9 +4,9 @@ class Feature(object):
     OUT = []
     
     def __init__(self, resources=None, dependencies=None):
+        self.changed = True
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
-        self.changed = True
     
     def __str__(self):
         return self.getName()
@@ -42,37 +42,25 @@ class Feature(object):
         :param features: available features
         :type features: dict of features
         """
-        #self.changed = self.needsUpdate(entities, features) #TODO: Take a closer look at self.changed
-        if not self.changed:
-            return entities[self.getName()]
+        for name, feature in self.dependencies.iteritems():
+            entities[feature] = features[feature].generate(entities, features)
+        
+        dependencies_changed = any(features[feature].changed for feature in\
+            self.dependencies.itervalues())
+        name = self.getName()
+        if not dependencies_changed and name in entities:
+            return entities[name]
+        
         local_entities = {}
         for name, feature in self.dependencies.iteritems():
-            if features[feature].changed:
-                entities[feature] = features[feature].generate(entities, features)
-                features[feature].changed = False
             local_entities[name] = entities[feature]
-        #try:
         res = self.calculate(**local_entities)
-        self.changed = True
-        #except TypeError, e:
-        #    raise TypeError(self.getName()  + ' ' + e.message.split(' ', 1)[1])
+        self.changed = not (name in entities and entities[name] is res)
         return res
     
-    def needsUpdate(self, entities, features):
-        """Check if this features needs to be updated since the last iteration
-        
-        :param dict entities: currently calculated entities
-        :param features: available features
-        :type features: dict of features
-        """
-        if self.getName() not in entities:
-            return True
-        for dep in self.dependencies.itervalues():
-            if features[dep].changed:
-                return True
-        return False
-
     def getName(self):
         if len(self.resources) == 0:
             return type(self).__name__
-        return '%s:%s'%(type(self).__name__, ','.join(resource.name for resource in sorted(self.resources)))
+        return '%s:%s'%(type(self).__name__,\
+            ','.join(resource.name for resource in sorted(self.resources)))
+

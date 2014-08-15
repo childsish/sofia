@@ -22,3 +22,4 @@ class VcfSet(Resource):
     
     def init(self, **kwargs):
         self.parser = VcfSetParser(VcfIteratorParser(self.getFilename()))
+
