@@ -2,43 +2,27 @@ import argparse
 import cPickle
 import os
 
-from lhc.indices.index import Index
-from lhc.indices.exact_key import ExactKeyIndex
-from lhc.indices.overlapping_interval import OverlappingIntervalIndex
 from lhc.interval import Interval
 from operator import add
 from vcf_.merger import VcfMerger
-from vcf_.parser import VcfParser
+from vcf_.iterator import VcfIterator
+from vcf_.index import VcfFileIndexer
 
 def iterEntries(fname):
-    parser = VcfParser(fname)
-    return iter(parser)
+    return VcfIterator(fname)
 
 def index(fname, iname=None):
-    iname = VcfParser.getIndexName(fname) if iname is None else iname
+    if fname.endswith('.gz'):
+        raise IOError('Unable to index compressed files.')
+    
+    indexer = VcfFileIndexer()
+    ivl_index = indexer.index(fname)
+    
+    iname = '%s.idx'%fname if iname is None else iname
     outfile = open(iname, 'wb')
-    pos_index, ivl_index = _createIndices(fname)
-    cPickle.dump(pos_index, outfile, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(fname, fhndl, cPickle.HIGHEST_PROTOCOL)
     cPickle.dump(ivl_index, outfile, cPickle.HIGHEST_PROTOCOL)
     outfile.close()
-
-def _createIndices(fname):
-    pos_index = Index((ExactKeyIndex, ExactKeyIndex))
-    ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
-    infile = open(fname, 'rb')
-    while True:
-        fpos = infile.tell()
-        line = infile.readline()
-        if line == '':
-            break
-        elif line.strip() == '' or line.startswith('#'):
-            continue
-        entry = VcfParser._parseUnsampledLine(line)
-        pos_index[(entry.chr, entry.pos)] = fpos
-        ivl = Interval(entry.pos, entry.pos + len(entry.ref))
-        ivl_index[(entry.chr, ivl)] = fpos
-    infile.close()
-    return pos_index, ivl_index
 
 def merge(fnames, quality=50.0, out=None):
     import sys
@@ -88,3 +72,4 @@ def getArgumentParser():
 if __name__ == '__main__':
     import sys
     sys.exit(main())
+

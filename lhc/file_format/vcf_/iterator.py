@@ -41,6 +41,9 @@ class VcfIterator(object):
             parts[self.FILTER],
             self._parseAttributes(parts[self.INFO]),
             self._parseSamples(parts))
+    
+    def seek(self, fpos):
+        self.fhndl.seek(fpos)
 
     def _parseHeaders(self):
         fhndl = self.fhndl

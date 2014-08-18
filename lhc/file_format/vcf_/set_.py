@@ -21,3 +21,4 @@ class VcfSet(object):
         else:
             raise NotImplementedError('Variant set random access not implemented for type: %s'%type(key))
         return [self.data[v] for k, v in idxs]
+
