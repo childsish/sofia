@@ -5,6 +5,7 @@ class Feature(object):
     
     def __init__(self, resources=None, dependencies=None):
         self.changed = True
+        self.calculated = False
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
     
@@ -43,6 +44,10 @@ class Feature(object):
         :type features: dict of features
         """
         for name, feature in self.dependencies.iteritems():
+            print '', feature, features[feature].calculated
+        for name, feature in self.dependencies.iteritems():
+            if features[feature].calculated:
+                continue
             entities[feature] = features[feature].generate(entities, features)
         
         dependencies_changed = any(features[feature].changed for feature in\
@@ -52,11 +57,20 @@ class Feature(object):
             return entities[name]
         
         local_entities = {}
-        for name, feature in self.dependencies.iteritems():
-            local_entities[name] = entities[feature]
+        for dependency_name, feature in self.dependencies.iteritems():
+            local_entities[dependency_name] = entities[feature]
         res = self.calculate(**local_entities)
+        self.calculated = True
         self.changed = not (name in entities and entities[name] is res)
         return res
+    
+    def reset(self, features):
+        """ Resets the calculation status of this feature and all dependencies 
+        to False.
+        """
+        self.calculated = False
+        for feature in self.dependencies.itervalues():
+            features[feature].reset(features)
     
     def getName(self):
         if len(self.resources) == 0:

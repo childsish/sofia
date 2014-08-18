@@ -37,11 +37,14 @@ class FeatureGraph(object):
             row = self._getNextRow(requested_features, kwargs)
     
     def _getNextRow(self, requested_features, kwargs):
+        for feature in requested_features:
+            self.features[feature].reset(self.features)
         self.features['target'].changed = True
         row = []
         for feature in requested_features:
             item = self.features[feature].generate(kwargs, self.features)
             item = '' if item is None else self.features[feature].format(item)
+            print 'x:', item
             row.append(item)
         return row
 

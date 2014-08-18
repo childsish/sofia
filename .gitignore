@@ -6,3 +6,5 @@
 .pydevproject
 *.dot
 *.png
+*.swp
+

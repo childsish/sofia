@@ -66,3 +66,19 @@ class AlternativeCount(Feature):
         sample = variant.samples.values()[0]
         return sample['AO'] if 'AO' in sample else 'NA'
 
+class VariantFrequency(Feature):
+
+    IN = ['reference_count', 'alternative_count']
+
+    def init(self, sample=None):
+        self.sample = sample
+
+    def calculate(self, reference_count, alternative_count):
+        alternative_count = 0 if alternative_count is None\
+            else float(alternative_count)
+        if alternative_count == 0:
+            return 0
+        reference_count = 0 if reference_count is None\
+            else float(reference_count)
+        return alternative_count / (alternative_count + reference_count)
+

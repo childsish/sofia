@@ -6,6 +6,7 @@ import json
 from collections import defaultdict, Counter
 from common import getProgramDirectory, loadFeatureHyperGraph
 from itertools import izip, chain, product
+from ebias.feature_parser import FeatureParser
 from ebias.resource_parser import ResourceParser
 from ebias.feature_graph import FeatureGraph
 
@@ -32,10 +33,10 @@ class Aggregator(object):
             return graph.resources.intersection(requested_resources) == requested_resources
         
         iterGraphs = self.hyper_graph.iterFeatureGraphs
-        feature_graphs = [[graph for graph in iterGraphs(requested_feature, provided_resources, set()) if satisfiesRequest(graph, requested_resources)]\
-            for requested_feature, requested_resources in requested_features]
+        feature_graphs = [[graph for graph in iterGraphs(requested_feature, provided_resources, set(), kwargs) if satisfiesRequest(graph, requested_resources)]\
+            for requested_feature, requested_resources, kwargs in requested_features]
         
-        missing_features = [requested_feature for feature_graph, (requested_feature, requested_resources) in izip(feature_graphs, requested_features) if len(feature_graph) == 0]
+        missing_features = [requested_feature for feature_graph, (requested_feature, requested_resources, kwargs) in izip(feature_graphs, requested_features) if len(feature_graph) == 0]
         if len(missing_features) > 0:
             raise ValueError('Unable to resolve a graph for requested feature: %s'%','.join(missing_features))
         
@@ -71,23 +72,12 @@ def defineParser(parser):
     parser.set_defaults(func=aggregate)
 
 def aggregate(args):
-    requested_features = parseRequestedFeatures(args.features)
+    feature_parser = FeatureParser()
+    requested_features = [feature_parser.parse(ftr) for ftr in args.features]
     provided_resources = parseProvidedResources(args.input, args.resources)
     aggregator = Aggregator()
     aggregator.aggregate(requested_features, provided_resources)
         
-def parseRequestedFeatures(features):
-    """ -f name[:resource[,resource]*] """
-    regx = re.compile('(?P<name>\w+)(?P<resources>[\w,:]+)?')
-    res = []
-    for feature in features:
-        match = regx.match(feature)
-        name = match.group('name')
-        resources = frozenset() if match.group('resources') is None\
-            else frozenset(match.group('resources').split(','))
-        res.append((name, resources))
-    return res
-
 def parseProvidedResources(target, resources):
     program_dir = getProgramDirectory()
     fhndl = open(os.path.join(program_dir, 'config.json'))

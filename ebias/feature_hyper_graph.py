@@ -31,7 +31,7 @@ class FeatureHyperGraph(object):
             for parent in self.ins[out]:
                 self.graph.addEdge(out, parent, name)
 
-    def iterFeatureGraphs(self, feature_name, resources, visited):
+    def iterFeatureGraphs(self, feature_name, resources, visited, kwargs={}):
         if feature_name in visited:
             raise StopIteration()
         visited.add(feature_name)
@@ -56,7 +56,7 @@ class FeatureHyperGraph(object):
             resources = reduce(or_, (graph.resources for name, graph in cmb))
             dependencies = {edge: dependee_graph.feature.getName() for edge, (dependee, dependee_graph) in izip(edge_names, cmb)}
             feature_instance = feature(resources, dependencies)
-            feature_instance.init() #TODO: feature initialisation arguments
+            feature_instance.init(**kwargs)
             res = FeatureGraph(feature_instance)
             for edge, (dependee, dependee_graph) in izip(edge_names, cmb):
                 res.addEdge(edge, feature_instance.getName(), dependee)
