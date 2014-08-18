@@ -56,3 +56,4 @@ class IndexedGtfFile(object):
     def _getEntryAtFilePosition(self, fpos):
         self.iterator.seek(fpos.value)
         return self.iterator.next()
+

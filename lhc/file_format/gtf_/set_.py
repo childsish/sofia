@@ -24,3 +24,4 @@ class GtfSet(object):
         else:
             raise NotImplementedError('Gene model set random access not implemented for %s'%type(key))
         return [self.data[v] for k, v in idxs]
+
