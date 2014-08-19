@@ -36,7 +36,7 @@ def merge(fnames, quality=50.0, out=None):
             out.write('%s=%s\n'%(key, value))
     out.write('#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t' + '\t'.join(merger.sample_names) + '\n')
     for entry in merger:
-        out.write('%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\ti%s\t%s\n'%(\
+        out.write('%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%(\
             entry.chr,
             entry.pos + 1,
             entry.id,
