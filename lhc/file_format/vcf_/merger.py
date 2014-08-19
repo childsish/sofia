@@ -55,7 +55,8 @@ class VcfMerger(object):
             samples = OrderedDict([(name, OrderedDict([('GT', '0/0'),
                                           ('GQ', '0'),
                                           ('RO', '0'),
-                                          ('AO', ao)]))
+                                          ('AO', ao),
+                                          ('Q', '0')]))
                 for name in self.sample_names])
             for idx in idxs:
                 top = tops[idx]
@@ -78,6 +79,7 @@ class VcfMerger(object):
                     samples[sample_name]['GQ'] = sample_data['GQ']
                     samples[sample_name]['RO'] = sample_data['RO']
                     samples[sample_name]['AO'] = ','.join(merged_counts[1:])
+                    samples[sample_name]['Q'] = top.qual
             entry[8] = samples
             yield Variant(*entry)
             for idx in idxs:
