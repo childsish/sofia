@@ -39,8 +39,6 @@ class VcfMerger(object):
             for idx in idxs:
                 top = list(tops[idx])
                 ref = top[VcfIterator.REF]
-                if len(longest_ref) != len(ref):
-                    print top[VcfIterator.ALT].split(',')
                 alts = [alt + longest_ref[len(ref):]\
                     for alt in top[VcfIterator.ALT].split(',')]
                 merged_alleles.update(alts)
