@@ -79,7 +79,7 @@ class VcfMerger(object):
                     samples[sample_name]['GQ'] = sample_data['GQ']
                     samples[sample_name]['RO'] = sample_data['RO']
                     samples[sample_name]['AO'] = ','.join(merged_counts[1:])
-                    samples[sample_name]['Q'] = top.qual
+                    samples[sample_name]['Q'] = str(top.qual)
             entry[8] = samples
             yield Variant(*entry)
             for idx in idxs:
@@ -91,7 +91,7 @@ class VcfMerger(object):
     
     def _nextLine(self, idx):
         entry = self.iterators[idx].next()
-        while entry.filter != 'PASS' and entry.qual < self.quality:
+        while entry.filter != 'PASS' or entry.qual < self.quality:
             entry = self.iterators[idx].next()
         return entry
     

@@ -37,7 +37,7 @@ class VcfIterator(object):
             parts[self.ID],
             parts[self.REF],
             parts[self.ALT],
-            int(parts[self.QUAL]) if parts[self.QUAL].isdigit() else parts[self.QUAL],
+            self._parseQuality(parts[self.QUAL]),
             parts[self.FILTER],
             self._parseAttributes(parts[self.INFO]),
             self._parseSamples(parts))
@@ -59,6 +59,9 @@ class VcfIterator(object):
             line = fhndl.next().strip()
         hdrs['##SAMPLES'] = line.strip().split('\t')[9:]
         return hdrs
+    
+    def _parseQuality(self, qual):
+        return float(qual) if qual != '.' and '.' in qual else qual
     
     def _parseAttributes(self, attr_line):
         return dict(attr.split('=', 1) if '=' in attr else (attr, attr)\
