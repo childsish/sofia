@@ -35,14 +35,20 @@ def merge(fnames, quality=50.0, out=None):
         for value in values:
             out.write('%s=%s\n'%(key, value))
     out.write('#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t' + '\t'.join(merger.sample_names) + '\n')
-    lens = set()
     for entry in merger:
-        lens.add(len(entry.samples))
-        out.write('%s\t%s\t%s'%('\t'.join(map(str, entry[:-1])),
+        out.write('%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\ti%s\t%s\n'%(\
+            entry.chr,
+            entry.pos + 1,
+            entry.id,
+            entry.ref,
+            entry.alt,
+            entry.qual,
+            entry.filter,
+            entry.info,
             ':'.join(entry.samples.values()[0].iterkeys()),
             '\t'.join(':'.join(sample.itervalues())\
-                for sample in entry.samples.itervalues())))
-        out.write('\n')
+                for sample in entry.samples.itervalues())
+        ))
     out.close()
 
 def main():
