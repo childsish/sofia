@@ -4,7 +4,7 @@ from operator import or_
 
 from lhc.graph.hyper_graph import HyperGraph
 from ebias.feature_graph import FeatureGraph
-from ebias.resource import Resource
+from ebias.resource import Resource, Target
 
 class FeatureHyperGraph(object):
     def __init__(self):
@@ -37,9 +37,9 @@ class FeatureHyperGraph(object):
         visited.add(feature_name)
         feature = self.features[feature_name]
         if issubclass(feature, Resource):
-            if feature.TARGET and feature.matches(resources['target']):
+            if issubclass(feature, Target)and feature.matches(resources['target']):
                 yield self.initFeatureGraph(feature, set([resources['target']]))
-            elif not feature.TARGET:
+            elif not issubclass(feature, Target):
                 hits = set(resource for resource in resources.itervalues() if resource.name != 'target' and feature.matches(resource))
                 if len(hits) > 1:
                     raise ValueError('Multiple resources possible')

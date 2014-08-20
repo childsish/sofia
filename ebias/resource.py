@@ -5,7 +5,6 @@ class Resource(Feature):
     EXT = []
     TYPE = None
     PARSER = None
-    TARGET = False
     
     def init(self, **kwargs):
         self.parser = self.PARSER(self.getFilename())
@@ -14,7 +13,7 @@ class Resource(Feature):
         return self.parser
     
     def getName(self):
-        return 'target' if self.TARGET else super(Resource, self).getName()
+        return super(Resource, self).getName()
     
     def getFilename(self):
         return list(self.resources)[0].fname
@@ -33,4 +32,19 @@ class Resource(Feature):
     @classmethod
     def matchesType(cls, resource):
         return cls.TYPE == resource.type
+
+class Target(Resource):
+    def generate(self, entities, features):
+        if self.calculated:
+            return entities['target']
+        entities['target'] = self.calculate()
+        self.calculated = True
+        self.changed = True
+        return entities['target']
+
+    def calculate(self):
+        return self.parser.next()
+
+    def getName(self):
+        return 'target'
 

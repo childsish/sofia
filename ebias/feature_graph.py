@@ -44,7 +44,6 @@ class FeatureGraph(object):
         for feature in requested_features:
             item = self.features[feature].generate(kwargs, self.features)
             item = '' if item is None else self.features[feature].format(item)
-            print 'x:', item
             row.append(item)
         return row
 

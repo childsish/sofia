@@ -1,15 +1,5 @@
 from ebias.feature import Feature
 
-class IterateVariants(Feature):
-    
-    IN = ['variant_iterator']
-    OUT = ['variant', 'genomic_position']
-    
-    def calculate(self, variant_iterator):
-        v = variant_iterator.next()
-        print 'w:', v.chr, v.pos
-        return variant_iterator.next()
-
 class GetVariantByPosition(Feature):
     
     IN = ['variant_set', 'genomic_position']

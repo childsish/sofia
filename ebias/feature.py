@@ -43,17 +43,18 @@ class Feature(object):
         :param features: available features
         :type features: dict of features
         """
-        for name, feature in self.dependencies.iteritems():
-            print '', feature, features[feature].calculated
-        for name, feature in self.dependencies.iteritems():
-            if features[feature].calculated:
-                continue
-            entities[feature] = features[feature].generate(entities, features)
-        
-        dependencies_changed = any(features[feature].changed for feature in\
-            self.dependencies.itervalues())
         name = self.getName()
+        if self.calculated:
+            return entities[name]
+        
+        dependencies_changed = False
+        for feature in self.dependencies.itervalues():
+            features[feature].generate(entities, features)
+            if features[feature].changed:
+                dependencies_changed = True
         if not dependencies_changed and name in entities:
+            self.calculated = True
+            self.changed = False
             return entities[name]
         
         local_entities = {}
@@ -62,6 +63,7 @@ class Feature(object):
         res = self.calculate(**local_entities)
         self.calculated = True
         self.changed = not (name in entities and entities[name] is res)
+        entities[name] = res
         return res
     
     def reset(self, features):
