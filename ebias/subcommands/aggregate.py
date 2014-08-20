@@ -18,7 +18,15 @@ class Aggregator(object):
         resolutions = list(self.iterGraphPossibilities(requested_features, provided_resources))
         if len(resolutions) == 1:
             resolution, resolved_features = resolutions[0]
-            print '\t'.join(feature[0] for feature in requested_features)
+            hdrs = []
+            for feature, resources, kwargs in requested_features:
+                hdr = [feature]
+                if len(resources) > 0:
+                    hdr.append(','.join(resources))
+                if len(kwargs) > 0:
+                    hdr.append(','.join('%s=%s'%e for e in kwargs.iteritems()))
+                hdrs.append(':'.join(hdr))
+            print '\t'.join(hdrs)
             for row in resolution.iterRows(resolved_features):
                 print '\t'.join(row)
         elif len(resolutions) == 0:

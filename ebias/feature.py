@@ -3,11 +3,12 @@ class Feature(object):
     IN = []
     OUT = []
     
-    def __init__(self, resources=None, dependencies=None):
+    def __init__(self, resources=None, dependencies=None, kwargs={}):
         self.changed = True
         self.calculated = False
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
+        self.kwargs = kwargs
     
     def __str__(self):
         return self.getName()
@@ -75,8 +76,10 @@ class Feature(object):
             features[feature].reset(features)
     
     def getName(self):
-        if len(self.resources) == 0:
-            return type(self).__name__
-        return '%s:%s'%(type(self).__name__,\
-            ','.join(resource.name for resource in sorted(self.resources)))
+        name = [type(self).__name__]
+        if len(self.resources) != 0:
+            name.append(','.join(resource.name for resource in self.resources))
+        if len(self.kwargs) != 0:
+            name.append(','.join('%s=%s'%e for e in self.kwargs.iteritems()))
+        return ':'.join(name)
 
