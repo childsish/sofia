@@ -102,7 +102,7 @@ class VcfMerger(object):
         return sorted_tops
     
     def _updateSorting(self, sorted_tops, entry, idx):
-        key = (entry.chr, entry.pos)
+        key = (Chromosome.getIdentifier(entry.chr), entry.pos)
         sorted_tops.get(key, []).append(idx)
     
     def _mergeHeaders(self, hdrs):
