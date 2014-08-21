@@ -108,9 +108,13 @@ class AminoAcidVariation(Feature):
         if isinstance(entity, dict):
             res = []
             for k, e in entity.iteritems():
-                
-        ','.join('%s:%s%s%s'%(k, e.ref, e.pos, ))entity.iteritems()if isinstance(entity, dict)
-        return ','.join('%s%s%s'%(entity.ref, entity.pos + 1, alt) for alt in entity.alt)
+                res.append(';'.join('%s:%s%s%s'%(k, e.ref, e.pos + 1, alt)\
+                    for alt in entity.alt))
+            res = ','.join(res)
+        else:
+            res = ';'.join('%s%s%s'%(entity.ref, entity.pos + 1, alt)\
+                for alt in entity.alt)
+        return res
 
     def _getAminoAcidVariation(self, codon_variant):
         return AminoAcidVariant(codon_variant.pos / 3,
