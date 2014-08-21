@@ -17,6 +17,21 @@ class IterateProteinSequence(Feature):
     def calculate(self, protein_sequence_iterator):
         return protein_sequence_iterator.next()
 
+class GetCodingSequenceByGeneModel(Feature):
+
+    IN = ['chromosome_sequence_set', 'gene_model']
+    OUT = ['coding_sequence']
+
+    def calculate(self, chromosome_sequence_set, gene_model):
+        if gene_model is None:
+            return None
+        transcripts = chain.from_iterable(model.transcripts.itervalues()\
+                for model in gene_model.itervalues())\
+            if isinstance(gene_model, dict)\
+            else gene_model.transcripts.itervalues()
+        return {transcript.name: transcript.getSubSeq(chromosome_sequence_set)\
+            for transcript in transcripts if transcript is not None}
+
 class GetGeneSequenceByGeneModel(Feature):
     
     IN = ['chromosome_sequence_set', 'gene_model']
@@ -25,12 +40,12 @@ class GetGeneSequenceByGeneModel(Feature):
     def calculate(self, chromosome_sequence_set, gene_model):
         if gene_model is None:
             return None
-        transcripts = chain(model.transcripts.itervalues()\
+        transcripts = chain.from_iterable(model.transcripts.itervalues()\
                 for model in gene_model.itervalues())\
             if isinstance(gene_model, dict)\
             else gene_model.transcripts.itervalues()
         return {transcript.name: transcript.getSubSeq(chromosome_sequence_set)\
-            for transcript in transcripts}
+            for transcript in transcripts if transcript is not None}
 
 class GetGeneSequence(Feature):
     

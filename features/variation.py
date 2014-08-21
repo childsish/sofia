@@ -1,3 +1,4 @@
+from itertools import chain
 from collections import namedtuple
 from lhc.binf.genetic_code import GeneticCodes
 from lhc.binf.sequence import revcmp
@@ -28,15 +29,25 @@ class CodingVariation(Feature):
         if gene_model is None:
             return None
         
-        transcripts = chain(model.transcripts.itervalues()\
+        transcripts = chain.from_iterable(model.transcripts.itervalues()\
                 for model in gene_model.itervalues())\
             if isinstance(gene_model, dict)\
             else gene_model.transcripts.itervalues()
         return {transcript.name: self._getCodingVariation(transcript, variant)\
-            for transcript in transcripts}
+            for transcript in transcripts if transcript is not None}
 
     def format(self, entity):
-        return ','.join('c.%s%s>%s'%(entity.pos + 1, entity.ref, alt) for alt in entity.alt)
+        if isinstance(entity, dict):
+            res = []
+            for k, v in entity.iteritems():
+                if v is None:
+                    continue
+                res.append(';'.join('%s:c.%s%s>%s'%(k, v.pos + 1, v.ref, alt)\
+                    for alt in v.alt))
+            res = ','.join(res)
+        else:
+            res = ';'.join('c.%s%s>%s'%(entity.pos + 1, entity.ref, alt) for alt in entity.alt)
+        return res
 
     def _getCodingVariation(self, transcript, variant):
         ref = variant.ref
@@ -65,12 +76,23 @@ class CodonVariation(Feature):
             return None
         getVariant = self._getCodonVariation
         return {key: getVariant(coding_variant[key], coding_sequence[key])\
-                for key in coding_variant}\
+                for key in coding_variant if coding_variant[key] is not None}\
             if isinstance(coding_variant, dict)\
             else self._getCodonVariation(coding_variant, coding_sequence)
     
     def format(self, entity):
-        return ','.join('c.%s%s>%s'%(entity.pos + 1, entity.ref, alt) for alt in entity.alt)
+        if isinstance(entity, dict):
+            res = []
+            for k, v in entity.iteritems():
+                if v is None:
+                    continue
+                res.append(';'.join('%s:c.%s%s>%s'%(k, v.pos + 1, v.ref, alt)\
+                    for alt in v.alt))
+            res = ','.join(res)
+        else:
+            res = ';'.join('c.%s%s>%s'%(entity.pos + 1, entity.ref, alt)\
+                for alt in entity.alt)
+        return res
     
     def _getCodonVariation(self, coding_variant, coding_sequence):
         pos = coding_variant.pos
@@ -109,7 +131,7 @@ class AminoAcidVariation(Feature):
             res = []
             for k, e in entity.iteritems():
                 res.append(';'.join('%s:%s%s%s'%(k, e.ref, e.pos + 1, alt)\
-                    for alt in entity.alt))
+                    for alt in e.alt))
             res = ','.join(res)
         else:
             res = ';'.join('%s%s%s'%(entity.ref, entity.pos + 1, alt)\
