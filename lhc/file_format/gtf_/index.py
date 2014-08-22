@@ -27,7 +27,7 @@ class GtfFileIndexer(object):
 class IndexedGtfFile(object):
     def __init__(self, iname):
         self.iname = iname
-        fhndl = open(iname)
+        fhndl = open(iname, 'rb')
         self.fname = cPickle.load(fhndl)
         self.key_index = cPickle.load(fhndl)
         self.ivl_index = cPickle.load(fhndl)

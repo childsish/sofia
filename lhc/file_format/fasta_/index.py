@@ -6,7 +6,7 @@ from lhc.indices.fasta import FastaIndex
 class IndexedFastaFile(object):
     def __init__(self, iname):
         self.iname = iname
-        fhndl = open(iname)
+        fhndl = open(iname, 'rb')
         self.fname = cPickle.load(fhndl)
         self.index = cPickle.load(fhndl)
         fhndl.close()
