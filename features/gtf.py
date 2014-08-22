@@ -1,10 +1,10 @@
-from ebias.resource import Resource
+from ebias.resource import Resource, Target
 
 from lhc.file_format.gtf_.iterator import GtfIterator as GtfIteratorParser
 from lhc.file_format.gtf_.set_ import GtfSet as GtfSetParser
 from lhc.file_format.gtf_.index import IndexedGtfFile
 
-class GtfIterator(Resource):
+class GtfIterator(Target):
     
     EXT = ['.gtf', '.gtf.gz']
     TYPE = 'gene_model'
