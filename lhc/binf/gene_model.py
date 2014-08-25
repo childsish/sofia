@@ -36,7 +36,7 @@ class Transcript(object):
         for exon in self.exons:
             if exon.ivl.start <= pos and exon.ivl.stop > pos:
                 return rel_pos + exon.getRelPos(pos)
-            rel_pos += exon.ivl.stop - exon.ivl.start
+            rel_pos += len(exon)
         return None
         #raise IndexError('Position %s not in %s'%(pos, self.name))
     

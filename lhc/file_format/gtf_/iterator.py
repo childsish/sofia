@@ -61,7 +61,8 @@ class GtfIterator(object):
     @classmethod
     def _parseLine(cls, line):
         parts = line.strip().split('\t')
-        ivl = Interval(parts[cls.CHR], int(parts[cls.START]) - 1, int(parts[cls.STOP]))
+        ivl = Interval(parts[cls.CHR], int(parts[cls.START]) - 1,\
+            int(parts[cls.STOP]), parts[cls.STRAND])
         attr = cls._parseAttributes(parts[cls.ATTR])
         return parts[cls.TYPE], ivl, attr
     
