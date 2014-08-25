@@ -28,6 +28,8 @@ class BedIterator(object):
     
     def next(self):
         line = self.fhndl.next()
+        while line[:5] in ['brows', 'track']: #TODO: remove when bed headers implemented
+            line = self.fhndl.next()
         return self._parseLine(line)
 
     def seek(self, fpos):

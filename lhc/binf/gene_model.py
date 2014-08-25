@@ -27,6 +27,9 @@ class Transcript(object):
         self.name = name
         self.ivl = ivl
         self.exons = [] if exons is None else exons
+    
+    def __len__(self):
+        return sum(map(len, self.exons))
 
     def getRelPos(self, pos):
         rel_pos = 0
@@ -51,6 +54,9 @@ class Exon(object):
     
     def __str__(self):
         return '%s..%s'%(self.ivl.start, self.ivl.stop)
+    
+    def __len__(self):
+        return len(self.ivl)
     
     def getSubSeq(self, seq, fr=None, to=None):
         return self.ivl.getSubSeq(seq, fr, to)
