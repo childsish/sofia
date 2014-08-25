@@ -11,6 +11,9 @@ class Interval(object):
     def __str__(self):
         return '[{start}, {stop})'.format(start=self.start, stop=self.stop)
     
+    def __len__(self):
+        return self.stop - self.start
+    
     def __repr__(self):
         return 'Interval{s}'.format(s=str(self))
     
