@@ -36,6 +36,16 @@ class GetGeneSequence(Feature):
             return None
         return gene_sequence_set[header]
 
+class GetCodingSequenceByGeneModel(Feature):
+
+    IN = ['chromosome_sequence_set', 'gene_model']
+    OUT = ['coding_sequence']
+
+    def calculate(self, chromosome_sequence_set, gene_model):
+        if gene_model is None:
+            return None
+        return gene_model.transcripts.values()[0].getSubSeq(chromosome_sequence_set)#, type='CDS')
+
 class GetCodingSequence(Feature):
     
     IN = ['coding_sequence_set', 'header']
