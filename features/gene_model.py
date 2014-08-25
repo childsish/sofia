@@ -8,10 +8,7 @@ class GeneName(Feature):
     def calculate(self, gene_model):
         if gene_model is None:
             return ''
-        return {model.name: model.name for model in gene_model}
-    
-    def format(self, gene_name):
-        return ','.join(gene_name) if isinstance(gene_name, dict) else gene_name
+        return gene_model.name
 
 class GenePosition(Feature):
     
@@ -19,14 +16,7 @@ class GenePosition(Feature):
     OUT = ['gene_position']
 
     def calculate(self, genomic_position, gene_model):
-        transcripts = chain(model.transcripts.itervalues()\
-                for model in gene_model.itervalues())\
-            if isinstance(gene_model, dict)\
-            else gene_model.transcripts.itervalues()
-        return {t.name: t.getRelPos(genomic_position.pos) for t in transcripts}
+        return gene_model.transcripts.values()[0].getRelPos(genomic_position.pos)
 
     def format(self, gene_position):
-        return ','.join('%s:%d'%(k, v + 1) for k, v in gene_position)\
-            if isinstance(gene_position, dict)\
-            else str(gene_position + 1)
-
+        return '' if gene_position is None else str(gene_position + 1)
