@@ -22,6 +22,9 @@ class Gene(object):
         self.ivl = ivl
         self.transcripts = OrderedDict() if transcripts is None else transcripts
 
+    def __str__(self):
+        return '%s:%s'%(self.name, str(self.ivl))
+
 class Transcript(object):
     def __init__(self, name, ivl, exons=None):
         self.name = name
