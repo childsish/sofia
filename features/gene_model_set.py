@@ -22,7 +22,8 @@ class GetGeneModelByPosition(Feature):
     OUT = ['gene_model']
 
     def calculate(self, gene_model_set, genomic_position):
-        res = gene_model_set[genomic_position]
-        if res is None or len(res) == 0:
+        gene_model = gene_model_set[genomic_position]
+        if gene_model is None or len(gene_model) == 0:
             return None 
-        return res[0]
+        return gene_model[0]
+

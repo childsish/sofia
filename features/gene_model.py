@@ -10,16 +10,17 @@ class GeneName(Feature):
             return ''
         return gene_model.name
 
-class MajorTranscriptName(Feature):
+class MajorTranscript(Feature):
     
     IN = ['gene_model']
-    OUT = ['major_transcript_name']
+    OUT = ['major_transcript']
 
     def calculate(self, gene_model):
         if gene_model is None:
             return None
-        major_transcript = sorted(gene_model.transcripts.itervalues(),\
-            key=lambda x:len(x))[-1]
+        return gene_model.getMajorTranscript()
+    
+    def format(self, major_transcript):
         return major_transcript.name
 
 class GenePosition(Feature):
@@ -28,8 +29,7 @@ class GenePosition(Feature):
     OUT = ['gene_position']
 
     def calculate(self, genomic_position, gene_model):
-        major_transcript = sorted(gene_model.transcripts.itervalues(),\
-            key=lambda x:len(x))[-1]
+        major_transcript = gene_model.getMajorTranscript()
         return major_transcript.getRelPos(genomic_position.pos)
 
     def format(self, gene_position):

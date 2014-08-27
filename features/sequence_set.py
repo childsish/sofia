@@ -18,13 +18,13 @@ class IterateProteinSequence(Feature):
 
 class GetGeneSequenceByGeneModel(Feature):
     
-    IN = ['chromosome_sequence_set', 'gene_model']
+    IN = ['chromosome_sequence_set', 'major_transcript']
     OUT = ['gene_sequence']
 
-    def calculate(self, chromosome_sequence_set, gene_model):
-        if gene_model is None:
+    def calculate(self, chromosome_sequence_set, major_transcript):
+        if major_transcript is None:
             return None
-        return gene_model.transcripts.values()[0].getSubSeq(chromosome_sequence_set)
+        return major_transcript.getSubSeq(chromosome_sequence_set)
 
 class GetGeneSequence(Feature):
     
@@ -38,13 +38,13 @@ class GetGeneSequence(Feature):
 
 class GetCodingSequenceByGeneModel(Feature):
 
-    IN = ['chromosome_sequence_set', 'gene_model']
+    IN = ['chromosome_sequence_set', 'major_transcript']
     OUT = ['coding_sequence']
 
-    def calculate(self, chromosome_sequence_set, gene_model):
-        if gene_model is None:
+    def calculate(self, chromosome_sequence_set, major_transcript):
+        if major_transcript is None:
             return None
-        return gene_model.transcripts.values()[0].getSubSeq(chromosome_sequence_set)#, type='CDS')
+        return major_transcript.getSubSeq(chromosome_sequence_set)#, type='CDS')
 
 class GetCodingSequence(Feature):
     

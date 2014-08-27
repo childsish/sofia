@@ -5,11 +5,11 @@ from ebias.feature import Feature
 
 class VariantType(Feature):
     
-    IN = ['gene_model', 'amino_acid_variant']
+    IN = ['major_transcript', 'amino_acid_variant']
     OUT = ['variant_type']
     
-    def calculate(self, gene_model, amino_acid_variant):
-        if gene_model is None:
+    def calculate(self, major_transcript, amino_acid_variant):
+        if major_transcript is None:
             return 'intergenic'
         elif amino_acid_variant is None:
             return 'intronic'
@@ -21,21 +21,20 @@ CodingVariant = namedtuple('CodingVariant', ('pos', 'ref', 'alt'))
 
 class CodingVariation(Feature):
     
-    IN = ['gene_model', 'variant']
+    IN = ['major_transcript', 'variant']
     OUT = ['coding_variant']
     
-    def calculate(self, gene_model, variant):
-        if gene_model is None:
+    def calculate(self, major_transcript, variant):
+        if major_transcript is None:
             return None
         ref = variant.ref
-        transcript = gene_model.transcripts.values()[0]
-        coding_position = transcript.getRelPos(variant.pos)\
-            if gene_model.ivl.strand == '+'\
-            else transcript.getRelPos(variant.pos + len(ref) - 1)
+        coding_position = major_transcript.getRelPos(variant.pos)\
+            if major_transcript.ivl.strand == '+'\
+            else major_transcript.getRelPos(variant.pos + len(ref) - 1)
         if coding_position is None:
             return None
         alt = variant.alt.split(',')
-        if gene_model.ivl.strand == '-':
+        if major_transcript.ivl.strand == '-':
             ref = revcmp(ref)
             alt = map(revcmp, alt)
         return CodingVariant(coding_position, ref, alt)
