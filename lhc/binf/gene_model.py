@@ -22,6 +22,9 @@ class Gene(object):
         self.ivl = ivl
         self.transcripts = OrderedDict() if transcripts is None else transcripts
 
+    def getMajorTranscript(self):
+        return sorted(self.transcripts.itervalues(), key=lambda x:len(x))[-1]
+
     def __str__(self):
         return '%s:%s'%(self.name, str(self.ivl))
 
@@ -30,6 +33,9 @@ class Transcript(object):
         self.name = name
         self.ivl = ivl
         self.exons = [] if exons is None else exons
+
+    def __str__(self):
+        return '%s:%s'%(self.name, str(self.ivl))
     
     def __len__(self):
         return sum(map(len, self.exons))
@@ -47,9 +53,6 @@ class Transcript(object):
         return ''.join([exon.getSubSeq(seq, fr, to)\
             for exon in self.exons if exon.type in valid_types])
     
-    def getMajorTranscript(self):
-        return sorted(self.transcripts.iteritems(), key=lambda x:len(x))[-1]
-
 class Exon(object):
     
     TYPE = enum(['gene', 'transcript', 'CDS', 'UTR5', 'UTR3'])
