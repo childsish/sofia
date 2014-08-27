@@ -46,6 +46,9 @@ class Transcript(object):
     def getSubSeq(self, seq, fr=None, to=None, valid_types=set(['CDS', 'UTR5', 'UTR3'])):
         return ''.join([exon.getSubSeq(seq, fr, to)\
             for exon in self.exons if exon.type in valid_types])
+    
+    def getMajorTranscript(self):
+        return sorted(self.transcripts.iteritems(), key=lambda x:len(x))[-1]
 
 class Exon(object):
     
