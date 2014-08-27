@@ -42,9 +42,9 @@ class IndexedGtfFile(object):
             fposs = [self.key_index[key]]
         elif hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
             ivl = Interval(key.pos, key.pos + len(key.ref))
-            fposs = self.ivl_index[(key.chr, ivl)]
+            fposs = [fpos.value for fpos in self.ivl_index[(key.chr, ivl)]]
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            fposs = self.ivl_index[(key.chr, key)]
+            fposs = [fpos.value for fpos in self.ivl_index[(key.chr, key)]]
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
         
@@ -54,6 +54,6 @@ class IndexedGtfFile(object):
         return self.prv_value
     
     def _getEntryAtFilePosition(self, fpos):
-        self.iterator.seek(fpos.value)
+        self.iterator.seek(fpos)
         return self.iterator.next()
 
