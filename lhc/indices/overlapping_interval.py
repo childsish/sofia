@@ -1,6 +1,6 @@
 from bisect import bisect_left, bisect_right
 from lhc.indices.index import Accessor
-from lhc.interval import Interval
+from lhc.interval import Interval, IntervalBinner
 
 class OverlappingIntervalIndex(Accessor):
     
@@ -9,15 +9,13 @@ class OverlappingIntervalIndex(Accessor):
     RETURN = 'multiple'
     TYPE = 'inexact'
     
-    MINBIN = 2
-    MAXBIN = 7
-    
     def __init__(self):
+        self.binner = IntervalBinner()
         self.bins = []
         self.items = []
     
     def __contains__(self, key):
-        bin = self._getBin(key)
+        bin = self.binner.getBin(key)
         idx = bisect_left(self.bins, bin)
         if idx == len(self.bins) or self.bins[idx] != bin:
             return False
@@ -25,7 +23,7 @@ class OverlappingIntervalIndex(Accessor):
     
     def __getitem__(self, key):
         res = []
-        bins = self._getOverlappingBins(key)
+        bins = self.binner.getOverlappingBins(key)
         for bin in bins:
             if bin[0] == bin[1]:
                 idx = bisect_left(self.bins, bin[0])
@@ -42,7 +40,7 @@ class OverlappingIntervalIndex(Accessor):
         return res
     
     def __setitem__(self, key, value):
-        bin = self._getBin(key)
+        bin = self.binner.getBin(key)
         idx = bisect_left(self.bins, bin)
         if idx == len(self.bins) or self.bins[idx] != bin:
             self.bins.insert(idx, bin)

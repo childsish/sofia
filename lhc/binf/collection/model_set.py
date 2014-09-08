@@ -2,15 +2,14 @@ import os
 import sqlite3
 import itertools
 
+from lhc.interval import IntervalBinner
 from lhc.binf.genomic_coordinate import Interval
 from lhc.binf.gene_model import Gene, Transcript, Exon
 
 class ModelSet(object):
 
-    MINBIN = 2
-    MAXBIN = 7
-
     def __init__(self, fname, mdls=None):
+        self.binner = IntervalBinner()
         if mdls is None:
             self.conn = sqlite3.connect(fname)
         if mdls is not None:
@@ -52,7 +51,6 @@ class ModelSet(object):
     
     def intersect(self, ivl, fetch_type=Exon.TYPE.gene):
         cur = self.conn.cursor()
-        getOverlappingBins = self._getOverlappingBins
         
         qry1 = '''SELECT name
             FROM model
@@ -66,7 +64,7 @@ class ModelSet(object):
                 chr = "{chr}"'''
         
         qry = []
-        bins = getOverlappingBins(ivl)
+        bins = self.binner.getOverlappingBins(ivl)
         for bin in bins:
             if bin[0] == bin[1]:
                 qry.append(qry1.format(chr=ivl.chr, bin=bin[0]))
@@ -117,7 +115,7 @@ class ModelSet(object):
                 'parent': None,
                 'left': counter.next(),
                 'right': None,
-                'bin': self._getBin(gene.ivl)})
+                'bin': self.binner.getBin(gene.ivl)})
             gene_id = cur.lastrowid
             for transcript_idx, transcript_key in enumerate(gene.transcripts):
                 transcript = gene.transcripts[transcript_key]
@@ -132,7 +130,7 @@ class ModelSet(object):
                     'parent': gene_id,
                     'left': counter.next(),
                     'right': None,
-                    'bin': self._getBin(transcript.ivl)})
+                    'bin': self.binner.getBin(transcript.ivl)})
                 transcript_id = cur.lastrowid
                 for exon_idx, exon in enumerate(transcript.exons):
                     cur.execute(insert_qry, {
@@ -146,7 +144,7 @@ class ModelSet(object):
                         'parent': transcript_id,
                         'left': counter.next(),
                         'right': counter.next(),
-                        'bin': self._getBin(exon.ivl)})
+                        'bin': self.binner.getBin(exon.ivl)})
                 cur.execute(update_qry, {'right': counter.next(), 'id': transcript_id})
             cur.execute(update_qry, {'right': counter.next(), 'id': gene_id})
     
@@ -155,22 +153,4 @@ class ModelSet(object):
         cur.execute('CREATE INDEX IF NOT EXISTS model_name_idx ON model(name, type)')
         cur.execute('CREATE INDEX IF NOT EXISTS model_nest_idx ON model(left, right)')
         cur.execute('CREATE INDEX IF NOT EXISTS variant_idx ON model(bin, type, chr)')
-    
-    @classmethod
-    def _getBin(cls, ivl):
-        for i in range(cls.MINBIN, cls.MAXBIN + 1):
-            binLevel = 10 ** i
-            if int(ivl.start / binLevel) == int(ivl.stop / binLevel):
-                return int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.start / binLevel))
-        return int((cls.MAXBIN + 1) * 10 ** (cls.MAXBIN + 1))
-    
-    @classmethod
-    def _getOverlappingBins(cls, ivl):
-        res = []
-        bigBin = int((cls.MAXBIN + 1) * 10 ** (cls.MAXBIN + 1))
-        for i in range(cls.MINBIN, cls.MAXBIN + 1):
-            binLevel = 10 ** i
-            res.append((int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.start / binLevel)), int(i * 10 ** (cls.MAXBIN + 1) + int(ivl.stop / binLevel))))
-        res.append((bigBin, bigBin))
-        return res
     
