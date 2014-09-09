@@ -16,13 +16,14 @@ def index(fname, iname=None):
         raise IOError('Unable to index compressed files.')
     
     indexer = VcfFileIndexer()
-    ivl_index = indexer.index(fname)
+    ivl_index, fnames = indexer.index(fname)
     
     iname = '%s.idx'%fname if iname is None else iname
-    outfile = open(iname, 'wb')
+    fhndl = open(iname, 'wb')
     cPickle.dump(fname, fhndl, cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(ivl_index, outfile, cPickle.HIGHEST_PROTOCOL)
-    outfile.close()
+    cPickle.dump(fnames, fhndl, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(ivl_index, fhndl, cPickle.HIGHEST_PROTOCOL)
+    fhndl.close()
 
 def merge(fnames, quality=50.0, out=None):
     import sys

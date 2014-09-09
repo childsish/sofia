@@ -62,24 +62,13 @@ class VcfMerger(object):
                 top = tops[idx]
                 alleles = [longest_ref] + top.alt
                 for sample_name, sample_data in top.samples.iteritems():
-                    merged_counts = len(merged_alleles) * ['0']
-                    counts = [sample_data['RO']] + sample_data['AO'].split(',')
-                    for allele, count in izip(alleles, counts):
-                        merged_counts[merged_alleles.index(allele)] = count
-                    if sample_data['GT'] != '0/0':
-                        try:
-                            a1, a2 = map(int, sample_data['GT'].split('/'))
-                        except Exception, e:
-                            print self.iterators[idx].fname
-                            raise e
-                        sample_data['GT'] = '/'.join(map(str,\
-                            (merged_alleles.index(alleles[a1]),\
-                             merged_alleles.index(alleles[a2]))))
-                    samples[sample_name]['GT'] = sample_data['GT']
-                    samples[sample_name]['GQ'] = sample_data['GQ']
-                    samples[sample_name]['RO'] = sample_data['RO']
-                    samples[sample_name]['AO'] = ','.join(merged_counts[1:])
+                    samples[sample_name].update(sample_data)
                     samples[sample_name]['Q'] = str(top.qual)
+                    if 'RO' in sample_data:
+                        merged_counts = self._mergeCounts(sample_data,
+                            merged_allles, alleles)
+                        samples[sample_name]['RO'] = sample_data['RO']
+                        samples[sample_name]['AO'] = ','.join(merged_counts[1:])
             entry[8] = samples
             yield Variant(*entry)
             for idx in idxs:
@@ -118,3 +107,18 @@ class VcfMerger(object):
             res[k] = list(values)
         return res
 
+    def _mergeCounts(self, sample_data, merged_alleles):
+        merged_counts = len(merged_alleles) * ['0']
+        counts = [sample_data['RO']] + sample_data['AO'].split(',')
+        for allele, count in izip(alleles, counts):
+            merged_counts[merged_alleles.index(allele)] = count
+        if sample_data['GT'] != '0/0':
+            try:
+                a1, a2 = map(int, sample_data['GT'].split('/'))
+            except Exception, e:
+                print self.iterators[idx].fname
+                raise e
+            sample_data['GT'] = '/'.join(map(str,\
+                (merged_alleles.index(alleles[a1]),\
+                 merged_alleles.index(alleles[a2]))))
+        return merged_counts
