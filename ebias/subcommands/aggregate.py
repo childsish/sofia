@@ -70,12 +70,17 @@ def defineParser(parser):
     parser.add_argument('input', metavar='TARGET',
         help='the file to annotate')
     parser.add_argument('features', nargs='+',
-        help='name:[resource[,resource]*]')
+        help='request a feature using the following format <name>[:<arguments>][:<resources>]', default=[])
+    parser.add_argument('-f', '--feature',
+        help='specify a feature file in json format')
+    parser.add_argument('-o', '--output',
+        help='direct output to named file (stdout)')
     parser.add_argument('-r', '--resources', nargs='+',
-        help='name[:type]=fname', default=[])
-    parser.add_argument('-o', '--output')
-    parser.add_argument('-t', '--template')
-    parser.add_argument('-y', '--type')
+        help='provide a resource using the following format <file name>[;<type>][;<name>]')
+    parser.add_argument('-t', '--template',
+        help='specify a template string for the output')
+    parser.add_argument('-y', '--type',
+        help='specify the type of entity in the target file')
     #parser.add_argument('-g', '--graph', action='StoreTrue')
     parser.set_defaults(func=aggregate)
 
