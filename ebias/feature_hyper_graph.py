@@ -50,6 +50,9 @@ class FeatureHyperGraph(object):
         edge_names = sorted(self.graph.vs[feature_name].iterkeys())
         edge_dependencies = [list(self.iterDependencies(self.graph.vs[feature_name][edge], resources, set(visited))) for edge in edge_names]
         
+        missing_dependencies = [name for name, dependencies in izip(edge_names, edge_dependencies) if len(dependencies) == 0]
+        if len(missing_dependencies) > 0:
+            print '%s is missing dependencies: %s'%(feature_name, ','.join(missing_dependencies))
         #TODO: Check here for missing dependencies
         
         for cmb in product(*edge_dependencies):
