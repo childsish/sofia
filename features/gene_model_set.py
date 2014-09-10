@@ -14,7 +14,7 @@ class GetGeneModelByHeader(Feature):
     OUT = ['gene_model']
     
     def calculate(self, gene_model_set, header):
-        return {header: gene_model_set[header]}
+        return gene_model_set[header]
 
 class GetGeneModelByPosition(Feature):
     
@@ -22,6 +22,8 @@ class GetGeneModelByPosition(Feature):
     OUT = ['gene_model']
 
     def calculate(self, gene_model_set, genomic_position):
-        gene_models = gene_model_set[genomic_position]
-        return {model.name: model for model in gene_models}
+        gene_model = gene_model_set[genomic_position]
+        if gene_model is None or len(gene_model) == 0:
+            return None 
+        return gene_model[0]
 

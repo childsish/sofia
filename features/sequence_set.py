@@ -1,4 +1,3 @@
-from itertools import chain
 from ebias.feature import Feature
 
 class IterateCodingSequence(Feature):
@@ -17,35 +16,15 @@ class IterateProteinSequence(Feature):
     def calculate(self, protein_sequence_iterator):
         return protein_sequence_iterator.next()
 
-class GetCodingSequenceByGeneModel(Feature):
-
-    IN = ['chromosome_sequence_set', 'gene_model']
-    OUT = ['coding_sequence']
-
-    def calculate(self, chromosome_sequence_set, gene_model):
-        if gene_model is None:
-            return None
-        transcripts = chain.from_iterable(model.transcripts.itervalues()\
-                for model in gene_model.itervalues())\
-            if isinstance(gene_model, dict)\
-            else gene_model.transcripts.itervalues()
-        return {transcript.name: transcript.getSubSeq(chromosome_sequence_set)\
-            for transcript in transcripts if transcript is not None}
-
 class GetGeneSequenceByGeneModel(Feature):
     
-    IN = ['chromosome_sequence_set', 'gene_model']
+    IN = ['chromosome_sequence_set', 'major_transcript']
     OUT = ['gene_sequence']
 
-    def calculate(self, chromosome_sequence_set, gene_model):
-        if gene_model is None:
+    def calculate(self, chromosome_sequence_set, major_transcript):
+        if major_transcript is None:
             return None
-        transcripts = chain.from_iterable(model.transcripts.itervalues()\
-                for model in gene_model.itervalues())\
-            if isinstance(gene_model, dict)\
-            else gene_model.transcripts.itervalues()
-        return {transcript.name: transcript.getSubSeq(chromosome_sequence_set)\
-            for transcript in transcripts if transcript is not None}
+        return major_transcript.getSubSeq(chromosome_sequence_set)
 
 class GetGeneSequence(Feature):
     
@@ -56,6 +35,16 @@ class GetGeneSequence(Feature):
         if header is None:
             return None
         return gene_sequence_set[header]
+
+class GetCodingSequenceByGeneModel(Feature):
+
+    IN = ['chromosome_sequence_set', 'major_transcript']
+    OUT = ['coding_sequence']
+
+    def calculate(self, chromosome_sequence_set, major_transcript):
+        if major_transcript is None:
+            return None
+        return major_transcript.getSubSeq(chromosome_sequence_set)#, type='CDS')
 
 class GetCodingSequence(Feature):
     

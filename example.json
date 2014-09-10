@@ -1,0 +1,16 @@
+{
+    "features": [
+        {
+            "name": "Chromosome",
+        },
+        {
+            "name": "Position"
+        }
+    ],
+    "resources": [
+        {
+            "fname": "$HOME/data/public/sequence/GRCh37.fasta"
+        }
+    ]
+}
+
