@@ -9,7 +9,9 @@
     ],
     "resources": [
         {
-            "fname": "$HOME/data/public/sequence/GRCh37.fasta"
+            "fname": "$HOME/data/public/sequence/GRCh37.fasta",
+            "type": "chromosome_sequence",
+            "name": "GRCh37"
         }
     ]
 }

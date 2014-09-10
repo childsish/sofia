@@ -71,8 +71,8 @@ def defineParser(parser):
         help='the file to annotate')
     parser.add_argument('features', nargs='+',
         help='request a feature using the following format <name>[:<arguments>][:<resources>]', default=[])
-    parser.add_argument('-f', '--feature',
-        help='specify a feature file in json format')
+    parser.add_argument('-j', '--job',
+        help='specify a job file in json format')
     parser.add_argument('-o', '--output',
         help='direct output to named file (stdout)')
     parser.add_argument('-r', '--resources', nargs='+',
@@ -85,11 +85,28 @@ def defineParser(parser):
     parser.set_defaults(func=aggregate)
 
 def aggregate(args):
-    feature_parser = FeatureParser()
-    requested_features = [feature_parser.parse(ftr) for ftr in args.features]
-    provided_resources = parseProvidedResources(args.input, args.resources)
+    if args.job:
+        fhndl = open(args.job)
+        job = json.load(fhndl)
+        fhndl.close()
+        requested_features =\
+            [RequestedFeature(*ftr) for ftr in job['requested_feature']]
+        provided_resources =\
+            [ProvidedResource(*res) for res in job['provided_resource']]
+    else:
+        requested_features = []
+        provided_resources = {}
+
+    requested_features.extend(ftr for ftr in\
+        parseRequestedFeatures(args.features) if ftr not in requested_features)
+    provided_resources.update({res.name: res for res in\
+        parseProvidedResources(args.input, args.resources)})
     aggregator = Aggregator()
     aggregator.aggregate(requested_features, provided_resources)
+
+def parseRequestedFeatures(features):
+    parser = FeatureParser()
+    return [parser.parse(ftr) for feature in features]
         
 def parseProvidedResources(target, resources):
     program_dir = getProgramDirectory()

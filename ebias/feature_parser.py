@@ -1,5 +1,7 @@
 import re
 
+from requested_feature import RequestedFeature
+
 class FeatureParser(object):
     """ -f <name>[;(<key>=<value>)+][;<resource>[,<resource>]*]
         -f VariantFrequency;sample=B01P01;tmp
@@ -29,5 +31,5 @@ class FeatureParser(object):
                 init_args = dict(p.split('=', 1) for p in part1.split(','))
             else:
                 requested_resources = frozenset(part1.split(','))
-        return name, requested_resources, init_args
+        return RequestedFeature(name, requested_resources, init_args)
 
