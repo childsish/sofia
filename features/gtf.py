@@ -23,4 +23,3 @@ class GtfSet(Resource):
         fname = self.getFilename()
         self.parser = IndexedGtfFile(fname) if fname.endswith('.gtf.idx') else\
             GtfSetParser(GtfIteratorParser(fname))
-

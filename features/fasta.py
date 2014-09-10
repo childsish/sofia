@@ -1,4 +1,4 @@
-from ebias.resource import Resource
+from ebias.resource import Resource, Target
 
 from lhc.file_format.fasta_.set_ import FastaSet as FastaSetParser
 from lhc.file_format.fasta_.iterator import FastaIterator as FastaIteratorParser
@@ -28,7 +28,7 @@ class FastaCodingSequenceSet(Resource):
         self.parser = IndexedFastaFile(fname) if fname.endswith('.fasta.idx')\
             else FastaSetParser(FastaIteratorParser(fname))
 
-class FastaCodingSequenceIterator(Resource):
+class FastaCodingSequenceIterator(Target):
     
     EXT = ['.fasta', '.fasta.gz']
     TYPE = 'coding_sequence'
@@ -48,7 +48,7 @@ class FastaProteinSequenceSet(Resource):
         self.parser = IndexedFastaFile(fname) if fname.endswith('.fasta.idx')\
             else FastaSetParser(FastaIteratorParser(fname))
 
-class FastaProteinSequenceIterator(Resource):
+class FastaProteinSequenceIterator(Target):
     
     EXT = ['.fasta', '.fasta.gz']
     TYPE = 'protein_sequence'
