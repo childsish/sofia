@@ -18,6 +18,7 @@ class Aggregator(object):
         resolutions = list(self.iterGraphPossibilities(requested_features, provided_resources))
         if len(resolutions) == 1 and not args.graph:
             resolution, resolved_features = resolutions[0]
+            resolution.init()
             print '\t'.join([str(ftr) for ftr in requested_features])
             for row in resolution.iterRows(resolved_features):
                 print '\t'.join(row)
@@ -99,7 +100,6 @@ def aggregate(args):
     provided_resources.update(parseProvidedResources(args.input, args.resources))
     
     if len(requested_features) == 0:
-        import sys
         sys.stderr.write('Error: No features were requested. Please provide the names '\
             'of the features you wish to calculate.')
         sys.exit(1)

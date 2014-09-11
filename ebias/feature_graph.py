@@ -21,6 +21,10 @@ class FeatureGraph(object):
     
     def addEdge(self, edge, fr, to):
         self.graph.addEdge(edge, fr, to)
+    
+    def init(self):
+        for ftr in self.features.itervalues():
+            ftr.init()
 
     def update(self, other):
         self.features.update(other.features)
