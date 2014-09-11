@@ -1,6 +1,6 @@
 import argparse
-import os
 import json
+import os
 
 from common import getProgramDirectory, loadFeatureHyperGraph
 from itertools import izip, product
@@ -79,6 +79,9 @@ def defineParser(parser):
     parser.set_defaults(func=aggregate)
 
 def aggregate(args):
+    import sys
+    sys.stderr.write('\n    Aggregating information...\n\n')
+    
     if args.job:
         fhndl = open(args.job)
         job = json.load(fhndl)

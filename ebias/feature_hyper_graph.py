@@ -1,3 +1,5 @@
+import sys
+
 from collections import defaultdict
 from itertools import product, izip
 from operator import or_
@@ -36,8 +38,9 @@ class FeatureHyperGraph(object):
             raise StopIteration()
         visited.add(feature_name)
         feature = self.features[feature_name]
+        
         if issubclass(feature, Resource):
-            if issubclass(feature, Target)and feature.matches(resources['target']):
+            if issubclass(feature, Target) and feature.matches(resources['target']):
                 yield self.initFeatureGraph(feature, set([resources['target']]))
             elif not issubclass(feature, Target):
                 hits = set(resource for resource in resources.itervalues() if resource.name != 'target' and feature.matches(resource))
@@ -52,7 +55,7 @@ class FeatureHyperGraph(object):
         
         missing_dependencies = [name for name, dependencies in izip(edge_names, edge_dependencies) if len(dependencies) == 0]
         if len(missing_dependencies) > 0:
-            print '%s is missing dependencies: %s'%(feature_name, ','.join(missing_dependencies))
+            sys.stderr.write('%s is missing dependencies: %s\n'%(feature_name, ','.join(missing_dependencies)))
         #TODO: Check here for missing dependencies
         
         for cmb in product(*edge_dependencies):
