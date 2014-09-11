@@ -84,9 +84,9 @@ def aggregate(args):
         job = json.load(fhndl)
         fhndl.close()
         requested_features =\
-            [RequestedFeature(*ftr) for ftr in job['requested_feature']]
-        provided_resources =\
-            [ProvidedResource(*res) for res in job['provided_resource']]
+            [RequestedFeature(**ftr) for ftr in job['requested_features']]
+        provided_resources = {res.name: res for res in\
+            (ProvidedResource(**res) for res in job['provided_resources'])}
     else:
         requested_features = []
         provided_resources = {}
@@ -94,6 +94,13 @@ def aggregate(args):
     requested_features.extend(ftr for ftr in\
         parseRequestedFeatures(args.features) if ftr not in requested_features)
     provided_resources.update(parseProvidedResources(args.input, args.resources))
+    
+    if len(requested_features) == 0:
+        import sys
+        sys.stderr.write('Error: No features were requested. Please provide the names '\
+            'of the features you wish to calculate.')
+        sys.exit(1)
+    
     aggregator = Aggregator()
     aggregator.aggregate(requested_features, provided_resources, args)
 
