@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sys
 
 from common import getProgramDirectory, loadFeatureHyperGraph
 from itertools import izip, product
@@ -15,6 +16,8 @@ class Aggregator(object):
         self.hyper_graph = loadFeatureHyperGraph()
 
     def aggregate(self, requested_features, provided_resources, args):
+        sys.stderr.write('    Resolving graphs...\n\n')
+        
         resolutions = list(self.iterGraphPossibilities(requested_features, provided_resources))
         if len(resolutions) == 1 and not args.graph:
             resolution, resolved_features = resolutions[0]
@@ -23,24 +26,32 @@ class Aggregator(object):
             for row in resolution.iterRows(resolved_features):
                 print '\t'.join(row)
         elif len(resolutions) == 0:
-            print 'No resolutions were found'
+            sys.stderr.write('    No resolutions were found.\n\n')
         else:
             if len(resolutions) > 1:
-                print 'Multiple resolutions were found'
+                sys.stderr.write('    Multiple resolutions were found.\n\n')
             for r in resolutions:
-                print r[0]
+                sys.stderr.write('%s\n\n'%r[0])
 
     def iterGraphPossibilities(self, requested_features, provided_resources):
         def satisfiesRequest(graph, requested_resources):
             return graph.resources.intersection(requested_resources) == requested_resources
         
         iterGraphs = self.hyper_graph.iterFeatureGraphs
-        feature_graphs = [[graph for graph in iterGraphs(feature.name, provided_resources, set(), feature.args) if satisfiesRequest(graph, feature.resources)]\
-            for feature in requested_features]
+        feature_graphs = []
+        for feature in requested_features:
+            sys.stderr.write('Resolving requested feature: %s\n'%feature.name)
+            possible_graphs = [graph for graph in iterGraphs(feature.name, provided_resources, set(), feature.args) if satisfiesRequest(graph, feature.resources)]
+            if len(possible_graphs) == 0:
+                raise ValueError('Unable to resolve a graph for requested feature: %s'%feature.name)
+            elif len(possible_graphs) > 1:
+                raise ValueError('Multiple solutions found for requested feature: %s'%feature.name)
+            feature_graphs.append(possible_graphs)
+            sys.stderr.write('Solution found\n\n')
         
-        missing_features = [feature.name for feature_graph, feature in izip(feature_graphs, requested_features) if len(feature_graph) == 0]
-        if len(missing_features) > 0:
-            raise ValueError('Unable to resolve a graph for requested feature: %s'%','.join(missing_features))
+        #missing_features = [feature.name for feature_graph, feature in izip(feature_graphs, requested_features) if len(feature_graph) == 0]
+        #if len(missing_features) > 0:
+        #    raise ValueError('Unable to resolve a graph for requested feature: %s'%','.join(missing_features))
         
         for cmb in product(*feature_graphs):
             combined_graph = FeatureGraph()
@@ -80,8 +91,7 @@ def defineParser(parser):
     parser.set_defaults(func=aggregate)
 
 def aggregate(args):
-    import sys
-    sys.stderr.write('\n    Aggregating information...\n\n')
+    sys.stderr.write('\n    Ebias started...\n\n')
     
     if args.job:
         fhndl = open(args.job)
@@ -95,8 +105,7 @@ def aggregate(args):
         requested_features = []
         provided_resources = {}
     
-    requested_features.extend(ftr for ftr in\
-        parseRequestedFeatures(args.features) if ftr not in requested_features)
+    requested_features.extend(ftr for ftr in parseRequestedFeatures(args.features))
     provided_resources.update(parseProvidedResources(args.input, args.resources))
     
     if len(requested_features) == 0:
