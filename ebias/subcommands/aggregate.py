@@ -14,9 +14,9 @@ class Aggregator(object):
     def __init__(self):
         self.hyper_graph = loadFeatureHyperGraph()
 
-    def aggregate(self, requested_features, provided_resources):
+    def aggregate(self, requested_features, provided_resources, args):
         resolutions = list(self.iterGraphPossibilities(requested_features, provided_resources))
-        if len(resolutions) == 1:
+        if len(resolutions) == 1 and not args.graph:
             resolution, resolved_features = resolutions[0]
             print '\t'.join([str(ftr) for ftr in requested_features])
             for row in resolution.iterRows(resolved_features):
@@ -24,7 +24,8 @@ class Aggregator(object):
         elif len(resolutions) == 0:
             print 'No resolutions were found'
         else:
-            print 'Multiple resolutions were found'
+            if len(resolutions) > 1:
+                print 'Multiple resolutions were found'
             for r in resolutions:
                 print r[0]
 
@@ -61,19 +62,20 @@ def getParser():
 def defineParser(parser):
     parser.add_argument('input', metavar='TARGET',
         help='the file to annotate')
-    parser.add_argument('features', nargs='+',
-        help='request a feature using the following format <name>[:<arguments>][:<resources>]', default=[])
+    parser.add_argument('features', nargs='*', default=[],
+        help='request a feature using the following format <name>[:<arguments>][:<resources>]')
     parser.add_argument('-j', '--job',
         help='specify a job file in json format')
     parser.add_argument('-o', '--output',
         help='direct output to named file (stdout)')
-    parser.add_argument('-r', '--resources', nargs='+',
+    parser.add_argument('-r', '--resources', nargs='+', default=[],
         help='provide a resource using the following format <file name>[;<type>][;<name>]')
     parser.add_argument('-t', '--template',
         help='specify a template string for the output')
     parser.add_argument('-y', '--type',
         help='specify the type of entity in the target file')
-    #parser.add_argument('-g', '--graph', action='StoreTrue')
+    parser.add_argument('-g', '--graph', action='store_true',
+        help='do not run framework but print the resolved graph')
     parser.set_defaults(func=aggregate)
 
 def aggregate(args):
@@ -88,12 +90,12 @@ def aggregate(args):
     else:
         requested_features = []
         provided_resources = {}
-
+    
     requested_features.extend(ftr for ftr in\
         parseRequestedFeatures(args.features) if ftr not in requested_features)
     provided_resources.update(parseProvidedResources(args.input, args.resources))
     aggregator = Aggregator()
-    aggregator.aggregate(requested_features, provided_resources)
+    aggregator.aggregate(requested_features, provided_resources, args)
 
 def parseRequestedFeatures(features):
     parser = FeatureParser()
