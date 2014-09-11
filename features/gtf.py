@@ -14,7 +14,7 @@ class GtfIterator(Target):
 
 class GtfSet(Resource):
     
-    EXT = ['.gtf', '.gtf.gz', '.gtf.idx']
+    EXT = ['.gtf', '.gtf.idx']
     TYPE = 'gene_model'
     PARSER = GtfSetParser
     OUT = ['gene_model_set']
