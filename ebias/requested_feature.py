@@ -1,5 +1,5 @@
 class RequestedFeature(object):
-    def __init__(self, name, resources=[], args={}):
+    def __init__(self, name, resources=set(), args={}):
         self.name = name
         self.resources = resources
         self.args = args
