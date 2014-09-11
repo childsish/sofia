@@ -1,8 +1,8 @@
 import argparse
 import cPickle
+import glob
 import os
 
-from lhc.interval import Interval
 from operator import add
 from vcf_.merger import VcfMerger
 from vcf_.iterator import VcfIterator
@@ -19,17 +19,16 @@ def index(fname, iname=None):
     ivl_index = indexer.index(fname)
     
     iname = '%s.idx'%fname if iname is None else iname
-    outfile = open(iname, 'wb')
-    cPickle.dump(fname, fhndl, cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(ivl_index, outfile, cPickle.HIGHEST_PROTOCOL)
-    outfile.close()
+    fhndl = open(iname, 'wb')
+    cPickle.dump(os.path.abspath(fname), fhndl, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(ivl_index, fhndl, cPickle.HIGHEST_PROTOCOL)
+    fhndl.close()
 
 def merge(fnames, quality=50.0, out=None):
     import sys
     
+    fnames = reduce(add, (glob.glob(fname) for fname in fnames))
     out = sys.stdout if out is None else open(out, 'w')
-    if len(fnames) == 1 and os.path.isdir(fnames[0]):
-        fnames = [os.path.join(fnames[0], fname) for fname in os.listdir(fnames[0])]
     merger = VcfMerger(fnames, quality)
     for key, values in merger.hdrs.iteritems():
         for value in values:

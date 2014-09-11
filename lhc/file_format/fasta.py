@@ -1,4 +1,5 @@
 import cPickle
+import os
 
 from argparse import ArgumentParser
 from itertools import izip
@@ -18,7 +19,7 @@ def index(fname, iname=None):
     
     iname = '%s.idx'%fname if iname is None else iname
     fhndl = open(iname, 'wb')
-    cPickle.dump(fname, fhndl, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(os.path.abspath(fname), fhndl, cPickle.HIGHEST_PROTOCOL)
     cPickle.dump(index, fhndl, cPickle.HIGHEST_PROTOCOL)
     fhndl.close()
     

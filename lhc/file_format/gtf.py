@@ -1,5 +1,6 @@
 import argparse
 import cPickle
+import os
 
 from lhc.file_format.gtf_.iterator import GtfIterator
 from lhc.file_format.gtf_.index import GtfFileIndexer
@@ -17,7 +18,7 @@ def index(fname, iname=None):
     
     iname = '%s.idx'%fname if iname is None else iname
     fhndl = open(iname, 'wb')
-    cPickle.dump(fname, fhndl, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(os.path.abspath(fname), fhndl, cPickle.HIGHEST_PROTOCOL)
     cPickle.dump(key_index, fhndl, cPickle.HIGHEST_PROTOCOL)
     cPickle.dump(ivl_index, fhndl, cPickle.HIGHEST_PROTOCOL)
     fhndl.close()
