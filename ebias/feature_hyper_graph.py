@@ -76,7 +76,6 @@ class FeatureHyperGraph(object):
 
     def initFeatureGraph(self, feature, resources):
         feature_instance = feature(resources)
-        feature_instance.init() #TODO: feature initialisation arguments
         res = FeatureGraph(feature_instance)
         for resource in resources:
             res.addResource(resource)
