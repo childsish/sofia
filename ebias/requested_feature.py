@@ -7,7 +7,7 @@ class RequestedFeature(object):
     def __str__(self):
         res = [self.name]
         if len(self.args) > 0:
-            res.append('%s=%s'%e for e in sorted(self.args.iteritems()))
+            res.append(','.join('%s=%s'%e for e in sorted(self.args.iteritems())))
         if len(self.resources) > 0:
             res.append(','.join(self.resources))
         return ':'.join(res)
