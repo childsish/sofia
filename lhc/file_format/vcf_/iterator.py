@@ -70,8 +70,9 @@ class VcfIterator(object):
             for attr in attr_line.strip().split(';'))
     
     def _parseSamples(self, parts):
-        res = OrderedDict()
+        res = {}
         keys = parts[self.FORMAT].split(':')
         for i, sample in enumerate(self.hdrs['##SAMPLES']):
             res[sample] = dict(izip(keys, parts[self.FORMAT + i + 1].strip().split(':')))
         return res
+
