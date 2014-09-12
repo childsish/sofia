@@ -16,11 +16,11 @@ def index(fname, iname=None):
         raise IOError('Unable to index compressed files.')
     
     indexer = VcfFileIndexer()
-    ivl_index = indexer.index(fname)
+    ivl_index, fnames = indexer.index(fname)
     
     iname = '%s.idx'%fname if iname is None else iname
     fhndl = open(iname, 'wb')
-    cPickle.dump(os.path.abspath(fname), fhndl, cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump([os.path.abspath(f) for f in fnames], fhndl, cPickle.HIGHEST_PROTOCOL)
     cPickle.dump(ivl_index, fhndl, cPickle.HIGHEST_PROTOCOL)
     fhndl.close()
 

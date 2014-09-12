@@ -30,21 +30,11 @@ class VcfIterator(object):
         return self
     
     def next(self):
-        line = self.fhndl.next()
-        parts = line.strip().split('\t')
-        return Variant(parts[self.CHR],
-            int(parts[self.POS]) - 1,
-            parts[self.ID],
-            parts[self.REF],
-            parts[self.ALT],
-            self._parseQuality(parts[self.QUAL]),
-            parts[self.FILTER],
-            self._parseAttributes(parts[self.INFO]),
-            self._parseSamples(parts))
+        return self._parseLine(self.fhndl.next())
     
     def seek(self, fpos):
         self.fhndl.seek(fpos)
-
+    
     def _parseHeaders(self):
         fhndl = self.fhndl
         hdrs = OrderedDict()
@@ -60,6 +50,18 @@ class VcfIterator(object):
         hdrs['##SAMPLES'] = line.strip().split('\t')[9:]
         return hdrs
     
+    def _parseLine(self, line):
+        parts = line.strip().split('\t')
+        return Variant(parts[self.CHR],
+            int(parts[self.POS]) - 1,
+            parts[self.ID],
+            parts[self.REF],
+            parts[self.ALT],
+            self._parseQuality(parts[self.QUAL]),
+            parts[self.FILTER],
+            self._parseAttributes(parts[self.INFO]),
+            self._parseSamples(parts))
+
     def _parseQuality(self, qual):
         return float(qual) if qual != '.' and '.' in qual else qual
     
@@ -68,8 +70,9 @@ class VcfIterator(object):
             for attr in attr_line.strip().split(';'))
     
     def _parseSamples(self, parts):
-        res = OrderedDict()
+        res = {}
         keys = parts[self.FORMAT].split(':')
         for i, sample in enumerate(self.hdrs['##SAMPLES']):
             res[sample] = dict(izip(keys, parts[self.FORMAT + i + 1].strip().split(':')))
         return res
+
