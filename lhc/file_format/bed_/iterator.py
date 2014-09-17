@@ -35,12 +35,13 @@ class BedIterator(object):
     def seek(self, fpos):
         self.fhndl.seek(fpos)
 
-    def _parseLine(self, line):
+    @classmethod
+    def _parseLine(cls, line):
         parts = line.strip().split('\t')
-        return BedEntry(parts[self.CHR],
-            int(parts[self.START]) - 1,
-            int(parts[self.STOP]),
-            parts[self.NAME],
-            parts[self.SCORE],
-            parts[self.STRAND])
+        return BedEntry(parts[cls.CHR],
+            int(parts[cls.START]) - 1,
+            int(parts[cls.STOP]),
+            parts[cls.NAME],
+            parts[cls.SCORE],
+            parts[cls.STRAND])
  
