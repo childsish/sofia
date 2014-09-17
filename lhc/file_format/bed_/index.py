@@ -4,9 +4,11 @@ import pysam
 from iterator import BedIterator
 
 class IndexedBedFile(object):
-    def __init__(self, iname):
-        self.iname = iname
-        self.fname = os.path.abspath(iname)[:-4]
+    def __init__(self, fname):
+        self.fname = os.path.abspath(fname)
+        iname = '%s.tbi'%self.fname
+        if not os.path.exists(iname):
+            raise ValueError('File missing interval index. Try: tabix -p bed <FILENAME>.')
         self.index = pysam.Tabixfile(self.fname)
 
     def __getitem__(self, key):

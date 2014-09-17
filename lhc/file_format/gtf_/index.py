@@ -10,18 +10,15 @@ from lhc.file_format.gtf_.iterator import GtfIterator
 class IndexedGtfFile(object):
     def __init__(self, fname):
         self.fname = os.path.abspath(fname)
-        kiname = '%s.lhci'%fname
+        kiname = '%s.lhci'%self.fname
         if not os.path.exists(kiname):
             raise ValueError('File missing key index. Try: python -m lhc.file_formats.gtf index <FILENAME>.')
         self.key_index = {parts[0]: [parts[1], int(parts[2]), int(parts[3])] for parts in\
             (line.strip().split('\t') for line in open(kiname))}
-        iiname = '%s'%fname
+        iiname = '%s.tbi'%self.fname
         if not os.path.exists(iiname):
             raise ValueError('File missing interval index. Try: tabix -p gff <FILENAME>.')
-        self.ivl_index = pysam.Tabixfile(iiname)
-        
-        self.prv_key = None
-        self.prv_value = None
+        self.ivl_index = pysam.Tabixfile(self.fname)
     
     def __getitem__(self, key):
         if isinstance(key, basestring):
