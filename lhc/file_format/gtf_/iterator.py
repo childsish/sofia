@@ -21,7 +21,7 @@ class GtfIterator(object):
         self.seek(0)
     
     def __del__(self):
-        if not self.fhndl.closed:
+        if hasattr(self, 'fhndl') and not self.fhndl.closed:
             self.fhndl.close()
     
     def __iter__(self):

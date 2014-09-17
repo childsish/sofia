@@ -20,7 +20,7 @@ class GtfSet(object):
             ivl = Interval(key.pos, key.pos + length)
             idxs = self.ivl_index[(key.chr, ivl)]
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            return self.ivl_index[(key.chr, key)]
+            idxs = self.ivl_index[(key.chr, key)]
         else:
             raise NotImplementedError('Gene model set random access not implemented for %s'%type(key))
         return [self.data[v] for k, v in idxs]

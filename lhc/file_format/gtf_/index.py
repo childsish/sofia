@@ -8,12 +8,17 @@ from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.file_format.gtf_.iterator import GtfIterator
     
 class IndexedGtfFile(object):
-    def __init__(self, iname):
-        self.iname = iname
-        self.fname = os.path.abspath(iname)[:-4]
-        self.key_index = {parts[0]: parts[1:] for parts in\
-            (line.strip().split('\t') for line in open('%s.lhci'%self.fname))}
-        self.ivl_index = pysam.Tabixfile(self.fname)
+    def __init__(self, fname):
+        self.fname = os.path.abspath(fname)
+        kiname = '%s.lhci'%fname
+        if not os.path.exists(kiname):
+            raise ValueError('File missing key index. Try: python -m lhc.file_formats.gtf index <FILENAME>.')
+        self.key_index = {parts[0]: [parts[1], int(parts[2]), int(parts[3])] for parts in\
+            (line.strip().split('\t') for line in open(kiname))}
+        iiname = '%s'%fname
+        if not os.path.exists(iiname):
+            raise ValueError('File missing interval index. Try: tabix -p gff <FILENAME>.')
+        self.ivl_index = pysam.Tabixfile(iiname)
         
         self.prv_key = None
         self.prv_value = None
@@ -28,7 +33,11 @@ class IndexedGtfFile(object):
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
         
-        return reduce(add, (self._getGenesInInterval(chr, start, stop) for chr, start, stop in ivls))
+        genes = {gene.name: gene for gene in\
+            reduce(add, (self._getGenesInInterval(chr, start, stop) for chr, start, stop in ivls))}
+        if isinstance(key, basestring):
+            return genes[key]
+        return genes.values()
     
     def _getGeneIntervalsInInterval(self, chr, start, stop):
         return [(chr, int(parts[GtfIterator.START]) - 1, int(parts[GtfIterator.STOP])) for parts in\
@@ -41,17 +50,18 @@ class IndexedGtfFile(object):
         transcripts = {}
         transcript_exons = defaultdict(list)
         for line in lines:
-            type, ivl, attr = GtfIterator._parseLine(line)
-            if type == 'CDS':
-                transcript_exons.append(Exon(ivl, 'CDS'))
-            elif type == 'transcript':
+            type_, ivl, attr = GtfIterator._parseLine(line)
+            if type_ == 'CDS':
+                transcript_exons[attr['transcript_name']].append(Exon(ivl, 'CDS'))
+            elif type_ == 'transcript':
                 transcript = Transcript(attr['transcript_name'], ivl)
                 transcripts[transcript.name] = transcript
-                gene_transcripts[transcript.name] = transcript
-            elif type == 'gene':
+                gene_transcripts[attr['gene_name']].append(transcript)
+            elif type_ == 'gene':
                 genes[attr['gene_name']] = Gene(attr['gene_name'], ivl)
         for transcript, exons in transcript_exons.iteritems():
             transcripts[transcript].exons = exons
         for gene, transcripts in gene_transcripts.iteritems():
             genes[gene].transcripts = {transcript.name: transcript for transcript in transcripts}
-        return genes
+        return genes.values()
+

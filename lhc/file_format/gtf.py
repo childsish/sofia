@@ -12,12 +12,13 @@ def index(fname):
     index = []
     fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
     for line in fhndl:
-        entry = GtfIterator._parseLine(line)
-        index.append('%s\t%s\t%d\t%d'%(entry.attr['gene_name'], entry.chr, entry.start + 1, entry.stop + 1))
+        type, ivl, attr = GtfIterator._parseLine(line)
+        if type == 'gene':
+            index.append('%s\t%s\t%d\t%d'%(attr['gene_name'], ivl.chr, ivl.start + 1, ivl.stop + 1))
     fhndl.close()
     
     iname = '%s.lhci'%fname
-    fhndl = open(iname)
+    fhndl = open(iname, 'w')
     fhndl.write('\n'.join(index))
     fhndl.close()
 
@@ -30,8 +31,13 @@ def getArgumentParser():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
+    index_parser = subparsers.add_parser('index')
+    index_parser.add_argument('input')
+    index_parser.set_defaults(func=lambda args: index(args.input))
+
     return parser
 
 if __name__ == '__main__':
     import sys
     sys.exit(main())
+
