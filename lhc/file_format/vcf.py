@@ -1,28 +1,12 @@
 import argparse
-import cPickle
 import glob
-import os
 
 from operator import add
 from vcf_.merger import VcfMerger
 from vcf_.iterator import VcfIterator
-from vcf_.index import VcfFileIndexer
 
 def iterEntries(fname):
     return VcfIterator(fname)
-
-def index(fname, iname=None):
-    if fname.endswith('.gz'):
-        raise IOError('Unable to index compressed files.')
-    
-    indexer = VcfFileIndexer()
-    ivl_index, fnames = indexer.index(fname)
-    
-    iname = '%s.idx'%fname if iname is None else iname
-    fhndl = open(iname, 'wb')
-    cPickle.dump([os.path.abspath(f) for f in fnames], fhndl, cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(ivl_index, fhndl, cPickle.HIGHEST_PROTOCOL)
-    fhndl.close()
 
 def merge(fnames, quality=50.0, out=None):
     import sys
@@ -59,11 +43,6 @@ def getArgumentParser():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
     
-    index_parser = subparsers.add_parser('index')
-    index_parser.add_argument('input', metavar='FILE')
-    index_parser.add_argument('-o', '--output', metavar='FILE')
-    index_parser.set_defaults(func=lambda args:index(args.input))
-    
     merge_parser = subparsers.add_parser('merge')
     merge_parser.add_argument('inputs', nargs='+', metavar='FILE')
     merge_parser.add_argument('-q', '--quality', type=float)
@@ -77,4 +56,3 @@ def getArgumentParser():
 if __name__ == '__main__':
     import sys
     sys.exit(main())
-
