@@ -1,59 +1,57 @@
-import cPickle
+import os
+import pysam
 
-from lhc.interval import Interval
-from lhc.indices.index import Index
-from lhc.indices.exact_key import ExactKeyIndex
-from lhc.indices.overlapping_interval import OverlappingIntervalIndex
+from collections import defaultdict
+from operator import add
+from lhc.binf.genomic_coordinate import Interval
+from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.file_format.gtf_.iterator import GtfIterator
-
-class GtfFileIndexer(object):
-    def index(self, fname):
-        key_index = ExactKeyIndex()
-        ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
-        infile = open(fname, 'rb')
-        fpos = 0
-        for line in infile:
-            if line.startswith('#') or line.strip() == '':
-                fpos += len(line)
-                continue
-            type, ivl, attr = GtfIterator._parseLine(line)
-            if type == 'gene':
-                key_index[attr['gene_name']] = fpos
-                ivl_index[(ivl.chr, Interval(ivl.start, ivl.stop))] = fpos
-            fpos += len(line)
-        infile.close()
-        return key_index, ivl_index
     
 class IndexedGtfFile(object):
     def __init__(self, iname):
         self.iname = iname
-        fhndl = open(iname, 'rb')
-        self.fname = cPickle.load(fhndl)
-        self.key_index = cPickle.load(fhndl)
-        self.ivl_index = cPickle.load(fhndl)
-        fhndl.close()
-        self.iterator = GtfIterator(self.fname)
+        self.fname = os.path.abspath(iname)[:-4]
+        self.key_index = {parts[0]: parts[1:] for parts in\
+            (line.strip().split('\t') for line in open('%s.lhci'%self.fname))}
+        self.ivl_index = pysam.Tabixfile(self.fname)
         
         self.prv_key = None
         self.prv_value = None
     
     def __getitem__(self, key):
         if isinstance(key, basestring):
-            fposs = [self.key_index[key]]
+            ivls = [self.key_index[key]]
         elif hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
-            ivl = Interval(key.pos, key.pos + len(key.ref))
-            fposs = [fpos.value for fpos in self.ivl_index[(key.chr, ivl)]]
+            ivls = self._getGeneIntervalsInInterval(key.chr, key.pos, key.pos + len(key.ref))
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            fposs = [fpos.value for fpos in self.ivl_index[(key.chr, key)]]
+            ivls = self._getGeneIntervalsInInterval(key.chr, key.start, key.stop)
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
         
-        if self.prv_key != fposs:
-            self.prv_key = fposs
-            self.prv_value = [self._getEntryAtFilePosition(fpos) for fpos in fposs]
-        return self.prv_value
+        return reduce(add, (self._getGenesInInterval(chr, start, stop) for chr, start, stop in ivls))
     
-    def _getEntryAtFilePosition(self, fpos):
-        self.iterator.seek(fpos)
-        return self.iterator.next()
-
+    def _getGeneIntervalsInInterval(self, chr, start, stop):
+        return [(chr, int(parts[GtfIterator.START]) - 1, int(parts[GtfIterator.STOP])) for parts in\
+            (line.split('\t') for line in self.ivl_index.fetch(chr, start, stop)) if parts[GtfIterator.TYPE] == 'gene']
+    
+    def _getGenesInInterval(self, chr, start, stop):
+        lines = self.ivl_index.fetch(chr, start, stop)
+        genes = {}
+        gene_transcripts = defaultdict(list)
+        transcripts = {}
+        transcript_exons = defaultdict(list)
+        for line in lines:
+            type, ivl, attr = GtfIterator._parseLine(line)
+            if type == 'CDS':
+                transcript_exons.append(Exon(ivl, 'CDS'))
+            elif type == 'transcript':
+                transcript = Transcript(attr['transcript_name'], ivl)
+                transcripts[transcript.name] = transcript
+                gene_transcripts[transcript.name] = transcript
+            elif type == 'gene':
+                genes[attr['gene_name']] = Gene(attr['gene_name'], ivl)
+        for transcript, exons in transcript_exons.iteritems():
+            transcripts[transcript].exons = exons
+        for gene, transcripts in gene_transcripts.iteritems():
+            genes[gene].transcripts = {transcript.name: transcript for transcript in transcripts}
+        return genes

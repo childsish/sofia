@@ -1,26 +1,24 @@
 import argparse
-import cPickle
-import os
+import gzip
 
 from lhc.file_format.gtf_.iterator import GtfIterator
-from lhc.file_format.gtf_.index import GtfFileIndexer
 
 def iterEntries(fname):
     """ Convenience function """
     return GtfIterator(fname)
 
-def index(fname, iname=None):
-    if fname.endswith('.gz'):
-        raise IOError('Unable to index compressed files.')
+def index(fname):
+    """ Query a gtf file by model name. Use tabix for interval queries. """
+    index = []
+    fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
+    for line in fhndl:
+        entry = GtfIterator._parseLine(line)
+        index.append('%s\t%s\t%d\t%d'%(entry.attr['gene_name'], entry.chr, entry.start + 1, entry.stop + 1))
+    fhndl.close()
     
-    indexer = GtfFileIndexer()
-    key_index, ivl_index = indexer.index(fname)
-    
-    iname = '%s.idx'%fname if iname is None else iname
-    fhndl = open(iname, 'wb')
-    cPickle.dump(os.path.abspath(fname), fhndl, cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(key_index, fhndl, cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(ivl_index, fhndl, cPickle.HIGHEST_PROTOCOL)
+    iname = '%s.lhci'%fname
+    fhndl = open(iname)
+    fhndl.write('\n'.join(index))
     fhndl.close()
 
 def main():
@@ -31,11 +29,6 @@ def main():
 def getArgumentParser():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
-
-    index_parser = subparsers.add_parser('index')
-    index_parser.add_argument('input', metavar='FILE')
-    index_parser.add_argument('-o', '--output', metavar='FILE')
-    index_parser.set_defaults(func=lambda args:index(args.input))
 
     return parser
 
