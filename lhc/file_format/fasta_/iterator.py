@@ -35,3 +35,4 @@ class FastaIterator(object):
             res = FastaEntry(self.hdr, ''.join(self.seq))
             self.hdr = None
         return res
+
