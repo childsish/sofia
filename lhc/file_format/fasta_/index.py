@@ -70,7 +70,7 @@ class IndexedFastaEntry(object):
             fpos_fr = self._getFilePosition(self.chr, key.start)
             fpos_to = self._getFilePosition(self.chr, key.stop)
             self.fhndl.seek(fpos_fr)
-            res = self.fhndl.read(fpos_to - fpos_fr).split().replace('\n', '')
+            res = self.fhndl.read(fpos_to - fpos_fr).replace('\n', '')
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
         return res
