@@ -66,7 +66,7 @@ class VcfMerger(object):
                     samples[sample_name]['Q'] = str(top.qual)
                     if 'RO' in sample_data:
                         merged_counts = self._mergeCounts(sample_data,
-                            merged_allles, alleles)
+                            merged_alleles, alleles)
                         samples[sample_name]['RO'] = sample_data['RO']
                         samples[sample_name]['AO'] = ','.join(merged_counts[1:])
             entry[8] = samples
