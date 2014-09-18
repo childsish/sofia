@@ -32,6 +32,8 @@ class GtfIterator(object):
             raise StopIteration()
         res = None
         for line in self.fhndl:
+            if line.startswith('#'):
+                continue
             type, ivl, attr = self._parseLine(line)
             if type == 'gene':
                 res = self.gene
