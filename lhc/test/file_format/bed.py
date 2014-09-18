@@ -24,7 +24,7 @@ class TestBed(unittest.TestCase):
         prc.wait()
 
     def test_indexedBed(self):
-        bed = IndexedBedFile('%s.gz.tbi'%self.fname)
+        bed = IndexedBedFile('%s.gz'%self.fname)
 
         res = bed[Interval('chr1', 100, 200)]
         self.assertEquals(len(res), 2)
