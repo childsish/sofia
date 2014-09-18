@@ -39,7 +39,7 @@ class VcfIterator(object):
         fhndl = self.fhndl
         hdrs = OrderedDict()
         line = fhndl.next().strip()
-        if not 'VCF' in line:
+        if 'VCF' not in line:
             raise ValueError('Invalid VCF file. Line 1: %s'%line.strip())
         while line.startswith('##'):
             key, value = line.split('=', 1)

@@ -17,7 +17,7 @@ def merge(fnames, quality=50.0, out=None):
     for key, values in merger.hdrs.iteritems():
         for value in values:
             out.write('%s=%s\n'%(key, value))
-    out.write('#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t' + '\t'.join(merger.sample_names) + '\n')
+    out.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t' + '\t'.join(merger.sample_names) + '\n')
     for entry in merger:
         out.write('%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%(\
             entry.chr,

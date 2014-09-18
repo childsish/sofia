@@ -107,7 +107,7 @@ class VcfMerger(object):
             res[k] = list(values)
         return res
 
-    def _mergeCounts(self, sample_data, merged_alleles):
+    def _mergeCounts(self, sample_data, merged_alleles, alleles):
         merged_counts = len(merged_alleles) * ['0']
         counts = [sample_data['RO']] + sample_data['AO'].split(',')
         for allele, count in izip(alleles, counts):
@@ -122,3 +122,4 @@ class VcfMerger(object):
                 (merged_alleles.index(alleles[a1]),\
                  merged_alleles.index(alleles[a2]))))
         return merged_counts
+

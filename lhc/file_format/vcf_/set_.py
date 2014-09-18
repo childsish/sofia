@@ -7,7 +7,7 @@ class VcfSet(object):
     def __init__(self, iterator):
         self.data = list(iterator)
         self.ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
-        for i, variant in enumerate(iterator):
+        for i, variant in enumerate(self.data):
             ivl = Interval(variant.pos, variant.pos + len(variant.ref))
             self.ivl_index[(variant.chr, ivl)] = i
 
