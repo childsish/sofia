@@ -5,7 +5,6 @@ import sys
 
 from collections import defaultdict
 from common import getProgramDirectory, loadFeatureHyperGraph
-from itertools import izip, product
 from ebias.error_manager import ERROR_MANAGER
 from ebias.feature_parser import FeatureParser
 from ebias.resource_parser import ResourceParser
@@ -20,22 +19,18 @@ class Aggregator(object):
     def aggregate(self, requested_features, provided_resources, args):
         sys.stderr.write('    Resolving features...\n')
         
-        resolutions = list(self.iterGraphPossibilities(requested_features, provided_resources))
-        if len(resolutions) == 1 and not args.graph:
-            resolution, resolved_features = resolutions[0]
-            resolution.init()
-            print '\t'.join([str(ftr) for ftr in requested_features])
-            for row in resolution.iterRows(resolved_features):
-                print '\t'.join(row)
-        elif len(resolutions) == 0:
-            sys.stderr.write('    No resolutions were found.\n\n')
+        solution, resolved_features = self.resolveRequest(requested_features, provided_resources)
+        if args.graph:
+            sys.stdout.write('%s\n\n'%solution)
         else:
-            if len(resolutions) > 1:
-                sys.stderr.write('    Multiple resolutions were found.\n\n')
-            for r in resolutions:
-                sys.stderr.write('%s\n\n'%r[0])
+            solution.init()
+            sys.stdout.write('\t'.join([str(ftr) for ftr in requested_features]))
+            sys.stdout.write('\n')
+            for row in solution.iterRows(resolved_features):
+                sys.stdout.write('\t'.join(row))
+                sys.stdout.write('\n')
 
-    def iterGraphPossibilities(self, requested_features, provided_resources):
+    def resolveRequest(self, requested_features, provided_resources):
         def satisfiesRequest(graph, requested_resources):
             return graph.resources.intersection(requested_resources) == requested_resources
         
@@ -70,19 +65,14 @@ class Aggregator(object):
                 sys.stderr.write(err)
             else:
                 sys.stderr.write('Unique solution found.\n')
-            feature_graphs.append(possible_graphs)
+            feature_graphs.append(possible_graphs[0])
         
-        #missing_features = [feature.name for feature_graph, feature in izip(feature_graphs, requested_features) if len(feature_graph) == 0]
-        #if len(missing_features) > 0:
-        #    raise ValueError('Unable to resolve a graph for requested feature: %s'%','.join(missing_features))
-        
-        for cmb in product(*feature_graphs):
-            combined_graph = FeatureGraph()
-            resolved_features = []
-            for feature_graph in cmb:
-                combined_graph.update(feature_graph)
-                resolved_features.append(feature_graph.feature.getName())
-            yield combined_graph, resolved_features
+        combined_graph = FeatureGraph()
+        resolved_features = []
+        for feature_graph in feature_graphs:
+            combined_graph.update(feature_graph)
+            resolved_features.append(feature_graph.feature.getName())
+        return combined_graph, resolved_features
 
 def main(argv):
     parser = getParser()
@@ -171,5 +161,4 @@ def parseProvidedResources(target, resources):
     return provided_resources
 
 if __name__ == '__main__':
-    import sys
     sys.exit(main(sys.argv))
