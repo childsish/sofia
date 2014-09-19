@@ -13,7 +13,7 @@ class FastaChromosomeSequenceSet(Resource):
     PARSER = FastaSetParser
     OUT = ['chromosome_sequence_set']
     
-    def init(self, **kwargs):
+    def init(self):
         fname = self.getFilename()
         self.parser = IndexedFastaFile(fname) if os.path.exists('%s.fai'%fname)\
             else FastaSetParser(FastaIteratorParser(fname))
@@ -25,7 +25,7 @@ class FastaCodingSequenceSet(Resource):
     PARSER = FastaSetParser
     OUT = ['coding_sequence_set']
     
-    def init(self, **kwargs):
+    def init(self):
         fname = self.getFilename()
         self.parser = IndexedFastaFile(fname) if os.path.exists('%s.fai'%fname)\
             else FastaSetParser(FastaIteratorParser(fname))
@@ -45,7 +45,7 @@ class FastaProteinSequenceSet(Resource):
     PARSER = FastaSetParser
     OUT = ['protein_sequence_set']
     
-    def init(self, **kwargs):
+    def init(self):
         fname = self.getFilename()
         self.parser = IndexedFastaFile(fname) if os.path.exists('%s.fai'%fname)\
             else FastaSetParser(FastaIteratorParser(fname))

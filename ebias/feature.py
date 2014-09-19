@@ -14,6 +14,11 @@ class Feature(object):
         return self.getName()
     
     def init(self):
+        """ Initialise the feature.
+
+        When overridden, this function can be passed arguments that are parsed
+        from the command line.
+        """
         pass
     
     def calculate(self, **kwargs):

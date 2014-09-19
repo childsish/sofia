@@ -9,7 +9,7 @@ class Resource(Feature):
     TYPE = None
     PARSER = None
     
-    def init(self, **kwargs):
+    def init(self):
         self.parser = self.PARSER(self.getFilename())
     
     def calculate(self):

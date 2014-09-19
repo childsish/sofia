@@ -21,7 +21,7 @@ class GtfSet(Resource):
     PARSER = GtfSetParser
     OUT = ['gene_model_set']
 
-    def init(self, **kwargs):
+    def init(self):
         fname = self.getFilename()
         if fname.endswith('.gz'):
             from lhc.file_format.gtf_.index import IndexedGtfFile

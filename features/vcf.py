@@ -25,7 +25,7 @@ class VcfSet(Resource):
     PARSER = VcfSetParser
     OUT = ['variant_set']
     
-    def init(self, **kwargs):
+    def init(self):
         fname = self.getFilename()
         if fname.endswith('.gz'):
             from lhc.file_format.vcf_.index import IndexedVcfFile
