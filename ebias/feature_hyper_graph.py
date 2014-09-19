@@ -5,8 +5,9 @@ from itertools import product, izip
 from operator import or_
 
 from lhc.graph.hyper_graph import HyperGraph
-from ebias.feature_graph import FeatureGraph
-from ebias.resource import Resource, Target
+from error_manager import ERROR_MANAGER
+from feature_graph import FeatureGraph
+from resource import Resource, Target
 
 class FeatureHyperGraph(object):
     def __init__(self):
@@ -14,7 +15,6 @@ class FeatureHyperGraph(object):
         self.ins = defaultdict(set)
         self.features = {}
         self.graph = HyperGraph()
-        self.errors = set() #TODO: factor out into own class (graph traverser?)
     
     def __str__(self):
         return str(self.graph)
@@ -56,7 +56,7 @@ class FeatureHyperGraph(object):
         
         missing_dependencies = [name for name, dependencies in izip(edge_names, edge_dependencies) if len(dependencies) == 0]
         if len(missing_dependencies) > 0:
-            self.errors.add('%s is missing dependencies: %s'%(feature_name, ','.join(missing_dependencies)))
+            ERROR_MANAGER.addError('%s is missing dependencies: %s'%(feature_name, ','.join(missing_dependencies)))
         #TODO: Check here for missing dependencies
         
         for cmb in product(*edge_dependencies):
@@ -81,4 +81,3 @@ class FeatureHyperGraph(object):
         for resource in resources:
             res.addResource(resource)
         return res
-        

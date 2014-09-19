@@ -6,6 +6,7 @@ import sys
 from collections import defaultdict
 from common import getProgramDirectory, loadFeatureHyperGraph
 from itertools import izip, product
+from ebias.error_manager import ERROR_MANAGER
 from ebias.feature_parser import FeatureParser
 from ebias.resource_parser import ResourceParser
 from ebias.feature_graph import FeatureGraph
@@ -41,14 +42,14 @@ class Aggregator(object):
         iterGraphs = self.hyper_graph.iterFeatureGraphs
         feature_graphs = []
         for feature in requested_features:
-            self.hyper_graph.errors = set()
+            ERROR_MANAGER.reset()
             sys.stderr.write('    %s: '%\
                 str(feature))
             possible_graphs = [graph for graph in iterGraphs(feature.name, provided_resources, set(), feature.args) if satisfiesRequest(graph, feature.resources)]
             if len(possible_graphs) == 0:
                 sys.stderr.write('Unable to resolve feature.\n')
                 sys.stderr.write('      Possible reasons: \n      * %s\n'%\
-                    '\n      * '.join(sorted(self.hyper_graph.errors)))
+                    '\n      * '.join(sorted(ERROR_MANAGER.errors)))
                 sys.exit(1)
             elif len(possible_graphs) > 1:
                 matching_graphs = defaultdict(list)
