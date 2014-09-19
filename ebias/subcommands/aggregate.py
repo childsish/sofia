@@ -40,7 +40,7 @@ class Aggregator(object):
         iterGraphs = self.hyper_graph.iterFeatureGraphs
         feature_graphs = []
         for feature in requested_features:
-            sys.stderr.write('Resolving requested feature: %s\n'%feature.name)
+            sys.stderr.write('Resolving requested feature: %s\n'%str(feature))
             possible_graphs = [graph for graph in iterGraphs(feature.name, provided_resources, set(), feature.args) if satisfiesRequest(graph, feature.resources)]
             if len(possible_graphs) == 0:
                 raise ValueError('Unable to resolve a graph for requested feature: %s'%feature.name)
@@ -76,12 +76,16 @@ def defineParser(parser):
         help='the file to annotate')
     parser.add_argument('features', nargs='*', default=[],
         help='request a feature using the following format <name>[:<arguments>][:<resources>]')
+    parser.add_argument('-F', '--feature-list',
+        help='a text file with a list of requested features')
     parser.add_argument('-j', '--job',
         help='specify a job file in json format')
     parser.add_argument('-o', '--output',
         help='direct output to named file (stdout)')
     parser.add_argument('-r', '--resources', nargs='+', default=[],
         help='provide a resource using the following format <file name>[;<type>][;<name>]')
+    parser.add_argument('-R', '--resource-list',
+        help='a text file with a list of provided resources')
     parser.add_argument('-t', '--template',
         help='specify a template string for the output')
     parser.add_argument('-y', '--type',
@@ -105,12 +109,24 @@ def aggregate(args):
         requested_features = []
         provided_resources = {}
     
-    requested_features.extend(ftr for ftr in parseRequestedFeatures(args.features))
-    provided_resources.update(parseProvidedResources(args.input, args.resources))
-    
+    requested_features.extend(ftr for ftr in\
+        parseRequestedFeatures(args.features))
+    if args.feature_list is not None:
+        fhndl = open(args.feature_list)
+        requested_features.extend(parseRequestedFeatures(fhndl.read().split()))
+        fhndl.close()
+
+    if args.resource_list is not None:
+        fhndl = open(args.resource_list)
+        provided_resources.update(parseProvidedResources(fhndl.read().split(),
+            args.resources))
+        fhndl.close()
+    provided_resources.update(parseProvidedResources(args.input,
+        args.resources))
+
     if len(requested_features) == 0:
-        sys.stderr.write('Error: No features were requested. Please provide the names '\
-            'of the features you wish to calculate.')
+        sys.stderr.write('Error: No features were requested. Please provide'\
+            'the names of the features you wish to calculate.')
         sys.exit(1)
     
     aggregator = Aggregator()
