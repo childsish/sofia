@@ -19,7 +19,7 @@ class VcfSet(Resource):
     """A set of variants parsed from a .vcf file
     """
     
-    EXT = ['.vcf', '.vcf.idx']
+    EXT = ['.vcf', '.vcf.gz']
     TYPE = 'variant'
     PARSER = VcfSetParser
     OUT = ['variant_set']
