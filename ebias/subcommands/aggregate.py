@@ -45,7 +45,21 @@ class Aggregator(object):
             if len(possible_graphs) == 0:
                 raise ValueError('Unable to resolve a graph for requested feature: %s'%feature.name)
             elif len(possible_graphs) > 1:
-                raise ValueError('Multiple solutions found for requested feature: %s'%feature.name)
+                matching_graphs = []
+                for graph in possible_graphs:
+                    resources = frozenset([r.name for r in graph.resources\
+                        if not r.name == 'target'])
+                    if feature.resources == resources:
+                        matching_graphs.append(graph)
+                if len(matching_graphs) == 0:
+                    for graph in possible_graphs:
+                        sys.stderr.write('%s\n\n'%str(graph))
+                    raise ValueError('Multiple solutions found for requested feature: %s'%str(feature))
+                elif len(matching_graphs) > 1:
+                    for graph in matching_graphs:
+                        sys.stderr.write('%s\n\n'%str(graph))
+                    raise ValueError('Multiple exact solutions found for requested feature: %s'%str(feature))
+                possible_graphs = matching_graphs
             feature_graphs.append(possible_graphs)
             sys.stderr.write('Solution found\n\n')
         
