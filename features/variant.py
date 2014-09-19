@@ -54,7 +54,8 @@ class ReferenceCount(Feature):
     OUT = ['reference_count']
 
     def calculate(self, variant):
-        return {name: data['RO'] for name, data in variant.samples.iteritems()}
+        return {name: data['RO'] if 'RO' in data else 0\
+            for name, data in variant.samples.iteritems()}
 
 class AlternativeCount(Feature):
 
@@ -65,6 +66,9 @@ class AlternativeCount(Feature):
         # TODO: Find a solution for two alt alleles
         res = {}
         for name, data in variant.samples.iteritems():
+            if 'AO' not in data:
+                res[name] = 0
+                continue
             alleles = data['GT'].split('/')
             ao = data['AO'].split(',')
             count = sum(int(ao[int(allele) - 1]) for allele in alleles\
