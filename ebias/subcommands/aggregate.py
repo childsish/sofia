@@ -3,6 +3,7 @@ import json
 import os
 import sys
 
+from collections import defaultdict
 from common import getProgramDirectory, loadFeatureHyperGraph
 from itertools import izip, product
 from ebias.feature_parser import FeatureParser
@@ -45,23 +46,24 @@ class Aggregator(object):
             if len(possible_graphs) == 0:
                 raise ValueError('Unable to resolve a graph for requested feature: %s'%feature.name)
             elif len(possible_graphs) > 1:
-                matching_graphs = []
+                matching_graphs = defaultdict(list)
                 for graph in possible_graphs:
                     resources = frozenset([r.name for r in graph.resources\
                         if not r.name == 'target'])
-                    if feature.resources == resources:
-                        matching_graphs.append(graph)
-                if len(matching_graphs) == 0:
+                    key = len(resources - feature.resources)
+                    matching_graphs[key].append(graph)
+                count, matching_graphs = sorted(matching_graphs.iteritems())[0]
+                if len(matching_graphs) > 1:
                     for graph in possible_graphs:
                         sys.stderr.write('%s\n\n'%str(graph))
                     raise ValueError('Multiple solutions found for requested feature: %s'%str(feature))
-                elif len(matching_graphs) > 1:
-                    for graph in matching_graphs:
-                        sys.stderr.write('%s\n\n'%str(graph))
-                    raise ValueError('Multiple exact solutions found for requested feature: %s'%str(feature))
                 possible_graphs = matching_graphs
+                err = 'Unique solution found\n\n' if count == 0 else\
+                    'Unique solution found with %d extra resources\n\n'%count
+                sys.stderr.write(err)
+            else:
+                sys.stderr.write('Unique solution found\n\n')
             feature_graphs.append(possible_graphs)
-            sys.stderr.write('Solution found\n\n')
         
         #missing_features = [feature.name for feature_graph, feature in izip(feature_graphs, requested_features) if len(feature_graph) == 0]
         #if len(missing_features) > 0:
