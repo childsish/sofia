@@ -24,7 +24,7 @@ class FeatureGraph(object):
     
     def init(self):
         for ftr in self.features.itervalues():
-            ftr.init()
+            ftr.init(**ftr.kwargs)
 
     def update(self, other):
         self.features.update(other.features)
@@ -46,8 +46,18 @@ class FeatureGraph(object):
         self.features['target'].changed = True
         row = []
         for feature in requested_features:
-            item = self.features[feature].generate(kwargs, self.features)
-            item = '' if item is None else self.features[feature].format(item)
-            row.append(item)
+            try:
+                item = self.features[feature].generate(kwargs, self.features)
+                item = '' if item is None else self.features[feature].format(item)
+                row.append(item)
+            except Exception, e:
+                if isinstance(e, StopIteration):
+                    raise e
+                import sys
+                import traceback
+                traceback.print_exception(*sys.exc_info(), file=sys.stderr)
+                sys.stderr.write('Error processing entry on line %d\n'%\
+                    (self.features['target'].parser.line_no))
+                sys.exit(1)
         return row
 
