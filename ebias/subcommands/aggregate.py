@@ -47,8 +47,8 @@ class Aggregator(object):
             possible_graphs = [graph for graph in iterGraphs(feature.name, provided_resources, set(), feature.args) if satisfiesRequest(graph, feature.resources)]
             if len(possible_graphs) == 0:
                 sys.stderr.write('Unable to resolve feature.\n')
-                sys.stderr.write('    Possible reasons: \n%s\n'%\
-                    '\n'.join(sorted(self.hyper_graph.errors)))
+                sys.stderr.write('      Possible reasons: \n      * %s\n'%\
+                    '\n      * '.join(sorted(self.hyper_graph.errors)))
                 sys.exit(1)
             elif len(possible_graphs) > 1:
                 matching_graphs = defaultdict(list)
