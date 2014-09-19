@@ -20,6 +20,7 @@ class VcfIterator(object):
     def __init__(self, fname):
         self.fname = fname
         self.fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
+        self.line_no = 0
         self.hdrs = self._parseHeaders()
     
     def __del__(self):
@@ -30,6 +31,7 @@ class VcfIterator(object):
         return self
     
     def next(self):
+        self.line_no += 1
         return self._parseLine(self.fhndl.next())
     
     def seek(self, fpos):
@@ -39,6 +41,7 @@ class VcfIterator(object):
         fhndl = self.fhndl
         hdrs = OrderedDict()
         line = fhndl.next().strip()
+        self.line_no += 1
         if 'VCF' not in line:
             raise ValueError('Invalid VCF file. Line 1: %s'%line.strip())
         while line.startswith('##'):
@@ -47,6 +50,7 @@ class VcfIterator(object):
                 hdrs[key] = []
             hdrs[key].append(value)
             line = fhndl.next().strip()
+            self.line_no += 1
         hdrs['##SAMPLES'] = line.strip().split('\t')[9:]
         return hdrs
     
@@ -73,6 +77,7 @@ class VcfIterator(object):
         res = {}
         keys = parts[self.FORMAT].split(':')
         for i, sample in enumerate(self.hdrs['##SAMPLES']):
-            res[sample] = dict(izip(keys, parts[self.FORMAT + i + 1].strip().split(':')))
+            res[sample] = {} if parts[self.FORMAT + i + 1] == '.' else\
+                dict(izip(keys, parts[self.FORMAT + i + 1].strip().split(':')))
         return res
 
