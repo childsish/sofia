@@ -1,10 +1,10 @@
 import os
+import sys
 
 from ebias.resource import Resource, Target
 
 from lhc.file_format.gtf_.iterator import GtfIterator as GtfIteratorParser
 from lhc.file_format.gtf_.set_ import GtfSet as GtfSetParser
-from lhc.file_format.gtf_.index import IndexedGtfFile
 
 class GtfIterator(Target):
     
@@ -23,6 +23,7 @@ class GtfSet(Resource):
 
     def init(self, **kwargs):
         fname = self.getFilename()
+        if fname.endswith('.gz'):
+            from lhc.file_format.gtf_.index import IndexedGtfFile
         self.parser = IndexedGtfFile(fname) if os.path.exists('%s.tbi'%fname)\
             else GtfSetParser(GtfIteratorParser(fname))
-

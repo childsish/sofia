@@ -1,8 +1,9 @@
+import os
+
 from ebias.resource import Resource, Target
 
 from lhc.file_format.vcf_.iterator import VcfIterator as VcfIteratorParser
 from lhc.file_format.vcf_.set_ import VcfSet as VcfSetParser
-from lhc.file_format.vcf_.index import IndexedVcfFile
 
 class VcfIterator(Target):
     
@@ -26,6 +27,7 @@ class VcfSet(Resource):
     
     def init(self, **kwargs):
         fname = self.getFilename()
-        self.parser = IndexedVcfFile(fname) if fname.endswith('.gtf.idx') else\
+        if fname.endswith('.gz'):
+            from lhc.file_format.vcf_.index import IndexedVcfFile
+        self.parser = IndexedVcfFile(fname) if os.path.exists('%s.tbi'%fname) else\
             VcfSetParser(VcfIteratorParser(fname))
-
