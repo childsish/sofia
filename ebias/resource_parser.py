@@ -4,13 +4,13 @@ import re
 from ebias.provided_resource import ProvidedResource
 
 class ResourceParser(object):
-    """ -r <fname>[;type=<type>][;<name>]
-        -r /tmp/tmp.vcf;type=vcf;tmp
+    """ -r <fname>[:type=<type>][:<name>]
+        -r /tmp/tmp.vcf:type=vcf:tmp
     """
     
-    REGX = re.compile('^(?P<fname>[^;]+)' +\
-                      '(?:;type=(?P<type>\w+))?' +\
-                      '(?:;(?P<name>\w+))?$')
+    REGX = re.compile('^(?P<fname>[^:]+)' +\
+                      '(?::type=(?P<type>\w+))?' +\
+                      '(?::(?P<name>\w+))?$')
     
     def __init__(self, default_types):
         self.default_types = default_types
@@ -27,8 +27,6 @@ class ResourceParser(object):
     
     def createResource(self, fname, type=None, name=None):
         if fname.endswith('.gz'):
-            tmp_name, ext = fname.rsplit('.', 2)[:2]
-        elif fname.endswith('.idx'):
             tmp_name, ext = fname.rsplit('.', 2)[:2]
         else:
             tmp_name, ext =fname.rsplit('.', 1)[:2]
