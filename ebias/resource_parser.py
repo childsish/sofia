@@ -33,6 +33,6 @@ class ResourceParser(object):
         if type is None and ext not in self.default_types:
             raise ValueError('Unable to determine type of biological information stored in %s'%fname)
         type = self.default_types[ext] if type is None else type
-        name = tmp_name if name is None else name
+        name = os.path.basename(tmp_name) if name is None else name
         return ProvidedResource(fname, type, name)
 
