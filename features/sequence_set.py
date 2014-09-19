@@ -26,7 +26,7 @@ class GetGeneSequenceByGeneModel(Feature):
             return None
         return major_transcript.getSubSeq(chromosome_sequence_set)
 
-class GetGeneSequence(Feature):
+class GetGeneSequenceByHeader(Feature):
     
     IN = ['gene_sequence_set', 'header']
     OUT = ['gene_sequence']
@@ -46,7 +46,7 @@ class GetCodingSequenceByGeneModel(Feature):
             return None
         return major_transcript.getSubSeq(chromosome_sequence_set)#, type='CDS')
 
-class GetCodingSequence(Feature):
+class GetCodingSequencebyHeader(Feature):
     
     IN = ['coding_sequence_set', 'header']
     OUT = ['coding_sequence']
@@ -56,7 +56,7 @@ class GetCodingSequence(Feature):
             return None
         return coding_sequence_set[header]
 
-class GetProteinSequence(Feature):
+class GetProteinSequenceByHeader(Feature):
     
     IN = ['protein_sequence_set', 'header']
     OUT = ['protein_sequence']
