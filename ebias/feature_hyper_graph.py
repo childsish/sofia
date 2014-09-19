@@ -14,6 +14,7 @@ class FeatureHyperGraph(object):
         self.ins = defaultdict(set)
         self.features = {}
         self.graph = HyperGraph()
+        self.errors = set() #TODO: factor out into own class (graph traverser?)
     
     def __str__(self):
         return str(self.graph)
@@ -55,7 +56,7 @@ class FeatureHyperGraph(object):
         
         missing_dependencies = [name for name, dependencies in izip(edge_names, edge_dependencies) if len(dependencies) == 0]
         if len(missing_dependencies) > 0:
-            sys.stderr.write('%s is missing dependencies: %s\n'%(feature_name, ','.join(missing_dependencies)))
+            self.errors.add('%s is missing dependencies: %s'%(feature_name, ','.join(missing_dependencies)))
         #TODO: Check here for missing dependencies
         
         for cmb in product(*edge_dependencies):

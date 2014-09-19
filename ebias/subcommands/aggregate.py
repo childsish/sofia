@@ -17,7 +17,7 @@ class Aggregator(object):
         self.hyper_graph = loadFeatureHyperGraph()
 
     def aggregate(self, requested_features, provided_resources, args):
-        sys.stderr.write('    Resolving graphs...\n\n')
+        sys.stderr.write('    Resolving features...\n')
         
         resolutions = list(self.iterGraphPossibilities(requested_features, provided_resources))
         if len(resolutions) == 1 and not args.graph:
@@ -41,10 +41,15 @@ class Aggregator(object):
         iterGraphs = self.hyper_graph.iterFeatureGraphs
         feature_graphs = []
         for feature in requested_features:
-            sys.stderr.write('Resolving requested feature: %s\n'%str(feature))
+            self.hyper_graph.errors = set()
+            sys.stderr.write('    %s: '%\
+                str(feature))
             possible_graphs = [graph for graph in iterGraphs(feature.name, provided_resources, set(), feature.args) if satisfiesRequest(graph, feature.resources)]
             if len(possible_graphs) == 0:
-                raise ValueError('Unable to resolve a graph for requested feature: %s'%feature.name)
+                sys.stderr.write('Unable to resolve feature.\n')
+                sys.stderr.write('    Possible reasons: \n%s\n'%\
+                    '\n'.join(sorted(self.hyper_graph.errors)))
+                sys.exit(1)
             elif len(possible_graphs) > 1:
                 matching_graphs = defaultdict(list)
                 for graph in possible_graphs:
@@ -56,13 +61,14 @@ class Aggregator(object):
                 if len(matching_graphs) > 1:
                     for graph in possible_graphs:
                         sys.stderr.write('%s\n\n'%str(graph))
-                    raise ValueError('Multiple solutions found for requested feature: %s'%str(feature))
+                    sys.stderr.write('    Multiple solutions found.\n')
+                    sys.exit(1)
                 possible_graphs = matching_graphs
-                err = 'Unique solution found\n\n' if count == 0 else\
-                    'Unique solution found with %d extra resources\n\n'%count
+                err = 'Unique solution found.\n' if count == 0 else\
+                    'Unique solution found with %d extra resources.\n'%count
                 sys.stderr.write(err)
             else:
-                sys.stderr.write('Unique solution found\n\n')
+                sys.stderr.write('Unique solution found.\n')
             feature_graphs.append(possible_graphs)
         
         #missing_features = [feature.name for feature_graph, feature in izip(feature_graphs, requested_features) if len(feature_graph) == 0]
