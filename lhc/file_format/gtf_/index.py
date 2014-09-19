@@ -58,12 +58,13 @@ class IndexedGtfFile(object):
                 continue
             
             if type_ == 'CDS':
-                exon = Exon(ivl, 'CDS')
-                transcript_exons[attr['transcript_name']].append(exon)
+                entry = (int(attr['exon_number']), Exon(ivl, 'CDS'))
+                transcript_exons[attr['transcript_name']].append(entry)
             elif type_ == 'transcript':
                 transcript = Transcript(attr['transcript_name'], ivl)
                 gene.transcripts[transcript.name] = transcript
         for transcript, exons in transcript_exons.iteritems():
-            gene.transcripts[transcript].exons = exons
+            gene.transcripts[transcript].exons = [exon for exon_no, exon in\
+                sorted(exons)]
         return gene
 
