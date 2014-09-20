@@ -32,6 +32,21 @@ class Quality(Feature):
             return quality
         return '%.2f'%quality
 
+class VariantInfo(Feature):
+    
+    IN = ['variant']
+    OUT = ['variant_info']
+    
+    def init(self, key=None):
+        self.key = key
+    
+    def calculate(self, variant):
+        if variant is None:
+            return None
+        if self.key is None:
+            return variant.info
+        return variant.info[key]
+
 class Reference(Feature):
 
     IN = ['variant']
