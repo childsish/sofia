@@ -9,7 +9,7 @@ class RequestedFeature(object):
         if len(self.args) > 0:
             res.append(','.join('%s=%s'%e for e in sorted(self.args.iteritems())))
         if len(self.resources) > 0:
-            res.append(','.join(self.resources))
+            res.append(','.join(r.name for r in self.resources))
         return ':'.join(res)
 
     def __eq__(self, other):

@@ -38,11 +38,11 @@ class Aggregator(object):
         feature_graphs = []
         for feature in requested_features:
             ERROR_MANAGER.reset()
-            sys.stderr.write('    %s: '%\
+            sys.stderr.write('    %s - '%\
                 str(feature))
             possible_graphs = [graph for graph in iterGraphs(feature.name, provided_resources, set(), feature.args) if satisfiesRequest(graph, feature.resources)]
             if len(possible_graphs) == 0:
-                sys.stderr.write('Unable to resolve feature.\n')
+                sys.stderr.write('unable to resolve feature.\n')
                 sys.stderr.write('      Possible reasons: \n      * %s\n'%\
                     '\n      * '.join(sorted(ERROR_MANAGER.errors)))
                 sys.exit(1)
@@ -51,21 +51,22 @@ class Aggregator(object):
                 for graph in possible_graphs:
                     resources = frozenset([r.name for r in graph.resources\
                         if not r.name == 'target'])
-                    key = len(resources - feature.resources)
-                    matching_graphs[key].append(graph)
+                    extra_resources = resources - feature.resources
+                    matching_graphs[len(extra_resources)].append((graph, extra_resources))
                 count, matching_graphs = sorted(matching_graphs.iteritems())[0]
                 if len(matching_graphs) > 1:
                     for graph in possible_graphs:
                         sys.stderr.write('%s\n\n'%str(graph))
                     sys.stderr.write('    Multiple solutions found.\n')
                     sys.exit(1)
-                possible_graphs = matching_graphs
-                err = 'Unique solution found.\n' if count == 0 else\
-                    'Unique solution found with %d extra resources.\n'%count
+                matching_graph, extra_resources = matching_graphs[0]
+                err = 'unique solution found.\n' if count == 0 else\
+                    'unique solution found with %d extra resources.\n      %s\n'%(count, '\n      '.join(extra_resources))
                 sys.stderr.write(err)
+                feature_graphs.append(matching_graph)
             else:
-                sys.stderr.write('Unique solution found.\n')
-            feature_graphs.append(possible_graphs[0])
+                sys.stderr.write('unique solution found.\n')
+                feature_graphs.append(possible_graphs[0])
         
         combined_graph = FeatureGraph()
         resolved_features = []
@@ -91,8 +92,6 @@ def defineParser(parser):
         help='request a feature using the following format <name>[:<arguments>][:<resources>]')
     parser.add_argument('-F', '--feature-list',
         help='a text file with a list of requested features')
-    parser.add_argument('-j', '--job',
-        help='specify a job file in json format')
     parser.add_argument('-o', '--output',
         help='direct output to named file (stdout)')
     parser.add_argument('-r', '--resources', nargs='+', default=[],
@@ -110,25 +109,7 @@ def defineParser(parser):
 def aggregate(args):
     sys.stderr.write('\n    Ebias started...\n\n')
     
-    if args.job:
-        fhndl = open(args.job)
-        job = json.load(fhndl)
-        fhndl.close()
-        requested_features =\
-            [RequestedFeature(**ftr) for ftr in job['requested_features']]
-        provided_resources = {res.name: res for res in\
-            (ProvidedResource(**res) for res in job['provided_resources'])}
-    else:
-        requested_features = []
-        provided_resources = {}
-    
-    requested_features.extend(ftr for ftr in\
-        parseRequestedFeatures(args.features))
-    if args.feature_list is not None:
-        fhndl = open(args.feature_list)
-        requested_features.extend(parseRequestedFeatures(fhndl.read().split()))
-        fhndl.close()
-
+    provided_resources = {}
     if args.resource_list is not None:
         fhndl = open(args.resource_list)
         provided_resources.update(parseProvidedResources(fhndl.read().split(),
@@ -136,6 +117,13 @@ def aggregate(args):
         fhndl.close()
     provided_resources.update(parseProvidedResources(args.input,
         args.resources))
+    
+    requested_features = [ftr for ftr in\
+        parseRequestedFeatures(args.features, provided_resources)]
+    if args.feature_list is not None:
+        fhndl = open(args.feature_list)
+        requested_features.extend(parseRequestedFeatures(fhndl.read().split(), provided_resources))
+        fhndl.close()
 
     if len(requested_features) == 0:
         sys.stderr.write('Error: No features were requested. Please provide'\
@@ -144,10 +132,6 @@ def aggregate(args):
     
     aggregator = Aggregator()
     aggregator.aggregate(requested_features, provided_resources, args)
-
-def parseRequestedFeatures(features):
-    parser = FeatureParser()
-    return [parser.parse(feature) for feature in features]
         
 def parseProvidedResources(target, resources):
     program_dir = getProgramDirectory()
@@ -159,6 +143,10 @@ def parseProvidedResources(target, resources):
     provided_resources = resource_parser.parseResources(resources)
     provided_resources['target'] = resource_parser.createResource(target, name='target')
     return provided_resources
+
+def parseRequestedFeatures(features, provided_resources):
+    parser = FeatureParser(provided_resources)
+    return [parser.parse(feature) for feature in features]
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
