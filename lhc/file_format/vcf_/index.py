@@ -9,7 +9,7 @@ class IndexedVcfFile(object):
         iname = '%s.tbi'%self.fname
         if not os.path.exists(iname):
             raise ValueError('File missing interval index. Try: tabix -p vcf <FILENAME>.')
-        self.index = pysam.TabixFile(self.fname)
+        self.index = pysam.Tabixfile(self.fname)
         self.iterator = VcfIterator(self.fname)
     
     def __getitem__(self, key):
