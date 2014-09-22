@@ -55,7 +55,7 @@ class FeatureHyperGraph(object):
         edge_names = sorted(self.graph.vs[feature_name].iterkeys())
         edge_dependencies = []
         for edge_name in edge_names:
-            edge_dependencies.append(list(self.iterDependencies(self.graph.vs[feature_name][edge_name], resources, set(visited))))
+            edge_dependencies.append(list(self.iterDependencies(self.graph.vs[feature_name][edge_name], resources, visited)))
         
         missing_dependencies = [name for name, dependencies in izip(edge_names, edge_dependencies) if len(dependencies) == 0]
         if len(missing_dependencies) > 0:
@@ -75,7 +75,7 @@ class FeatureHyperGraph(object):
     def iterDependencies(self, dependencies, resources, visited):
         # Each edge may have several dependencies and each dependency may have several resolutions
         for dependency in dependencies:
-            for dependency_graph in self.iterFeatureGraphs(dependency, resources, visited):
+            for dependency_graph in self.iterFeatureGraphs(dependency, resources, set(visited)):
                 yield (dependency, dependency_graph)
 
     def initFeatureGraph(self, feature, resource):
