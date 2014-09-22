@@ -3,8 +3,8 @@ import re
 from requested_feature import RequestedFeature
 
 class FeatureParser(object):
-    """ -f <name>[;(<key>=<value>)+][;<resource>[,<resource>]*]
-        -f VariantFrequency;sample=B01P01;tmp
+    """ -f <name>[:(<key>=<value>)+][:<resource>[,<resource>]*]
+        -f VariantFrequency:sample=B01P01:tmp
     """
     
     PARTS_REGX = re.compile('(?P<name>[^:]+)' +\

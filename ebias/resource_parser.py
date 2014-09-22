@@ -4,30 +4,53 @@ import re
 from ebias.provided_resource import ProvidedResource
 
 class ResourceParser(object):
-    """ -r <fname>[:type=<type>][:<name>]
+    """ -r <fname>[:type=<type>][:<name>][:<kwargs>]
         -r /tmp/tmp.vcf:type=vcf:tmp
     """
     
-    REGX = re.compile('^(?P<fname>([\w]:)?[^:]+)' +\
-                      '(?::type=(?P<type>\w+))?' +\
-                      '(?::(?P<name>\w+))?$')
+    REGX = re.compile('^(?P<fname>(?:[\w]:)?[^:]+)' +\
+                      '(?::(?P<part1>[^:]+))?' +\
+                      '(?::(?P<part2>[^:]+))?' +\
+                      '(?::(?P<part3>[^:]+))?$')
     
     def __init__(self, default_types):
         self.default_types = default_types
     
-    def parseResources(self, resources):
+    def parseResources(self, resource_strings):
         res = {}
-        for resource in resources:
-            match = self.REGX.match(resource)
-            if match is None:
-                raise ValueError('Unable to parse resource string: %s'%resource)
-            resource = self.createResource(**match.groupdict())
-            if resource.name in res:
-                raise KeyError('Resource with name "%s" already exists'%resource.name)
+        for resource_string in resource_strings:
+            resource = self.parseResource(resource_string)
             res[resource.name] = resource
         return res
     
-    def createResource(self, fname, type=None, name=None):
+    def parseResource(self, resource_string):
+        match = self.REGX.match(resource_string)
+        if match is None:
+            raise ValueError('Unable to parse resource string: %s'%\
+                resource_string)
+        fname = match.group('fname')
+        type = None
+        name = None
+        init_args = {}
+        for part in match.groups()[1:]:
+            if part is None:
+                continue
+            elif part.startswith('type='):
+                if type is not None:
+                    raise ValueError('Resource type specified multiple times')
+                type = part[5:]
+            elif '=' in part:
+                if len(init_args) > 0:
+                    raise ValueError('Resource initialisation arguments '\
+                        'specified multiple times')
+                init_args = dict(p.split('=') for p in part.split(','))
+            else:
+                if name is not None:
+                    raise ValueError('Resource name specified multiple times')
+                name = part
+        return self.createResource(fname, type, name, init_args)
+    
+    def createResource(self, fname, type=None, name=None, init_args={}):
         if fname.endswith('.gz'):
             ext = fname.rsplit('.', 2)[1]
         else:
@@ -36,4 +59,4 @@ class ResourceParser(object):
             raise ValueError('Unable to determine type of biological information stored in %s'%fname)
         type = self.default_types[ext] if type is None else type
         name = os.path.basename(fname) if name is None else name
-        return ProvidedResource(fname, type, name)
+        return ProvidedResource(fname, type, name, init_args)

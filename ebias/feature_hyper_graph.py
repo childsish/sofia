@@ -42,13 +42,14 @@ class FeatureHyperGraph(object):
         
         if issubclass(feature, Resource):
             if issubclass(feature, Target) and feature.matches(resources['target']):
-                yield self.initFeatureGraph(feature, set([resources['target']]))
+                yield self.initFeatureGraph(feature, resources['target'])
             elif not issubclass(feature, Target):
-                hits = set(resource for resource in resources.itervalues() if resource.name != 'target' and feature.matches(resource))
+                hits = set(resource for resource in resources.itervalues()\
+                    if resource.name != 'target' and feature.matches(resource))
                 if len(hits) > 1:
                     raise ValueError('Multiple resources possible')
                 elif len(hits) == 1:
-                    yield self.initFeatureGraph(feature, hits)
+                    yield self.initFeatureGraph(feature, list(hits)[0])
             raise StopIteration()
         
         edge_names = sorted(self.graph.vs[feature_name].iterkeys())
@@ -63,6 +64,7 @@ class FeatureHyperGraph(object):
         for cmb in product(*edge_dependencies):
             resources = reduce(or_, (graph.resources for name, graph in cmb))
             dependencies = {edge: dependee_graph.feature.getName() for edge, (dependee, dependee_graph) in izip(edge_names, cmb)}
+            #TODO: Actually wrong place to pass kwargs and could cause bugs
             feature_instance = feature(resources, dependencies, kwargs)
             res = FeatureGraph(feature_instance)
             for edge, (dependee, dependee_graph) in izip(edge_names, cmb):
@@ -76,9 +78,8 @@ class FeatureHyperGraph(object):
             for dependency_graph in self.iterFeatureGraphs(dependency, resources, visited):
                 yield (dependency, dependency_graph)
 
-    def initFeatureGraph(self, feature, resources):
-        feature_instance = feature(resources)
+    def initFeatureGraph(self, feature, resource):
+        feature_instance = feature(set([resource]), kwargs=resource.init_args)
         res = FeatureGraph(feature_instance)
-        for resource in resources:
-            res.addResource(resource)
+        res.addResource(resource)
         return res
