@@ -23,6 +23,7 @@ class Aggregator(object):
         if args.graph:
             sys.stdout.write('%s\n\n'%solution)
         else:
+            sys.stderr.write('\n    Aggregating information...\n\n')
             solution.init()
             sys.stdout.write('\t'.join([str(ftr) for ftr in requested_features]))
             sys.stdout.write('\n')
