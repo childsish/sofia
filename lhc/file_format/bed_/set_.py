@@ -7,7 +7,7 @@ class BedSet(object):
     def __init__(self, iterator):
         self.data = list(iterator)
         self.ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
-        for i, entry in enumerate(iterator):
+        for i, entry in enumerate(self.data):
             ivl = Interval(entry.start, entry.stop)
             self.ivl_index[(entry.chr, ivl)] = i
 
