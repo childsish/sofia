@@ -45,7 +45,7 @@ class VariantInfo(Feature):
             return None
         if self.key is None:
             return variant.info
-        return variant.info[key]
+        return variant.info[self.key]
 
 class Reference(Feature):
 
