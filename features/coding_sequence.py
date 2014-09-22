@@ -13,22 +13,6 @@ class GetCodingSequenceFromNucleotideSequence(Feature):
     def calculate(self, nucleotide_sequence):
         return nucleotide_sequence
 
-class StartCodon(Feature):
-    
-    IN = ['coding_sequence']
-    OUT = ['start_codon']
-    
-    def calculate(self, coding_sequence):
-        return coding_sequence[:3]
-
-class StopCodon(Feature):
-    
-    IN = ['coding_sequence']
-    OUT = ['start_codon']
-    
-    def calculate(self, coding_sequence):
-        return coding_sequence[-3:]
-
 class GetCodingSequenceLength(Feature):
     
     IN = ['coding_sequence']
