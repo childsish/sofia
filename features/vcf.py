@@ -25,10 +25,10 @@ class VcfSet(Resource):
     PARSER = VcfSetParser
     OUT = ['variant_set']
     
-    def init(self, style='ensemble'):
+    def init(self, style='ensemble', ignore=''):
         fname = self.getFilename()
         if fname.endswith('.gz'):
             from lhc.file_format.vcf_.index import IndexedVcfFile
-        self.parser = IndexedVcfFile(fname, style)\
+        self.parser = IndexedVcfFile(fname, style, ignore.split('-'))\
             if os.path.exists('%s.tbi'%fname) else\
             VcfSetParser(VcfIteratorParser(fname))

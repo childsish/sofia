@@ -37,8 +37,9 @@ class VariantInfo(Feature):
     IN = ['variant']
     OUT = ['variant_info']
     
-    def init(self, key=None):
+    def init(self, key=None, ignore=''):
         self.key = key
+        self.ignore = ignore.split(';')
     
     def calculate(self, variant):
         if variant is None:
@@ -67,29 +68,41 @@ class ReferenceCount(Feature):
 
     IN = ['variant']
     OUT = ['reference_count']
+    
+    def init(self, sample=None):
+        self.sample = sample
 
     def calculate(self, variant):
-        return {name: data['RO'] if 'RO' in data else 0\
-            for name, data in variant.samples.iteritems()}
+        if self.sample is None:
+            return {name: data['RO'] if 'RO' in data else 0\
+                for name, data in variant.samples.iteritems()}
+        data = variant.samples[self.sample]
+        return int(data['RO']) if 'RO' in data else 0
 
 class AlternativeCount(Feature):
 
     IN = ['variant']
     OUT = ['alternative_count']
 
+    def init(self, sample=None):
+        self.sample = sample
+
     def calculate(self, variant):
         # TODO: Find a solution for two alt alleles
-        res = {}
-        for name, data in variant.samples.iteritems():
-            if 'AO' not in data:
-                res[name] = 0
-                continue
-            alleles = data['GT'].split('/')
-            ao = data['AO'].split(',')
-            count = sum(int(ao[int(allele) - 1]) for allele in alleles\
-                if allele != '0')
-            res[name] = count
-        return res
+        if self.sample is None:
+            res = {name: self._getCount(data) for name, data in\
+                variant.samples.iteritems()}
+            return res
+        return self._getCount(variant.samples[self.sample])
+    
+    def _getCount(self, data):
+        if 'AO' not in data:
+            return 0
+        alleles = data['GT'].split('/')
+        ao = data['AO'].split(',')
+        count = sum(int(ao[int(allele) - 1]) for allele in alleles\
+            if allele != '0')
+        return count
 
 class VariantFrequency(Feature):
 
