@@ -2,6 +2,7 @@
 	"default_types": [
 		{ "ext": "vcf", "type": "variant" },
 		{ "ext": "gtf", "type": "gene_model" },
-		{ "ext": "fasta", "type": "chromosome_sequence" }
+		{ "ext": "fasta", "type": "chromosome_sequence" },
+		{ "ext": "bed", "type": "genomic_interval" }
 	]
 }
