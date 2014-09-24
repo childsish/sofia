@@ -1,21 +1,59 @@
 from collections import namedtuple
+from itertools import izip
 from lhc.binf.genetic_code import GeneticCodes
 from lhc.binf.sequence import revcmp
 from ebias.feature import Feature
 
 class VariantType(Feature):
+    """ Determines the variant type.
     
-    IN = ['major_transcript', 'amino_acid_variant']
+    Determined the variant type according to the sequence ontology
+    (http://www.sequenceontology.org)
+    """
+    
+    IN = ['major_transcript', 'amino_acid_variant', 'variant']
     OUT = ['variant_type']
     
-    def calculate(self, major_transcript, amino_acid_variant):
+    def calculate(self, major_transcript, amino_acid_variant, variant):
         if major_transcript is None:
-            return 'intergenic'
+            return ['intergenic_variant']
         elif amino_acid_variant is None:
-            return 'intronic'
-        elif all(amino_acid_variant.ref == alt for alt in amino_acid_variant.alt):
-            return 'synonymous'
-        return 'non-synonymous'
+            return ['intron_variant']
+        res = []
+        for na_alt, aa_alt in izip(variant.alt.split(','), amino_acid_variant.alt):
+            if len(na_alt) == len(variant.ref):
+                res.append(self._getAminoAcidType(amino_acid_variant.pos, 
+                    amino_acid_variant.ref, aa_alt))
+            elif len(na_alt) > len(variant.ref):
+                if (len(na_alt) - len(variant.ref)) % 3 == 0:
+                    res.append('inframe_insertion')
+                else:
+                    res.append('frameshift_elongation')
+            else:
+                if (len(variant.ref) - len(na_alt)) % 3 == 0:
+                    res.append('inframe_deletion')
+                else:
+                    res.append('frameshift_truncation')
+        return res
+    
+    def format(self, variant_type):
+        return ','.join(variant_type)
+
+    def _getAminoAcidType(self, pos, ref, alt):
+        if ref == alt:
+            if pos == 0:
+                return 'start_retained_variant'
+            elif ref == '*':
+                return 'stop_retained_variant'
+            return 'synonymous_variant'
+        if pos == 0:
+            return 'start_lost'
+        elif ref == '*':
+            return 'stop_lost'
+        elif alt == '*':
+            return 'stop_gained'
+        #TODO: split into conservative or non-conservative
+        return 'missense_variant'
 
 CodingVariant = namedtuple('CodingVariant', ('pos', 'ref', 'alt'))
 
