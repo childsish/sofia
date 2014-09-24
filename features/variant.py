@@ -37,9 +37,8 @@ class VariantInfo(Feature):
     IN = ['variant']
     OUT = ['variant_info']
     
-    def init(self, key=None, ignore=''):
+    def init(self, key=None):
         self.key = key
-        self.ignore = ignore.split(';')
     
     def calculate(self, variant):
         if variant is None:
@@ -47,6 +46,27 @@ class VariantInfo(Feature):
         if self.key is None:
             return variant.info
         return variant.info[self.key]
+
+class VariantFormat(Feature):
+    
+    IN = ['variant']
+    OUT = ['variant_format']
+
+    def init(self, sample=None, key=None):
+        self.sample = sample
+        self.key = key
+
+    def calculate(self, variant):
+        if self.sample is None and self.key is None:
+            return variant.samples
+        elif self.sample is not None and self.key is None:
+            return variant.sample[self.sample]
+        elif self.sample is None and self.key is not None:
+            return {sample: format[self.key] for\
+                sample, format in variant.samples.iteritems()}
+        if self.key not in variant.samples[self.sample]:
+            return 'NA'
+        return variant.samples[self.sample][self.key]
 
 class Reference(Feature):
 
@@ -74,7 +94,7 @@ class ReferenceCount(Feature):
 
     def calculate(self, variant):
         if self.sample is None:
-            return {name: data['RO'] if 'RO' in data else 0\
+            return {name: int(data['RO']) if 'RO' in data else 0\
                 for name, data in variant.samples.iteritems()}
         data = variant.samples[self.sample]
         return int(data['RO']) if 'RO' in data else 0
@@ -84,47 +104,49 @@ class AlternativeCount(Feature):
     IN = ['variant']
     OUT = ['alternative_count']
 
-    def init(self, sample=None):
+    def init(self, sample=None, total='f'):
         self.sample = sample
+        self.total = total[0].lower() == 't'
 
     def calculate(self, variant):
         # TODO: Find a solution for two alt alleles
-        if self.sample is None:
-            res = {name: self._getCount(data) for name, data in\
-                variant.samples.iteritems()}
-            return res
-        return self._getCount(variant.samples[self.sample])
+        res = {name: self._getCount(data) for name, data in\
+              variant.samples.iteritems()}\
+            if self.sample is None else\
+              self._getCount(variant.samples[self.sample])
+        return res
     
     def _getCount(self, data):
         if 'AO' not in data:
             return 0
-        alleles = data['GT'].split('/')
-        ao = data['AO'].split(',')
-        count = sum(int(ao[int(allele) - 1]) for allele in alleles\
-            if allele != '0')
+        ao = [int(count) for count in data['AO'].split(',')]
+        if self.total:
+            return sum(ao)
+        alleles = set(int(gt) - 1 for gt in data['GT'].split('/') if gt != '0')
+        count = sum(ao[allele] for allele in alleles)
         return count
 
 class VariantFrequency(Feature):
 
-    IN = ['reference_count', 'alternative_count']
+    IN = ['alternative_count', 'reference_count']
+    OUT = ['variant_frequency']
 
     def init(self, sample=None):
         self.sample = sample
 
-    def calculate(self, reference_count, alternative_count):
+    def calculate(self, alternative_count, reference_count):
         if self.sample is None:
-            return {sample: self._calculateFrequency(reference_count[sample],
-                alternative_count[sample]) for sample in reference_count}
-        return self._calculateFrequency(reference_count[self.sample],
-            alternative_count[self.sample])
+            return {name: self._getFrequency(alternative_count[name],
+                reference_count[name]) for name in alternative_count}
+        return self._getFrequency(alternative_count[self.sample],
+            reference_count[self.sample])
     
     def format(self, entity):
+        if entity is None:
+            return ''
         return '%.4f'%entity
 
-    def _calculateFrequency(self, ref, alt):
-        alt = 0 if alt is None else float(alt)
-        if alt == 0:
-            return 0
-        ref = 0 if ref is None else float(ref)
-        return alt / (alt + ref)
+    def _getFrequency(self, alt, ref):
+        den = float(alt + ref)
+        return 0 if den == 0 else alt / den
 
