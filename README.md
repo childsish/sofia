@@ -58,6 +58,9 @@ Give the resource types with initialisation?
 
 -t name:TableResource:
 
+Attempts to follow the guidelines set out in:
+http://www.hgvs.org/mutnomen/
+
 
 Multiple VCFs
 -------------
