@@ -128,25 +128,25 @@ class AlternativeCount(Feature):
 
 class VariantFrequency(Feature):
 
-    IN = ['alternative_count', 'reference_count']
+    IN = ['variant']
     OUT = ['variant_frequency']
 
     def init(self, sample=None):
         self.sample = sample
 
-    def calculate(self, alternative_count, reference_count):
+    def calculate(self, variant):
         if self.sample is None:
-            return {name: self._getFrequency(alternative_count[name],
-                reference_count[name]) for name in alternative_count}
-        return self._getFrequency(alternative_count[self.sample],
-            reference_count[self.sample])
+            return {name: self._getFrequency(sample)\
+                for name, sample in variant.samples.iteritems()}
+        return self._getFrequency(variant.samples[self.sample])
     
     def format(self, entity):
         if entity is None:
             return ''
         return '%.4f'%entity
 
-    def _getFrequency(self, alt, ref):
-        den = float(alt + ref)
-        return 0 if den == 0 else alt / den
+    def _getFrequency(self, sample):
+        if 'AO' in sample and 'DP' in sample:
+            return sum(map(int, sample['AO'].split(','))) / float(sample['DP'])
+        return None
 

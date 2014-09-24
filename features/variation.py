@@ -77,8 +77,25 @@ class CodingVariation(Feature):
             alt = map(revcmp, alt)
         return CodingVariant(coding_position, ref, alt)
     
-    def format(self, entity):
-        return ','.join('c.%s%s>%s'%(entity.pos + 1, entity.ref, alt) for alt in entity.alt)
+    def format(self, coding_variant):
+        res = []
+        pos = coding_variant.pos
+        ref = coding_variant.ref
+        for alt in coding_variant.alt:
+            if len(coding_variant.ref) > len(alt):
+                d = len(coding_variant.ref) - len(alt)
+                rng = '%d'%(pos + len(ref) - 1,) if d == 1 else\
+                    '%d_%d'%(pos + len(ref) - d, pos + len(ref) - 1)
+                res.append('c.%sdel%s'%(rng, ref[-d - 1:-1]))
+            elif len(alt) > len(coding_variant.ref):
+                d = len(alt) - len(coding_variant.ref)
+                typ = 'dup' if alt[-d - 1:-1] == ref[-d - 1:-1] else 'ins'
+                rng = '%d'%(pos + len(alt) - 1,) if d == 1 else\
+                    '%d_%d'%(pos + len(alt) - d, pos + len(alt) - 1)
+                res.append('c.%s%s%s'%(rng, typ, alt[-d - 1:-1]))
+            else:
+                res.append('c.%d%s>%s'%(pos + 1, ref, alt))
+        return ','.join(res)
 
 CodonVariant = namedtuple('CodonVariant', ['pos', 'ref', 'alt'])
 
@@ -91,19 +108,29 @@ class CodonVariation(Feature):
         if coding_variant is None:
             return None
         pos = coding_variant.pos
-        pos_in_codon = pos % 3
-        codon_pos = pos - pos_in_codon
-        alts = []
         ref = coding_variant.ref
+        if len(ref) == 1:
+            fr = pos % 3
+            to = 2 - (pos % 3)
+        else:
+            fr = [3, 4, 2][pos % 3]
+            to = [2, 4, 3][(pos + len(ref)) % 3]
+        alts = []
         for alt in coding_variant.alt:
+            d = abs(len(ref) - len(alt))
+            if d % 3 != 0:
+                alts.append(None)
+                continue
             seq = list(coding_sequence)
             seq[pos:pos + len(ref)] = list(alt)
-            alts.append(''.join(seq[codon_pos:codon_pos + 3]))
-        ref_codon = coding_sequence[codon_pos:codon_pos + 3]
-        return CodonVariant(pos, ref_codon, alts)
+            alts.append(''.join(seq[pos - fr:pos + len(alt) + to]))
+        ref_codon = coding_sequence[pos - fr:pos + len(ref) + to]
+        if all(alt == None for alt in alts):
+            return None
+        return CodonVariant(pos - fr, ref_codon, alts)
     
     def format(self, entity):
-        return ','.join('c.%s%s>%s'%(entity.pos + 1, entity.ref, alt) for alt in entity.alt)
+        return ','.join('3.%d%s>%s'%(entity.pos + 1, entity.ref, alt) for alt in entity.alt)
 
 AminoAcidVariant = namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt'))
 
@@ -111,17 +138,57 @@ class AminoAcidVariation(Feature):
     
     IN = ['codon_variant']
     OUT = ['amino_acid_variant']
+
+    ABBREVIATIONS = {
+        'A': 'Ala', 'B': 'Asx', 'C': 'Cys', 'D': 'Asp', 'E': 'Glu', 'F': 'Phe',
+        'G': 'Gly', 'H': 'His', 'I': 'Ile', 'K': 'Lys', 'L': 'Leu', 'M': 'Met',
+        'N': 'Asn', 'P': 'Pro', 'Q': 'Gln', 'R': 'Arg', 'S': 'Ser', 'T': 'Thr',
+        'V': 'Val', 'W': 'Trp', 'X':   'X', 'Y': 'Tyr', 'Z': 'Glx', '*': '*'
+    }
     
-    def init(self):
+    def init(self, use_3code='f'):
         self.gc = GeneticCodes().getCode(1)
+        self.abbreviations = self.ABBREVIATIONS if use_3code[0].lower() == 't'\
+            else {name: name for name in self.ABBREVIATIONS}
 
     def calculate(self, codon_variant):
         if codon_variant is None:
             return None
+        alts = []
+        alts = [None if alt is None else self.gc.translate(alt)\
+            for alt in codon_variant.alt]
         return AminoAcidVariant(codon_variant.pos / 3,
-            self.gc.translate(codon_variant.ref),
-            [self.gc.translate(alt) for alt in codon_variant.alt])
+            self.gc.translate(codon_variant.ref), alts)
     
-    def format(self, entity):
-        return ','.join('%s%s%s'%(entity.ref, entity.pos + 1, alt) for alt in entity.alt)
+    def format(self, amino_acid_variant):
+        res = []
+        pos = amino_acid_variant.pos
+        ref = amino_acid_variant.ref
+        for alt in amino_acid_variant.alt:
+            if alt is None:
+                res.append('')
+            elif len(amino_acid_variant.ref) > len(alt):
+                d = len(amino_acid_variant.ref) - len(alt)
+                rng = '%d'%(pos + len(ref) - 1,) if d == 1 else\
+                    '%d_%d'%(pos + len(ref) - d, pos + len(ref) - 1)
+                res.append('p.%sdel%s'%(rng, ref[-d - 1:-1]))
+            elif len(alt) > len(amino_acid_variant.ref):
+                d = len(alt) - len(amino_acid_variant.ref)
+                typ = 'dup' if alt[-d - 1:-1] == ref[-d - 1:-1] else 'ins'
+                rng = '%d'%(pos + len(alt) - 1,) if d == 1 else\
+                    '%d_%d'%(pos + len(alt) - d, pos + len(alt) - 1)
+                res.append('p.%s%s%s'%(rng, typ, alt[-d - 1:-1]))
+            else:
+                i = 0
+                j = len(ref) - 1
+                if ref != alt:
+                    print ref
+                    print alt
+                    while ref[i] == alt[i]:
+                        i += 1
+                    while ref[j] == alt[j]:
+                        j -= 1
+                    j += 1
+                res.append('p.%s%d%s'%(ref[i:j + 1], pos + i + 1, alt[i:j + 1]))
+        return ','.join(res)
 
