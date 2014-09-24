@@ -27,9 +27,13 @@ class Aggregator(object):
             solution.init()
             sys.stdout.write('\t'.join([str(ftr) for ftr in requested_features]))
             sys.stdout.write('\n')
-            for row in solution.iterRows(resolved_features):
-                sys.stdout.write('\t'.join(row))
-                sys.stdout.write('\n')
+            try:
+                for row in solution.iterRows(resolved_features):
+                    sys.stdout.write('\t'.join(row))
+                    sys.stdout.write('\n')
+            except TypeError:
+                sys.stderr("A feature's format function does not return a string")
+                sys.exit(1)
 
     def resolveRequest(self, requested_features, provided_resources):
         def satisfiesRequest(graph, requested_resources):
