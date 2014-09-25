@@ -11,13 +11,14 @@ class VariantType(Feature):
     (http://www.sequenceontology.org)
     """
     
-    IN = ['major_transcript', 'amino_acid_variant', 'variant']
+    IN = ['major_transcript', 'variant', 'coding_variant', 'amino_acid_variant']
     OUT = ['variant_type']
     
-    def calculate(self, major_transcript, amino_acid_variant, variant):
+    def calculate(self, major_transcript, variant, coding_variant, amino_acid_variant):
+        #TODO: Improve intron detection
         if major_transcript is None:
             return ['intergenic_variant']
-        elif amino_acid_variant is None:
+        elif coding_variant is None:
             return ['intron_variant']
         res = []
         for na_alt, aa_alt in izip(variant.alt.split(','), amino_acid_variant.alt):
@@ -94,7 +95,10 @@ class CodingVariation(Feature):
                     '%d_%d'%(pos + len(alt) - d, pos + len(alt) - 1)
                 res.append('c.%s%s%s'%(rng, typ, alt[-d - 1:-1]))
             else:
-                res.append('c.%d%s>%s'%(pos + 1, ref, alt))
+                if len(ref) > 1 and ref == alt[::-1]:
+                    res.append('c.%d_%dinv'%(pos + 1, pos + len(ref)))
+                else:
+                    res.append('c.%d%s>%s'%(pos + 1, ref, alt))
         return ','.join(res)
 
 CodonVariant = namedtuple('CodonVariant', ['pos', 'ref', 'alt'])
@@ -120,17 +124,12 @@ class CodonVariation(Feature):
             d = abs(len(ref) - len(alt))
             if d % 3 != 0:
                 alts.append(None)
-                continue
-            seq = list(coding_sequence)
-            seq[pos:pos + len(ref)] = list(alt)
-            alts.append(''.join(seq[pos - fr:pos + len(alt) + to]))
+            else:
+                seq = list(coding_sequence)
+                seq[pos:pos + len(ref)] = list(alt)
+                alts.append(''.join(seq[pos - fr:pos + len(alt) + to]))
         ref_codon = coding_sequence[pos - fr:pos + len(ref) + to]
-        if all(alt == None for alt in alts):
-            return None
         return CodonVariant(pos - fr, ref_codon, alts)
-    
-    def format(self, entity):
-        return ','.join('3.%d%s>%s'%(entity.pos + 1, entity.ref, alt) for alt in entity.alt)
 
 AminoAcidVariant = namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt'))
 
@@ -182,8 +181,6 @@ class AminoAcidVariation(Feature):
                 i = 0
                 j = len(ref) - 1
                 if ref != alt:
-                    print ref
-                    print alt
                     while ref[i] == alt[i]:
                         i += 1
                     while ref[j] == alt[j]:
