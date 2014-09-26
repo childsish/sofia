@@ -4,7 +4,7 @@ import pysam
 from iterator import VcfIterator
 
 class IndexedVcfFile(object):
-    def __init__(self, fname, style='ensemble'):
+    def __init__(self, fname, style='ensemble', ignore=[]):
         """ Initialise an indexed vcf file.
         
         :param fname: the name of the indexed vcf file.
@@ -19,6 +19,7 @@ class IndexedVcfFile(object):
         self.index = pysam.Tabixfile(self.fname)
         self.iterator = VcfIterator(self.fname)
         self.style = style
+        self.ignore = set(ignore)
     
     def __getitem__(self, key):
         if not hasattr(key, 'chr'):
@@ -29,6 +30,8 @@ class IndexedVcfFile(object):
               'chr%s'%key.chr if not key.startswith('chr') and\
                 self.style == 'ucsc' else\
               key.chr
+        if chr in self.ignore:
+            return []
         start = key.start if hasattr(key, 'start') else\
                 key.pos if hasattr(key, 'pos') else\
                 None
