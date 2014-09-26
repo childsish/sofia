@@ -150,3 +150,25 @@ class VariantFrequency(Feature):
             return sum(map(int, sample['AO'].split(','))) / float(sample['DP'])
         return None
 
+class VariantCall(Feature):
+
+    IN = ['variant']
+    OUT = ['variant_call']
+
+    def init(self, sample=None):
+        self.sample = sample
+    
+    def calculate(self, variant):
+        if self.sample is None:
+            return {name: self._getCall(sample) for name, sample\
+                in variant.samples.iteritems()}
+        return self._getCall(variant.samples[self.sample])
+
+    def _getCall(self, sample):
+        if 'GT' not in sample:
+            return None
+        a1, a2 = sample['GT'].split('/')
+        if a1 == a2:
+            return 'homozygous_wildtype' if a1 == '0' else 'homozygous_mutant'
+        return 'heterozygous_mutant'
+
