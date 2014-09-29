@@ -147,7 +147,14 @@ class VariantFrequency(Feature):
 
     def _getFrequency(self, sample):
         if 'AO' in sample and 'DP' in sample:
-            return sum(map(int, sample['AO'].split(','))) / float(sample['DP'])
+            ao = sum(int(ao) for ao in sample['AO'].split(','))
+            return ao / float(sample['DP'])
+        elif 'AO' in sample and 'RO' in sample:
+            ao = sum(int(ao) for ao in sample['AO'].split(','))
+            den = ao + float(sample['RO'])
+            if den == 0:
+                return 0
+            return ao / (ao + float(sample['RO']))
         return None
 
 class VariantCall(Feature):
