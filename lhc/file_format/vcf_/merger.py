@@ -26,10 +26,16 @@ class VcfMerger(object):
             self.sample_to_bam = {}
         else:
             import pysam
-            self.bams = [pysam.Samfile(bam) for bam in bams]
-            self.sample_to_bam = {bam.header['RG'][0]['SM']: bam\
-                for bam in self.bams}
-            print self.sample_to_bam
+            self.bams = []
+            self.sample_to_bam = {}
+            for bam_name in bams:
+                bam = pysam.Samfile(bam_name)
+                sample = bam.header['RG'][0]['SM']
+                if sample in self.sample_names:
+                    self.bams.append(bam)
+                    self.sample_to_bam[sample] = bam
+                else:
+                    bam.close()
 
     def __iter__(self):
         """ Iterate through merged vcf lines.
@@ -45,30 +51,27 @@ class VcfMerger(object):
             ref = sorted((tops[idx].ref for idx in idxs),\
                 key=lambda x:len(x))[-1]
             alt = set()
-            for idx in idxs:
-                top = tops[idx]
-                alt.update(alt + ref[len(top.ref):]\
-                    for alt in top.alt.split(','))
-            alt = sorted(alt)
-            
             sample_to_top = {}
             for idx in idxs:
                 top = tops[idx]
+                top_alt = [a + ref[len(top.ref):] for a in top.alt.split(',')]
+                alt.update(top_alt)
                 for sample in top.samples:
-                    sample_to_top[sample] = top
-
+                    sample_to_top[sample] = (top, top_alt)
+            alt = sorted(alt)
+            
             format_ = {}
             samples = {}
             for sample_name in self.sample_names:
                 if sample_name in sample_to_top:
-                    top = sample_to_top[sample_name]
+                    top, top_alt = sample_to_top[sample_name]
                     sample_data = top.samples[sample_name]
                     if 'Q' not in format_: format_['Q'] = ''
                     if 'GT' not in format_: format_['GT'] = '0/0'
                     samples[sample_name] = {'Q': '' if top.qual == '.' else\
                         '%.4f'%top.qual}
                     samples[sample_name]['GT'] =\
-                        self._getGT(sample_data['GT'], top.alt, alt)
+                        self._getGT(sample_data['GT'], top_alt, alt)
                     if 'GQ' in sample_data:
                         if 'GQ' not in format_: format_['GQ'] = ''
                         samples[sample_name]['GQ'] = sample_data['GQ']
@@ -146,7 +149,6 @@ class VcfMerger(object):
         return res
     
     def _getGT(self, gt, old_alt, new_alt):
-        old_alt = old_alt.split(',')
         a1, a2 = map(int, gt.split('/'))
         if a1 != '0': a1 = str(new_alt.index(old_alt[a1 - 1]) + 1)
         if a2 != '0': a2 = str(new_alt.index(old_alt[a2 - 1]) + 1)
