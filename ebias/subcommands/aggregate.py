@@ -32,7 +32,7 @@ class Aggregator(object):
                     sys.stdout.write('\t'.join(row))
                     sys.stdout.write('\n')
             except TypeError:
-                sys.stderr("A feature's format function does not return a string")
+                sys.stderr.write("A feature's format function does not return a string")
                 sys.exit(1)
 
     def resolveRequest(self, requested_features, provided_resources):
