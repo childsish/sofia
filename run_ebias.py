@@ -5,7 +5,7 @@ import os
 import sys
 
 sys.path.append(os.path.realpath(__file__))
-from ebias.subcommands import aggregate, list_
+from ebias.subcommands import aggregate, info
 
 def main():
     parser = getParser()
@@ -19,8 +19,8 @@ def getParser():
     aggregate_parser = subparsers.add_parser('aggregate')
     aggregate.defineParser(aggregate_parser)
     
-    list_parser = subparsers.add_parser('list')
-    list_.defineParser(list_parser)
+    info_parser = subparsers.add_parser('info')
+    info.defineParser(info_parser)
     
     return parser
 

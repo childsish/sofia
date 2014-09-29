@@ -5,7 +5,7 @@ from lhc.tools import loadPlugins
 from common import getProgramDirectory, loadFeatureHyperGraph
 from ebias.feature import Feature
 
-def list_(args):
+def info(args):
     if args.output is None:
         import sys
         args.output = sys.stdout
@@ -63,7 +63,7 @@ def defineParser(parser):
         help='specify where to put output')
     parser.add_argument('-f', '--feature',
         help='list a specific feature')
-    parser.set_defaults(func=list_)
+    parser.set_defaults(func=info)
     
 if __name__ == '__main__':
     import sys
