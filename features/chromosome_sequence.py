@@ -25,5 +25,8 @@ class HomopolymerLength(Feature):
         return res
     
     def format(self, homopolymer_length):
+        unq = set(homopolymer_length)
+        if len(unq) == 1:
+            return str(list(unq)[0])
         return ','.join(str(i) for i in homopolymer_length)
 
