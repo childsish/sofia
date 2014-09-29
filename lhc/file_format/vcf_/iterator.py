@@ -67,7 +67,13 @@ class VcfIterator(object):
             self._parseSamples(parts))
 
     def _parseQuality(self, qual):
-        return float(qual) if qual != '.' and '.' in qual else qual
+        if qual == '.':
+            return '.'
+        try:
+            res = float(qual)
+        except TypeError:
+            return '.'
+        return res
     
     def _parseAttributes(self, attr_line):
         return dict(attr.split('=', 1) if '=' in attr else (attr, attr)\
