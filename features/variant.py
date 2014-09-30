@@ -23,8 +23,15 @@ class Quality(Feature):
 
     IN = ['variant']
     OUT = ['quality']
+    
+    def init(self, sample=None):
+        self.sample = sample
 
     def calculate(self, variant):
+        if self.sample is not None:
+            if 'Q' in variant.samples[self.sample]:
+                return variant.samples[self.sample]['Q']
+            return '0'
         return variant.qual
 
     def format(self, quality):
