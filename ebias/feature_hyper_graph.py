@@ -10,6 +10,7 @@ from feature_graph import FeatureGraph
 from resource import Resource, Target
 
 class FeatureHyperGraph(object):
+    """ A hyper graph of all the possible feature calculation pathways. """
     def __init__(self):
         self.outs = defaultdict(set)
         self.ins = defaultdict(set)
@@ -17,9 +18,11 @@ class FeatureHyperGraph(object):
         self.graph = HyperGraph()
     
     def __str__(self):
+        """ Returns a dot formatted representation of the graph. """
         return str(self.graph)
     
     def registerFeature(self, feature):
+        """ Add a feature to the hyper graph. """
         name = feature.__name__
         self.features[name] = feature
         self.graph.addVertex(name)
@@ -35,6 +38,7 @@ class FeatureHyperGraph(object):
                 self.graph.addEdge(out, parent, name)
 
     def iterFeatureGraphs(self, feature_name, resources, visited, kwargs={}):
+        """ Find all possible resolutions for the given feature_name. """
         if feature_name in visited:
             raise StopIteration()
         visited.add(feature_name)
@@ -73,12 +77,14 @@ class FeatureHyperGraph(object):
             yield res
     
     def iterDependencies(self, dependencies, resources, visited):
-        # Each edge may have several dependencies and each dependency may have several resolutions
+        """ Iterate through all the solutions for each dependency of a single
+        edge. """
         for dependency in dependencies:
             for dependency_graph in self.iterFeatureGraphs(dependency, resources, set(visited)):
                 yield (dependency, dependency_graph)
 
     def initFeatureGraph(self, feature, resource):
+        """ Create a single node FeatureGraph. """
         feature_instance = feature(set([resource]), kwargs=resource.init_args)
         res = FeatureGraph(feature_instance)
         res.addResource(resource)

@@ -1,4 +1,5 @@
 class RequestedFeature(object):
+    """ A feature that the user requests. """
     def __init__(self, name, resources=set(), args={}):
         self.name = name
         self.resources = resources

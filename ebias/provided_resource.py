@@ -1,6 +1,7 @@
 import os
 
 class ProvidedResource(object):
+    """ A resource that the user has provided. """
     def __init__(self, fname, type, name=None, init_args={}):
         self.fname = fname
         self.type = type

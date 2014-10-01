@@ -3,7 +3,18 @@ import re
 from requested_feature import RequestedFeature
 
 class FeatureParser(object):
-    """ -f <name>[:(<key>=<value>)+][:<resource>[,<resource>]*]
+    """ The parser for features from the command line and from feature files.
+        
+    The feature string takes the form of:
+        -f <name>[:(<key>=<value>)+][:<resource>[,<resource>]*]
+    where <name>
+            is the name of the requested feature,
+        (<key>=<value>)+
+            is a list of arguments to the requested feature
+        <resource>
+            is a resource that the requested feature specifically depends upon.
+    
+    An example:
         -f VariantFrequency:sample=B01P01:tmp
     """
     
@@ -12,9 +23,12 @@ class FeatureParser(object):
                             '(?::(?P<part2>[^:]+))?')
     
     def __init__(self, provided_resources):
+        """ Initialise the FeatureParser with a list of resources that the user
+        has provided. """
         self.provided_resources = provided_resources
 
     def parse(self, line):
+        """ Parse a feature string. """
         match = self.PARTS_REGX.match(line)
         name, part1, part2 = match.groups()
         requested_resources = frozenset()
@@ -37,6 +51,8 @@ class FeatureParser(object):
         return RequestedFeature(name, requested_resources, init_args)
     
     def _parseResources(self, resource_part, feature_name):
+        """ Parse a resource from the feature string and check if any requested
+        resources have been provided by the user. """
         try:
             return frozenset([self.provided_resources[r] for r in resource_part.split(',')])
         except KeyError, e:

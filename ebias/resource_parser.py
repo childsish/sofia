@@ -4,7 +4,22 @@ import re
 from ebias.provided_resource import ProvidedResource
 
 class ResourceParser(object):
-    """ -r <fname>[:type=<type>][:<name>][:<kwargs>]
+    """ A parser for resources on the command line and from resource files.
+    
+    The resource string takes the form of:
+        -r <fname>[:type=<type>][:<name>][:<kwargs>]
+    where
+        <fname>
+            is the file name of the resource
+        <type>
+            is the type of entity found in the resource
+        <name>
+            is an alternative name of the resource. This is used when
+            referencing the resource in a feature string.
+        <kwargs>
+            are the arguments passed to a resource upon initialisation
+    
+    An example:
         -r /tmp/tmp.vcf:type=vcf:tmp
     """
     
@@ -14,9 +29,11 @@ class ResourceParser(object):
                       '(?::(?P<part3>[^:]+))?$')
     
     def __init__(self, default_types):
+        """ Initialise with default entity types based on file extension. """
         self.default_types = default_types
     
     def parseResources(self, resource_strings):
+        """ Parse all resource strings in a list. """
         res = {}
         for resource_string in resource_strings:
             resource = self.parseResource(resource_string)
@@ -24,6 +41,7 @@ class ResourceParser(object):
         return res
     
     def parseResource(self, resource_string):
+        """ Parse a resource string. """
         match = self.REGX.match(resource_string)
         if match is None:
             raise ValueError('Unable to parse resource string: %s'%\
@@ -51,6 +69,7 @@ class ResourceParser(object):
         return self.createResource(fname, type, name, init_args)
     
     def createResource(self, fname, type=None, name=None, init_args={}):
+        """ Create a resource. """
         if fname.endswith('.gz'):
             ext = fname.rsplit('.', 2)[1]
         else:
