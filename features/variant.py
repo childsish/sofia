@@ -183,6 +183,6 @@ class VariantCall(Feature):
             return None
         a1, a2 = sample['GT'].split('/')
         if a1 == a2:
-            return 'homozygous_wildtype' if a1 == '0' else 'homozygous_mutant'
-        return 'heterozygous_mutant'
+            return 'homozygous_reference' if a1 == '0' else 'homozygous_variant'
+        return 'heterozygous_variant'
 
