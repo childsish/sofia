@@ -4,7 +4,6 @@ from ebias.resource import Resource, Target
 
 from lhc.file_format.fasta_.set_ import FastaSet as FastaSetParser
 from lhc.file_format.fasta_.iterator import FastaIterator as FastaIteratorParser
-from lhc.file_format.fasta_.index import IndexedFastaFile
 
 class FastaChromosomeSequenceSet(Resource):
     
@@ -15,5 +14,13 @@ class FastaChromosomeSequenceSet(Resource):
     
     def init(self):
         fname = self.getFilename()
-        self.parser = IndexedFastaFile(fname) if os.path.exists('%s.fai'%fname)\
-            else FastaSetParser(FastaIteratorParser(fname))
+        if os.path.exists('%s.fai'%fname):
+           try:
+                from lhc.file_format.fasta_.index import IndexedFastaFile
+                self.parser = IndexedFastaFile(fname)
+                return
+            except ImportError:
+                sys.stderr.write('Pysam not available. Parsing entire file.')
+                pass
+        self.parser = FastaSetParser(FastaIteratorParser(fname))
+

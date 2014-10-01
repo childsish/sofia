@@ -23,7 +23,13 @@ class BedSet(Resource):
 
     def init(self):
         fname = self.getFilename()
-        if fname.endswith('.gz'):
-            from lhc.file_format.bed_.index import IndexedBedFile
-        self.parser = IndexedBedFile(fname) if os.path.exists('%s.tbi'%fname)\
-            else BedSetParser(BedIteratorParser(fname))
+        if os.path.exists('%s.tbi'%fname):
+            try:
+                from lhc.file_format.bed_.index import IndexedBedFile
+                self.parser = IndexedBedFile(fname)
+                return
+            except ImportError:
+                sys.stderr.write('Pysam not available. Parsing entire file.')
+                pass
+        self.parser = BedSetParser(BedIteratorParser(fname))
+

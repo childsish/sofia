@@ -27,8 +27,13 @@ class VcfSet(Resource):
     
     def init(self, style='ensemble', ignore=''):
         fname = self.getFilename()
-        if fname.endswith('.gz'):
-            from lhc.file_format.vcf_.index import IndexedVcfFile
-        self.parser = IndexedVcfFile(fname, style, ignore.split('-'))\
-            if os.path.exists('%s.tbi'%fname) else\
-            VcfSetParser(VcfIteratorParser(fname))
+        if os.path.exists('%s.tbi'):
+            try:
+                from lhc.file_format.vcf_.index import IndexedVcfFile
+                self.parser = IndexedVcfFile(fname, style, ignore.split('-'))
+                return
+            except ImportError:
+                sys.stderr.write('Pysam not available. Parsing entire file.')
+                pass
+        self.parser = VcfSetParser(VcfIteratorParser(fname))
+

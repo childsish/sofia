@@ -1,5 +1,5 @@
-import os
 import sys
+import os
 
 from ebias.resource import Resource, Target
 
@@ -23,7 +23,13 @@ class GtfSet(Resource):
 
     def init(self):
         fname = self.getFilename()
-        if fname.endswith('.gz'):
-            from lhc.file_format.gtf_.index import IndexedGtfFile
-        self.parser = IndexedGtfFile(fname) if os.path.exists('%s.tbi'%fname)\
-            else GtfSetParser(GtfIteratorParser(fname))
+        if os.path.exists('%s.tbi'%fname):
+            try:
+                from lhc.file_format.gtf_.index import IndexedGtfFile
+                self.parser = IndexedGtfFile(fname)
+                return
+            except ImportError:
+                sys.stderr.write('Pysam not available. Parsing entire file.')
+                pass
+        self.parser = GtfSetParser(GtfIteratorParser(fname))
+
