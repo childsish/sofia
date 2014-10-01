@@ -1,4 +1,5 @@
 class Feature(object):
+    """ A feature that can be calculated from resources and other features. """
     
     IN = []
     OUT = []
@@ -11,6 +12,8 @@ class Feature(object):
         self.kwargs = kwargs
     
     def __str__(self):
+        """ Return the name of the feature based on it's resources and
+        arguments. """
         return self.getName()
     
     def init(self):
@@ -81,10 +84,11 @@ class Feature(object):
             features[feature].reset(features)
     
     def getName(self):
+        """ Return the name of the feature based on it's resources and
+        arguments. """
         name = [type(self).__name__]
         if len(self.resources) != 0:
             name.append(','.join(resource.name for resource in self.resources))
         if len(self.kwargs) != 0:
             name.append(','.join('%s=%s'%e for e in self.kwargs.iteritems()))
         return ':'.join(name)
-
