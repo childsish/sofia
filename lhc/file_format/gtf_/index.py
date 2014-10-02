@@ -10,12 +10,12 @@ from lhc.file_format.gtf_.iterator import GtfIterator
 class IndexedGtfFile(object):
     def __init__(self, fname):
         self.fname = os.path.abspath(fname)
-        kiname = '%s.lhci'%self.fname
-        if not os.path.exists(kiname):
-            raise ValueError('File missing key index. '\
-                'Try: python -m lhc.file_formats.gtf index <FILENAME>.')
-        self.key_index = {parts[0]: [parts[1], int(parts[2]), int(parts[3])]\
-            for parts in (line.strip().split('\t') for line in open(kiname))}
+        #kiname = '%s.lhci'%self.fname
+        #if not os.path.exists(kiname):
+        #    raise ValueError('File missing key index. '\
+        #        'Try: python -m lhc.file_formats.gtf index <FILENAME>.')
+        #self.key_index = {parts[0]: [parts[1], int(parts[2]), int(parts[3])]\
+        #    for parts in (line.strip().split('\t') for line in open(kiname))}
         iiname = '%s.tbi'%self.fname
         if not os.path.exists(iiname):
             raise ValueError('File missing interval index. '\
@@ -23,9 +23,9 @@ class IndexedGtfFile(object):
         self.ivl_index = pysam.Tabixfile(self.fname)
     
     def __getitem__(self, key):
-        if isinstance(key, basestring):
-            genes = [self.key_index[key]]
-        elif hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
+        #if isinstance(key, basestring):
+        #    genes = [self.key_index[key]]
+        if hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
             genes = self._getGeneIntervalsInInterval(key.chr, key.pos, key.pos + len(key.ref))
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             genes = self._getGeneIntervalsInInterval(key.chr, key.start, key.stop)
