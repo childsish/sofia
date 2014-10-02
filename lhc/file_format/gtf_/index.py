@@ -33,11 +33,15 @@ class IndexedGtfFile(object):
             raise NotImplementedError('Random access not implemented for %s'%type(key))
         
         genes = [self._completeGene(gene) for gene in genes]
-        if isinstance(key, basestring):
-            for gene in genes:
-                if gene.name == key:
-                    return gene
+        #if isinstance(key, basestring):
+        #    for gene in genes:
+        #        if gene.name == key:
+        #            return gene
         return genes
+
+    def getGenesAtPosition(self, chr, pos):
+        genes = self._getGeneIntervalsInInterval(chr, pos, pos + 1)
+        return [self._completeGene(gene) for gene in genes]
     
     def _getGeneIntervalsInInterval(self, chr, start, stop):
         idx = self.ivl_index
