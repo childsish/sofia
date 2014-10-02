@@ -22,3 +22,6 @@ class BedSet(object):
             raise NotImplementedError('Variant set random access not implemented for type: %s'%type(key))
         return [self.data[v] for k, v in idxs]
 
+    def getIntervalsAtPosition(self, chr, pos):
+        return [self.data[v] for k, v in\
+            self.ivl_index[(chr, Interval(pos, pos + 1))]]

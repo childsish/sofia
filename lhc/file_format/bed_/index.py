@@ -22,3 +22,7 @@ class IndexedBedFile(object):
             raise NotImplementedError('Random access not implemented for %s'%type(key))
         
         return [BedIterator._parseLine(line) for line in lines]
+    
+    def getIntervalsAtPosition(self, chr, pos):
+        return [BedIterator._parseLine(line) for line in\
+            self.index.fetch(chr, pos, pos + 1)]
