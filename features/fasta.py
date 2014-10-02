@@ -15,7 +15,7 @@ class FastaChromosomeSequenceSet(Resource):
     def init(self):
         fname = self.getFilename()
         if os.path.exists('%s.fai'%fname):
-           try:
+            try:
                 from lhc.file_format.fasta_.index import IndexedFastaFile
                 self.parser = IndexedFastaFile(fname)
                 return
