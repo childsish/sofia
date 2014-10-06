@@ -5,7 +5,8 @@ from operator import or_
 from lhc.graph.hyper_graph import HyperGraph
 from error_manager import ERROR_MANAGER
 from feature_graph import FeatureGraph
-from features import Resource, Target
+from feature_wrapper import FeatureWrapper
+from features import Resource, Target, Extractor
 
 class FeatureHyperGraph(object):
     """ A hyper graph of all the possible feature calculation pathways. """
@@ -21,6 +22,9 @@ class FeatureHyperGraph(object):
     
     def registerFeature(self, feature):
         """ Add a feature to the hyper graph. """
+        def getEntityName(entity):
+            return ''.join(part.capitalize() for part in entity.split('_'))
+        
         c_feature = feature.name
         self.features[c_feature] = feature
         self.graph.addVertex(c_feature)
@@ -28,12 +32,31 @@ class FeatureHyperGraph(object):
         for in_ in feature.ins:
             self.ins[in_].add(c_feature)
             self.graph.addEdge(in_, c_feature)
-            for child in self.outs[in_]:
-                self.graph.addEdge(in_, c_feature, child)
+            for in_origin in self.outs[in_]:
+                self.graph.addEdge(in_, c_feature, in_origin)
+            for path in self.entity_graph.getAncestorPaths(in_):
+                extractor = FeatureWrapper(Extractor,
+                    'Extract%sFrom%s'%\
+                        (getEntityName(path[-1]), getEntityName(path[0])),
+                    ins=[path[0]],
+                    outs=[path[-1]],
+                    kwargs={'path': path})
+                for in_origin in self.outs[path[0]]:
+                    self.registerFeature(extractor)
+
         for out in feature.outs:
             self.outs[out].add(c_feature)
-            for parent in self.ins[out]:
-                self.graph.addEdge(out, parent, c_feature)
+            for out_destination in self.ins[out]:
+                self.graph.addEdge(out, out_destination, c_feature)
+            for path in self.entity_graph.getDescendentPaths(out):
+                extractor = FeatureWrapper(Extractor,
+                    'Extract%sFrom%s'%\
+                        (getEntityName(path[-1]), getEntityName(path[0])),
+                    ins=[path[0]],
+                    outs=[path[-1]],
+                    kwargs={'path': path})
+                for out_destination in self.ins[path[-1]]:
+                    self.registerFeature(extractor)
 
     def iterFeatureGraphs(self, feature_name, requested_feature, resources, visited=None):
         """ Find all possible resolutions for the given feature_name. """

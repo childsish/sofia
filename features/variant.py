@@ -6,7 +6,7 @@ class Chromosome(Feature):
     OUT = ['chromosome']
 
     def calculate(self, genomic_position):
-        return genomic_position.chr
+        return genomic_position['chromosome_id']
 
 class Position(Feature):
     
@@ -14,7 +14,7 @@ class Position(Feature):
     OUT = ['position']
     
     def calculate(self, genomic_position):
-        return genomic_position.pos
+        return genomic_position['chromosome_pos']
 
     def format(self, position):
         return str(position + 1)
@@ -28,6 +28,7 @@ class Quality(Feature):
         self.sample = sample
 
     def calculate(self, variant):
+        variant = variant['variant']
         if self.sample is not None:
             if 'Q' in variant.samples[self.sample]:
                 return variant.samples[self.sample]['Q']
@@ -48,6 +49,7 @@ class VariantInfo(Feature):
         self.key = key
     
     def calculate(self, variant):
+        variant = variant['variant']
         if variant is None:
             return None
         if self.key is None:
@@ -64,6 +66,7 @@ class VariantFormat(Feature):
         self.key = key
 
     def calculate(self, variant):
+        variant = variant['variant']
         if self.sample is None and self.key is None:
             return variant.samples
         elif self.sample is not None and self.key is None:
@@ -81,6 +84,7 @@ class Reference(Feature):
     OUT = ['reference']
 
     def calculate(self, variant):
+        variant = variant['variant']
         return variant.ref
 
 class Alternative(Feature):
@@ -89,6 +93,7 @@ class Alternative(Feature):
     OUT = ['alternative']
 
     def calculate(self, variant):
+        variant = variant['variant']
         return variant.alt
 
 class ReferenceCount(Feature):
@@ -100,6 +105,7 @@ class ReferenceCount(Feature):
         self.sample = sample
 
     def calculate(self, variant):
+        variant = variant['variant']
         if self.sample is None:
             return {name: int(data['RO']) if 'RO' in data else 0\
                 for name, data in variant.samples.iteritems()}
@@ -116,6 +122,7 @@ class AlternativeCount(Feature):
         self.total = total[0].lower() == 't'
 
     def calculate(self, variant):
+        variant = variant['variant']
         # TODO: Find a solution for two alt alleles
         res = {name: self._getCount(data) for name, data in\
               variant.samples.iteritems()}\
@@ -142,6 +149,7 @@ class VariantFrequency(Feature):
         self.sample = sample
 
     def calculate(self, variant):
+        variant = variant['variant']
         if self.sample is None:
             return {name: self._getFrequency(sample)\
                 for name, sample in variant.samples.iteritems()}
@@ -173,6 +181,7 @@ class VariantCall(Feature):
         self.sample = sample
     
     def calculate(self, variant):
+        variant = variant['variant']
         if self.sample is None:
             return {name: self._getCall(sample) for name, sample\
                 in variant.samples.iteritems()}
@@ -185,4 +194,3 @@ class VariantCall(Feature):
         if a1 == a2:
             return 'homozygous_reference' if a1 == '0' else 'homozygous_variant'
         return 'heterozygous_variant'
-

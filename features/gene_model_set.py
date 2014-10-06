@@ -6,7 +6,10 @@ class GetGeneModelByPosition(Feature):
     OUT = ['gene_model']
 
     def calculate(self, gene_model_set, genomic_position):
-        gene_model = gene_model_set[genomic_position]
+        #TODO: select correct gene
+        gene_model = gene_model_set.getGenesAtPosition(\
+            genomic_position['chromosome_id'],
+            genomic_position['chromosome_pos'])
         if gene_model is None or len(gene_model) == 0:
             return None 
         return gene_model[0]
@@ -17,7 +20,11 @@ class GetGeneModelByInterval(Feature):
     OUT = ['gene_model']
 
     def calculate(self, gene_model_set, genomic_interval):
-        gene_model = gene_model_set[genomic_interval]
+        #TODO: select correct gene
+        gene_model = gene_model_set.getGenesInInterval(\
+            genomic_interval['chromosome_id'],
+            genomic_interval['start'],
+            genomic_interval['stop'])
         if gene_model is None or len(gene_model) == 0:
             return None
         return gene_model[0]

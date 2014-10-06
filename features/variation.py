@@ -15,6 +15,7 @@ class VariantType(Feature):
     OUT = ['variant_type']
     
     def calculate(self, major_transcript, variant, coding_variant, amino_acid_variant):
+        variant = variant['variant']
         #TODO: Improve intron detection
         if major_transcript is None:
             return ['intergenic_variant']
@@ -64,6 +65,7 @@ class CodingVariation(Feature):
     OUT = ['coding_variant']
     
     def calculate(self, major_transcript, variant):
+        variant = variant['variant']
         if major_transcript is None:
             return None
         ref = variant.ref

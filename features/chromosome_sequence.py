@@ -9,6 +9,7 @@ class HomopolymerLength(Feature):
         self.max_length = max_length
     
     def calculate(self, variant, chromosome_sequence_set):
+        variant = variant['variant']
         res = []
         for alt in variant.alt.split(','):
             indel = len(variant.ref) != len(variant.alt)

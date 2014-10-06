@@ -13,10 +13,13 @@ class VcfIterator(Target):
     TYPE = 'variant'
     PARSER = VcfIteratorParser
     TARGET = True
-    OUT = ['variant', 'genomic_position']
+    OUT = ['variant']
 
     def calculate(self):
-        return self.parser.next()
+        variant = self.parser.next()
+        genomic_position = {'chromosome_id': variant.chr,
+            'chromosome_pos': variant.pos}
+        return {'genomic_position': genomic_position, 'variant': variant}
 
 class VcfSet(Resource):
     """A set of variants parsed from a .vcf file

@@ -1,0 +1,8 @@
+{
+    "variant": ["genomic_position", "ref", "alt*", "qual", "sample*"],
+    "genomic_position": ["chromosome_id", "chromosome_pos"],
+    "sample": ["GT", "GQ", "RO", "AO*"],
+    "gene_model": ["gene_id", "chromosome_id", "transcript*"],
+    "transcript": ["exon*"],
+    "exon": ["exon_start", "exon_stop"]
+}
