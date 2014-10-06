@@ -12,7 +12,7 @@ class BedIterator(Target):
     TYPE = 'genomic_interval'
     PARSER = BedIteratorParser
     TARGET = True
-    OUT = ['genomic_interval_iterator']
+    OUT = ['genomic_interval']
 
 class BedSet(Resource):
     
