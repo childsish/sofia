@@ -45,7 +45,9 @@ class Aggregator(object):
             ERROR_MANAGER.reset()
             sys.stderr.write('    %s - '%\
                 str(feature))
-            possible_graphs = [graph for graph in iterGraphs(feature.name, provided_resources, set(), feature.args) if satisfiesRequest(graph, feature.resources)]
+            possible_graphs = [graph for graph in\
+                iterGraphs(feature.name, feature, provided_resources)\
+                if satisfiesRequest(graph, feature.resources)]
             if len(possible_graphs) == 0:
                 sys.stderr.write('unable to resolve feature.\n')
                 sys.stderr.write('      Possible reasons: \n      * %s\n'%\
