@@ -1,8 +1,8 @@
 import os
-import sys
 
 from lhc.tools import loadPlugins
-from ebias.feature import Feature
+from ebias.features import Feature
+from ebias.feature_wrapper import FeatureWrapper
 from ebias.feature_hyper_graph import FeatureHyperGraph
 
 def loadResource(fname, parsers, format=None):
@@ -19,7 +19,7 @@ def loadFeatureHyperGraph():
     available_features = loadPlugins(os.path.join(program_dir, 'features'), Feature)
     res = FeatureHyperGraph()
     for feature in available_features.itervalues():
-        res.registerFeature(feature)
+        res.registerFeature(FeatureWrapper(feature))
     return res
 
 def getProgramDirectory():

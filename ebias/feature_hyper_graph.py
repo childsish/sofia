@@ -21,19 +21,19 @@ class FeatureHyperGraph(object):
     
     def registerFeature(self, feature):
         """ Add a feature to the hyper graph. """
-        name = feature.__name__
-        self.features[name] = feature
-        self.graph.addVertex(name)
+        c_feature = feature.name
+        self.features[c_feature] = feature
+        self.graph.addVertex(c_feature)
         
-        for in_ in feature.IN:
-            self.ins[in_].add(name)
-            self.graph.addEdge(in_, name)
+        for in_ in feature.ins:
+            self.ins[in_].add(c_feature)
+            self.graph.addEdge(in_, c_feature)
             for child in self.outs[in_]:
-                self.graph.addEdge(in_, name, child)
-        for out in feature.OUT:
-            self.outs[out].add(name)
+                self.graph.addEdge(in_, c_feature, child)
+        for out in feature.outs:
+            self.outs[out].add(c_feature)
             for parent in self.ins[out]:
-                self.graph.addEdge(out, parent, name)
+                self.graph.addEdge(out, parent, c_feature)
 
     def iterFeatureGraphs(self, feature_name, requested_feature, resources, visited=None):
         """ Find all possible resolutions for the given feature_name. """
@@ -44,14 +44,14 @@ class FeatureHyperGraph(object):
         visited.add(feature_name)
         feature = self.features[feature_name]
         
-        if issubclass(feature, Resource):
-            if issubclass(feature, Target) and feature.matches(resources['target']):
+        if issubclass(feature.feature_class, Resource):
+            if issubclass(feature.feature_class, Target) and feature.matches(resources['target']):
                 yield self.initFeatureGraph(feature, resources['target'])
-            elif not issubclass(feature, Target):
+            elif not issubclass(feature.feature_class, Target):
                 hits = set(resource for resource in resources.itervalues()\
-                    if resource.name != 'target' and feature.matches(resource))
+                    if resource.name != 'target' and feature.feature_class.matches(resource))
                 for hit in hits:
-                    yield self.initFeatureGraph(feature, hit)
+                    yield self.initFeatureGraph(feature.feature_class, hit)
             raise StopIteration()
         
         edge_names = sorted(self.graph.vs[feature_name].iterkeys())
