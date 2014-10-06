@@ -4,7 +4,7 @@ import pysam
 from iterator import VcfIterator
 
 class IndexedVcfFile(object):
-    def __init__(self, fname, style='ensemble', ignore=[]):
+    def __init__(self, fname, id_map=None):
         """ Initialise an indexed vcf file.
         
         :param fname: the name of the indexed vcf file.
@@ -18,20 +18,13 @@ class IndexedVcfFile(object):
             raise ValueError('File missing interval index. Try: tabix -p vcf <FILENAME>.')
         self.index = pysam.Tabixfile(self.fname)
         self.iterator = VcfIterator(self.fname)
-        self.style = style
-        self.ignore = set(ignore)
+        self.id_map = id_map
     
     def __getitem__(self, key):
         if not hasattr(key, 'chr'):
             raise NotImplementedError('Random access not implemented for %s'%\
                 type(key))
-        chr = key.chr[3:] if key.chr.startswith('chr') and\
-                self.style == 'ensemble' else\
-              'chr%s'%key.chr if not key.startswith('chr') and\
-                self.style == 'ucsc' else\
-              key.chr
-        if chr in self.ignore:
-            return []
+        chr = self.id_map[key.chr]
         start = key.start if hasattr(key, 'start') else\
                 key.pos if hasattr(key, 'pos') else\
                 None
