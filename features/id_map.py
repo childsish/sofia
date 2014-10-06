@@ -1,5 +1,4 @@
-from ebias.resource import Resource
-from ebias.feature import Feature
+from ebias.features import Feature, Resource
 
 from lhc.file_format.id_map import IdMap as IdMapParser
 

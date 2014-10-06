@@ -1,4 +1,4 @@
-from ebias.feature import Feature
+from ebias.features import Feature
 
 class GetCodingSequenceByGeneModel(Feature):
 

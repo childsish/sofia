@@ -1,5 +1,3 @@
-import sys
-
 from collections import defaultdict
 from itertools import product, izip
 from operator import or_
@@ -7,7 +5,7 @@ from operator import or_
 from lhc.graph.hyper_graph import HyperGraph
 from error_manager import ERROR_MANAGER
 from feature_graph import FeatureGraph
-from resource import Resource, Target
+from features import Resource, Target
 
 class FeatureHyperGraph(object):
     """ A hyper graph of all the possible feature calculation pathways. """

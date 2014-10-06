@@ -1,7 +1,5 @@
-import sys
-
-from error_manager import ERROR_MANAGER
-from ebias.feature import Feature
+from feature import Feature
+from ebias.error_manager import ERROR_MANAGER
 
 class Resource(Feature):
     """ A feature that provides access to a disk based resource. """

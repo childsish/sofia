@@ -1,6 +1,7 @@
 import os
+import sys
 
-from ebias.resource import Resource, Target
+from ebias.features import Resource, Target
 
 from lhc.file_format.id_map import IdMap
 from lhc.file_format.vcf_.iterator import VcfIterator as VcfIteratorParser
