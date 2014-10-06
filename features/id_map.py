@@ -26,3 +26,25 @@ class GetPathwayIdByGeneId(Feature):
         except KeyError:
             pass
         return None
+    
+    def format(self, pathway_id):
+        if isinstance(pathway_id, basestring):
+            return pathway_id
+        return ','.join(pathway_id)
+
+class GetAnnotationByGeneId(Feature):
+
+    IN = ['gene_id', 'id_map']
+    OUT = ['annotation']
+
+    def calculate(self, gene_id, id_map):
+        try:
+            return id_map[gene_id]
+        except KeyError:
+            pass
+        return None
+    
+    def format(self, annotation):
+        if isinstance(annotation, basestring):
+            return annotation
+        return ','.join(annotation)
