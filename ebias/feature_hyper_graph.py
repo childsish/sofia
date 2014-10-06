@@ -37,9 +37,11 @@ class FeatureHyperGraph(object):
             for parent in self.ins[out]:
                 self.graph.addEdge(out, parent, name)
 
-    def iterFeatureGraphs(self, feature_name, resources, visited, kwargs={}):
+    def iterFeatureGraphs(self, feature_name, requested_feature, resources, visited=None):
         """ Find all possible resolutions for the given feature_name. """
-        if feature_name in visited:
+        if visited is None:
+            visited = set()
+        elif feature_name in visited:
             raise StopIteration()
         visited.add(feature_name)
         feature = self.features[feature_name]
@@ -50,16 +52,14 @@ class FeatureHyperGraph(object):
             elif not issubclass(feature, Target):
                 hits = set(resource for resource in resources.itervalues()\
                     if resource.name != 'target' and feature.matches(resource))
-                if len(hits) > 1:
-                    raise ValueError('Multiple resources possible')
-                elif len(hits) == 1:
-                    yield self.initFeatureGraph(feature, list(hits)[0])
+                for hit in hits:
+                    yield self.initFeatureGraph(feature, hit)
             raise StopIteration()
         
         edge_names = sorted(self.graph.vs[feature_name].iterkeys())
         edge_dependencies = []
         for edge_name in edge_names:
-            edge_dependencies.append(list(self.iterDependencies(self.graph.vs[feature_name][edge_name], resources, visited)))
+            edge_dependencies.append(list(self.iterDependencies(self.graph.vs[feature_name][edge_name], requested_feature, resources, visited)))
         
         missing_dependencies = [name for name, dependencies in izip(edge_names, edge_dependencies) if len(dependencies) == 0]
         if len(missing_dependencies) > 0:
@@ -68,7 +68,8 @@ class FeatureHyperGraph(object):
         for cmb in product(*edge_dependencies):
             resources = reduce(or_, (graph.resources for name, graph in cmb))
             dependencies = {edge: dependee_graph.feature.getName() for edge, (dependee, dependee_graph) in izip(edge_names, cmb)}
-            #TODO: Actually wrong place to pass kwargs and could cause bugs
+            kwargs = requested_feature.args\
+                if requested_feature.name == feature_name else {}
             feature_instance = feature(resources, dependencies, kwargs)
             res = FeatureGraph(feature_instance)
             for edge, (dependee, dependee_graph) in izip(edge_names, cmb):
@@ -76,11 +77,11 @@ class FeatureHyperGraph(object):
                 res.update(dependee_graph)
             yield res
     
-    def iterDependencies(self, dependencies, resources, visited):
+    def iterDependencies(self, dependencies, requested_feature, resources, visited):
         """ Iterate through all the solutions for each dependency of a single
         edge. """
         for dependency in dependencies:
-            for dependency_graph in self.iterFeatureGraphs(dependency, resources, set(visited)):
+            for dependency_graph in self.iterFeatureGraphs(dependency, requested_feature, resources, set(visited)):
                 yield (dependency, dependency_graph)
 
     def initFeatureGraph(self, feature, resource):
