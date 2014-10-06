@@ -9,8 +9,6 @@ from ebias.error_manager import ERROR_MANAGER
 from ebias.feature_parser import FeatureParser
 from ebias.resource_parser import ResourceParser
 from ebias.feature_graph import FeatureGraph
-from ebias.requested_feature import RequestedFeature
-from ebias.provided_resource import ProvidedResource
 
 class Aggregator(object):
     def __init__(self):
