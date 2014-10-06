@@ -2,6 +2,7 @@ import os
 
 from ebias.resource import Resource, Target
 
+from lhc.file_format.id_map import IdMap
 from lhc.file_format.vcf_.iterator import VcfIterator as VcfIteratorParser
 from lhc.file_format.vcf_.set_ import VcfSet as VcfSetParser
 
@@ -29,7 +30,7 @@ class VcfSet(Resource):
         if id_map is not None:
             id_map = IdMap(id_map, fr, to)
         fname = self.getFilename()
-        if os.path.exists('%s.tbi'):
+        if os.path.exists('%s.tbi'%fname):
             try:
                 from lhc.file_format.vcf_.index import IndexedVcfFile
                 self.parser = IndexedVcfFile(fname, id_map)
