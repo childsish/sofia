@@ -25,15 +25,16 @@ class VcfSet(Resource):
     PARSER = VcfSetParser
     OUT = ['variant_set']
     
-    def init(self, style='ensemble', ignore=''):
+    def init(self, id_map=None, fr=None, to=None):
+        if id_map is not None:
+            id_map = IdMap(id_map, fr, to)
         fname = self.getFilename()
         if os.path.exists('%s.tbi'):
             try:
                 from lhc.file_format.vcf_.index import IndexedVcfFile
-                self.parser = IndexedVcfFile(fname, style, ignore.split('-'))
+                self.parser = IndexedVcfFile(fname, id_map)
                 return
             except ImportError:
                 sys.stderr.write('Pysam not available. Parsing entire file.')
                 pass
         self.parser = VcfSetParser(VcfIteratorParser(fname))
-
