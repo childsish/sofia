@@ -115,7 +115,7 @@ class FeatureHyperGraph(object):
         feature = self.features[feature_name]
         
         if issubclass(feature.feature_class, Resource):
-            if issubclass(feature.feature_class, Target) and feature.matches(resources['target']):
+            if issubclass(feature.feature_class, Target) and feature.feature_class.matches(resources['target']):
                 yield self.initFeatureGraph(feature, resources['target'])
             elif not issubclass(feature.feature_class, Target):
                 hits = set(resource for resource in resources.itervalues()\
