@@ -1,5 +1,6 @@
 import argparse
 import glob
+import sys
 
 from operator import add
 from vcf_.merger import VcfMerger
@@ -8,10 +9,13 @@ from vcf_.iterator import VcfIterator
 def iterEntries(fname):
     return VcfIterator(fname)
 
-def merge(fnames, quality=50.0, out=None, bams=[]):
-    import sys
-    
-    fnames = reduce(add, (glob.glob(fname) for fname in fnames))
+def merge(glob_fnames, quality=50.0, out=None, bams=[]):
+    fnames = []
+    for glob_fname in glob_fnames:
+        fname = glob.glob(glob_fname)
+        if len(fname) == 0:
+            raise ValueError('%s does not match any existing files'%glob_fname)
+        fnames.extend(fname)
     out = sys.stdout if out is None else open(out, 'w')
     merger = VcfMerger(fnames, quality, bams=bams)
     for key, values in merger.hdrs.iteritems():
@@ -58,5 +62,4 @@ def getArgumentParser():
     return parser
 
 if __name__ == '__main__':
-    import sys
     sys.exit(main())
