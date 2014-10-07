@@ -25,7 +25,6 @@ def merge(glob_fnames, quality=50.0, out=None, bams=[]):
     for entry in merger:
         format = sorted(key for key in entry.samples.itervalues().next().keys()\
             if key != '.')
-        sample = entry.samples
         out.write('%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%(\
             entry.chr,
             entry.pos + 1,
@@ -36,7 +35,7 @@ def merge(glob_fnames, quality=50.0, out=None, bams=[]):
             entry.filter,
             entry.info,
             ':'.join(format),
-            '\t'.join('.' if '.' in sample else
+            '\t'.join('.' if '.' in entry.samples[sample] else
                 ':'.join(entry.samples[sample][f] for f in format)\
                 for sample in merger.sample_names)
         ))
