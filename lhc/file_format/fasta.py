@@ -35,6 +35,21 @@ def _getHeaders(fname):
     fhndl.close()
     return hdrs
 
+def extract(fname, header, out_fname=None):
+    out_fhndl = sys.stdout if out_fname is None else open(out_fname ,'w')
+    fhndl = open(fname)
+    extracting = False
+    for line in fhndl:
+        if line[0] == '>':
+            if extracting:
+                break
+            elif line[1:].startswith(header):
+                extracting = True
+        if extracting:
+            out_fhndl.write(line)
+    fhndl.close()
+    out_fhndl.close()
+
 def main():
     parser = getArgumentParser()
     args = parser.parse_args()
@@ -48,6 +63,12 @@ def getArgumentParser():
     compare_parser.add_argument('input_a')
     compare_parser.add_argument('input_b')
     compare_parser.set_defaults(func=lambda args: compare(args.input_a, args.input_b))
+    
+    extract_parser = subparsers.add_parser('extract')
+    extract_parser.add_argument('input')
+    extract_parser.add_argument('header')
+    extract_parser.add_argument('-o', '--output')
+    extract_parser.set_defaults(func=lambda args: extract(args.input, args.header, args.output))
     
     return parser
 
