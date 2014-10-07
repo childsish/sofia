@@ -18,6 +18,7 @@ class BedIterator(object):
     def __init__(self, fname):
         self.fname = fname
         self.fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
+        self.line_no = 0
     
     def __del__(self):
         if hasattr(self, 'fhndl') and not self.fhndl.closed:
@@ -30,6 +31,7 @@ class BedIterator(object):
         line = self.fhndl.next()
         while line[:5] in ['brows', 'track']: #TODO: remove when bed headers implemented
             line = self.fhndl.next()
+        self.line_no += 1
         return self._parseLine(line)
 
     def seek(self, fpos):
