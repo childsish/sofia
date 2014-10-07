@@ -10,11 +10,12 @@ from features import Resource, Target, Extractor
 
 class FeatureHyperGraph(object):
     """ A hyper graph of all the possible feature calculation pathways. """
-    def __init__(self):
+    def __init__(self, entity_graph):
         self.outs = defaultdict(set)
         self.ins = defaultdict(set)
         self.features = {}
         self.graph = HyperGraph()
+        self.entity_graph = entity_graph
     
     def __str__(self):
         """ Returns a dot formatted representation of the graph. """
@@ -68,7 +69,7 @@ class FeatureHyperGraph(object):
         feature = self.features[feature_name]
         
         if issubclass(feature.feature_class, Resource):
-            if issubclass(feature.feature_class, Target) and feature.matches(resources['target']):
+            if issubclass(feature.feature_class, Target) and feature.feature_class.matches(resources['target']):
                 yield self.initFeatureGraph(feature, resources['target'])
             elif not issubclass(feature.feature_class, Target):
                 hits = set(resource for resource in resources.itervalues()\
