@@ -28,7 +28,10 @@ class FeatureGraph(object):
     def init(self):
         """ Initialise all the features in the graph. """
         for ftr in self.features.itervalues():
-            ftr.init(**ftr.kwargs)
+            try:
+                ftr.init(**ftr.kwargs)
+            except TypeError, e:
+                raise TypeError(e.args[0].replace('init()', type(ftr).__name__))
 
     def update(self, other):
         """ Merge this FeatureGraph with another. """
