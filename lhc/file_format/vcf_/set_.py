@@ -20,5 +20,4 @@ class VcfSet(object):
             idxs = self.ivl_index[(key.chr, key)]
         else:
             raise NotImplementedError('Variant set random access not implemented for type: %s'%type(key))
-        return [self.data[v] for k, v in idxs]
-
+        return [self.data[v] for v in idxs.itervalues()]

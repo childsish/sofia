@@ -25,3 +25,8 @@ class GtfSet(object):
             raise NotImplementedError('Gene model set random access not implemented for %s'%type(key))
         return [self.data[v] for k, v in idxs]
 
+    def getGenesAtPosition(self, chr, pos):
+        return self.getGenesInInterval(chr, pos, pos + 1)
+    
+    def getGenesInInterval(self, chr, start, stop):
+        return [self.data[v] for k, v in self.ivl_index[chr, Interval(start, stop)]]

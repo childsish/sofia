@@ -1,12 +1,10 @@
-import gzip
 import re
 
 from collections import OrderedDict, defaultdict, Counter
-from itertools import count, izip
+from itertools import izip
 from lhc.binf.identifier import Chromosome
 from lhc.collection.sorted_dict import SortedDict
 from iterator import VcfIterator, Variant
-from operator import add
 
 class VcfMerger(object):
     
