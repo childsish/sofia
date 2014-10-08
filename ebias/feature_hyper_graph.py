@@ -135,13 +135,13 @@ class FeatureHyperGraph(object):
         
         for cmb in product(*edge_dependencies):
             resources = reduce(or_, (graph.resources for name, graph in cmb))
-            dependencies = {edge: dependee_graph.feature.getName() for edge, (dependee, dependee_graph) in izip(edge_names, cmb)}
+            dependencies = {edge: dependee_graph.feature.name for edge, (dependee, dependee_graph) in izip(edge_names, cmb)}
             kwargs = requested_feature.args\
                 if requested_feature.name == feature_name else {}
             feature_instance = feature(resources, dependencies, kwargs)
             res = FeatureGraph(feature_instance)
             for edge, (dependee, dependee_graph) in izip(edge_names, cmb):
-                res.addEdge(edge, feature_instance.getName(), dependee)
+                res.addEdge(edge, feature_instance.name, dependee)
                 res.update(dependee_graph)
             yield res
     

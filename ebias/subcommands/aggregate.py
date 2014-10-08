@@ -77,7 +77,7 @@ class Aggregator(object):
         resolved_features = []
         for feature_graph in feature_graphs:
             combined_graph.update(feature_graph)
-            resolved_features.append(feature_graph.feature.getName())
+            resolved_features.append(feature_graph.feature.name)
         return combined_graph, resolved_features
 
 def main(argv):

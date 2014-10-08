@@ -10,11 +10,12 @@ class Feature(object):
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
         self.kwargs = kwargs
+        self.name = self._getName()
     
     def __str__(self):
         """ Return the name of the feature based on it's resources and
         arguments. """
-        return self.getName()
+        return self.name
     
     def init(self):
         """ Initialise the feature.
@@ -52,7 +53,7 @@ class Feature(object):
         :param features: available features
         :type features: dict of features
         """
-        name = self.getName()
+        name = self.name
         if self.calculated:
             return entities[name]
         
@@ -83,7 +84,7 @@ class Feature(object):
         for feature in self.dependencies.itervalues():
             features[feature].reset(features)
     
-    def getName(self):
+    def _getName(self):
         """ Return the name of the feature based on it's resources and
         arguments. """
         name = [type(self).__name__]

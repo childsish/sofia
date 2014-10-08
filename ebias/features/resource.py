@@ -15,15 +15,11 @@ class Resource(Feature):
         resource initialisation.
         """
         self.parser = self.PARSER(self.getFilename())
+        self.name = super(Resource, self)._getName()
     
     def calculate(self):
         """ Return the resource. """
         return self.parser
-    
-    def getName(self):
-        """ Returns the name of the resource based on the customisations
-        provided by the user. """
-        return super(Resource, self).getName()
     
     def getFilename(self):
         """ Returns the filename of the resource. """
@@ -73,6 +69,6 @@ class Target(Resource):
         """ Get the next entity in the resource. """
         return self.parser.next()
 
-    def getName(self):
+    def _getName(self):
         """ Overridden to return unique name. """
         return 'target'

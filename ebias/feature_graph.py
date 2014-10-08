@@ -9,7 +9,7 @@ class FeatureGraph(object):
         self.resources = set()
         
         if feature is not None:
-            feature_name = feature.getName()
+            feature_name = feature.name
             self.features[feature_name] = feature
             self.graph.addVertex(feature_name)
         
