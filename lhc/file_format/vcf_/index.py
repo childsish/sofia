@@ -24,7 +24,8 @@ class IndexedVcfFile(object):
         if not hasattr(key, 'chr'):
             raise NotImplementedError('Random access not implemented for %s'%\
                 type(key))
-        chr = self.id_map[key.chr]
+        #TODO: assumes a single mapping
+        chr = key.chr if self.id_map is None else list(self.id_map[key.chr])[0]
         start = key.start if hasattr(key, 'start') else\
                 key.pos if hasattr(key, 'pos') else\
                 None
