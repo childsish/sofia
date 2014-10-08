@@ -14,9 +14,21 @@ class IdMap(Resource):
             IdMapParser(id_map, fr, to)
         self.parser = IdMapParser(fname, id_map=id_map)
 
+class GeneIdMap(Resource):
+    
+    OUT = ['gene_id_map']
+    EXT = ['.txt', '.txt.gz']
+    TYPE = 'gene_id'
+
+class ChromosomeIdMap(Resource):
+
+    OUT = ['chromosome_id_map']
+    EXT = ['.txt', '.txt.gz']
+    TYPE = 'chromosome_id'
+
 class GetPathwayIdByGeneId(Feature):
     
-    IN = ['gene_id', 'id_map']
+    IN = ['gene_id', 'pathway_id_map']
     OUT = ['pathway_id']
     
     def calculate(self, gene_id, id_map):
@@ -33,7 +45,7 @@ class GetPathwayIdByGeneId(Feature):
 
 class GetAnnotationByGeneId(Feature):
 
-    IN = ['gene_id', 'id_map']
+    IN = ['gene_id', 'annotation_map']
     OUT = ['annotation']
 
     def calculate(self, gene_id, id_map):

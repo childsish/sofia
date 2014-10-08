@@ -3,7 +3,7 @@ from ebias.features import Feature
 class GeneName(Feature):
     
     IN = ['gene_model']
-    OUT = ['gene_id']
+    OUT = ['gene_id:gene_id=hugo']
     
     def calculate(self, gene_model):
         if gene_model is None:
