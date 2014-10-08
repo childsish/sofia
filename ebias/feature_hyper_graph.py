@@ -60,26 +60,6 @@ class FeatureHyperGraph(object):
             self.outs[out].add(c_feature)
             for out_destination in self.ins[out]:
                 self.graph.addEdge(out, out_destination, c_feature)
-            for path in self.entity_graph.getDescendentPaths(out):
-                if len(path) != 2:
-                    continue
-                extractor_name = 'Extract%sFrom%s'%\
-                        (getEntityName(path[-1]), getEntityName(path[0]))
-                extractor = FeatureWrapper(Extractor,
-                    extractor_name,
-                    ins=[path[0]],
-                    outs=[path[-1]],
-                    kwargs={'path': path})
-                self.features[extractor_name] = extractor
-                self.graph.addVertex(extractor_name)
-                self.graph.addEdge(path[0], extractor_name)
-                for in_ in extractor.ins:
-                    self.ins[in_].add(extractor_name)
-                    for in_origin in self.outs[in_]:
-                        self.graph.addEdge(in_, extractor_name, in_origin)
-                self.outs[path[-1]].add(extractor_name)
-                for out_destination in self.ins[path[-1]]:
-                    self.graph.addEdge(path[-1], out_destination, extractor_name)
         
         if feature.feature_class is not Converter and\
                 issubclass(feature.feature_class, Converter):
