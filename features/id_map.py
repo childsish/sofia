@@ -13,24 +13,23 @@ class IdMap(Resource):
         id_map = id_map if id_map is None else\
             IdMapParser(id_map, fr, to)
         self.parser = IdMapParser(fname, id_map=id_map)
+    
+    @classmethod
+    def iterOutput(cls, resource, attr={}):
+        fhndl = open(resource.fname)
+        hdrs = fhndl.next().strip().split('\t')
+        fhndl.close()
+        yield {
+            cls.OUT[0]: {'hdrs': hdrs}
+        }
 
-class GeneIdMap(Resource):
+class GeneIdMap(IdMap):
     
     OUT = ['gene_id_map']
     EXT = ['.txt', '.txt.gz']
     TYPE = 'gene_id'
-    
-    def iterOutput(self):
-        fhndl = open(self.getFilename())
-        hdrs = fhndl.next().strip().split('\t')
-        fhndl.close()
-        return {
-            'gene_id_map': {
-                'hdrs': hdrs
-            }
-        }
 
-class ChromosomeIdMap(Resource):
+class ChromosomeIdMap(IdMap):
 
     OUT = ['chromosome_id_map']
     EXT = ['.txt', '.txt.gz']

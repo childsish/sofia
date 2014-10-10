@@ -85,11 +85,6 @@ class Feature(object):
         for feature in self.dependencies.itervalues():
             features[feature].reset(features)
     
-    def iterOutput(self, **kwargs):
-        #TODO use the entity graph to return proper entities with attributes
-        attrs = self.attrs
-        yield {out: attrs[out] if out in attrs else None for out in self.OUT}
-    
     def _getName(self):
         """ Return the name of the feature based on it's resources and
         arguments. """
@@ -99,3 +94,8 @@ class Feature(object):
         if len(self.kwargs) != 0:
             name.append(','.join('%s=%s'%e for e in self.kwargs.iteritems()))
         return ':'.join(name)
+    
+    @classmethod
+    def iterOutput(cls, attrs={}, **kwargs):
+        #TODO use the entity graph to return proper entities with attributes
+        yield {out: attrs[out] if out in attrs else None for out in cls.OUT}

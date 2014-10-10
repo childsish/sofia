@@ -18,8 +18,9 @@ class Converter(Feature):
         entity[self.path[-1]] = id_map[entity[self.path[-1]]]
         return entity
 
-    def iterOutput(self, id, id_map):
-        for step in self.path[1:]:
+    @classmethod
+    def iterOutput(cls, id, id_map, attr={}):
+        for step in cls.path[1:]:
             id = id[step]
         hdrs = id_map['hdrs']
         if id is None or id not in hdrs:

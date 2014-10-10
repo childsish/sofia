@@ -72,3 +72,7 @@ class Target(Resource):
     def _getName(self):
         """ Overridden to return unique name. """
         return 'target'
+
+    @classmethod
+    def iterOutput(cls, resource, attrs={}):
+        yield cls.OUT
