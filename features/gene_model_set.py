@@ -13,6 +13,14 @@ class GetGeneModelByPosition(Feature):
         if gene_model is None or len(gene_model) == 0:
             return None 
         return gene_model[0]
+    
+    def iterOutput(self, gene_model_set, genomic_position):
+        yield {
+            'gene_model': {
+                'gene_id': gene_model_set['gene_id'],
+                'chromosome_id': gene_model_set['chromosome_id']
+            }
+        }
 
 class GetGeneModelByInterval(Feature):
         
@@ -28,3 +36,11 @@ class GetGeneModelByInterval(Feature):
         if gene_model is None or len(gene_model) == 0:
             return None
         return gene_model[0]
+    
+    def iterOutput(self, gene_model_set, genomic_interval):
+        yield {
+            'gene_model': {
+                'gene_id': gene_model_set['gene_id'],
+                'chromosome_id': gene_model_set['chromosome_id']
+            }
+        }

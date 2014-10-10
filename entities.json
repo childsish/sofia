@@ -1,5 +1,7 @@
 {
     "variant": ["genomic_position"],
+    "variant_set": ["genomic_position"],
     "genomic_position": ["chromosome_id"],
-    "gene_model": ["gene_id", "chromosome_id"]
+    "gene_model": ["gene_id", "chromosome_id"],
+    "gene_model_set": ["gene_id", "chromosome_id"]
 }

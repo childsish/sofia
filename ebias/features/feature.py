@@ -4,12 +4,13 @@ class Feature(object):
     IN = []
     OUT = []
     
-    def __init__(self, resources=None, dependencies=None, kwargs={}):
+    def __init__(self, resources=None, dependencies=None, kwargs={}, attrs={}):
         self.changed = True
         self.calculated = False
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
         self.kwargs = kwargs
+        self.attrs = attrs
         self.name = self._getName()
     
     def __str__(self):
@@ -83,6 +84,11 @@ class Feature(object):
         self.calculated = False
         for feature in self.dependencies.itervalues():
             features[feature].reset(features)
+    
+    def iterOutput(self, **kwargs):
+        #TODO use the entity graph to return proper entities with attributes
+        attrs = self.attrs
+        yield {out: attrs[out] if out in attrs else None for out in self.OUT}
     
     def _getName(self):
         """ Return the name of the feature based on it's resources and

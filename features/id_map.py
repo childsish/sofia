@@ -19,6 +19,16 @@ class GeneIdMap(Resource):
     OUT = ['gene_id_map']
     EXT = ['.txt', '.txt.gz']
     TYPE = 'gene_id'
+    
+    def iterOutput(self):
+        fhndl = open(self.getFilename())
+        hdrs = fhndl.next().strip().split('\t')
+        fhndl.close()
+        return {
+            'gene_id_map': {
+                'hdrs': hdrs
+            }
+        }
 
 class ChromosomeIdMap(Resource):
 
