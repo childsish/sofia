@@ -28,7 +28,7 @@ class VcfMerger(object):
             self.sample_to_bam = {}
             for bam_name in bams:
                 bam = pysam.Samfile(bam_name)
-                sample = bam.header['RG'][0]['SM']
+                sample = bam.header['RG'][0]['SM'].strip()
                 if sample in self.sample_names:
                     self.bams.append(bam)
                     self.sample_to_bam[sample] = bam
@@ -42,7 +42,7 @@ class VcfMerger(object):
         """
         tops = [self._nextLine(idx) for idx in xrange(len(self.iterators))]
         sorted_tops = self._initSorting(tops)
-        
+
         while len(sorted_tops) > 0:
             key, idxs = sorted_tops.popLowest()
             
@@ -66,8 +66,10 @@ class VcfMerger(object):
                     sample_data = top.samples[sample_name]
                     if 'Q' not in format_: format_['Q'] = ''
                     if 'GT' not in format_: format_['GT'] = '0/0'
-                    samples[sample_name] = {'Q': '' if top.qual == '.' else\
-                        '%.4f'%top.qual}
+                    qual = sample_data['Q'] if 'Q' in sample_data else\
+                        '' if top.qual == '.' else\
+                        '%.2f'%top.qual
+                    samples[sample_name] = {'Q': qual}
                     samples[sample_name]['GT'] =\
                         self._getGT(sample_data['GT'], top_alt, alt)
                     if 'GQ' in sample_data:
@@ -119,7 +121,7 @@ class VcfMerger(object):
     
     def _nextLine(self, idx):
         entry = self.iterators[idx].next()
-        while entry.filter != 'PASS' or entry.qual < self.quality:
+        while entry.filter not in ['.', 'PASS'] or entry.qual < self.quality:
             entry = self.iterators[idx].next()
         return entry
     
@@ -161,10 +163,14 @@ class VcfMerger(object):
         ref_start = pos
         ref_stop = pos + len(ref)
         cnt = Counter()
+        rec = sample == '3.2-2D' and pos == 178952102
         for read in bam.fetch(chr, ref_start, ref_stop):
-            read_start, read_stop =\
+            read_start, read_stop, truncated =\
                 self._getReadInterval(read, ref_start, ref_stop)
-            cnt[read.seq[read_start:read_stop]] += 1
+            alt_seq = read.seq[read_start:read_stop]
+            if truncated: # assume reference
+                alt_seq += ref[len(alt_seq):]
+            cnt[alt_seq] += 1
         if cnt[ref] == 0 and all(cnt[a] == 0 for a in alt):
             return None, None
         return str(cnt[ref]), ','.join(str(cnt[a]) for a in alt)
@@ -173,6 +179,7 @@ class VcfMerger(object):
         read_start = 0
         read_stop = 0
         ref_pos = 0
+        truncated = True
         read_pos = read.qstart
         for op, length in read.cigar:
             read_ext = [1, 1, 0, 1, 1, 1, 1, 1, 1][op] * length
@@ -180,9 +187,10 @@ class VcfMerger(object):
             if read.pos + ref_pos + ref_ext > ref_start and read_start == 0:
                 read_start = read_pos + (ref_start - ref_pos - read.pos)
             if read.pos + ref_pos + ref_ext > ref_stop:
-                read_stop = read_pos + (ref_stop - ref_pos - read.pos)
+                truncated = False
                 break
             read_pos += read_ext
             ref_pos += ref_ext
-        return read_start, read_stop
+        read_stop = read_pos + (ref_stop - ref_pos - read.pos)
+        return read_start, read_stop, truncated
 
