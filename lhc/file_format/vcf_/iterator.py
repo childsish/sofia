@@ -84,7 +84,8 @@ class VcfIterator(object):
         if self.FORMAT < len(parts):
             keys = parts[self.FORMAT].split(':')
             for i, sample in enumerate(self.hdrs['##SAMPLES']):
-                res[sample] = {} if parts[self.FORMAT + i + 1] == '.' else\
-                    dict(izip(keys, parts[self.FORMAT + i + 1].strip().split(':')))
+                if parts[self.FORMAT + i + 1] == '.':
+                    continue
+                res[sample] = dict(izip(keys, parts[self.FORMAT + i + 1].strip().split(':')))
         return res
 
