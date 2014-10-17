@@ -1,16 +1,19 @@
+from operator import and_
+from ebias.entity import Entity
+
 class Feature(object):
     """ A feature that can be calculated from resources and other features. """
     
     IN = []
     OUT = []
     
-    def __init__(self, resources=None, dependencies=None, kwargs={}, attrs={}):
+    def __init__(self, resources=None, dependencies=None, kwargs={}, outs=None):
         self.changed = True
         self.calculated = False
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
         self.kwargs = kwargs
-        self.attrs = attrs
+        self.outs = {out: Entity() for out in self.OUT} if outs is None else outs
         self.name = self._getName()
     
     def __str__(self):
@@ -96,6 +99,25 @@ class Feature(object):
         return ':'.join(name)
     
     @classmethod
-    def iterOutput(cls, attrs={}, **kwargs):
+    def iterOutput(cls, ins={}, outs={}, attrs={}):
+        """ Iterate through concrete output possibilities
+        
+        Attributes provided by the user and are interpreted as requested
+        attributes. Attributes found in entities must be propogated.
+        """
         #TODO use the entity graph to return proper entities with attributes
-        yield {out: attrs[out] if out in attrs else None for out in cls.OUT}
+        # Check that input entity attributes match
+        common_attr_names = reduce(and_, (set(entity.attrs) for entity in ins.itervalues()))
+        for name in common_attr_names:
+            attrs = set()
+            for entity in ins.itervalues():
+                attrs[name].add(entity.attrs[name])
+            if len(attrs) > 1:
+                raise StopIteration()
+        
+        # Yield the output entities
+        attrs = {}
+        for entity in ins.itervalues():
+            attrs.update(entity.attrs)
+        yield {out: Entity(attrs) for out in outs}
+        #yield {out: ENTITY_FACTORY.makeEntity(out, attrs) for out in outs}

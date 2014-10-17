@@ -1,4 +1,5 @@
 from ebias.features import Feature, Resource
+from ebias.entity import Entity
 
 from lhc.file_format.id_map import IdMap as IdMapParser
 
@@ -15,12 +16,12 @@ class IdMap(Resource):
         self.parser = IdMapParser(fname, id_map=id_map)
     
     @classmethod
-    def iterOutput(cls, resource, attr={}):
+    def iterOutput(cls, resource):
         fhndl = open(resource.fname)
         hdrs = fhndl.next().strip().split('\t')
         fhndl.close()
-        yield {
-            cls.OUT[0]: {'hdrs': hdrs}
+        yield { 
+            cls.OUT[0]: Entity({'hdrs': hdrs})
         }
 
 class GeneIdMap(IdMap):

@@ -96,12 +96,14 @@ class FeatureHyperGraph(object):
         
         if issubclass(feature.feature_class, Resource):
             if issubclass(feature.feature_class, Target) and feature.feature_class.matches(resources['target']):
-                yield self.initFeatureGraph(feature, resources['target'])
+                for outs in feature.feature_class.iterOutput(resources['target']):
+                    yield self.initFeatureGraph(feature, outs, resources['target'])
             elif not issubclass(feature.feature_class, Target):
                 hits = set(resource for resource in resources.itervalues()\
                     if resource.name != 'target' and feature.feature_class.matches(resource))
                 for hit in hits:
-                    yield self.initFeatureGraph(feature.feature_class, hit)
+                    for outs in feature.feature_class.iterOutput(hit):
+                        yield self.initFeatureGraph(feature.feature_class, outs, hit)
             raise StopIteration()
         
         edge_names = sorted(self.graph.vs[feature_name].iterkeys())
@@ -116,14 +118,16 @@ class FeatureHyperGraph(object):
         for cmb in product(*edge_dependencies):
             resources = reduce(or_, (graph.resources for name, graph in cmb))
             dependencies = {edge: dependee_graph.feature.name for edge, (dependee, dependee_graph) in izip(edge_names, cmb)}
+            ins = {edge: dependee_graph.feature.outs[edge] for edge, (dependee, dependee_graph) in izip(edge_names, cmb)}
             kwargs = requested_feature.args\
                 if requested_feature.name == feature_name else {}
-            feature_instance = feature(resources, dependencies, kwargs)
-            res = FeatureGraph(feature_instance)
-            for edge, (dependee, dependee_graph) in izip(edge_names, cmb):
-                res.addEdge(edge, feature_instance.name, dependee)
-                res.update(dependee_graph)
-            yield res
+            for out in feature.feature_class.iterOutput(ins, feature.outs):
+                feature_instance = feature(resources, dependencies, kwargs, out)
+                res = FeatureGraph(feature_instance)
+                for edge, (dependee, dependee_graph) in izip(edge_names, cmb):
+                    res.addEdge(edge, feature_instance.name, dependee)
+                    res.update(dependee_graph)
+                yield res
     
     def iterDependencies(self, dependencies, requested_feature, resources, visited):
         """ Iterate through all the solutions for each dependency of a single
@@ -132,9 +136,9 @@ class FeatureHyperGraph(object):
             for dependency_graph in self.iterFeatureGraphs(dependency, requested_feature, resources, set(visited)):
                 yield (dependency, dependency_graph)
 
-    def initFeatureGraph(self, feature, resource):
+    def initFeatureGraph(self, feature, outs, resource):
         """ Create a single node FeatureGraph. """
-        feature_instance = feature(set([resource]), kwargs=resource.init_args)
+        feature_instance = feature(set([resource]), {}, resource.init_args, outs)
         res = FeatureGraph(feature_instance)
         res.addResource(resource)
         return res

@@ -1,3 +1,5 @@
+from ebias.entity import Entity
+
 class FeatureWrapper(object):
     def __init__(self, feature_class, name=None, ins=None, outs=None, kwargs={}):
         self.feature_class = feature_class
@@ -6,7 +8,8 @@ class FeatureWrapper(object):
         self.outs = feature_class.OUT if outs is None else outs
         self.kwargs = kwargs
 
-    def __call__(self, resources=None, dependencies=None, kwargs={}):
+    def __call__(self, resources=None, dependencies=None, kwargs={}, outs=None):
         tmp_kwargs = self.kwargs.copy()
         tmp_kwargs.update(kwargs)
-        return self.feature_class(resources, dependencies, tmp_kwargs)
+        outs = {out: Entity() for out in outs} if outs is None else outs
+        return self.feature_class(resources, dependencies, tmp_kwargs, outs)

@@ -1,5 +1,7 @@
 from feature import Feature
 
+from ebias.entity import Entity
+
 class Converter(Feature):
     
     IN = ['id', 'id_map']
@@ -19,11 +21,9 @@ class Converter(Feature):
         return entity
 
     @classmethod
-    def iterOutput(cls, id, id_map, attr={}):
-        for step in cls.path[1:]:
-            id = id[step]
-        hdrs = id_map['hdrs']
+    def iterOutput(cls, ins={}, outs={}, attr={}):
+        hdrs = ins['id_map'].attrs['hdrs']
         if id is None or id not in hdrs:
             raise StopIteration()
         for hdr in hdrs:
-            yield { 'id': hdr }
+            yield { out: Entity({out: hdr}) for out in outs }
