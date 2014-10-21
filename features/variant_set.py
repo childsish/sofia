@@ -4,11 +4,14 @@ class GetVariantByVariant(Feature):
     
     IN = ['variant_set', 'variant']
     OUT = ['variant']
-
+    
     def calculate(self, variant_set, variant):
         variant = variant['variant']
         #TODO: check matched variants
-        overlap = variant_set[variant]
+        try:
+            overlap = variant_set[variant]
+        except ValueError:
+            return None
         hits = [o for o in overlap if o.pos == variant.pos and\
             o.ref == variant.ref and o.alt == variant.alt]
         if len(hits) > 1:

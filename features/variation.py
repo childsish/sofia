@@ -22,8 +22,8 @@ class VariantType(Feature):
         elif coding_variant is None:
             return ['intron_variant']
         res = []
-        for na_alt, aa_alt in izip(variant.alt.split(','), amino_acid_variant.alt):
-            if len(na_alt) == len(variant.ref):
+        for na_alt, aa_alt, fs in izip(variant.alt.split(','), amino_acid_variant.alt, amino_acid_variant.fs):
+            if fs is None:
                 res.append(self._getAminoAcidType(amino_acid_variant.pos, 
                     amino_acid_variant.ref, aa_alt))
             elif len(na_alt) > len(variant.ref):
@@ -103,14 +103,15 @@ class CodingVariation(Feature):
                     res.append('c.%d%s>%s'%(pos + 1, ref, alt))
         return ','.join(res)
 
-CodonVariant = namedtuple('CodonVariant', ['pos', 'ref', 'alt'])
+CodonVariant = namedtuple('CodonVariant', ['pos', 'ref', 'alt', 'fs'])
 
 class CodonVariation(Feature):
     
-    IN = ['coding_variant', 'coding_sequence']
+    IN = ['coding_variant', 'coding_sequence', 'downstream_1000']
     OUT = ['codon_variant']
+    BUFFER = 1000
     
-    def calculate(self, coding_variant, coding_sequence):
+    def calculate(self, coding_variant, coding_sequence, downstream_1000):
         if coding_variant is None:
             return None
         pos = coding_variant.pos
@@ -122,23 +123,32 @@ class CodonVariation(Feature):
             fr = [3, 4, 2][pos % 3]
             to = [2, 4, 3][(pos + len(ref)) % 3]
         alts = []
+        fs = []
         for alt in coding_variant.alt:
-            d = abs(len(ref) - len(alt))
-            if d % 3 != 0:
-                alts.append(None)
+            seq = list(coding_sequence)
+            seq[pos:pos + len(ref)] = list(alt)
+            alts.append(''.join(seq[pos - fr:pos + len(alt) + to]))
+            
+            d = len(ref) - len(alt)
+            if d == 0:
+                fs_pos = None
             else:
-                seq = list(coding_sequence)
-                seq[pos:pos + len(ref)] = list(alt)
-                alts.append(''.join(seq[pos - fr:pos + len(alt) + to]))
+                fs_pos = 0
+                seq = downstream_1000
+                while fs_pos < len(seq) and seq[fs_pos:fs_pos + 3] not in ['TAA', 'TAG', 'TGA']:
+                    fs_pos += 3
+            fs.append(fs_pos)
         ref_codon = coding_sequence[pos - fr:pos + len(ref) + to]
-        return CodonVariant(pos - fr, ref_codon, alts)
+        return CodonVariant(pos - fr, ref_codon, alts, fs)
 
-AminoAcidVariant = namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt'))
+AminoAcidVariant = namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'))
 
 class AminoAcidVariation(Feature):
     
     IN = ['codon_variant']
     OUT = ['amino_acid_variant']
+    
+    BUFFER = 50
 
     ABBREVIATIONS = {
         'A': 'Ala', 'B': 'Asx', 'C': 'Cys', 'D': 'Asp', 'E': 'Glu', 'F': 'Phe',
@@ -158,27 +168,27 @@ class AminoAcidVariation(Feature):
         alts = []
         alts = [None if alt is None else self.gc.translate(alt)\
             for alt in codon_variant.alt]
+        fs = [None if fs_ is None else fs_ / 3 for fs_ in codon_variant.fs]
         return AminoAcidVariant(codon_variant.pos / 3,
-            self.gc.translate(codon_variant.ref), alts)
+            self.gc.translate(codon_variant.ref), alts, fs)
     
     def format(self, amino_acid_variant):
         res = []
         pos = amino_acid_variant.pos
         ref = amino_acid_variant.ref
-        for alt in amino_acid_variant.alt:
-            if alt is None:
-                res.append('')
-            elif len(amino_acid_variant.ref) > len(alt):
+        for alt, fs in izip(amino_acid_variant.alt, amino_acid_variant.fs):
+            r = None
+            if len(amino_acid_variant.ref) > len(alt):
                 d = len(amino_acid_variant.ref) - len(alt)
                 rng = '%d'%(pos + len(ref) - 1,) if d == 1 else\
                     '%d_%d'%(pos + len(ref) - d, pos + len(ref) - 1)
-                res.append('p.%sdel%s'%(rng, ref[-d - 1:-1]))
+                r = 'p.%sdel%s'%(rng, ref[-d - 1:-1])
             elif len(alt) > len(amino_acid_variant.ref):
                 d = len(alt) - len(amino_acid_variant.ref)
                 typ = 'dup' if alt[-d - 1:-1] == ref[-d - 1:-1] else 'ins'
                 rng = '%d'%(pos + len(alt) - 1,) if d == 1 else\
                     '%d_%d'%(pos + len(alt) - d, pos + len(alt) - 1)
-                res.append('p.%s%s%s'%(rng, typ, alt[-d - 1:-1]))
+                r = 'p.%s%s%s'%(rng, typ, alt[-d - 1:-1])
             else:
                 i = 0
                 j = len(ref) - 1
@@ -188,6 +198,9 @@ class AminoAcidVariation(Feature):
                     while ref[j] == alt[j]:
                         j -= 1
                     j += 1
-                res.append('p.%s%d%s'%(ref[i:j + 1], pos + i + 1, alt[i:j + 1]))
+                r = 'p.%s%d%s'%(ref[i:j + 1], pos + i + 1, alt[i:j + 1])
+                if fs is not None:
+                    r += 'fs*%d'%fs
+            res.append(r)
         return ','.join(res)
 

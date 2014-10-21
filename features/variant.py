@@ -29,11 +29,12 @@ class Quality(Feature):
 
     def calculate(self, variant):
         variant = variant['variant']
-        if self.sample is not None:
-            if 'Q' in variant.samples[self.sample]:
-                return variant.samples[self.sample]['Q']
-            return '0'
-        return variant.qual
+        if self.sample is None:
+            return variant.qual
+        elif self.sample not in variant.samples or\
+                'Q' not in variant.samples[self.sample]:
+            return None
+        return variant.samples[self.sample]['Q']
 
     def format(self, quality):
         if isinstance(quality, basestring):
@@ -49,9 +50,9 @@ class VariantInfo(Feature):
         self.key = key
     
     def calculate(self, variant):
-        variant = variant['variant']
         if variant is None:
             return None
+        variant = variant['variant']
         if self.key is None:
             return variant.info
         return variant.info[self.key]
@@ -107,38 +108,65 @@ class ReferenceCount(Feature):
     def calculate(self, variant):
         variant = variant['variant']
         if self.sample is None:
-            return {name: int(data['RO']) if 'RO' in data else 0\
+            return {name: self._getCount(data)\
                 for name, data in variant.samples.iteritems()}
-        data = variant.samples[self.sample]
-        return int(data['RO']) if 'RO' in data else 0
+        elif self.sample not in variant.samples:
+            return None
+        return self._getCount(variant.samples[self.sample])
+    
+    def _getCount(self, sample):
+        return int(sample['RO']) if 'RO' in sample else 0
 
 class AlternativeCount(Feature):
 
     IN = ['variant']
     OUT = ['alternative_count']
 
-    def init(self, sample=None, total='f'):
+    def init(self, sample=None):
         self.sample = sample
-        self.total = total[0].lower() == 't'
 
     def calculate(self, variant):
         variant = variant['variant']
         # TODO: Find a solution for two alt alleles
-        res = {name: self._getCount(data) for name, data in\
-              variant.samples.iteritems()}\
-            if self.sample is None else\
-              self._getCount(variant.samples[self.sample])
-        return res
+        if self.sample is None:
+            return {name: self._getCount(data) for name, data in\
+                variant.samples.iteritems()}
+        elif self.sample not in variant.samples:
+            return None
+        return self._getCount(variant.samples[self.sample])
     
     def _getCount(self, data):
         if 'AO' not in data:
             return 0
         ao = [int(count) for count in data['AO'].split(',')]
-        if self.total:
-            return sum(ao)
-        alleles = set(int(gt) - 1 for gt in data['GT'].split('/') if gt != '0')
-        count = sum(ao[allele] for allele in alleles)
-        return count
+        return sum(ao)
+
+class Depth(Feature):
+
+    IN = ['variant']
+    OUT = ['depth']
+    
+    def init(self, sample=None):
+        self.sample = sample
+
+    def calculate(self, variant):
+        if variant is None:
+            return None
+        variant = variant['variant']
+        if self.sample is None:
+            return {sample: self._getDepth(data)\
+                for sample, data in variant.samples.iteritems()}
+        elif self.sample not in variant.samples:
+            return None
+        return self._getDepth(variant.samples[self.sample])
+    
+    def _getDepth(self, sample):
+        if 'DP' in sample:
+            return sample['DP']
+        elif 'RO' in sample and 'AO' in sample:
+            ao = sum(int(ao) for ao in sample['AO'].split(','))
+            return ao + int(sample['RO'])
+        return None
 
 class VariantFrequency(Feature):
 
@@ -149,10 +177,14 @@ class VariantFrequency(Feature):
         self.sample = sample
 
     def calculate(self, variant):
+        if variant is None:
+            return None
         variant = variant['variant']
         if self.sample is None:
             return {name: self._getFrequency(sample)\
                 for name, sample in variant.samples.iteritems()}
+        elif self.sample not in variant.samples:
+            return None
         return self._getFrequency(variant.samples[self.sample])
     
     def format(self, entity):
@@ -185,6 +217,8 @@ class VariantCall(Feature):
         if self.sample is None:
             return {name: self._getCall(sample) for name, sample\
                 in variant.samples.iteritems()}
+        elif self.sample not in variant.samples:
+            return None
         return self._getCall(variant.samples[self.sample])
 
     def _getCall(self, sample):
