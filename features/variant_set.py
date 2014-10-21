@@ -16,9 +16,7 @@ class GetVariantByVariant(Feature):
         elif len(hits) == 0:
             return None
         variant = hits[0]
-        genomic_position = {'chromosome_id': variant.chr,
-            'chromosome_pos': variant.pos}
-        return {'genomic_position': genomic_position, 'variant': variant}
+        return {'variant': variant}
 
 
 class GetVariantsByGeneModel(Feature):
