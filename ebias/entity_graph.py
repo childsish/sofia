@@ -9,10 +9,14 @@ class EntityGraph(object):
         fhndl.close()
 
         self.graph = Graph()
-        for entity, children in json_obj.iteritems():
+        self.attr = {}
+        for entity, settings in json_obj.iteritems():
             self.graph.addVertex(entity)
-            for child in children:
-                self.graph.addEdge('%s_%s'%(entity, child), entity, child)
+            if 'children' in settings:
+                for child in settings['children']:
+                    self.graph.addEdge('%s_%s'%(entity, child), entity, child)
+            if 'attributes' in settings:
+                self.attr[entity] = settings['attributes']
 
     def getAncestorPaths(self, entity):
         res = []

@@ -11,5 +11,5 @@ class FeatureWrapper(object):
     def __call__(self, resources=None, dependencies=None, kwargs={}, outs=None):
         tmp_kwargs = self.kwargs.copy()
         tmp_kwargs.update(kwargs)
-        outs = {out: Entity() for out in outs} if outs is None else outs
+        outs = {out: Entity(out) for out in outs} if outs is None else outs
         return self.feature_class(resources, dependencies, tmp_kwargs, outs)

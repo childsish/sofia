@@ -6,7 +6,6 @@ class Resource(Feature):
     """ A feature that provides access to a disk based resource. """
     
     EXT = []
-    TYPE = None
     PARSER = None
     
     def init(self):
@@ -48,13 +47,13 @@ class Resource(Feature):
     @classmethod
     def matchesType(cls, resource):
         """ Match the entity type of the disk-based source to this resource. """
-        return cls.TYPE == resource.type
+        return tuple(cls.OUT) == resource.type
 
     @classmethod
     def iterOutput(cls, provided_resource):
-        attrs = provided_resource.attrs
-        yield {out: Entity(attrs) for out in cls.OUT}
-        #yield {out: ENTITY_FACTORY.makeEntity(out, provided_resource.attrs) for out in cls.OUT}
+        attr = provided_resource.attr
+        yield {out: Entity(out, attr) for out in cls.OUT}
+        #yield {out: ENTITY_FACTORY.makeEntity(out, provided_resource.attr) for out in cls.OUT}
 
 class Target(Resource):
     """ The target resource that is to be annotated.
@@ -79,3 +78,8 @@ class Target(Resource):
     def _getName(self):
         """ Overridden to return unique name. """
         return 'target'
+
+    @classmethod
+    def matchesType(cls, resource):
+        """ Match the entity type of the disk-based source to this resource. """
+        return tuple(t + '_set' for t in cls.OUT) == resource.type

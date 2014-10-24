@@ -49,9 +49,9 @@ class VariantInfo(Feature):
         self.key = key
     
     def calculate(self, variant):
-        variant = variant['variant']
         if variant is None:
             return None
+        variant = variant['variant']
         if self.key is None:
             return variant.info
         return variant.info[self.key]

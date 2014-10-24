@@ -1,6 +1,6 @@
 {
     "variant": {
-    	"children": ["genomic_position"],
+    	"children": ["genomic_position"]
     },
     "genomic_position": {
     	"children": ["chromosome_id"]
@@ -14,10 +14,16 @@
     "chromosome_id": {
     	"attributes": ["chromosome_id"]
     },
+    "chromosome_sequence_set": {
+        "attributes": ["chromosome_id"]
+    },
     "variant_set": {
     	"attributes": ["chromosome_id"]
-    }
+    },
     "gene_model_set": {
     	"attributes": ["chromosome_id", "gene_id"]
+    },
+    "genomic_interval_set": {
+        "attributes": ["chromosome_id"]
     }
 }

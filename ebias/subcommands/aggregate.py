@@ -4,7 +4,7 @@ import os
 import sys
 
 from collections import defaultdict
-from common import getProgramDirectory, loadFeatureHyperGraph
+from common import getProgramDirectory, loadFeatureHyperGraph, loadEntityGraph
 from ebias.error_manager import ERROR_MANAGER
 from ebias.feature_parser import FeatureParser
 from ebias.resource_parser import ResourceParser
@@ -144,9 +144,10 @@ def parseProvidedResources(target, resources):
     config = json.load(fhndl)
     fhndl.close()
     default_types = {type['ext']: type['type'] for type in config['default_types']}
-    resource_parser = ResourceParser(default_types)
+    entity_graph = loadEntityGraph()
+    resource_parser = ResourceParser(default_types, entity_graph)
     provided_resources = resource_parser.parseResources(resources)
-    provided_resources['target'] = resource_parser.createResource(target, name='target')
+    provided_resources['target'] = resource_parser.parseResource(target + ' -n target')
     return provided_resources
 
 def parseRequestedFeatures(features, provided_resources):

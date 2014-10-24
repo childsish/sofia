@@ -7,7 +7,6 @@ class IdMap(Resource):
     
     OUT = ['id_map']
     EXT = ['.txt', '.txt.gz']
-    TYPE = 'id'
 
     def init(self, id_map=None, fr=None, to=None):
         fname = self.getFilename()
@@ -21,20 +20,18 @@ class IdMap(Resource):
         hdrs = fhndl.next().strip().split('\t')
         fhndl.close()
         yield { 
-            cls.OUT[0]: Entity({'hdrs': hdrs})
+            cls.OUT[0]: Entity(cls.OUT[0], {'hdrs': hdrs})
         }
 
 class GeneIdMap(IdMap):
     
     OUT = ['gene_id_map']
     EXT = ['.txt', '.txt.gz']
-    TYPE = 'gene_id'
 
 class ChromosomeIdMap(IdMap):
 
     OUT = ['chromosome_id_map']
     EXT = ['.txt', '.txt.gz']
-    TYPE = 'chromosome_id'
 
 class GetPathwayIdByGeneId(Feature):
     

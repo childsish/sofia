@@ -22,8 +22,13 @@ class Converter(Feature):
 
     @classmethod
     def iterOutput(cls, ins={}, outs={}, attr={}):
-        hdrs = ins['id_map'].attrs['hdrs']
+        for k in ins:
+            if k.endswith('_map'):
+                id_map = ins[k]
+            else:
+                id = ins[k]
+        hdrs = id_map.attr['hdrs']
         if id is None or id not in hdrs:
             raise StopIteration()
         for hdr in hdrs:
-            yield { out: Entity({out: hdr}) for out in outs }
+            yield { out: Entity(out, {out: hdr}) for out in outs }

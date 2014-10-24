@@ -1,5 +1,7 @@
+from collections import defaultdict
 from operator import and_
 from ebias.entity import Entity
+from ebias.error_manager import ERROR_MANAGER
 
 class Feature(object):
     """ A feature that can be calculated from resources and other features. """
@@ -13,7 +15,7 @@ class Feature(object):
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
         self.kwargs = kwargs
-        self.outs = {out: Entity() for out in self.OUT} if outs is None else outs
+        self.outs = {out: Entity(out) for out in self.OUT} if outs is None else outs
         self.name = self._getName()
     
     def __str__(self):
@@ -99,7 +101,7 @@ class Feature(object):
         return ':'.join(name)
     
     @classmethod
-    def iterOutput(cls, ins={}, outs={}, attrs={}):
+    def iterOutput(cls, ins={}, outs={}, attr={}):
         """ Iterate through concrete output possibilities
         
         Attributes provided by the user and are interpreted as requested
@@ -107,17 +109,19 @@ class Feature(object):
         """
         #TODO use the entity graph to return proper entities with attributes
         # Check that input entity attributes match
-        common_attr_names = reduce(and_, (set(entity.attrs) for entity in ins.itervalues()))
+        common_attr_names = set.intersection(*[set(entity.attr) for entity in ins.itervalues()])
         for name in common_attr_names:
-            attrs = set()
+            common_attr = set()
             for entity in ins.itervalues():
-                attrs[name].add(entity.attrs[name])
-            if len(attrs) > 1:
+                common_attr.add(entity.attr[name])
+            if len(common_attr) > 1:
+                ERROR_MANAGER.addError('%s could not match %s attributes: %s'%\
+                    (cls.__name__, name, ', '.join('(%s: %s)'%(k, v.attr[name]) for k, v in ins.iteritems())))
                 raise StopIteration()
         
         # Yield the output entities
-        attrs = {}
+        out_attr = {}
         for entity in ins.itervalues():
-            attrs.update(entity.attrs)
-        yield {out: Entity(attrs) for out in outs}
-        #yield {out: ENTITY_FACTORY.makeEntity(out, attrs) for out in outs}
+            out_attr.update(entity.attr)
+        yield {out: Entity(out, out_attr) for out in outs}
+        #yield {out: ENTITY_FACTORY.makeEntity(out, attr) for out in outs}
