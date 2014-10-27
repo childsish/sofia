@@ -72,7 +72,7 @@ class FeatureHyperGraph(object):
                     converter_name,
                     ins=[path[0], id_map],
                     outs=[path[0]],
-                    kwargs={'path': path})
+                    kwargs={'path': path, 'map': id_map})
                 self.features[converter_name] = converter
                 self.graph.addVertex(converter_name)
                 self.graph.addEdge(path[0], converter_name)
@@ -103,7 +103,7 @@ class FeatureHyperGraph(object):
                     if resource.name != 'target' and feature.feature_class.matches(resource))
                 for hit in hits:
                     for outs in feature.feature_class.iterOutput(hit):
-                        yield self.initFeatureGraph(feature.feature_class, outs, hit)
+                        yield self.initFeatureGraph(feature, outs, hit)
             raise StopIteration()
         
         edge_names = sorted(self.graph.vs[feature_name].iterkeys())
@@ -124,7 +124,7 @@ class FeatureHyperGraph(object):
             found = False
             for out in feature.feature_class.iterOutput(ins, feature.outs):
                 found = True
-                feature_instance = feature(resources, dependencies, kwargs, out)
+                feature_instance = feature(resources, dependencies, kwargs, ins, out)
                 res = FeatureGraph(feature_instance)
                 for edge, dependee_graph in izip(edge_names, cmb):
                     res.addEdge(edge, feature_instance.name, dependee_graph.feature.name)
@@ -142,7 +142,7 @@ class FeatureHyperGraph(object):
 
     def initFeatureGraph(self, feature, outs, resource):
         """ Create a single node FeatureGraph. """
-        feature_instance = feature(set([resource]), {}, resource.param, outs)
+        feature_instance = feature(set([resource]), {}, resource.param, {}, outs)
         res = FeatureGraph(feature_instance)
         res.addResource(resource)
         return res

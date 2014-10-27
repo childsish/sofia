@@ -1,3 +1,4 @@
+from itertools import izip
 from ebias.entity import Entity
 
 class FeatureWrapper(object):
@@ -8,8 +9,9 @@ class FeatureWrapper(object):
         self.outs = feature_class.OUT if outs is None else outs
         self.kwargs = kwargs
 
-    def __call__(self, resources=None, dependencies=None, kwargs={}, outs=None):
+    def __call__(self, resources=None, dependencies=None, kwargs={}, ins=None, outs=None):
         tmp_kwargs = self.kwargs.copy()
         tmp_kwargs.update(kwargs)
+        #ins = dict(izip(self.ins, self.feature_class.IN))
         outs = {out: Entity(out) for out in outs} if outs is None else outs
-        return self.feature_class(resources, dependencies, tmp_kwargs, outs)
+        return self.feature_class(resources, dependencies, tmp_kwargs, ins, outs)

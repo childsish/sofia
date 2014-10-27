@@ -12,7 +12,7 @@ class IdMap(Resource):
         fname = self.getFilename()
         id_map = id_map if id_map is None else\
             IdMapParser(id_map, fr, to)
-        self.parser = IdMapParser(fname, id_map=id_map)
+        self.parser = IdMapParser(fname)
     
     @classmethod
     def iterOutput(cls, resource):

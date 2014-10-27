@@ -6,17 +6,23 @@ class GetVariantByVariant(Feature):
     OUT = ['variant']
 
     def calculate(self, variant_set, variant):
-        variant = variant['variant']
         #TODO: check matched variants
-        overlap = variant_set[variant]
-        hits = [o for o in overlap if o.pos == variant.pos and\
-            o.ref == variant.ref and o.alt == variant.alt]
+        if variant is None:
+            return None
+        chr = variant['genomic_position']['chromosome_id']
+        pos = variant['genomic_position']['chromosome_pos']
+        overlap = variant_set.getVariantsAtPosition(chr, pos)
+        hits = [o for o in overlap if o.pos == pos and\
+            o.ref == variant['variant'].ref and o.alt == variant['variant'].alt]
         if len(hits) > 1:
             raise ValueError('Too many hits')
         elif len(hits) == 0:
             return None
         variant = hits[0]
-        return {'variant': variant}
+        return {'variant': variant, 'genomic_position': {
+            'chromosome_id': variant.chr,
+            'chromosome_pos': variant.pos
+        }}
 
 
 class GetVariantsByGeneModel(Feature):
