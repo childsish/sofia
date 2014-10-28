@@ -10,7 +10,7 @@ class Graph(object):
         res = ['digraph %s {'%self.name]
         for v1, es in self.vs.iteritems():
             for e, v2 in es.iteritems():
-                res.append('    %s -> %s [label="%s"];'%(v1, v2, e))
+                res.append('    "%s" -> "%s" [label="%s"];'%(v1, v2, e))
         res.append('}')
         return '\n'.join(res)
     
