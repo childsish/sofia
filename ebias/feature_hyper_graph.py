@@ -35,26 +35,23 @@ class FeatureHyperGraph(object):
             self.graph.addEdge(in_, c_feature)
             for in_origin in self.outs[in_]:
                 self.graph.addEdge(in_, c_feature, in_origin)
-            for path in self.entity_graph.getAncestorPaths(in_):
-                if len(path) != 2:
-                    continue
+            for in_, out in ((path[0], path[-1]) for path in self.entity_graph.getAncestorPaths(in_) if len(path) == 2):
                 extractor_name = 'Extract%sFrom%s'%\
-                        (getEntityName(path[-1]), getEntityName(path[0]))
+                        (getEntityName(out), getEntityName(in_))
                 extractor = FeatureWrapper(Extractor,
                     extractor_name,
-                    ins=[path[0]],
-                    outs={path[-1]: self.entity_graph.createEntity(path[-1])},
-                    kwargs={'path': path})
+                    ins={in_: self.entity_graph.createEntity(in_)},
+                    outs={out: self.entity_graph.createEntity(out)},
+                    kwargs={'path': [in_, out]})
                 self.features[extractor_name] = extractor
                 self.graph.addVertex(extractor_name)
-                self.graph.addEdge(path[0], extractor_name)
-                for in_ in extractor.ins:
-                    self.ins[in_].add(extractor_name)
-                    for in_origin in self.outs[in_]:
-                        self.graph.addEdge(in_, extractor_name, in_origin)
-                self.outs[path[-1]].add(extractor_name)
-                for out_destination in self.ins[path[-1]]:
-                    self.graph.addEdge(path[-1], out_destination, extractor_name)
+                self.graph.addEdge(in_, extractor_name)
+                self.ins[in_].add(extractor_name)
+                for in_origin in self.outs[in_]:
+                    self.graph.addEdge(in_, extractor_name, in_origin)
+                self.outs[out].add(extractor_name)
+                for out_destination in self.ins[out]:
+                    self.graph.addEdge(out, out_destination, extractor_name)
 
         for out in feature.outs:
             self.outs[out].add(c_feature)
@@ -93,20 +90,20 @@ class FeatureHyperGraph(object):
             raise StopIteration()
         visited.add(feature_name)
         feature = self.features[feature_name]
-        print feature_name
+        #print feature_name
         
         if issubclass(feature.feature_class, Resource):
             if issubclass(feature.feature_class, Target) and feature.feature_class.matches(resources['target']):
                 for outs in feature.iterOutput({'resource': resources['target']}):
                     res = self.initFeatureGraph(feature, outs, resources['target'])
-                    print '', feature_name, res.feature.getAttributes()
+                    #print '', feature_name, res.feature.getAttributes()
                     yield res
             elif not issubclass(feature.feature_class, Target):
                 hits = set(resource for resource in resources.itervalues()\
                     if resource.name != 'target' and feature.feature_class.matches(resource))
                 for hit in hits:
                     for outs in feature.iterOutput({'resource': hit}):
-                        print '', feature_name
+                        #print '', feature_name
                         yield self.initFeatureGraph(feature, outs, hit)
             raise StopIteration()
         
@@ -118,16 +115,16 @@ class FeatureHyperGraph(object):
                 dependencies = {edge: partial_solution.feature.name for edge, partial_solution in izip(edge_names, partial_solutions)}
                 kwargs = requested_feature.args\
                     if requested_feature.name == feature_name else {}
-                feature_instance = feature(resources_, dependencies, kwargs, outs=outs)
+                feature_instance = feature(resources_, dependencies, kwargs, ins, outs)
                 res = FeatureGraph(feature_instance)
                 for edge, partial_solution in izip(edge_names, partial_solutions):
                     res.addEdge(edge, feature_instance.name, partial_solution.feature.name)
                     res.update(partial_solution)
-                print 'Here', feature_name
-                print [(edge, partial_solution.feature.name) for edge, partial_solution in izip(edge_names, partial_solutions)]
-                print [(edge, partial_solution.feature.outs[edge].attr) for edge, partial_solution in izip(edge_names, partial_solutions)]
-                print res.feature.getAttributes()
-                print res
+                #print 'Here', feature_name
+                #print [(edge, partial_solution.feature.name) for edge, partial_solution in izip(edge_names, partial_solutions)]
+                #print [(edge, partial_solution.feature.outs[edge].attr) for edge, partial_solution in izip(edge_names, partial_solutions)]
+                #print res.feature.getAttributes()
+                #print res
                 yield res
 
     def iterDependencies(self, feature_name, edge_idx, outs, solution, requested_feature, resources, visited):
@@ -140,11 +137,11 @@ class FeatureHyperGraph(object):
             found_partial_solution = False
             for partial_solution in self.iterFeatureGraphs(dep, requested_feature, resources, set(visited)):
                 if not self.outputsMatch(outs, partial_solution.feature.outs[edge_name].attr):
-                    ERROR_MANAGER.addError('%s could not match %s attributes: %s'%\
-                        (feature_name, name, ', '.join('(%s: %s)'%(k, v.attr[name]) for k, v in ins.iteritems())))
+                    ERROR_MANAGER.addError('%s resolving edge %s: %s attributes conflicts with partial solution. %s vs. %s'%\
+                        (feature_name, edge_name, dep, partial_solution.feature.outs[edge_name].attr, outs))
                     continue
                 found_partial_solution = True
-                outs.update(partial_solution.feature.outs)
+                outs.update(partial_solution.feature.outs[edge_name].attr)
                 solution.append(partial_solution)
                 for graph, outs_ in self.iterDependencies(feature_name, edge_idx + 1, outs, solution, requested_feature, resources, visited):
                     yield graph, outs_
@@ -152,8 +149,8 @@ class FeatureHyperGraph(object):
                 ERROR_MANAGER.addError('%s can not resolve dependency: %s'%(feature_name, dep))
         
     def outputsMatch(self, out_a, out_b):
-        for attr_name in set(out_a) & set(out_b):
-            if len(set(out_a[name]) | set(out_b[name])) > 1:
+        for name in set(out_a) & set(out_b):
+            if out_a[name] != out_b[name]:
                 return False
         return True
         
