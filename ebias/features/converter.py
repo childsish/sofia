@@ -24,7 +24,7 @@ class Converter(Feature):
             entity = entity[step]
         entity[self.path[-1]] = id_map.mapIdentifier(fr, to, entity[self.path[-1]])
         return res
-
+    
     @classmethod
     def iterOutput(cls, ins={}, outs={}, attr={}):
         for k in cls.IN:

@@ -43,7 +43,7 @@ class FeatureHyperGraph(object):
                 extractor = FeatureWrapper(Extractor,
                     extractor_name,
                     ins=[path[0]],
-                    outs=[path[-1]],
+                    outs={path[-1]: self.entity_graph.createEntity(path[-1])},
                     kwargs={'path': path})
                 self.features[extractor_name] = extractor
                 self.graph.addVertex(extractor_name)
@@ -71,7 +71,7 @@ class FeatureHyperGraph(object):
                 converter = FeatureWrapper(feature.feature_class,
                     converter_name,
                     ins=[path[0], id_map],
-                    outs=[path[0]],
+                    outs={path[0]: self.entity_graph.createEntity(path[0])},
                     kwargs={'path': path, 'map': id_map})
                 self.features[converter_name] = converter
                 self.graph.addVertex(converter_name)
@@ -107,39 +107,47 @@ class FeatureHyperGraph(object):
             raise StopIteration()
         
         edge_names = sorted(self.graph.vs[feature_name].iterkeys())
-        edge_dependencies = []
-        for edge_name in edge_names:
-            edge_dependencies.append(list(self.iterDependencies(self.graph.vs[feature_name][edge_name], requested_feature, resources, visited)))
-        
-        missing_dependencies = [name for name, dependencies in izip(edge_names, edge_dependencies) if len(dependencies) == 0]
-        if len(missing_dependencies) > 0:
-            ERROR_MANAGER.addError('%s is missing dependencies: %s'%(feature_name, ','.join(missing_dependencies)))
-        
-        for cmb in product(*edge_dependencies):
-            resources = reduce(or_, (graph.resources for graph in cmb))
-            dependencies = {edge: dependee_graph.feature.name for edge, dependee_graph in izip(edge_names, cmb)}
-            ins = {edge: dependee_graph.feature.outs[edge] for edge, dependee_graph in izip(edge_names, cmb)}
-            kwargs = requested_feature.args\
-                if requested_feature.name == feature_name else {}
-            found = False
-            for out in feature.feature_class.iterOutput(ins, feature.outs):
-                found = True
-                feature_instance = feature(resources, dependencies, kwargs, ins, out)
+        for partial_solutions, ins in self.iterDependencies(feature_name, 0, {}, [], requested_feature, resources, visited):
+            print feature_name
+            for outs in feature.feature_class.iterOutput(ins):
+                resources_ = reduce(or_, (graph.resources for graph in partial_solutions))
+                dependencies = {edge: partial_solution.feature.name for edge, partial_solution in izip(edge_names, partial_solutions)}
+                kwargs = requested_feature.args\
+                    if requested_feature.name == feature_name else {}
+                feature_instance = feature(resources_, dependencies, kwargs)
                 res = FeatureGraph(feature_instance)
-                for edge, dependee_graph in izip(edge_names, cmb):
-                    res.addEdge(edge, feature_instance.name, dependee_graph.feature.name)
-                    res.update(dependee_graph)
+                for edge, partial_solution in izip(edge_names, partial_solutions):
+                    res.addEdge(edge, feature_instance.name, partial_solution.feature.name)
+                    res.update(partial_solution)
                 yield res
-            if not found:
-                ERROR_MANAGER.addError('%s dependencies have non-matching attributes'%feature_name)
-    
-    def iterDependencies(self, dependencies, requested_feature, resources, visited):
-        """ Iterate through all the solutions for each dependency of a single
-        edge. """
-        for dependency in dependencies:
-            for dependency_graph in self.iterFeatureGraphs(dependency, requested_feature, resources, set(visited)):
-                yield dependency_graph
 
+    def iterDependencies(self, feature_name, edge_idx, outs, solution, requested_feature, resources, visited):
+        edge_names = sorted(self.graph.vs[feature_name].iterkeys())
+        if edge_idx == len(edge_names):
+            yield solution, outs
+            raise StopIteration()
+        edge_name = edge_names[edge_idx]
+        for dep in self.graph.vs[feature_name][edge_name]:
+            found_partial_solution = False
+            for partial_solution in self.iterFeatureGraphs(dep, requested_feature, resources, set(visited)):
+                if not self.outputsMatch(outs, partial_solution.feature.outs[edge_name].attr):
+                    ERROR_MANAGER.addError('%s could not match %s attributes: %s'%\
+                        (feature_name, name, ', '.join('(%s: %s)'%(k, v.attr[name]) for k, v in ins.iteritems())))
+                    continue
+                found_partial_solution = True
+                outs.update(partial_solution.feature.outs)
+                solution.append(partial_solution)
+                for graph, outs_ in self.iterDependencies(feature_name, edge_idx + 1, outs, solution, requested_feature, resources, visited):
+                    yield graph, outs_
+            if not found_partial_solution:
+                ERROR_MANAGER.addError('%s can not resolve dependency: %s'%(feature_name, dep))
+        
+    def outputsMatch(self, out_a, out_b):
+        for attr_name in set(out_a) & set(out_b):
+            if len(set(out_a[name]) | set(out_b[name])) > 1:
+                return False
+        return True
+        
     def initFeatureGraph(self, feature, outs, resource):
         """ Create a single node FeatureGraph. """
         feature_instance = feature(set([resource]), {}, resource.param, {}, outs)

@@ -1,5 +1,6 @@
 import json
 
+from ebias.entity import Entity
 from lhc.graph.graph import Graph
 
 class EntityGraph(object):
@@ -38,3 +39,13 @@ class EntityGraph(object):
                     stk.append(path + [child])
                     res.append(path + [child])
         return res
+
+    def createEntity(self, name):
+        attr = {}
+        for path in [[name]] + self.getDescendentPaths(name):
+            for step in path:
+                if step not in self.attr:
+                    continue
+                for name in self.attr[step]:
+                    attr[name] = None
+        return Entity(name, attr)
