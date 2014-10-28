@@ -15,8 +15,8 @@ class IdMap(Resource):
         self.parser = IdMapParser(fname)
     
     @classmethod
-    def iterOutput(cls, resource):
-        fhndl = open(resource.fname)
+    def iterOutput(cls, ins, outs):
+        fhndl = open(ins['resource'].fname)
         hdrs = fhndl.next().strip().split('\t')
         fhndl.close()
         yield { 

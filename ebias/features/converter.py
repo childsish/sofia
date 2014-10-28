@@ -41,6 +41,8 @@ class Converter(Feature):
                 (cls.__name__, id_key, id, ','.join(hdrs)))
             raise StopIteration()
         for hdr in hdrs:
+            if id.attr[id_key] == hdr:
+                continue
             attr = id.attr.copy()
             attr[id_key] = hdr
             yield { out: Entity(out, attr) for out in outs }

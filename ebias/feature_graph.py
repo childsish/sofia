@@ -12,6 +12,7 @@ class FeatureGraph(object):
             feature_name = feature.name
             self.features[feature_name] = feature
             self.graph.addVertex(feature_name)
+            self.graph.name = type(feature).__name__
         
     def __str__(self):
         """ Returns a dot formatted representation of the graph. """

@@ -93,32 +93,41 @@ class FeatureHyperGraph(object):
             raise StopIteration()
         visited.add(feature_name)
         feature = self.features[feature_name]
+        print feature_name
         
         if issubclass(feature.feature_class, Resource):
             if issubclass(feature.feature_class, Target) and feature.feature_class.matches(resources['target']):
-                for outs in feature.feature_class.iterOutput(resources['target']):
-                    yield self.initFeatureGraph(feature, outs, resources['target'])
+                for outs in feature.iterOutput({'resource': resources['target']}):
+                    res = self.initFeatureGraph(feature, outs, resources['target'])
+                    print '', feature_name, res.feature.getAttributes()
+                    yield res
             elif not issubclass(feature.feature_class, Target):
                 hits = set(resource for resource in resources.itervalues()\
                     if resource.name != 'target' and feature.feature_class.matches(resource))
                 for hit in hits:
-                    for outs in feature.feature_class.iterOutput(hit):
+                    for outs in feature.iterOutput({'resource': hit}):
+                        print '', feature_name
                         yield self.initFeatureGraph(feature, outs, hit)
             raise StopIteration()
         
         edge_names = sorted(self.graph.vs[feature_name].iterkeys())
         for partial_solutions, ins in self.iterDependencies(feature_name, 0, {}, [], requested_feature, resources, visited):
-            print feature_name
-            for outs in feature.feature_class.iterOutput(ins):
+            ins = {edge: partial_solution.feature.outs[edge] for edge, partial_solution in izip(edge_names, partial_solutions)}
+            for outs in feature.iterOutput(ins):
                 resources_ = reduce(or_, (graph.resources for graph in partial_solutions))
                 dependencies = {edge: partial_solution.feature.name for edge, partial_solution in izip(edge_names, partial_solutions)}
                 kwargs = requested_feature.args\
                     if requested_feature.name == feature_name else {}
-                feature_instance = feature(resources_, dependencies, kwargs)
+                feature_instance = feature(resources_, dependencies, kwargs, outs=outs)
                 res = FeatureGraph(feature_instance)
                 for edge, partial_solution in izip(edge_names, partial_solutions):
                     res.addEdge(edge, feature_instance.name, partial_solution.feature.name)
                     res.update(partial_solution)
+                print 'Here', feature_name
+                print [(edge, partial_solution.feature.name) for edge, partial_solution in izip(edge_names, partial_solutions)]
+                print [(edge, partial_solution.feature.outs[edge].attr) for edge, partial_solution in izip(edge_names, partial_solutions)]
+                print res.feature.getAttributes()
+                print res
                 yield res
 
     def iterDependencies(self, feature_name, edge_idx, outs, solution, requested_feature, resources, visited):

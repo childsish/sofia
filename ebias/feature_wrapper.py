@@ -16,3 +16,7 @@ class FeatureWrapper(object):
         #ins = dict(izip(self.ins, self.feature_class.IN))
         outs = self.outs if outs is None else outs
         return self.feature_class(resources, dependencies, tmp_kwargs, ins, outs)
+
+    def iterOutput(self, ins):
+        for outs in self.feature_class.iterOutput(ins, self.outs):
+            yield outs

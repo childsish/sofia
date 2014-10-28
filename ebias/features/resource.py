@@ -50,9 +50,9 @@ class Resource(Feature):
         return tuple(cls.OUT) == resource.type
 
     @classmethod
-    def iterOutput(cls, provided_resource):
-        attr = provided_resource.attr
-        yield {out: Entity(out, attr) for out in cls.OUT}
+    def iterOutput(cls, ins={}, outs={}):
+        attr = ins['resource'].attr
+        yield {out: Entity(out, attr) for out in outs}
         #yield {out: ENTITY_FACTORY.makeEntity(out, provided_resource.attr) for out in cls.OUT}
 
 class Target(Resource):
@@ -75,9 +75,9 @@ class Target(Resource):
         """ Get the next entity in the resource. """
         return self.parser.next()
 
-    def _getName(self):
-        """ Overridden to return unique name. """
-        return 'target'
+    #def _getName(self):
+    #    """ Overridden to return unique name. """
+    #    return 'target'
 
     @classmethod
     def matchesType(cls, resource):
