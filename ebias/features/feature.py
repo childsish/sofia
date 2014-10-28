@@ -1,15 +1,22 @@
+from collections import defaultdict
+from operator import and_
+from ebias.entity import Entity
+from ebias.error_manager import ERROR_MANAGER
+
 class Feature(object):
     """ A feature that can be calculated from resources and other features. """
     
     IN = []
     OUT = []
     
-    def __init__(self, resources=None, dependencies=None, kwargs={}):
+    def __init__(self, resources=None, dependencies=None, kwargs={}, ins=None, outs=None):
         self.changed = True
         self.calculated = False
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
         self.kwargs = kwargs
+        self.ins = {in_: in_ for in_ in self.IN} if ins is None else ins
+        self.outs = {out: Entity(out) for out in self.OUT} if outs is None else outs
         self.name = self._getName()
     
     def __str__(self):
@@ -84,12 +91,57 @@ class Feature(object):
         for feature in self.dependencies.itervalues():
             features[feature].reset(features)
     
+    def getAttributes(self):
+        res = {}
+        for out in self.outs.itervalues():
+            res.update(out.attr)
+        return res
+    
     def _getName(self):
         """ Return the name of the feature based on it's resources and
         arguments. """
         name = [type(self).__name__]
         if len(self.resources) != 0:
-            name.append(','.join(resource.name for resource in self.resources))
+            tmp = ','.join(resource.name for resource in self.resources\
+                if resource.name != 'target')
+            if len(tmp) > 0:
+                name.append('-r ' + tmp)
         if len(self.kwargs) != 0:
-            name.append(','.join('%s=%s'%e for e in self.kwargs.iteritems()))
-        return ':'.join(name)
+            tmp = ','.join('%s=%s'%e for e in self.kwargs.iteritems())
+            name.append('-p ' + tmp)
+        if len(self.outs) != 0:
+            tmp = []
+            for entity in self.outs.itervalues():
+                tmp.extend((k, v) for k, v in entity.attr.iteritems()\
+                    if v is not None)
+            tmp = ','.join('%s=%s'%e for e in tmp)
+            if len(tmp) > 0:
+                name.append('-a ' + tmp)
+        return '\\n'.join(name)
+    
+    @classmethod
+    def iterOutput(cls, ins={}, outs={}):
+        """ Iterate through concrete output possibilities
+        
+        Attributes provided by the user and are interpreted as requested
+        attributes. Attributes found in entities must be propogated.
+        """
+        #TODO use the entity graph to return proper entities with attributes
+        # Check that input entity attributes match
+        common_attr_names = set.intersection(*[set(entity.attr) for entity in ins.itervalues()])
+        for name in common_attr_names:
+            common_attr = set()
+            for entity in ins.itervalues():
+                common_attr.add(entity.attr[name])
+            if len(common_attr) > 1:
+                ERROR_MANAGER.addError('%s could not match %s attributes: %s'%\
+                    (cls.__name__, name, ', '.join('(%s: %s)'%(k, v.attr[name]) for k, v in ins.iteritems())))
+                raise StopIteration()
+        
+        # Yield the output entities
+        out_attr = {}
+        for entity in ins.itervalues():
+            out_attr.update(entity.attr)
+        outs = {out: Entity(out, out_attr) for out in outs}
+        yield outs
+        #yield {out: ENTITY_FACTORY.makeEntity(out, attr) for out in outs}

@@ -1,8 +1,8 @@
 {
 	"default_types": [
-		{ "ext": "vcf", "type": "variant" },
-		{ "ext": "gtf", "type": "gene_model" },
-		{ "ext": "fasta", "type": "chromosome_sequence" },
-		{ "ext": "bed", "type": "genomic_interval" }
+		{ "ext": "vcf", "type": ["variant_set"] },
+		{ "ext": "gtf", "type": ["gene_model_set"] },
+		{ "ext": "fasta", "type": ["chromosome_sequence_set"] },
+		{ "ext": "bed", "type": ["genomic_interval_set"] }
 	]
 }

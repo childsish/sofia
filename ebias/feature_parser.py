@@ -32,7 +32,7 @@ class FeatureParser(object):
         match = self.PARTS_REGX.match(line)
         name, part1, part2 = match.groups()
         requested_resources = frozenset()
-        init_args = {}
+        param = {}
         
         if part2 is not None:
             if '=' in part1 and '=' in part2:
@@ -40,15 +40,15 @@ class FeatureParser(object):
             elif '=' not in part1 and '=' not in part2:
                 raise ValueError('Feature requested resources have been defined twice.')
             if '=' in part2:
-                init_args = dict(p.split('=', 1) for p in part2.split(','))
+                param = dict(p.split('=', 1) for p in part2.split(','))
             else:
                 requested_resources = self._parseResources(part2, name)
         if part1 is not None:
             if '=' in part1:
-                init_args = dict(p.split('=', 1) for p in part1.split(','))
+                param = dict(p.split('=', 1) for p in part1.split(','))
             else:
                 requested_resources = self._parseResources(part1, name)
-        return RequestedFeature(name, requested_resources, init_args)
+        return RequestedFeature(name, requested_resources, param)
     
     def _parseResources(self, resource_part, feature_name):
         """ Parse a resource from the feature string and check if any requested

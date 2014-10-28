@@ -1,36 +1,41 @@
+import argparse
 import os
-import re
 
 from ebias.provided_resource import ProvidedResource
+
+class ArgumentDictionary(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string):
+        setattr(namespace, self.dest, dict(v.split('=', 1) for v in values))
 
 class ResourceParser(object):
     """ A parser for resources on the command line and from resource files.
     
     The resource string takes the form of:
-        -r <fname>[:type=<type>][:<name>][:<kwargs>]
+        -r "[-n NAME] [-t TYPE] [-p PARAM] [-a ATTR] resource"
     where
-        <fname>
+        resource
             is the file name of the resource
-        <type>
-            is the type of entity found in the resource
-        <name>
+        NAME
             is an alternative name of the resource. This is used when
             referencing the resource in a feature string.
-        <kwargs>
+        TYPE
+            is the type of entity found in the resource
+        PARAM
             are the arguments passed to a resource upon initialisation
+        ATTR
+            are the attributes of the resource
     
     An example:
-        -r /tmp/tmp.vcf:type=vcf:tmp
+        -r /tmp/tmp.vcf
+        -r "/tmp/tmp.vcf -n tmp -t vcf"
+        -r "tmp.vcf -n tmp -t vcf -k x=x y=y -a chromosome_id=ucsc"
     """
     
-    REGX = re.compile('^(?P<fname>(?:[\w]:)?[^:]+)' +\
-                      '(?::(?P<part1>[^:]+))?' +\
-                      '(?::(?P<part2>[^:]+))?' +\
-                      '(?::(?P<part3>[^:]+))?$')
-    
-    def __init__(self, default_types):
+    def __init__(self, default_types, entity_graph):
         """ Initialise with default entity types based on file extension. """
         self.default_types = default_types
+        self.entity_graph = entity_graph
+        self.parser = self._defineParser()
     
     def parseResources(self, resource_strings):
         """ Parse all resource strings in a list. """
@@ -42,40 +47,36 @@ class ResourceParser(object):
     
     def parseResource(self, resource_string):
         """ Parse a resource string. """
-        match = self.REGX.match(resource_string)
-        if match is None:
-            raise ValueError('Unable to parse resource string: %s'%\
-                resource_string)
-        fname = match.group('fname')
-        type = None
-        name = None
-        init_args = {}
-        for part in match.groups()[1:]:
-            if part is None:
-                continue
-            elif part.startswith('type='):
-                if type is not None:
-                    raise ValueError('Resource type specified multiple times')
-                type = part[5:]
-            elif '=' in part:
-                if len(init_args) > 0:
-                    raise ValueError('Resource initialisation arguments '\
-                        'specified multiple times')
-                init_args = dict(p.split('=') for p in part.split(','))
-            else:
-                if name is not None:
-                    raise ValueError('Resource name specified multiple times')
-                name = part
-        return self.createResource(fname, type, name, init_args)
+        args = self.parser.parse_args(resource_string.split())
+        types = self._getTypes(args.resource, args.type)
+        attr = self._getAttr(types, args.attr)
+        return ProvidedResource(args.resource, types, args.name, args.param, attr)
     
-    def createResource(self, fname, type=None, name=None, init_args={}):
+    def _getTypes(self, fname, type=None):
         """ Create a resource. """
-        if fname.endswith('.gz'):
-            ext = fname.rsplit('.', 2)[1]
-        else:
-            ext = fname.rsplit('.', 1)[1]
+        ext = fname.rsplit('.', 2)[1] if fname.endswith('.gz') else\
+            fname.rsplit('.', 1)[1]
         if type is None and ext not in self.default_types:
             raise ValueError('Unable to determine type of biological information stored in %s'%fname)
-        type = self.default_types[ext] if type is None else type
-        name = os.path.basename(fname) if name is None else name
-        return ProvidedResource(fname, type, name, init_args)
+        res = self.default_types[ext] if type is None else type.split(',')
+        return tuple(res)
+    
+    def _getAttr(self, types, attr):
+        res = {}
+        for type in types:
+            tmp = {a: None for a in self.entity_graph.attr[type]}\
+                if type in self.entity_graph.attr else {}
+            res.update(tmp)
+        res.update(attr)
+        return res
+    
+    def _defineParser(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('resource')
+        parser.add_argument('-n', '--name')
+        parser.add_argument('-t', '--type')
+        parser.add_argument('-p', '--param', action=ArgumentDictionary,
+            nargs='+', default={})
+        parser.add_argument('-a', '--attr', action=ArgumentDictionary,
+            nargs='+', default={})
+        return parser

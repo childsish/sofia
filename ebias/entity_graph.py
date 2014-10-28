@@ -1,5 +1,6 @@
 import json
 
+from ebias.entity import Entity
 from lhc.graph.graph import Graph
 
 class EntityGraph(object):
@@ -9,10 +10,14 @@ class EntityGraph(object):
         fhndl.close()
 
         self.graph = Graph()
-        for entity, children in json_obj.iteritems():
+        self.attr = {}
+        for entity, settings in json_obj.iteritems():
             self.graph.addVertex(entity)
-            for child in children:
-                self.graph.addEdge('%s_%s'%(entity, child), entity, child)
+            if 'children' in settings:
+                for child in settings['children']:
+                    self.graph.addEdge('%s_%s'%(entity, child), entity, child)
+            if 'attributes' in settings:
+                self.attr[entity] = settings['attributes']
 
     def getAncestorPaths(self, entity):
         res = []
@@ -34,3 +39,13 @@ class EntityGraph(object):
                     stk.append(path + [child])
                     res.append(path + [child])
         return res
+
+    def createEntity(self, name):
+        attr = {}
+        for path in [[name]] + self.getDescendentPaths(name):
+            for step in path:
+                if step not in self.attr:
+                    continue
+                for name in self.attr[step]:
+                    attr[name] = None
+        return Entity(name, attr)

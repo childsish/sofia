@@ -20,7 +20,6 @@ def loadFeatureHyperGraph():
     available_features = loadPlugins(os.path.join(program_dir, 'features'), Feature)
     res = FeatureHyperGraph(loadEntityGraph())
     for feature in available_features.itervalues():
-        wrapper = FeatureWrapper(feature)
         res.registerFeature(FeatureWrapper(feature))
     return res
 

@@ -32,4 +32,3 @@ class GtfSet(Resource):
                 sys.stderr.write('Pysam not available. Parsing entire file.')
                 pass
         self.parser = GtfSetParser(GtfIteratorParser(fname))
-

@@ -10,7 +10,6 @@ from lhc.file_format.vcf_.set_ import VcfSet as VcfSetParser
 class VcfIterator(Target):
     
     EXT = ['.vcf', '.vcf.gz']
-    TYPE = 'variant'
     PARSER = VcfIteratorParser
     TARGET = True
     OUT = ['variant']
@@ -26,7 +25,6 @@ class VcfSet(Resource):
     """
     
     EXT = ['.vcf', '.vcf.gz']
-    TYPE = 'variant'
     PARSER = VcfSetParser
     OUT = ['variant_set']
     
