@@ -145,7 +145,7 @@ class FeatureHyperGraph(object):
                 solution.append(partial_solution)
                 for graph, outs_ in self.iterDependencies(feature_name, edge_idx + 1, outs, solution, requested_feature, resources, visited):
                     yield graph, outs_
-            if not found_partial_solution:
+            if not found_partial_solution and dep != feature_name:
                 ERROR_MANAGER.addError('%s can not resolve dependency: %s'%(feature_name, dep))
         
     def outputsMatch(self, out_a, out_b):
