@@ -37,3 +37,11 @@ class IndexedVcfFile(object):
                start + 1
         lines = self.index.fetch(chr, start, stop)
         return [self.iterator._parseLine(line) for line in lines]
+    
+    def getVariantsAtPosition(self, chr, pos):
+        lines = self.index.fetch(chr, pos, pos + 1)
+        return [self.iterator._parseLine(line) for line in lines]
+    
+    def getVariantsInInterval(self, chr, start, stop):
+        line = self.index.fetch(chr, start, stop)
+        return [self.iterator._parseLine(line) for line in lines]
