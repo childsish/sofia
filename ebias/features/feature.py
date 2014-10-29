@@ -120,11 +120,11 @@ class Feature(object):
         return '\\n'.join(name)
     
     @classmethod
-    def iterOutput(cls, ins={}, outs={}):
-        """ Iterate through concrete output possibilities
-        
-        Attributes provided by the user and are interpreted as requested
-        attributes. Attributes found in entities must be propogated.
+    def getOutput(cls, ins={}, outs={}, requested_attr={}):
+        """ Determine the attributes of the outputs
+
+        Given the provided and requested attributes, determine the output
+        attributes.
         """
         #TODO use the entity graph to return proper entities with attributes
         # Check that input entity attributes match
@@ -136,12 +136,12 @@ class Feature(object):
             if len(common_attr) > 1:
                 ERROR_MANAGER.addError('%s could not match %s attributes: %s'%\
                     (cls.__name__, name, ', '.join('(%s: %s)'%(k, v.attr[name]) for k, v in ins.iteritems())))
-                raise StopIteration()
+                return None
         
         # Yield the output entities
         out_attr = {}
         for entity in ins.itervalues():
             out_attr.update(entity.attr)
         outs = {out: Entity(out, out_attr) for out in outs}
-        yield outs
-        #yield {out: ENTITY_FACTORY.makeEntity(out, attr) for out in outs}
+        return outs
+        #return {out: ENTITY_FACTORY.makeEntity(out, attr) for out in outs}
