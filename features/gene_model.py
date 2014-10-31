@@ -8,7 +8,7 @@ class GeneName(Feature):
     def calculate(self, gene_model):
         if gene_model is None:
             return ''
-        return gene_model.name
+        return gene_model['gene_id']
 
 class MajorTranscript(Feature):
     
@@ -18,7 +18,7 @@ class MajorTranscript(Feature):
     def calculate(self, gene_model):
         if gene_model is None:
             return None
-        return gene_model.getMajorTranscript()
+        return gene_model['gene_model'].getMajorTranscript()
     
     def format(self, major_transcript):
         return major_transcript.name
