@@ -36,8 +36,7 @@ class SolutionIterator(object):
         
         resources = reduce(or_, (graph.resources for graph in solutions))
         dependencies = {e: s.feature.name for e, s in izip(self.edges, solutions)}
-        feature_wrapper = self.graph.features[self.feature.name]
-        feature_instance = feature_wrapper(resources, dependencies, ins, outs)
+        feature_instance = self.feature(resources, dependencies, ins, outs)
         res = FeatureGraph(feature_instance)
         for e, s in izip(self.edges, solutions):
             res.addEdge(e, feature_instance.name, s.feature.name)

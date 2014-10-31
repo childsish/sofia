@@ -131,8 +131,7 @@ def aggregate(args):
     provided_resources.update(parseProvidedResources(args.input,
         args.resources))
     
-    requested_features = [ftr for ftr in\
-        parseRequestedFeatures(args.features, provided_resources)]
+    requested_features = parseRequestedFeatures(args.features, provided_resources)
     if args.feature_list is not None:
         fhndl = open(args.feature_list)
         requested_features.extend(parseRequestedFeatures(fhndl.read().split(), provided_resources))
