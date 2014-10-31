@@ -9,12 +9,12 @@ class Feature(object):
     IN = []
     OUT = []
     
-    def __init__(self, resources=None, dependencies=None, kwargs={}, ins=None, outs=None):
+    def __init__(self, resources=None, dependencies=None, param={}, ins=None, outs=None):
         self.changed = True
         self.calculated = False
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
-        self.kwargs = kwargs
+        self.param = param
         self.ins = {in_: in_ for in_ in self.IN} if ins is None else ins
         self.outs = {out: Entity(out) for out in self.OUT} if outs is None else outs
         self.name = self._getName()
@@ -106,8 +106,8 @@ class Feature(object):
                 if resource.name != 'target')
             if len(tmp) > 0:
                 name.append('-r ' + tmp)
-        if len(self.kwargs) != 0:
-            tmp = ','.join('%s=%s'%e for e in self.kwargs.iteritems())
+        if len(self.param) != 0:
+            tmp = ','.join('%s=%s'%e for e in self.param.iteritems())
             name.append('-p ' + tmp)
         if len(self.outs) != 0:
             tmp = []

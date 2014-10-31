@@ -30,7 +30,7 @@ class FeatureGraph(object):
         """ Initialise all the features in the graph. """
         for ftr in self.features.itervalues():
             try:
-                ftr.init(**ftr.kwargs)
+                ftr.init(**ftr.param)
             except TypeError, e:
                 raise TypeError(e.args[0].replace('init()', type(ftr).__name__))
 

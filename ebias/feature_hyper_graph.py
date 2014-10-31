@@ -47,6 +47,7 @@ class FeatureHyperGraph(object):
                     extractor_name,
                     ins={in_: self.entity_graph.createEntity(in_)},
                     outs={out: self.entity_graph.createEntity(out)},
+                    param={'path': [in_, out]},
                     attr={'path': [in_, out]})
                 self.features[extractor_name] = extractor
                 self.graph.addVertex(extractor_name)
