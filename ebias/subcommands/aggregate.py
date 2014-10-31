@@ -9,6 +9,8 @@ from ebias.error_manager import ERROR_MANAGER
 from ebias.feature_parser import FeatureParser
 from ebias.resource_parser import ResourceParser
 from ebias.feature_graph import FeatureGraph
+from ebias.solution_iterator import SolutionIterator
+from ebias.feature_wrapper import FeatureWrapper
 
 class Aggregator(object):
     def __init__(self):
@@ -37,14 +39,20 @@ class Aggregator(object):
         def satisfiesRequest(graph, requested_resources):
             return graph.resources.intersection(requested_resources) == requested_resources
         
-        iterGraphs = self.hyper_graph.iterFeatureGraphs
         feature_graphs = []
         for feature in requested_features:
             ERROR_MANAGER.reset()
             sys.stderr.write('    %s - '%\
                 str(feature))
-            possible_graphs = [graph for graph in\
-                iterGraphs(feature.name, feature, provided_resources)\
+            old_feature_wrapper = self.hyper_graph.features[feature.name]
+            feature_wrapper = FeatureWrapper(old_feature_wrapper.feature_class,
+                old_feature_wrapper.name,
+                old_feature_wrapper.ins,
+                old_feature_wrapper.outs,
+                feature.param,
+                feature.attr)
+            solution_iterator = SolutionIterator(feature_wrapper, self.hyper_graph, provided_resources)
+            possible_graphs = [graph for graph in solution_iterator\
                 if satisfiesRequest(graph, feature.resources)]
             if len(possible_graphs) == 0:
                 sys.stderr.write('unable to resolve feature.\n')
