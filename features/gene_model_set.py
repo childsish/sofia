@@ -11,8 +11,9 @@ class GetGeneModelByPosition(Feature):
             genomic_position['chromosome_id'],
             genomic_position['chromosome_pos'])
         if gene_model is None or len(gene_model) == 0:
-            return None 
-        return gene_model[0]
+            return None
+        gene = gene_model[0]
+        return {'gene_id': gene.name, 'chromosome_id': gene.ivl.chr, 'gene_model': gene_model[0]}
 
 class GetGeneModelByInterval(Feature):
         
@@ -27,4 +28,5 @@ class GetGeneModelByInterval(Feature):
             genomic_interval['stop'])
         if gene_model is None or len(gene_model) == 0:
             return None
-        return gene_model[0]
+        gene = gene_model[0]
+        return {'gene_id': gene.name, 'chromosome_id': gene.ivl.chr, 'gene_model': gene_model[0]}

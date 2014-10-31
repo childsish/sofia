@@ -26,7 +26,7 @@ class Converter(Feature):
         return res
     
     @classmethod
-    def iterOutput(cls, ins={}, outs={}, attr={}):
+    def getOutput(cls, ins={}, outs={}, requested_attr={}):
         for k in cls.IN:
             if not k.endswith('_map'):
                 id_key = k
@@ -35,14 +35,14 @@ class Converter(Feature):
                 id_map = ins[k]
             else:
                 id = ins[k]
+        in_attr = {}
+        for in_ in ins.itervalues():
+            in_attr.update(in_.attr)
+        if id_key not in requested_attr or requested_attr[id_key] is None or in_attr[id_key] == requested_attr[id_key]:
+            return None
         hdrs = id_map.attr['hdrs']
-        if id.attr[id_key] not in hdrs:
+        if in_attr[id_key] not in hdrs or requested_attr[id_key] not in hdrs:
             ERROR_MANAGER.addError('%s could not find %s %s in %s'%\
                 (cls.__name__, id_key, id, ','.join(hdrs)))
-            raise StopIteration()
-        for hdr in hdrs:
-            if id.attr[id_key] == hdr:
-                continue
-            attr = id.attr.copy()
-            attr[id_key] = hdr
-            yield { out: Entity(out, attr) for out in outs }
+            return None
+        return { out: Entity(out, requested_attr) for out in outs }

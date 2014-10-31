@@ -50,10 +50,10 @@ class Resource(Feature):
         return tuple(cls.OUT) == resource.type
 
     @classmethod
-    def iterOutput(cls, ins={}, outs={}):
+    def getOutput(cls, ins={}, outs={}, attr={}):
         attr = ins['resource'].attr
-        yield {out: Entity(out, attr) for out in outs}
-        #yield {out: ENTITY_FACTORY.makeEntity(out, provided_resource.attr) for out in cls.OUT}
+        return {out: Entity(out, attr) for out in outs}
+        #return {out: ENTITY_FACTORY.makeEntity(out, provided_resource.attr) for out in cls.OUT}
 
 class Target(Resource):
     """ The target resource that is to be annotated.

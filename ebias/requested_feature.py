@@ -1,14 +1,15 @@
 class RequestedFeature(object):
     """ A feature that the user requests. """
-    def __init__(self, name, resources=set(), args={}):
+    def __init__(self, name, resources=set(), param={}, attr={}):
         self.name = name
         self.resources = resources
-        self.args = args
+        self.param = param
+        self.attr = attr
     
     def __str__(self):
         res = [self.name]
-        if len(self.args) > 0:
-            res.append(','.join('%s=%s'%e for e in sorted(self.args.iteritems())))
+        if len(self.param) > 0:
+            res.append(','.join('%s=%s'%e for e in sorted(self.param.iteritems())))
         if len(self.resources) > 0:
             res.append(','.join(r.name for r in self.resources))
         return ':'.join(res)

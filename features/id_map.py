@@ -15,11 +15,11 @@ class IdMap(Resource):
         self.parser = IdMapParser(fname)
     
     @classmethod
-    def iterOutput(cls, ins, outs):
+    def getOutput(cls, ins={}, outs={}, attr={}):
         fhndl = open(ins['resource'].fname)
         hdrs = fhndl.next().strip().split('\t')
         fhndl.close()
-        yield { 
+        return { 
             cls.OUT[0]: Entity(cls.OUT[0], {'hdrs': hdrs})
         }
 
