@@ -1,5 +1,3 @@
-from collections import defaultdict
-from operator import or_
 from itertools import izip
 
 class IdMap(object):
