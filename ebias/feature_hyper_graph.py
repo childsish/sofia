@@ -75,6 +75,7 @@ class FeatureHyperGraph(object):
                     converter_name,
                     ins=[path[0], id_map],
                     outs={path[0]: self.entity_graph.createEntity(path[0])},
+                    param={'path': path, 'map': id_map},
                     attr={'path': path, 'map': id_map})
                 self.features[converter_name] = converter
                 self.graph.addVertex(converter_name)
