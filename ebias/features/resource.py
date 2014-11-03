@@ -20,10 +20,6 @@ class Resource(Feature):
         """ Check if a disk-based source matches this resource. """
         match_ext = cls.matchesExtension(resource)
         match_type = cls.matchesType(resource)
-        if match_ext and not match_type:
-            ERROR_MANAGER.addError('%s matches extension but not type'%cls.__name__)
-        elif match_type and not match_ext:
-            ERROR_MANAGER.addError('%s matches type but not extension'%cls.__name__)
         return match_ext and match_type
     
     @classmethod

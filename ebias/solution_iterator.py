@@ -91,7 +91,8 @@ class ResourceSolutionIterator(object):
 
     def next(self, requested_attr=None):
         if len(self.hits) == 0:
-            ERROR_MANAGER.addError('No resource provided for %s'%self.feature.name)
+            ERROR_MANAGER.addError('%s does not match any provided resource'%\
+                self.feature.name)
         if self.c_hit == len(self.hits):
             raise StopIteration()
         self.c_hit += 1
