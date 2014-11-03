@@ -11,7 +11,6 @@ class VcfIterator(Target):
     
     EXT = ['.vcf', '.vcf.gz']
     PARSER = VcfIteratorParser
-    TARGET = True
     OUT = ['variant']
 
     def calculate(self):

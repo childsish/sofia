@@ -11,7 +11,6 @@ class BedIterator(Target):
     EXT = ['.bed', '.bed.gz']
     TYPE = 'genomic_interval'
     PARSER = BedIteratorParser
-    TARGET = True
     OUT = ['genomic_interval']
 
 class BedSet(Resource):
