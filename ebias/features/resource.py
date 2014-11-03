@@ -6,16 +6,6 @@ class Resource(Feature):
     """ A feature that provides access to a disk based resource. """
     
     EXT = []
-    PARSER = None
-    
-    def init(self):
-        """ Initialise the resource using the given parser.
-        
-        This function can be overridden to accept arguments and customise
-        resource initialisation.
-        """
-        self.parser = self.PARSER(self.getFilename())
-        self.name = super(Resource, self)._getName()
     
     def calculate(self):
         """ Return the resource. """

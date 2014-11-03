@@ -10,8 +10,10 @@ from lhc.file_format.vcf_.set_ import VcfSet as VcfSetParser
 class VcfIterator(Target):
     
     EXT = ['.vcf', '.vcf.gz']
-    PARSER = VcfIteratorParser
     OUT = ['variant']
+    
+    def init(self):
+        self.parser = VcfIteratorParser(self.getFilename())
 
     def calculate(self):
         variant = self.parser.next()
@@ -24,7 +26,6 @@ class VcfSet(Resource):
     """
     
     EXT = ['.vcf', '.vcf.gz']
-    PARSER = VcfSetParser
     OUT = ['variant_set']
     
     def init(self, id_map=None, fr=None, to=None):

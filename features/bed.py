@@ -10,14 +10,15 @@ class BedIterator(Target):
     
     EXT = ['.bed', '.bed.gz']
     TYPE = 'genomic_interval'
-    PARSER = BedIteratorParser
     OUT = ['genomic_interval']
+    
+    def init(self):
+        self.parser = BedIteratorParser(self.getFilename())
 
 class BedSet(Resource):
     
     EXT = ['.bed', '.bed.gz']
     TYPE = 'genomic_interval'
-    PARSER = BedSetParser
     OUT = ['genomic_interval_set']
 
     def init(self):
