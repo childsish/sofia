@@ -27,22 +27,18 @@ class Converter(Feature):
     
     @classmethod
     def getOutput(cls, ins={}, outs={}, requested_attr={}):
-        for k in cls.IN:
-            if not k.endswith('_map'):
-                id_key = k
         for k in ins:
             if k.endswith('_map'):
-                id_map = ins[k]
+                id_map_key = k
             else:
-                id = ins[k]
-        in_attr = {}
-        for in_ in ins.itervalues():
-            in_attr.update(in_.attr)
-        if id_key not in requested_attr or requested_attr[id_key] is None or in_attr[id_key] == requested_attr[id_key]:
+                id_key = k
+        id_map = ins[id_map_key]
+        id = ins[id_key]
+        if id_key not in requested_attr or requested_attr[id_key] is None or id.attr[id_key] == requested_attr[id_key]:
             return None
         hdrs = id_map.attr['hdrs']
-        if in_attr[id_key] not in hdrs or requested_attr[id_key] not in hdrs:
-            ERROR_MANAGER.addError('%s could not find %s %s in %s'%\
-                (cls.__name__, id_key, id, ','.join(hdrs)))
+        if id.attr[id_key] not in hdrs or requested_attr[id_key] not in hdrs:
+            ERROR_MANAGER.addError('%s could not find %s "%s" among %s'%\
+                (cls.__name__, id_key, id.attr[id_key], ','.join(hdrs)))
             return None
         return { out: Entity(out, requested_attr) for out in outs }
