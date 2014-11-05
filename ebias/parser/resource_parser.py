@@ -1,11 +1,8 @@
 import argparse
 import os
 
-from ebias.provided_resource import ProvidedResource
-
-class ArgumentDictionary(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        setattr(namespace, self.dest, dict(v.split('=', 1) for v in values))
+from argument_dictionary import ArgumentDictionary
+from provided_resource import ProvidedResource
 
 class ResourceParser(object):
     """ A parser for resources on the command line and from resource files.
