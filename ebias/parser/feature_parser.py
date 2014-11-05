@@ -57,3 +57,13 @@ class FeatureParser(object):
             return frozenset([self.provided_resources[r] for r in resource_part.split(',')])
         except KeyError, e:
             raise KeyError('Resource "%s" requested by feature "%s" not provided.'%(e.args[0], feature_name))
+    
+    def _defineParser(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('feature')
+        parser.add_argument('-r', '--resource')
+        parser.add_argument('-p', '--param', action=ArgumentDictionary,
+            nargs='+', default={})
+        parser.add_argument('-a', '--attr', action=ArgumentDictionary,
+            nargs='+', default={})
+        return parser

@@ -6,8 +6,7 @@ import sys
 from collections import defaultdict
 from common import getProgramDirectory, loadFeatureHyperGraph, loadEntityGraph
 from ebias.error_manager import ERROR_MANAGER
-from ebias.feature_parser import FeatureParser
-from ebias.resource_parser import ResourceParser
+from ebias.parser import FeatureParser, ResourceParser
 from ebias.feature_graph import FeatureGraph
 from ebias.solution_iterator import SolutionIterator
 from ebias.feature_wrapper import FeatureWrapper
