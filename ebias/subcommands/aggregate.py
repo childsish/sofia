@@ -158,7 +158,7 @@ def parseProvidedResources(target, resources):
 
 def parseRequestedFeatures(features, provided_resources):
     parser = FeatureParser(provided_resources)
-    return [parser.parse(feature) for feature in features]
+    return parser.parseFeatures(features)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
