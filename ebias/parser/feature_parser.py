@@ -33,7 +33,7 @@ class FeatureParser(object):
     def parseFeatures(self, feature_strings):
         """ Parse all feature strings in a list """
         return [self.parseFeature(feature_string) for feature_string in\
-            feature_strings]
+            feature_strings if feature_string.strip() != '']
     
     def parseFeature(self, feature_string):
         """ Parse a feature string. """
