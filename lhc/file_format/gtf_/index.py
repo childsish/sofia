@@ -26,21 +26,18 @@ class IndexedGtfFile(object):
         #if isinstance(key, basestring):
         #    genes = [self.key_index[key]]
         if hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
-            genes = self._getGeneIntervalsInInterval(key.chr, key.pos, key.pos + len(key.ref))
+            return self.getGenesAtPosition(key.chr, key.pos)
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            genes = self._getGeneIntervalsInInterval(key.chr, key.start, key.stop)
+            return self.getGenesInInterval(key.chr, key.start, key.stop)
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
-        
-        genes = [self._completeGene(gene) for gene in genes]
-        #if isinstance(key, basestring):
-        #    for gene in genes:
-        #        if gene.name == key:
-        #            return gene
-        return genes
 
     def getGenesAtPosition(self, chr, pos):
         genes = self._getGeneIntervalsInInterval(chr, pos, pos + 1)
+        return [self._completeGene(gene) for gene in genes]
+    
+    def getGenesInInterval(self, chr, start, stop):
+        genes = self._getGeneIntervalsInInterval(chr, start, stop)
         return [self._completeGene(gene) for gene in genes]
     
     def _getGeneIntervalsInInterval(self, chr, start, stop):
