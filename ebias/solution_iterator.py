@@ -1,21 +1,17 @@
+from collections import defaultdict
 from feature_graph import FeatureGraph
-from itertools import izip, repeat
+from itertools import izip, repeat, product
 from operator import or_
 
 from ebias.features import Resource, Target
 from ebias.error_manager import ERROR_MANAGER
 
 class SolutionIterator(object):
-    def __init__(self, feature, graph, provided_resources, visited=None, requested_attr=None):
+    def __init__(self, feature, graph, provided_resources, visited=None):
         self.feature = feature
         self.graph = graph
         self.resources = provided_resources
         self.visited = set() if visited is None else visited
-        self.edges = sorted(graph.vs[feature.name])
-        self.edge_iterators = [iter(graph.vs[feature.name][edge]) for edge in self.edges]
-        self.solution_iterators = len(self.edges) * [EmptySolutionIterator()]#[self._incrementDependency(i) for i in range(len(self.edges))]
-        self.solutions = list(repeat(None, len(self.edges)))
-        self.requested_attr = {} if requested_attr is None else requested_attr
 
         self.visited.add(self.feature.name)
 
@@ -23,59 +19,43 @@ class SolutionIterator(object):
         return self.feature.name
     
     def __iter__(self):
-        return self
+        for solution in self.iterFeature():
+            yield solution
 
-    def next(self, requested_attr=None):
-        solutions = self.solutions
+    def iterFeature(self):
+        edges = sorted(self.graph.vs[self.feature.name])
+        solutions = [list(self.iterEdge(edge)) for edge in edges]
 
-        outs = None
-        while outs is None:
-            self._incrementEdge()
-            ins = {e: s.feature.outs[e] for e, s in izip(self.edges, solutions)}
-            outs = self.feature.getOutput(ins, requested_attr)
-        
-        resources = reduce(or_, (graph.resources for graph in solutions))
-        dependencies = {e: s.feature.name for e, s in izip(self.edges, solutions)}
-        feature_instance = self.feature(resources, dependencies, ins, outs)
-        res = FeatureGraph(feature_instance)
-        for e, s in izip(self.edges, solutions):
-            res.addEdge(e, feature_instance.name, s.feature.name)
-            res.update(s)
-        return res
+        cnt = defaultdict(list)
+        for edge, edge_solutions in izip(edges, solutions):
+            cnt[len(edge_solutions)].append(edge)
+        if 0 in cnt:
+            ERROR_MANAGER.addError('%s could not find any solutions for the edges %s'%\
+                (self.feature.name, ', '.join(cnt[0])))
 
-    def _incrementEdge(self, i=0):
-        """ Increments the solutions of one edge """
-        if i == len(self.edges):
-            raise StopIteration()
-        requested_attr = {}
-        for j in xrange(i + 1, len(self.edges)):
-            if self.solutions[j] is None:
-                self._incrementEdge(j)
-            requested_attr.update(self.solutions[j].feature.outs[self.edges[j]].attr)
-        while True:
-            try:
-                self.solutions[i] = self.solution_iterators[i].next(requested_attr)
-                break
-            except StopIteration:
-                while True:
-                    try:
-                        self.solution_iterators[i] = self._incrementDependency(i)
-                        break
-                    except StopIteration:
-                        self._incrementEdge(i + 1)
-                        self.edge_iterators[i] = iter(self.graph.vs[self.feature.feature_class.__name__][self.edges[i]])
+        for solution in product(*solutions):
+            ins = {e: s.feature.outs[e] for e, s in izip(edges, solution)}
+            outs = self.feature.getOutput(ins)
 
-    def _incrementDependency(self, i):
-        """ Increments the dependencies of one edge """
-        feature_name = None
-        while feature_name is None:
-            next = self.edge_iterators[i].next()
-            if next not in self.visited:
-                feature_name = next
-        feature = self.graph.features[feature_name]
-        return ResourceSolutionIterator(feature, self.resources)\
-            if issubclass(feature.feature_class, Resource)\
-            else SolutionIterator(feature, self.graph, self.resources, set(self.visited))
+            resources = reduce(or_, (graph.resources for graph in solution), set())
+            dependencies = {e: s.feature.name for e, s in izip(edges, solution)}
+            feature_instance = self.feature(resources, dependencies, ins, outs)
+            res = FeatureGraph(feature_instance)
+            for e, s in izip(edges, solution):
+                res.addEdge(e, feature_instance.name, s.feature.name)
+                res.update(s)
+            yield res
+
+    def iterEdge(self, edge):
+        for feature_name in self.graph.vs[self.feature.name][edge]:
+            feature = self.graph.features[feature_name]
+            if feature.name in self.visited:
+                continue
+            it = ResourceSolutionIterator(feature, self.resources)\
+                if issubclass(feature.feature_class, Resource)\
+                else SolutionIterator(feature, self.graph, self.resources, set(self.visited))
+            for solution in it:
+                yield solution
 
 class ResourceSolutionIterator(object):
     def __init__(self, feature, resources):
@@ -87,16 +67,11 @@ class ResourceSolutionIterator(object):
         return self.feature.name
 
     def __iter__(self):
-        return self
-
-    def next(self, requested_attr=None):
         if len(self.hits) == 0:
             ERROR_MANAGER.addError('%s does not match any provided resource'%\
                 self.feature.name)
-        if self.c_hit == len(self.hits):
-            raise StopIteration()
-        self.c_hit += 1
-        return self._initFeatureGraph(self.hits[self.c_hit - 1])
+        for hit in self.hits:
+            yield self._initFeatureGraph(hit)
 
     def _getHits(self, feature, resources):
         if issubclass(self.feature.feature_class, Target) and self.feature.feature_class.matches(resources['target']):
@@ -111,7 +86,3 @@ class ResourceSolutionIterator(object):
         res = FeatureGraph(feature_instance)
         res.addResource(resource)
         return res
-
-class EmptySolutionIterator(object):
-    def next(self, requested_attr=None):
-        raise StopIteration()
