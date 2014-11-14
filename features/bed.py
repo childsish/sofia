@@ -15,6 +15,18 @@ class BedIterator(Target):
     def init(self):
         self.parser = BedIteratorParser(self.getFilename())
 
+    def calculate(self):
+        interval = self.parser.next()
+        return {
+            'chromosome_id': interval.chr,
+            'start': interval.start,
+            'stop': interval.stop,
+            'data': interval
+        }
+
+    def format(self, genomic_interval):
+        return genomic_interval['data'].name
+
 class BedSet(Resource):
     
     EXT = ['.bed', '.bed.gz']
