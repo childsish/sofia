@@ -37,7 +37,7 @@ class Resource(Feature):
 
     @classmethod
     def getOutput(cls, ins={}, outs={}, attr={}):
-        attr = ins['resource'].attr
+        attr = ins['resource'].attr if len(ins) > 0 else {}
         return {out: Entity(out, attr) for out in outs}
         #return {out: ENTITY_FACTORY.makeEntity(out, provided_resource.attr) for out in cls.OUT}
 

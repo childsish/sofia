@@ -12,7 +12,7 @@ class GeneGotermMap(Resource):
         fhndl.next()
         self.parser = defaultdict(set)
         for line in fhndl:
-            parts = line.strip().split('\t')
+            parts =[part.strip() for part in  line.split('\t')]
             self.parser[parts[0]].add((parts[1], parts[2]))
         fhndl.close()
 
