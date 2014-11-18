@@ -3,15 +3,17 @@ from feature_graph import FeatureGraph
 from itertools import izip, repeat, product
 from operator import or_
 
+from ebias.converter import Converter
 from ebias.features import Resource, Target
 from ebias.error_manager import ERROR_MANAGER
 
 class SolutionIterator(object):
-    def __init__(self, feature, graph, provided_resources, visited=None):
+    def __init__(self, feature, graph, provided_resources, maps={}, visited=None):
         self.feature = feature
         self.graph = graph
         self.resources = provided_resources
         self.visited = set() if visited is None else visited
+        self.maps = maps
 
         self.visited.add(self.feature.name)
 
@@ -37,9 +39,13 @@ class SolutionIterator(object):
             ins = {e: s.feature.outs[e] for e, s in izip(edges, solution)}
             outs = self.feature.getOutput(ins)
 
+            converters = self.getConverters(ins)
+            if converters is None:
+                continue
+
             resources = reduce(or_, (graph.resources for graph in solution), set())
             dependencies = {e: s.feature.name for e, s in izip(edges, solution)}
-            feature_instance = self.feature(resources, dependencies, ins, outs)
+            feature_instance = self.feature(resources, dependencies, ins=ins, outs=outs, converters=converters)
             res = FeatureGraph(feature_instance)
             for e, s in izip(edges, solution):
                 res.addEdge(e, feature_instance.name, s.feature.name)
@@ -53,9 +59,57 @@ class SolutionIterator(object):
                 continue
             it = ResourceSolutionIterator(feature, self.resources)\
                 if issubclass(feature.feature_class, Resource)\
-                else SolutionIterator(feature, self.graph, self.resources, set(self.visited))
+                else SolutionIterator(feature, self.graph, self.resources, self.maps, set(self.visited))
             for solution in it:
                 yield solution
+
+    def getConverters(self, ins):
+        matching_entities = defaultdict(lambda: defaultdict(set))
+        for edge, entity in ins.iteritems():
+            for entity_name, entity_value in entity.attr.iteritems():
+                matching_entities[entity_name][entity_value].add(edge)
+
+        converters = defaultdict(Converter)
+        for entity_name, entity_values in matching_entities.iteritems():
+            if len(entity_values) == 1:
+                continue
+            elif entity_name not in self.maps:
+                ERROR_MANAGER.addError('There are no converters for %s'%entity_name)
+                return None
+            else:
+                for value in entity_values:
+                    if value not in self.maps[entity_name].hdrs:
+                        ERROR_MANAGER.addError('Converter for %s has can not convert %s'%(entity_name, value))
+                        return None
+
+            edge_converters = self.convertEdge(entity_name, entity_values)
+            if edge_converters is None:
+                return None
+            for edge, converter in edge_converters.iteritems():
+                converters[edge].update(converter)
+        return converters
+
+    def convertEdge(self, entity, entity_values):
+        errors = set() #TODO: Use later
+        for to_value in entity_values:
+            converters = self.convertEdgeTo(entity, entity_values, to_value, errors)
+            if converters is not None:
+                return converters
+        ERROR_MANAGER.addError(str(errors))
+
+    def convertEdgeTo(self, entity, entity_values, to_value, errors):
+        converters = defaultdict(Converter)
+        for fr_value, edges in entity_values.iteritems():
+            if fr_value == to_value:
+                continue
+            for edge in edges:
+                path = self.graph.entity_graph.getDescendentPathTo(edge, entity)
+                if path is None:
+                    errors.add((edge, entity))
+                    return None
+                converters[edge].path.append(path)
+                converters[edge].id_map.append(self.maps[entity].make(fr_value, to_value))
+        return converters
 
 class ResourceSolutionIterator(object):
     def __init__(self, feature, resources):

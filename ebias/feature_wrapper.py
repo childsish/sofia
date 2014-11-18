@@ -14,10 +14,10 @@ class FeatureWrapper(object):
     def __str__(self):
         return self.name
 
-    def __call__(self, resources=None, dependencies=None, ins=None, outs=None):
+    def __call__(self, resources=None, dependencies=None, ins=None, outs=None, converters={}):
         ins = self.ins if ins is None else ins
         outs = self.outs if outs is None else outs
-        return self.feature_class(resources, dependencies, self.param, ins, outs)
+        return self.feature_class(resources, dependencies, self.param, ins, outs, converters)
 
     def getOutput(self, ins, requested_attr={}):
         return self.feature_class.getOutput(ins, self.outs, requested_attr)

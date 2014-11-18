@@ -10,15 +10,16 @@ from ebias.parser import FeatureParser, ResourceParser
 from ebias.feature_graph import FeatureGraph
 from ebias.solution_iterator import SolutionIterator
 from ebias.feature_wrapper import FeatureWrapper
+from ebias.attribute_map_factory import AttributeMapFactory
 
 class Aggregator(object):
     def __init__(self):
         self.hyper_graph = loadFeatureHyperGraph()
 
-    def aggregate(self, requested_features, provided_resources, args):
+    def aggregate(self, requested_features, provided_resources, args, maps={}):
         sys.stderr.write('    Resolving features...\n')
         
-        solution, resolved_features = self.resolveRequest(requested_features, provided_resources)
+        solution, resolved_features = self.resolveRequest(requested_features, provided_resources, maps)
         if args.graph:
             sys.stdout.write('%s\n\n'%solution)
         else:
@@ -34,7 +35,7 @@ class Aggregator(object):
                 sys.stderr.write("A feature's format function does not return a string")
                 sys.exit(1)
 
-    def resolveRequest(self, requested_features, provided_resources):
+    def resolveRequest(self, requested_features, provided_resources, maps):
         def satisfiesRequest(graph, requested_resources):
             return graph.resources.intersection(requested_resources) == requested_resources
         
@@ -50,7 +51,7 @@ class Aggregator(object):
                 old_feature_wrapper.outs,
                 feature.param,
                 feature.attr)
-            solution_iterator = SolutionIterator(feature_wrapper, self.hyper_graph, provided_resources)
+            solution_iterator = SolutionIterator(feature_wrapper, self.hyper_graph, provided_resources, maps)
             possible_graphs = [graph for graph in solution_iterator\
                 if satisfiesRequest(graph, feature.resources)]
             if len(possible_graphs) == 0:
@@ -116,6 +117,8 @@ def defineParser(parser):
         help='specify the type of entity in the target file')
     parser.add_argument('-g', '--graph', action='store_true',
         help='do not run framework but print the resolved graph')
+    parser.add_argument('-m', '--maps', nargs='+',
+        help='maps for converting for entity attributes')
     parser.set_defaults(func=aggregate)
 
 def aggregate(args):
@@ -140,9 +143,11 @@ def aggregate(args):
         sys.stderr.write('Error: No features were requested. Please provide'\
             'the names of the features you wish to calculate.')
         sys.exit(1)
+
+    maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
     
     aggregator = Aggregator()
-    aggregator.aggregate(requested_features, provided_resources, args)
+    aggregator.aggregate(requested_features, provided_resources, args, maps)
         
 def parseProvidedResources(target, resources):
     program_dir = getProgramDirectory()

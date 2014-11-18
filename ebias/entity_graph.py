@@ -30,7 +30,7 @@ class EntityGraph(object):
         return res
 
     def getDescendentPaths(self, entity):
-        res = []
+        res = [[entity]]
         stk = [[entity]]
         while len(stk) > 0:
             path = stk.pop()
@@ -39,6 +39,13 @@ class EntityGraph(object):
                     stk.append(path + [child])
                     res.append(path + [child])
         return res
+
+    def getDescendentPathTo(self, ancestor, descendent):
+        paths = self.getDescendentPaths(ancestor)
+        for path in paths:
+            if path[-1] == descendent:
+                return path
+        return None
 
     def createEntity(self, name):
         attr = {}

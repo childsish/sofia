@@ -9,7 +9,7 @@ class Feature(object):
     IN = []
     OUT = []
     
-    def __init__(self, resources=None, dependencies=None, param={}, ins=None, outs=None):
+    def __init__(self, resources=None, dependencies=None, param={}, ins=None, outs=None, converters={}):
         self.changed = True
         self.calculated = False
         self.resources = set() if resources is None else resources
@@ -18,6 +18,7 @@ class Feature(object):
         self.ins = {in_: in_ for in_ in self.IN} if ins is None else ins
         self.outs = {out: Entity(out) for out in self.OUT} if outs is None else outs
         self.name = self._getName()
+        self.converters = converters
     
     def __str__(self):
         """ Return the name of the feature based on it's resources and
@@ -77,6 +78,8 @@ class Feature(object):
         local_entities = {}
         for dependency_name, feature in self.dependencies.iteritems():
             local_entities[dependency_name] = entities[feature]
+        for edge, converter in self.converters.iteritems():
+            converter.convert(local_entities)
         res = self.calculate(**local_entities)
         self.calculated = True
         self.changed = not (name in entities and entities[name] is res)
