@@ -41,35 +41,3 @@ class FeatureGraph(object):
         self.graph.vs.update(other.graph.vs)
         for e in other.graph.es:
             self.graph.es[e].update(other.graph.es[e])
-
-    def iterRows(self, requested_features):
-        """ Calculate the features in this graph for each entity in the target
-        resource. """
-        kwargs = {}
-        row = self._getNextRow(requested_features, kwargs)
-        while kwargs['target'] is not None:
-            yield row
-            row = self._getNextRow(requested_features, kwargs)
-    
-    def _getNextRow(self, requested_features, kwargs):
-        """ Return the requested features for the next entity in the target
-        resource. """
-        for feature in requested_features:
-            self.features[feature].reset(self.features)
-        self.features['target'].changed = True
-        row = []
-        for feature in requested_features:
-            try:
-                item = self.features[feature].generate(kwargs, self.features)
-                item = '' if item is None else self.features[feature].format(item)
-                row.append(item)
-            except Exception, e:
-                if isinstance(e, StopIteration):
-                    raise e
-                import sys
-                import traceback
-                traceback.print_exception(*sys.exc_info(), file=sys.stderr)
-                sys.stderr.write('Error processing entry on line %d\n'%\
-                    (self.features['target'].parser.line_no))
-                sys.exit(1)
-        return row

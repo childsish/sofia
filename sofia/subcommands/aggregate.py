@@ -2,9 +2,11 @@ import argparse
 import json
 import os
 import sys
+import multiprocessing
 
 from collections import defaultdict
 from common import getProgramDirectory, loadFeatureHyperGraph, loadEntityGraph
+from functools import partial
 from sofia.error_manager import ERROR_MANAGER
 from sofia.parser import FeatureParser, ResourceParser
 from sofia.feature_graph import FeatureGraph
@@ -17,6 +19,13 @@ class Aggregator(object):
         self.hyper_graph = loadFeatureHyperGraph()
 
     def aggregate(self, requested_features, provided_resources, args, maps={}):
+        def iterResource(resource):
+            resource.init(**resource.param)
+            line_no = 1
+            while True:
+                yield resource.calculate(), line_no
+                line_no += 1
+
         sys.stderr.write('    Resolving features...\n')
         
         solution, resolved_features = self.resolveRequest(requested_features, provided_resources, maps)
@@ -24,16 +33,17 @@ class Aggregator(object):
             sys.stdout.write('%s\n\n'%solution)
         else:
             sys.stderr.write('\n    Aggregating information...\n\n')
-            solution.init()
-            sys.stdout.write('\t'.join([str(ftr) for ftr in requested_features]))
+            sys.stdout.write('\t'.join(map(str, requested_features)))
             sys.stdout.write('\n')
-            try:
-                for row in solution.iterRows(resolved_features):
-                    sys.stdout.write('\t'.join(row))
-                    sys.stdout.write('\n')
-            except TypeError:
-                sys.stderr.write("A feature's format function does not return a string")
-                sys.exit(1)
+
+            it = iterResource(solution.features['target'])
+            pool = multiprocessing.Pool(args.processes, initAnnotation,
+                [resolved_features, solution])
+            for row in pool.imap(getAnnotation, it, 100):
+                sys.stdout.write('\t'.join(row))
+                sys.stdout.write('\n')
+            pool.close()
+            pool.join()
 
     def resolveRequest(self, requested_features, provided_resources, maps):
         def satisfiesRequest(graph, requested_resources):
@@ -107,6 +117,8 @@ def defineParser(parser):
         help='a text file with a list of requested features')
     parser.add_argument('-o', '--output',
         help='direct output to named file (stdout)')
+    parser.add_argument('-p', '--processes', default=1, type=int,
+        help='the number of processes to run in parallel')
     parser.add_argument('-r', '--resources', nargs='+', default=[],
         help='provide a resource using the following format <file name>[;<type>][;<name>]')
     parser.add_argument('-R', '--resource-list',
@@ -164,6 +176,48 @@ def parseProvidedResources(target, resources):
 def parseRequestedFeatures(features, provided_resources):
     parser = FeatureParser(provided_resources)
     return parser.parseFeatures(features)
+
+
+requested_features = None
+solution = None
+
+def initAnnotation(req_ftr, sol):
+    global requested_features
+    global solution
+    requested_features = req_ftr
+    solution = sol
+
+    solution.init()
+
+def getAnnotation(target):
+    """ Calculate the features in this graph for each entity in the target
+    resource. """
+    global requested_features
+    global solution
+
+    for feature in requested_features:
+        solution.features[feature].reset(solution.features)
+    target, line_no = target
+    kwargs = {'target': target}
+    row = []
+    for feature in requested_features:
+        try:
+            item = solution.features[feature].generate(kwargs, solution.features)
+            item = '' if item is None else solution.features[feature].format(item)
+            row.append(item)
+        except Exception, e:
+            import sys
+            import traceback
+            traceback.print_exception(*sys.exc_info(), file=sys.stderr)
+            sys.stderr.write('Error processing entry on line %d\n'%\
+                (solution.features['target'].parser.line_no))
+            sys.exit(1)
+    return row
+    #try:
+    #    sys.stdout.write('\t'.join(row))
+    #except TypeError:
+    #    sys.stderr.write("A feature's format function does not return a string")
+    #    sys.exit(1)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
