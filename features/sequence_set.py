@@ -18,6 +18,8 @@ class GetDownstream1000(Feature):
     OUT = ['downstream_1000']
     
     def calculate(self, chromosome_sequence_set, genomic_position, major_transcript):
+        if major_transcript is None:
+            return None
         chr = genomic_position['chromosome_id']
         pos = genomic_position['chromosome_pos']
         strand = major_transcript.ivl.strand
