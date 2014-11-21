@@ -1,4 +1,4 @@
-from ebias.features import Feature
+from sofia.features import Feature
 
 from lhc.binf.sequence import revcmp
 

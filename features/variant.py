@@ -1,4 +1,4 @@
-from ebias.features import Feature
+from sofia.features import Feature
 
 class Chromosome(Feature):
     

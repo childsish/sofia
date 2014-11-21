@@ -1,4 +1,4 @@
-ebias
+sofia
 =====
 
 Extensible BioInformation Aggregation System
@@ -9,16 +9,16 @@ Installation
 ### Windows
 
 1. Download and unzip the compressed version from GitHub:
-https://github.com/childsish/ebias/archive/master.zip
+https://github.com/childsish/sofia/archive/master.zip
 2. Extract the file to desired directory
 3. Add the directory to the environment variable PYTHONPATH
 
-> python -m run_ebias D:\data\tmp.vcf Chromosome Position GeneName AminoAcidVariant VariantType -r D:\data\tmp.gtf D:\data\tmp.fasta
+> python -m run_sofia D:\data\tmp.vcf Chromosome Position GeneName AminoAcidVariant VariantType -r D:\data\tmp.gtf D:\data\tmp.fasta
 
 ### Linux
 
 1. Change to desired installation directory
-2. > git pull git@github.com:childsish/ebias.git
+2. > git pull git@github.com:childsish/sofia.git
 3. (Optional) Add the installation directory to the environment variable PYTHONPATH or create a symbolic link to a bin directory in the PATH environment variable
 
 Creating a new feature

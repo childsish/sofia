@@ -2,7 +2,7 @@ from collections import namedtuple
 from itertools import izip
 from lhc.binf.genetic_code import GeneticCodes
 from lhc.binf.sequence import revcmp
-from ebias.features import Feature
+from sofia.features import Feature
 
 class VariantType(Feature):
     """ Determines the variant type.

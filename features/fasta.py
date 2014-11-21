@@ -1,7 +1,7 @@
 import os
 import sys
 
-from ebias.features import Resource
+from sofia.features import Resource
 
 from lhc.file_format.fasta_.set_ import FastaSet as FastaSetParser
 from lhc.file_format.fasta_.iterator import FastaIterator as FastaIteratorParser

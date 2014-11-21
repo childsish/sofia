@@ -1,7 +1,7 @@
 import sys
 import os
 
-from ebias.features import Resource, Target
+from sofia.features import Resource, Target
 
 from lhc.file_format.gtf_.iterator import GtfIterator as GtfIteratorParser
 from lhc.file_format.gtf_.set_ import GtfSet as GtfSetParser

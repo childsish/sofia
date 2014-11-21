@@ -5,12 +5,12 @@ import sys
 
 from collections import defaultdict
 from common import getProgramDirectory, loadFeatureHyperGraph, loadEntityGraph
-from ebias.error_manager import ERROR_MANAGER
-from ebias.parser import FeatureParser, ResourceParser
-from ebias.feature_graph import FeatureGraph
-from ebias.solution_iterator import SolutionIterator
-from ebias.feature_wrapper import FeatureWrapper
-from ebias.attribute_map_factory import AttributeMapFactory
+from sofia.error_manager import ERROR_MANAGER
+from sofia.parser import FeatureParser, ResourceParser
+from sofia.feature_graph import FeatureGraph
+from sofia.solution_iterator import SolutionIterator
+from sofia.feature_wrapper import FeatureWrapper
+from sofia.attribute_map_factory import AttributeMapFactory
 
 class Aggregator(object):
     def __init__(self):
@@ -117,7 +117,7 @@ def defineParser(parser):
         help='specify the type of entity in the target file')
     parser.add_argument('-g', '--graph', action='store_true',
         help='do not run framework but print the resolved graph')
-    parser.add_argument('-m', '--maps', nargs='+',
+    parser.add_argument('-m', '--maps', nargs='+', default=[],
         help='maps for converting for entity attributes')
     parser.set_defaults(func=aggregate)
 

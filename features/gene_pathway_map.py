@@ -1,4 +1,4 @@
-from ebias.features import Feature, Resource
+from sofia.features import Feature, Resource
 
 from collections import defaultdict
 

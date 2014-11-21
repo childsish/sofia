@@ -1,6 +1,6 @@
 import json
 
-from ebias.entity import Entity
+from sofia.entity import Entity
 from lhc.graph.graph import Graph
 
 class EntityGraph(object):

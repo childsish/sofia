@@ -3,9 +3,9 @@ from feature_graph import FeatureGraph
 from itertools import izip, repeat, product
 from operator import or_
 
-from ebias.converter import Converter
-from ebias.features import Resource, Target
-from ebias.error_manager import ERROR_MANAGER
+from sofia.converter import Converter
+from sofia.features import Resource, Target
+from sofia.error_manager import ERROR_MANAGER
 
 class SolutionIterator(object):
     def __init__(self, feature, graph, provided_resources, maps={}, visited=None):

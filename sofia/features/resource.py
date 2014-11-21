@@ -1,6 +1,6 @@
 from feature import Feature
-from ebias.entity import Entity
-from ebias.error_manager import ERROR_MANAGER
+from sofia.entity import Entity
+from sofia.error_manager import ERROR_MANAGER
 
 class Resource(Feature):
     """ A feature that provides access to a disk based resource. """

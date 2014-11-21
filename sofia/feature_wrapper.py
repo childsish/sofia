@@ -1,4 +1,4 @@
-from ebias.entity import Entity
+from sofia.entity import Entity
 
 class FeatureWrapper(object):
     def __init__(self, feature_class, name=None, ins=None, outs=None, param={}, attr={}):
