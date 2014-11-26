@@ -52,7 +52,7 @@ class SnpSet(object):
         n_idx = len(data.variables['poss'])
         data.variables['chrs'][n_idx] = chr_idx
         data.variables['poss'][n_idx] = pos
-        data.variables['snps'][:,n_idx,:] = snps
+        data.variables['snps'][:, n_idx, :] = snps
         data.variables['ref'][n_idx] = ref
 
     def get_snp_at_position(self, chr, pos):
@@ -67,7 +67,7 @@ class SnpSet(object):
         return poss_idx
 
     def get_snp_at_index(self, idx):
-        return self.data.variables['snps'][:,idx,:]
+        return self.data.variables['snps'][:, idx, :]
 
     def get_position_at_index(self, idx):
         chm_idx = self.data.variables['chms'][idx]
@@ -85,7 +85,7 @@ class SnpSet(object):
         return np.arange(pos_fr, pos_to, dtype=self.POSITION_TYPE)
 
     def get_markers_at_indices(self, idxs):
-        return self.data.variables['muts'][:,idxs,:]
+        return self.data.variables['muts'][:, idxs, :]
 
     def get_positions_at_indices(self, idxs):
         return map(self.get_position_at_index, idxs)

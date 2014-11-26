@@ -12,5 +12,5 @@ setup(
     license='LICENSE.txt',
     description='My python library of classes and functions that help me work',
     long_description=open('README.txt').read(),
-    install_requires=[],
+    install_requires=['numpy', 'netCDF4'],
 )
