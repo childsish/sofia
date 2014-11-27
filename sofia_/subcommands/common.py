@@ -1,10 +1,10 @@
 import os
 
 from lhc.tools import loadPlugins
-from sofia.features import Feature
-from sofia.feature_wrapper import FeatureWrapper
-from sofia.feature_hyper_graph import FeatureHyperGraph
-from sofia.entity_graph import EntityGraph
+from sofia_.features import Feature
+from sofia_.feature_wrapper import FeatureWrapper
+from sofia_.feature_hyper_graph import FeatureHyperGraph
+from sofia_.entity_graph import EntityGraph
 
 def loadResource(fname, parsers, format=None):
     if format is not None and format in parsers:

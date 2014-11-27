@@ -1,4 +1,4 @@
-from sofia.features import Feature
+from sofia_.features import Feature
 
 class HomopolymerLength(Feature):
     

@@ -3,7 +3,7 @@ import os
 
 from lhc.tools import loadPlugins
 from common import getProgramDirectory, loadFeatureHyperGraph
-from sofia.features import Feature
+from sofia_.features import Feature
 
 def info(args):
     if args.output is None:

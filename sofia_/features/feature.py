@@ -1,7 +1,7 @@
 from collections import defaultdict
 from operator import and_
-from sofia.entity import Entity
-from sofia.error_manager import ERROR_MANAGER
+from sofia_.entity import Entity
+from sofia_.error_manager import ERROR_MANAGER
 
 class Feature(object):
     """ A feature that can be calculated from resources and other features. """

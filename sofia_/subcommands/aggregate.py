@@ -7,12 +7,12 @@ import multiprocessing
 from collections import defaultdict
 from common import getProgramDirectory, loadFeatureHyperGraph, loadEntityGraph
 from functools import partial
-from sofia.error_manager import ERROR_MANAGER
-from sofia.parser import FeatureParser, ResourceParser
-from sofia.feature_graph import FeatureGraph
-from sofia.solution_iterator import SolutionIterator
-from sofia.feature_wrapper import FeatureWrapper
-from sofia.attribute_map_factory import AttributeMapFactory
+from sofia_.error_manager import ERROR_MANAGER
+from sofia_.parser import FeatureParser, ResourceParser
+from sofia_.feature_graph import FeatureGraph
+from sofia_.solution_iterator import SolutionIterator
+from sofia_.feature_wrapper import FeatureWrapper
+from sofia_.attribute_map_factory import AttributeMapFactory
 
 class Aggregator(object):
     def __init__(self):

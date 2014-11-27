@@ -1,4 +1,4 @@
-from sofia.features import Feature, Resource
+from sofia_.features import Feature, Resource
 
 from collections import defaultdict
 

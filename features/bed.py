@@ -1,7 +1,7 @@
 import os
 import sys
 
-from sofia.features import Resource, Target
+from sofia_.features import Resource, Target
 
 from lhc.file_format.bed_.iterator import BedIterator as BedIteratorParser
 from lhc.file_format.bed_.set_ import BedSet as BedSetParser

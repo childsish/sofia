@@ -1,7 +1,7 @@
 import os
 import sys
 
-from sofia.features import Resource, Target
+from sofia_.features import Resource, Target
 
 from lhc.file_format.id_map import IdMap
 from lhc.file_format.vcf_.iterator import VcfIterator as VcfIteratorParser

@@ -1,6 +1,6 @@
 from feature import Feature
-from sofia.entity import Entity
-from sofia.error_manager import ERROR_MANAGER
+from sofia_.entity import Entity
+from sofia_.error_manager import ERROR_MANAGER
 
 class Resource(Feature):
     """ A feature that provides access to a disk based resource. """
