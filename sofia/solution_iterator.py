@@ -8,13 +8,14 @@ from sofia.features import Resource, Target
 from sofia.error_manager import ERROR_MANAGER
 
 class SolutionIterator(object):
-    def __init__(self, feature, graph, provided_resources, maps={}, visited=None):
+    def __init__(self, feature, graph, provided_resources, maps={}, requested_resources=set(), visited=None):
         self.feature = feature
         self.graph = graph
         self.resources = provided_resources
-        self.visited = set() if visited is None else visited
         self.maps = maps
+        self.requested_resources = requested_resources
 
+        self.visited = set() if visited is None else visited
         self.visited.add(self.feature.name)
 
     def __str__(self):
@@ -26,31 +27,42 @@ class SolutionIterator(object):
 
     def iterFeature(self):
         edges = sorted(self.graph.vs[self.feature.name])
-        solutions = [list(self.iterEdge(edge)) for edge in edges]
+        disjoint_solutions = [list(self.iterEdge(edge)) for edge in edges]
 
         cnt = defaultdict(list)
-        for edge, edge_solutions in izip(edges, solutions):
+        for edge, edge_solutions in izip(edges, disjoint_solutions):
             cnt[len(edge_solutions)].append(edge)
         if 0 in cnt:
             ERROR_MANAGER.addError('%s could not find any solutions for the edges %s'%\
                 (self.feature.name, ', '.join(cnt[0])))
 
-        for solution in product(*solutions):
-            ins = {e: s.feature.outs[e] for e, s in izip(edges, solution)}
+        print self.feature.name, [(e, len(s)) for e, s in izip(edges, disjoint_solutions)]
+        #for edge, ss in izip(edges, disjoint_solutions):
+        #    print edge
+        #    for s in ss:
+        #        print '',s.feature.name.split()[0]
+        #print
+        min_res = None
+        res = defaultdict(list)
+        for disjoint_solution in product(*disjoint_solutions):
+            ins = {e: s.feature.outs[e] for e, s in izip(edges, disjoint_solution)}
             outs = self.feature.getOutput(ins)
 
             converters = self.getConverters(ins)
             if converters is None:
                 continue
 
-            resources = reduce(or_, (graph.resources for graph in solution), set())
-            dependencies = {e: s.feature.name for e, s in izip(edges, solution)}
+            resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
+            dependencies = {e: s.feature.name for e, s in izip(edges, disjoint_solution)}
             feature_instance = self.feature(resources, dependencies, ins=ins, outs=outs, converters=converters)
-            res = FeatureGraph(feature_instance)
-            for e, s in izip(edges, solution):
-                res.addEdge(e, feature_instance.name, s.feature.name)
-                res.update(s)
-            yield res
+            solution = FeatureGraph(feature_instance)
+            for e, s in izip(edges, disjoint_solution):
+                solution.addEdge(e, feature_instance.name, s.feature.name)
+                solution.update(s)
+            res[len(resources - self.requested_resources)].append(solution)
+        if len(res) > 0:
+            for solution in res[min(res)]:
+                yield solution
 
     def iterEdge(self, edge):
         for feature_name in self.graph.vs[self.feature.name][edge]:
@@ -59,7 +71,7 @@ class SolutionIterator(object):
                 continue
             it = ResourceSolutionIterator(feature, self.resources)\
                 if issubclass(feature.feature_class, Resource)\
-                else SolutionIterator(feature, self.graph, self.resources, self.maps, set(self.visited))
+                else SolutionIterator(feature, self.graph, self.resources, self.maps, self.requested_resources, set(self.visited))
             for solution in it:
                 yield solution
 

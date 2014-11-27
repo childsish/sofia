@@ -61,7 +61,7 @@ class Aggregator(object):
                 old_feature_wrapper.outs,
                 feature.param,
                 feature.attr)
-            solution_iterator = SolutionIterator(feature_wrapper, self.hyper_graph, provided_resources, maps)
+            solution_iterator = SolutionIterator(feature_wrapper, self.hyper_graph, provided_resources, maps, feature.resources)
             possible_graphs = [graph for graph in solution_iterator\
                 if satisfiesRequest(graph, feature.resources)]
             if len(possible_graphs) == 0:
