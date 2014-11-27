@@ -36,12 +36,6 @@ class SolutionIterator(object):
             ERROR_MANAGER.addError('%s could not find any solutions for the edges %s'%\
                 (self.feature.name, ', '.join(cnt[0])))
 
-        print self.feature.name, [(e, len(s)) for e, s in izip(edges, disjoint_solutions)]
-        #for edge, ss in izip(edges, disjoint_solutions):
-        #    print edge
-        #    for s in ss:
-        #        print '',s.feature.name.split()[0]
-        #print
         min_res = None
         res = defaultdict(list)
         for disjoint_solution in product(*disjoint_solutions):
