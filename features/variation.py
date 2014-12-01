@@ -203,4 +203,3 @@ class AminoAcidVariation(Feature):
                     r += 'fs*%d'%fs
             res.append(r)
         return ','.join(res)
-

@@ -30,4 +30,3 @@ class HomopolymerLength(Feature):
         if len(unq) == 1:
             return str(list(unq)[0])
         return ','.join(str(i) for i in homopolymer_length)
-

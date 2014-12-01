@@ -1,4 +1,4 @@
-sofia
+SoFIA
 =====
 
 Extensible BioInformation Aggregation System

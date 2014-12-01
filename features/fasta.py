@@ -22,4 +22,3 @@ class FastaChromosomeSequenceSet(Resource):
                 sys.stderr.write('Pysam not available. Parsing entire file.')
                 pass
         self.parser = FastaSetParser(FastaIteratorParser(fname))
-
