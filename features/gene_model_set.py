@@ -1,5 +1,6 @@
 from sofia_.features import Feature
 
+
 class GetGeneModelByGeneId(Feature):
 
     IN = ['gene_model_set', 'gene_id']
@@ -8,6 +9,7 @@ class GetGeneModelByGeneId(Feature):
     def calculate(self, gene_model_set, gene_id):
         gene = gene_model_set.getGeneByGeneId(gene_id)
         return {'gene_id': gene_id, 'chromosome_id': gene.ivl.chr, 'gene_model': gene}
+
 
 class GetGeneModelByPosition(Feature):
     
@@ -23,6 +25,7 @@ class GetGeneModelByPosition(Feature):
             return None
         gene = gene_model[0]
         return {'gene_id': gene.name, 'chromosome_id': gene.ivl.chr, 'gene_model': gene}
+
 
 class GetGeneModelByInterval(Feature):
         
