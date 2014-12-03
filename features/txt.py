@@ -31,3 +31,17 @@ class GeneGotermMap(Resource):
             parts =[part.strip() for part in  line.split('\t')]
             self.parser[parts[0]].add((parts[1], parts[2]))
         fhndl.close()
+
+
+class GeneIdIterator(Resource):
+
+    EXT = ['.txt']
+    OUT = ['gene_id_set']
+
+    def init(self):
+        fhndl = open(self.getFilename())
+        self.parser = (line.strip() for line in fhndl.read().split('\n'))
+        fhndl.close()
+
+    def calculate(self):
+        return self.parser.next()
