@@ -36,7 +36,7 @@ class GeneGotermMap(Resource):
 class GeneIdIterator(Resource):
 
     EXT = ['.txt']
-    OUT = ['gene_id_set']
+    OUT = ['gene_id']
 
     def init(self):
         fhndl = open(self.getFilename())
