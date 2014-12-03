@@ -6,6 +6,15 @@ from itertools import izip
 from operator import add, mul
 from lhc.binf.genetic_code import RedundantCode
 
+
+class TranslateCodingSequence(Feature):
+
+    IN = ['coding_sequence', 'genetic_code']
+    OUT = ['amino_acid_sequence']
+
+    def calculate(self, coding_sequence, genetic_code):
+        return genetic_code.translate(coding_sequence)
+
 class CalculateCodonUsage(Feature):
 
     IN = ['coding_sequence']
