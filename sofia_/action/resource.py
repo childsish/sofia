@@ -1,9 +1,9 @@
-from feature import Feature
+from action import Action
 from sofia_.entity import Entity
 from sofia_.error_manager import ERROR_MANAGER
 
-class Resource(Feature):
-    """ A feature that provides access to a disk based resource. """
+class Resource(Action):
+    """ A action that provides access to a disk based resource. """
     
     EXT = []
     
@@ -44,11 +44,11 @@ class Resource(Feature):
 class Target(Resource):
     """ The target resource that is to be annotated.
     
-    This particular feature should be used to provide iterative access to the
+    This particular action should be used to provide iterative access to the
     entities stored in the resource.
     """
-    def generate(self, entities, features):
-        """ Overridden from Feature.generate to enforce use of reset to get the
+    def generate(self, entities, actions):
+        """ Overridden from Action.generate to enforce use of reset to get the
         next entity. """
         if self.calculated:
             return entities['target']

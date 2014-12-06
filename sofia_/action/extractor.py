@@ -1,6 +1,6 @@
-from feature import Feature
+from action import Action
 
-class Extractor(Feature):
+class Extractor(Action):
     def init(self, path):
         self.path = path
 

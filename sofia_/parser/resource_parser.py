@@ -14,7 +14,7 @@ class ResourceParser(object):
             is the file name of the resource
         NAME
             is an alternative name of the resource. This is used when
-            referencing the resource in a feature string.
+            referencing the resource in an action string.
         TYPE
             is the type of entity found in the resource
         PARAM

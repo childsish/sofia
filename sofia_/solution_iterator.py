@@ -1,32 +1,32 @@
 from collections import defaultdict
-from feature_graph import FeatureGraph
-from itertools import izip, repeat, product
+from action_graph import ActionGraph
+from itertools import izip, product
 from operator import or_
 
 from sofia_.converter import Converter
-from sofia_.features import Resource, Target
+from sofia_.actions import Resource, Target
 from sofia_.error_manager import ERROR_MANAGER
 
 class SolutionIterator(object):
-    def __init__(self, feature, graph, provided_resources, maps={}, requested_resources=set(), visited=None):
-        self.feature = feature
+    def __init__(self, action, graph, provided_resources, maps={}, requested_resources=set(), visited=None):
+        self.action = action
         self.graph = graph
         self.resources = provided_resources
         self.maps = maps
         self.requested_resources = requested_resources
 
         self.visited = set() if visited is None else visited
-        self.visited.add(self.feature.name)
+        self.visited.add(self.action.name)
 
     def __str__(self):
-        return self.feature.name
+        return self.action.name
     
     def __iter__(self):
-        for solution in self.iterFeature():
+        for solution in self.iterAction():
             yield solution
 
-    def iterFeature(self):
-        edges = sorted(self.graph.vs[self.feature.name])
+    def iterAction(self):
+        edges = sorted(self.graph.vs[self.action.name])
         disjoint_solutions = [list(self.iterEdge(edge)) for edge in edges]
 
         cnt = defaultdict(list)
@@ -34,24 +34,23 @@ class SolutionIterator(object):
             cnt[len(edge_solutions)].append(edge)
         if 0 in cnt:
             ERROR_MANAGER.addError('%s could not find any solutions for the edges %s'%\
-                (self.feature.name, ', '.join(cnt[0])))
+                (self.action.name, ', '.join(cnt[0])))
 
-        min_res = None
         res = defaultdict(list)
         for disjoint_solution in product(*disjoint_solutions):
-            ins = {e: s.feature.outs[e] for e, s in izip(edges, disjoint_solution)}
-            outs = self.feature.getOutput(ins)
+            ins = {e: s.action.outs[e] for e, s in izip(edges, disjoint_solution)}
+            outs = self.action.getOutput(ins)
 
             converters = self.getConverters(ins)
             if converters is None:
                 continue
 
             resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
-            dependencies = {e: s.feature.name for e, s in izip(edges, disjoint_solution)}
-            feature_instance = self.feature(resources, dependencies, ins=ins, outs=outs, converters=converters)
-            solution = FeatureGraph(feature_instance)
+            dependencies = {e: s.action.name for e, s in izip(edges, disjoint_solution)}
+            action_instance = self.action(resources, dependencies, ins=ins, outs=outs, converters=converters)
+            solution = ActionGraph(action_instance)
             for e, s in izip(edges, disjoint_solution):
-                solution.addEdge(e, feature_instance.name, s.feature.name)
+                solution.addEdge(e, action_instance.name, s.action.name)
                 solution.update(s)
             res[len(resources - self.requested_resources)].append(solution)
         if len(res) > 0:
@@ -59,13 +58,13 @@ class SolutionIterator(object):
                 yield solution
 
     def iterEdge(self, edge):
-        for feature_name in self.graph.vs[self.feature.name][edge]:
-            feature = self.graph.features[feature_name]
-            if feature.name in self.visited:
+        for action_name in self.graph.vs[self.action.name][edge]:
+            action = self.graph.actions[action_name]
+            if action.name in self.visited:
                 continue
-            it = ResourceSolutionIterator(feature, self.resources)\
-                if issubclass(feature.feature_class, Resource)\
-                else SolutionIterator(feature, self.graph, self.resources, self.maps, self.requested_resources, set(self.visited))
+            it = ResourceSolutionIterator(action, self.resources)\
+                if issubclass(action.action_class, Resource)\
+                else SolutionIterator(action, self.graph, self.resources, self.maps, self.requested_resources, set(self.visited))
             for solution in it:
                 yield solution
 
@@ -117,32 +116,33 @@ class SolutionIterator(object):
                 converters[edge].id_map.append(self.maps[entity].make(fr_value, to_value))
         return converters
 
+
 class ResourceSolutionIterator(object):
-    def __init__(self, feature, resources):
-        self.feature = feature
+    def __init__(self, action, resources):
+        self.action = action
         self.c_hit = 0
-        self.hits = self._getHits(feature, resources)
+        self.hits = self._get_hits(action, resources)
 
     def __str__(self):
-        return self.feature.name
+        return self.action.name
 
     def __iter__(self):
         if len(self.hits) == 0:
-            ERROR_MANAGER.addError('%s does not match any provided resource'%\
-                self.feature.name)
+            ERROR_MANAGER.addError('%s does not match any provided resource'%
+                                   self.action.name)
         for hit in self.hits:
-            yield self._initFeatureGraph(hit)
+            yield self._init_action_graph(hit)
 
-    def _getHits(self, feature, resources):
-        if issubclass(self.feature.feature_class, Target) and self.feature.feature_class.matches(resources['target']):
+    def _get_hits(self, action, resources):
+        if issubclass(self.action.action_class, Target) and self.action.action_class.matches(resources['target']):
             return [resources['target']]
-        return [resource for resource in resources.itervalues()\
-            if resource.name != 'target' and self.feature.feature_class.matches(resource)]
+        return [resource for resource in resources.itervalues()
+                if resource.name != 'target' and self.action.action_class.matches(resource)]
 
-    def _initFeatureGraph(self, resource):
-        """ Create a single node FeatureGraph. """
-        outs = self.feature.getOutput({'resource': resource})
-        feature_instance = self.feature(set([resource]), {}, {}, outs)
-        res = FeatureGraph(feature_instance)
+    def _init_action_graph(self, resource):
+        """ Create a single node ActionGraph. """
+        outs = self.action.getOutput({'resource': resource})
+        action_instance = self.action(set([resource]), {}, {}, outs)
+        res = ActionGraph(action_instance)
         res.addResource(resource)
         return res

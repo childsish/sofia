@@ -5,20 +5,20 @@ import sys
 import multiprocessing
 
 from collections import defaultdict
-from common import getProgramDirectory, loadFeatureHyperGraph, loadEntityGraph
+from common import getProgramDirectory, loadActionHyperGraph, loadEntityGraph
 from functools import partial
 from sofia_.error_manager import ERROR_MANAGER
-from sofia_.parser import FeatureParser, ResourceParser
-from sofia_.feature_graph import FeatureGraph
+from sofia_.parser import ActionParser, ResourceParser
+from sofia_.action_graph import ActionGraph
 from sofia_.solution_iterator import SolutionIterator
-from sofia_.feature_wrapper import FeatureWrapper
+from sofia_.action_wrapper import ActionWrapper
 from sofia_.attribute_map_factory import AttributeMapFactory
 
 class Aggregator(object):
     def __init__(self):
-        self.hyper_graph = loadFeatureHyperGraph()
+        self.hyper_graph = loadActionHyperGraph()
 
-    def aggregate(self, requested_features, provided_resources, args, maps={}):
+    def aggregate(self, requested_actions, provided_resources, args, maps={}):
         def iterResource(resource):
             resource.init(**resource.param)
             line_no = 1
@@ -26,46 +26,46 @@ class Aggregator(object):
                 yield resource.calculate(), line_no
                 line_no += 1
 
-        sys.stderr.write('    Resolving features...\n')
+        sys.stderr.write('    Resolving steps...\n')
         
-        solution, resolved_features = self.resolveRequest(requested_features, provided_resources, maps)
+        solution, resolved_actions = self.resolveRequest(requested_actions, provided_resources, maps)
         if args.graph:
             sys.stdout.write('%s\n\n'%solution)
         else:
             sys.stderr.write('\n    Aggregating information...\n\n')
-            sys.stdout.write('\t'.join(map(str, requested_features)))
+            sys.stdout.write('\t'.join(map(str, requested_actions)))
             sys.stdout.write('\n')
 
-            it = iterResource(solution.features['target'])
+            it = iterResource(solution.actions['target'])
             pool = multiprocessing.Pool(args.processes, initAnnotation,
-                [resolved_features, solution])
+                [resolved_actions, solution])
             for row in pool.imap(getAnnotation, it, 100):
                 sys.stdout.write('\t'.join(row))
                 sys.stdout.write('\n')
             pool.close()
             pool.join()
 
-    def resolveRequest(self, requested_features, provided_resources, maps):
+    def resolveRequest(self, requested_actions, provided_resources, maps):
         def satisfiesRequest(graph, requested_resources):
             return graph.resources.intersection(requested_resources) == requested_resources
         
-        feature_graphs = []
-        for feature in requested_features:
+        action_graphs = []
+        for action in requested_actions:
             ERROR_MANAGER.reset()
             sys.stderr.write('    %s - '%\
-                str(feature))
-            old_feature_wrapper = self.hyper_graph.features[feature.name]
-            feature_wrapper = FeatureWrapper(old_feature_wrapper.feature_class,
-                old_feature_wrapper.name,
-                old_feature_wrapper.ins,
-                old_feature_wrapper.outs,
-                feature.param,
-                feature.attr)
-            solution_iterator = SolutionIterator(feature_wrapper, self.hyper_graph, provided_resources, maps, feature.resources)
+                str(action))
+            old_action_wrapper = self.hyper_graph.actions[action.name]
+            action_wrapper = ActionWrapper(old_action_wrapper.action_class,
+                old_action_wrapper.name,
+                old_action_wrapper.ins,
+                old_action_wrapper.outs,
+                action.param,
+                action.attr)
+            solution_iterator = SolutionIterator(action_wrapper, self.hyper_graph, provided_resources, maps, action.resources)
             possible_graphs = [graph for graph in solution_iterator\
-                if satisfiesRequest(graph, feature.resources)]
+                if satisfiesRequest(graph, action.resources)]
             if len(possible_graphs) == 0:
-                sys.stderr.write('unable to resolve feature.\n')
+                sys.stderr.write('unable to resolve action.\n')
                 sys.stderr.write('      Possible reasons: \n      * %s\n'%\
                     '\n      * '.join(sorted(ERROR_MANAGER.errors)))
                 sys.exit(1)
@@ -74,7 +74,7 @@ class Aggregator(object):
                 for graph in possible_graphs:
                     resources = frozenset([r.name for r in graph.resources\
                         if not r.name == 'target'])
-                    extra_resources = resources - feature.resources
+                    extra_resources = resources - action.resources
                     matching_graphs[len(extra_resources)].append((graph, extra_resources))
                 count, matching_graphs = sorted(matching_graphs.iteritems())[0]
                 if len(matching_graphs) > 1:
@@ -86,17 +86,17 @@ class Aggregator(object):
                 err = 'unique solution found.\n' if count == 0 else\
                     'unique solution found with %d extra resources.\n      %s\n'%(count, '\n      '.join(extra_resources))
                 sys.stderr.write(err)
-                feature_graphs.append(matching_graph)
+                action_graphs.append(matching_graph)
             else:
                 sys.stderr.write('unique solution found.\n')
-                feature_graphs.append(possible_graphs[0])
+                action_graphs.append(possible_graphs[0])
         
-        combined_graph = FeatureGraph()
-        resolved_features = []
-        for feature_graph in feature_graphs:
-            combined_graph.update(feature_graph)
-            resolved_features.append(feature_graph.feature.name)
-        return combined_graph, resolved_features
+        combined_graph = ActionGraph()
+        resolved_actions = []
+        for action_graph in action_graphs:
+            combined_graph.update(action_graph)
+            resolved_actions.append(action_graph.action.name)
+        return combined_graph, resolved_actions
 
 def main(argv):
     parser = getParser()
@@ -111,10 +111,10 @@ def getParser():
 def defineParser(parser):
     parser.add_argument('input', metavar='TARGET',
         help='the file to annotate')
-    parser.add_argument('features', nargs='*', default=[],
-        help='request a feature using the following format <name>[:<arguments>][:<resources>]')
-    parser.add_argument('-F', '--feature-list',
-        help='a text file with a list of requested features')
+    parser.add_argument('steps', nargs='*', default=[],
+        help='request a action using the following format <name>[:<arguments>][:<resources>]')
+    parser.add_argument('-F', '--action-list',
+        help='a text file with a list of requested steps')
     parser.add_argument('-o', '--output',
         help='direct output to named file (stdout)')
     parser.add_argument('-p', '--processes', default=1, type=int,
@@ -146,22 +146,22 @@ def aggregate(args):
     provided_resources.update(parseProvidedResources(args.input,
         args.resources))
     
-    requested_features = parseRequestedFeatures(args.features, provided_resources)
-    if args.feature_list is not None:
-        fhndl = open(args.feature_list)
-        feature_list = fhndl.read().strip().split('\n')
-        requested_features.extend(parseRequestedFeatures(feature_list, provided_resources))
+    requested_actions = parseRequestedActions(args.actions, provided_resources)
+    if args.action_list is not None:
+        fhndl = open(args.action_list)
+        action_list = fhndl.read().strip().split('\n')
+        requested_actions.extend(parseRequestedActions(action_list, provided_resources))
         fhndl.close()
 
-    if len(requested_features) == 0:
-        sys.stderr.write('Error: No features were requested. Please provide'\
-            'the names of the features you wish to calculate.')
+    if len(requested_actions) == 0:
+        sys.stderr.write('Error: No steps were requested. Please provide'\
+            'the names of the steps you wish to calculate.')
         sys.exit(1)
 
     maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
     
     aggregator = Aggregator()
-    aggregator.aggregate(requested_features, provided_resources, args, maps)
+    aggregator.aggregate(requested_actions, provided_resources, args, maps)
         
 def parseProvidedResources(target, resources):
     program_dir = getProgramDirectory()
@@ -175,50 +175,50 @@ def parseProvidedResources(target, resources):
     provided_resources['target'] = resource_parser.parseResource(target + ' -n target')
     return provided_resources
 
-def parseRequestedFeatures(features, provided_resources):
-    parser = FeatureParser(provided_resources)
-    return parser.parseFeatures(features)
+def parseRequestedActions(actions, provided_resources):
+    parser = ActionParser(provided_resources)
+    return parser.parseActions(actions)
 
 
-requested_features = None
+requested_actions = None
 solution = None
 
 def initAnnotation(req_ftr, sol):
-    global requested_features
+    global requested_actions
     global solution
-    requested_features = req_ftr
+    requested_actions = req_ftr
     solution = sol
 
     solution.init()
 
 def getAnnotation(target):
-    """ Calculate the features in this graph for each entity in the target
+    """ Calculate the steps in this graph for each entity in the target
     resource. """
-    global requested_features
+    global requested_actions
     global solution
 
-    for feature in requested_features:
-        solution.features[feature].reset(solution.features)
+    for action in requested_actions:
+        solution.actions[action].reset(solution.actions)
     target, line_no = target
     kwargs = {'target': target}
     row = []
-    for feature in requested_features:
+    for action in requested_actions:
         try:
-            item = solution.features[feature].generate(kwargs, solution.features)
-            item = '' if item is None else solution.features[feature].format(item)
+            item = solution.actions[action].generate(kwargs, solution.actions)
+            item = '' if item is None else solution.actions[action].format(item)
             row.append(item)
         except Exception, e:
             import sys
             import traceback
             traceback.print_exception(*sys.exc_info(), file=sys.stderr)
             sys.stderr.write('Error processing entry on line %d\n'%\
-                (solution.features['target'].parser.line_no))
+                (solution.actions['target'].parser.line_no))
             sys.exit(1)
     return row
     #try:
     #    sys.stdout.write('\t'.join(row))
     #except TypeError:
-    #    sys.stderr.write("A feature's format function does not return a string")
+    #    sys.stderr.write("A action's format function does not return a string")
     #    sys.exit(1)
 
 if __name__ == '__main__':

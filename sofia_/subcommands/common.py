@@ -1,9 +1,9 @@
 import os
 
 from lhc.tools import loadPlugins
-from sofia_.features import Feature
-from sofia_.feature_wrapper import FeatureWrapper
-from sofia_.feature_hyper_graph import FeatureHyperGraph
+from sofia_.action import Action
+from sofia_.action_wrapper import ActionWrapper
+from sofia_.action_hyper_graph import ActionHyperGraph
 from sofia_.entity_graph import EntityGraph
 
 def loadResource(fname, parsers, format=None):
@@ -15,12 +15,12 @@ def loadResource(fname, parsers, format=None):
     raise TypeError('Unrecognised file format: %s'%\
         os.path.basename(fname))
 
-def loadFeatureHyperGraph():
+def loadActionHyperGraph():
     program_dir = getProgramDirectory()
-    available_features = loadPlugins(os.path.join(program_dir, 'features'), Feature)
-    res = FeatureHyperGraph(loadEntityGraph())
-    for feature in available_features.itervalues():
-        res.registerFeature(FeatureWrapper(feature))
+    available_actions = loadPlugins(os.path.join(program_dir, 'actions'), Action)
+    res = ActionHyperGraph(loadEntityGraph())
+    for action in available_actions.itervalues():
+        res.registerAction(ActionWrapper(action))
     return res
 
 def loadEntityGraph():
@@ -29,4 +29,3 @@ def loadEntityGraph():
 
 def getProgramDirectory():
     return os.path.dirname(os.path.realpath(__file__)).rsplit(os.sep, 2)[0]
-

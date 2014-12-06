@@ -3,7 +3,7 @@ class ErrorManager(object):
     
     This class is intended to be used as a global storage for error messages
     that occur during graph resolution. The ErrorManager is reset before
-    each FeatureHyperGraph is resolved and errors are accumulated for later
+    each ActionHyperGraph is resolved and errors are accumulated for later
     reporting. 
     """
     def __init__(self):

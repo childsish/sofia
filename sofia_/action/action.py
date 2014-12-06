@@ -3,8 +3,8 @@ from operator import and_
 from sofia_.entity import Entity
 from sofia_.error_manager import ERROR_MANAGER
 
-class Feature(object):
-    """ A feature that can be calculated from resources and other features. """
+class Action(object):
+    """ A action that can be calculated from resources and other steps. """
     
     IN = []
     OUT = []
@@ -21,12 +21,12 @@ class Feature(object):
         self.converters = converters
     
     def __str__(self):
-        """ Return the name of the feature based on it's resources and
+        """ Return the name of the action based on it's resources and
         arguments. """
         return self.name
     
     def init(self):
-        """ Initialise the feature.
+        """ Initialise the action.
 
         When overridden, this function can be passed arguments that are parsed
         from the command line.
@@ -34,10 +34,10 @@ class Feature(object):
         pass
     
     def calculate(self, **kwargs):
-        """Calculate this feature
+        """Calculate this action
         
         Assumes dependencies are already resolved. This function must be
-        overridden when implementing new features.
+        overridden when implementing new steps.
         
         :param dict entities: currently calculated entities. The target is at
             entities['target'].
@@ -45,30 +45,30 @@ class Feature(object):
         raise NotImplementedError('You must override this function')
 
     def format(self, entity):
-        """Convert entity produced by this feature to a string
+        """Convert entity produced by this action to a string
         
         :param object entity: convert this entity
         """
         return str(entity)
     
-    def generate(self, entities, features):
-        """Generate a feature
+    def generate(self, entities, actions):
+        """Generate a action
         
         This function resolves all dependencies and then calculates the
-        feature.
+        action.
         
         :param dict entities: currently calculated entities
-        :param features: available features
-        :type features: dict of features
+        :param actions: available steps
+        :type actions: dict of actions
         """
         name = self.name
         if self.calculated:
             return entities[name]
         
         dependencies_changed = False
-        for feature in self.dependencies.itervalues():
-            features[feature].generate(entities, features)
-            if features[feature].changed:
+        for action in self.dependencies.itervalues():
+            actions[action].generate(entities, actions)
+            if actions[action].changed:
                 dependencies_changed = True
         if not dependencies_changed and name in entities:
             self.calculated = True
@@ -76,8 +76,8 @@ class Feature(object):
             return entities[name]
         
         local_entities = {}
-        for dependency_name, feature in self.dependencies.iteritems():
-            local_entities[dependency_name] = entities[feature]
+        for dependency_name, action in self.dependencies.iteritems():
+            local_entities[dependency_name] = entities[action]
         for edge, converter in self.converters.iteritems():
             converter.convert(local_entities)
         res = self.calculate(**local_entities)
@@ -86,13 +86,13 @@ class Feature(object):
         entities[name] = res
         return res
     
-    def reset(self, features):
-        """ Resets the calculation status of this feature and all dependencies 
+    def reset(self, actions):
+        """ Resets the calculation status of this action and all dependencies 
         to False.
         """
         self.calculated = False
-        for feature in self.dependencies.itervalues():
-            features[feature].reset(features)
+        for action in self.dependencies.itervalues():
+            actions[action].reset(actions)
     
     def getAttributes(self):
         res = {}
@@ -101,7 +101,7 @@ class Feature(object):
         return res
     
     def _getName(self):
-        """ Return the name of the feature based on it's resources and
+        """ Return the name of the action based on it's resources and
         arguments. """
         name = [type(self).__name__]
         if len(self.resources) != 0:
