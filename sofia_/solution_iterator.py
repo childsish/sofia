@@ -4,7 +4,7 @@ from itertools import izip, product
 from operator import or_
 
 from sofia_.converter import Converter
-from sofia_.actions import Resource, Target
+from sofia_.action import Resource, Target
 from sofia_.error_manager import ERROR_MANAGER
 
 class SolutionIterator(object):

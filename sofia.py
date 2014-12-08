@@ -3,16 +3,19 @@
 import argparse
 import os
 import sys
+libpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sofia_')
+sys.path.append(libpath)
 
-sys.path.append(os.path.realpath(__file__))
 from sofia_.subcommands import aggregate, info
 
+
 def main():
-    parser = getParser()
+    parser = get_parser()
     args = parser.parse_args()
     args.func(args)
 
-def getParser():
+
+def get_parser():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
     
@@ -23,6 +26,7 @@ def getParser():
     info.defineParser(info_parser)
     
     return parser
+
 
 if __name__ == '__main__':
     sys.exit(main())
