@@ -1,6 +1,6 @@
 import unittest
 
-from modules.subcommands import aggregate
+from sofia_.subcommands import aggregate
 
 class TestAggregate(unittest.TestCase):
     def test_parseResources(self):
