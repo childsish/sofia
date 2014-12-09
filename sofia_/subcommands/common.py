@@ -1,9 +1,10 @@
 import os
 
 from lhc.tools import loadPlugins
+
 from sofia_.action import Action
 from sofia_.action_wrapper import ActionWrapper
-from sofia_.action_hyper_graph import ActionHyperGraph
+from sofia_.graph.action_hyper_graph import ActionHyperGraph
 from sofia_.entity_graph import EntityGraph
 
 def loadResource(fname, parsers, format=None):

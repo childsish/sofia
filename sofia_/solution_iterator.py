@@ -1,11 +1,13 @@
 from collections import defaultdict
-from action_graph import ActionGraph
 from itertools import izip, product
+
 from operator import or_
 
+from sofia_.graph.action_graph import ActionGraph
 from sofia_.converter import Converter
 from sofia_.action import Resource, Target
 from sofia_.error_manager import ERROR_MANAGER
+
 
 class SolutionIterator(object):
     def __init__(self, action, graph, provided_resources, maps={}, requested_resources=set(), visited=None):

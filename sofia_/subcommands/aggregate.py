@@ -3,16 +3,16 @@ import json
 import os
 import sys
 import multiprocessing
-
 from collections import defaultdict
+
 from common import getProgramDirectory, loadActionHyperGraph, loadEntityGraph
-from functools import partial
 from sofia_.error_manager import ERROR_MANAGER
 from sofia_.parser import ActionParser, ResourceParser
-from sofia_.action_graph import ActionGraph
+from sofia_.graph.action_graph import ActionGraph
 from sofia_.solution_iterator import SolutionIterator
 from sofia_.action_wrapper import ActionWrapper
 from sofia_.attribute_map_factory import AttributeMapFactory
+
 
 class Aggregator(object):
     def __init__(self):
@@ -111,9 +111,9 @@ def getParser():
 def defineParser(parser):
     parser.add_argument('input', metavar='TARGET',
         help='the file to annotate')
-    parser.add_argument('steps', nargs='*', default=[],
+    parser.add_argument('actions', nargs='*', default=[],
         help='request a action using the following format <name>[:<arguments>][:<resources>]')
-    parser.add_argument('-F', '--action-list',
+    parser.add_argument('-A', '--action-list',
         help='a text file with a list of requested steps')
     parser.add_argument('-o', '--output',
         help='direct output to named file (stdout)')
