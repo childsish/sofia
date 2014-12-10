@@ -3,8 +3,7 @@ import sys
 
 from sofia_.action import Resource, Target
 
-from lhc.file_format.bed_.iterator import BedIterator as BedIteratorParser
-from lhc.file_format.bed_.set_ import BedSet as BedSetParser
+from modules.file_formats.bed import BedIterator as BedIteratorParser, BedSet as BedSetParser
 
 class BedIterator(Target):
     
