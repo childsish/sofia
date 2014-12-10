@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 from functools import reduce
 from itertools import izip
 from operator import add, mul
-from lhc.binf.genetic_code import RedundantCode
+from modules.binf.genetic_code import RedundantCode
 
 
 class TranslateCodingSequence(Action):

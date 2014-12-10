@@ -1,6 +1,5 @@
 from collections import namedtuple
 from itertools import izip
-from lhc.binf.genetic_code import GeneticCodes
 from lhc.binf.sequence import revcmp
 from sofia_.action import Action
 
@@ -145,7 +144,7 @@ AminoAcidVariant = namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'))
 
 class AminoAcidVariation(Action):
     
-    IN = ['codon_variant']
+    IN = ['codon_variant', 'genetic_code']
     OUT = ['amino_acid_variant']
     
     BUFFER = 50
@@ -158,19 +157,18 @@ class AminoAcidVariation(Action):
     }
     
     def init(self, use_3code='f'):
-        self.gc = GeneticCodes().getCode(1)
         self.abbreviations = self.ABBREVIATIONS if use_3code[0].lower() == 't'\
             else {name: name for name in self.ABBREVIATIONS}
 
-    def calculate(self, codon_variant):
+    def calculate(self, codon_variant, genetic_code):
         if codon_variant is None:
             return None
         alts = []
-        alts = [None if alt is None else self.gc.translate(alt)\
+        alts = [None if alt is None else genetic_code.translate(alt)\
             for alt in codon_variant.alt]
         fs = [None if fs_ is None else fs_ / 3 for fs_ in codon_variant.fs]
         return AminoAcidVariant(codon_variant.pos / 3,
-            self.gc.translate(codon_variant.ref), alts, fs)
+            genetic_code.translate(codon_variant.ref), alts, fs)
     
     def format(self, amino_acid_variant):
         res = []
