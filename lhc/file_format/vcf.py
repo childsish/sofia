@@ -9,7 +9,7 @@ from vcf_.iterator import VcfIterator
 def iterEntries(fname):
     return VcfIterator(fname)
 
-def merge(glob_fnames, quality=50.0, out=None, bams=[]):
+def merge(glob_fnames, quality=50.0, mapping_quality=0, out=None, bams=[]):
     fnames = []
     for glob_fname in glob_fnames:
         fname = glob.glob(glob_fname)
@@ -17,7 +17,7 @@ def merge(glob_fnames, quality=50.0, out=None, bams=[]):
             raise ValueError('%s does not match any existing files'%glob_fname)
         fnames.extend(fname)
     out = sys.stdout if out is None else open(out, 'w')
-    merger = VcfMerger(fnames, quality, bams=bams)
+    merger = VcfMerger(fnames, quality, mapping_quality, bams=bams)
     for key, values in merger.hdrs.iteritems():
         for value in values:
             out.write('%s=%s\n'%(key, value))
@@ -53,10 +53,13 @@ def getArgumentParser():
     merge_parser = subparsers.add_parser('merge')
     merge_parser.add_argument('inputs', nargs='+', metavar='FILE')
     merge_parser.add_argument('-b', '--bams', nargs='+')
-    merge_parser.add_argument('-q', '--quality', type=float)
+    merge_parser.add_argument('-q', '--quality', type=float,
+        default=0)
+    merge_parser.add_argument('-m', '--mapping_quality', type=float,
+        default=0)
     merge_parser.add_argument('-o', '--output')
     merge_parser.set_defaults(func=lambda args: merge(args.inputs,
-        args.quality, args.output, args.bams))
+        args.quality, args.mapping_quality, args.output, args.bams))
     
     return parser
 
