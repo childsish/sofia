@@ -3,9 +3,7 @@ import sys
 
 from sofia_.action import Resource, Target
 
-from lhc.file_format.id_map import IdMap
-from lhc.file_format.vcf_.iterator import VcfIterator as VcfIteratorParser
-from lhc.file_format.vcf_.set_ import VcfSet as VcfSetParser
+from modules.file_formats.vcf import VcfIterator as VcfIteratorParser, VcfSet as VcfSetParser
 
 class VcfIterator(Target):
     
@@ -28,14 +26,12 @@ class VcfSet(Resource):
     EXT = ['.vcf', '.vcf.gz']
     OUT = ['variant_set']
     
-    def init(self, id_map=None, fr=None, to=None):
-        if id_map is not None:
-            id_map = IdMap(id_map, fr, to)
+    def init(self, fr=None, to=None):
         fname = self.getFilename()
         if os.path.exists('%s.tbi'%fname):
             try:
                 from lhc.file_format.vcf_.index import IndexedVcfFile
-                self.parser = IndexedVcfFile(fname, id_map)
+                self.parser = IndexedVcfFile(fname)
                 return
             except ImportError:
                 sys.stderr.write('Pysam not available. Parsing entire file.')
