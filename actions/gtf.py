@@ -3,8 +3,8 @@ import os
 
 from sofia_.action import Resource, Target
 
-from lhc.file_format.gtf_.iterator import GtfIterator as GtfIteratorParser
-from lhc.file_format.gtf_.set_ import GtfSet as GtfSetParser
+from modules.file_formats.gtf import GtfIterator as GtfIteratorParser, GtfSet as GtfSetParser
+
 
 class GtfIterator(Target):
     
