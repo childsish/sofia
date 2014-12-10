@@ -1,6 +1,6 @@
 from sofia_.action import Action
 
-from lhc.binf.sequence import revcmp
+from modules.binf.sequence import revcmp
 
 class GetCodingSequenceByGeneModel(Action):
 
