@@ -2,7 +2,6 @@ import os
 import pysam
 
 from collections import defaultdict
-from operator import add
 from lhc.binf.genomic_coordinate import Interval
 from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.file_format.gtf_.iterator import GtfIterator
@@ -23,14 +22,19 @@ class IndexedGtfFile(object):
         self.ivl_index = pysam.Tabixfile(self.fname)
     
     def __getitem__(self, key):
-        #if isinstance(key, basestring):
-        #    genes = [self.key_index[key]]
+        if isinstance(key, basestring):
+            return self.getGeneByGeneId(key)
         if hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
             return self.getGenesAtPosition(key.chr, key.pos)
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             return self.getGenesInInterval(key.chr, key.start, key.stop)
         else:
             raise NotImplementedError('Random access not implemented for %s'%type(key))
+
+    def getGeneByGeneId(self, gene_id):
+        chr, start, stop = self.key_index[gene_id]
+        gene = Gene(gene_id, Interval(chr, start, stop))
+        return self._completeGene(gene)
 
     def getGenesAtPosition(self, chr, pos):
         genes = self._getGeneIntervalsInInterval(chr, pos, pos + 1)
@@ -44,6 +48,7 @@ class IndexedGtfFile(object):
         idx = self.ivl_index
         lines = [GtfIterator._parseLine(line) for line in\
             idx.fetch(chr, start, stop)]
+        return [(attr['gene_name'], ivl.start, ivl.stop) for type, ivl, attr in lines if type == 'gene']
         genes = [Gene(attr['gene_name'], ivl) for type, ivl, attr in lines\
             if type == 'gene']
         return genes
