@@ -5,7 +5,7 @@ from lhc.tools import loadPlugins
 from sofia_.action import Action
 from sofia_.action_wrapper import ActionWrapper
 from sofia_.graph.action_hyper_graph import ActionHyperGraph
-from sofia_.entity_graph import EntityGraph
+from sofia_.graph.entity_graph import EntityGraph
 
 def loadResource(fname, parsers, format=None):
     if format is not None and format in parsers:
