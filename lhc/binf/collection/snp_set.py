@@ -17,7 +17,7 @@ class SnpSet(object):
         u1 chrs(pos): the chromosome ids (names found in indices subgroup)
         u4 poss(pos): the position on the chromosome
         S1 ref(pos, ploidy): the reference sequence
-        u4 snps(gen, pos, ploidy): the mutation ids (mutations found in mutations subgroup)
+        S1 snps(gen, pos, ploidy): the alleles
         S1 gens(gen, gen_width): the list of genotype names
 
     group: indices {
