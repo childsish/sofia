@@ -2,9 +2,9 @@ import os
 import pysam
 
 from collections import defaultdict
-from lhc.binf.genomic_coordinate import Interval
-from lhc.binf.gene_model import Gene, Transcript, Exon
-from lhc.file_format.gtf_.iterator import GtfIterator
+from binf.genomic_coordinate import Interval
+from binf.gene_model import Gene, Transcript, Exon
+from iterator import GtfIterator
     
 class IndexedGtfFile(object):
     def __init__(self, fname):

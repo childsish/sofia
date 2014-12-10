@@ -1,8 +1,6 @@
 import os
 import pysam
 
-from lhc.binf.genomic_coordinate import Position
-
 class IndexedFastaFile(object):
     def __init__(self, fname):
         self.fname = os.path.abspath(fname)

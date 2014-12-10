@@ -1,7 +1,5 @@
-from lhc.indices.index import Index
-from lhc.indices.exact_key import ExactKeyIndex
-from lhc.indices.overlapping_interval import OverlappingIntervalIndex
-from lhc.interval import Interval
+from indices import Index, ExactKeyIndex, OverlappingIntervalIndex
+from interval import Interval
 
 class GtfSet(object):
     def __init__(self, iterator):

@@ -1,7 +1,6 @@
 import gzip
 
 from collections import namedtuple
-from lhc.binf.genomic_coordinate import Interval
 
 BedEntry = namedtuple('BedEntry', ('chr', 'start', 'stop', 'name', 'score', 'strand'))
 

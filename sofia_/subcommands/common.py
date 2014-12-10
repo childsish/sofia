@@ -1,7 +1,5 @@
 import os
 
-from lhc.tools import loadPlugins
-
 from sofia_.action import Action
 from sofia_.action_wrapper import ActionWrapper
 from sofia_.graph.action_hyper_graph import ActionHyperGraph
