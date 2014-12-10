@@ -2,27 +2,25 @@ from sofia_.action import Action
 
 from collections import Counter
 from itertools import islice, izip
-from lhc.binf.aa import readMolWeight
 
 
 class Pest(Action):
 
-    IN = ['amino_acid_sequence']
+    IN = ['amino_acid_sequence', 'molecular_weight_set']
     OUT = ['pest']
 
     POSITIVE = set('RHK')
     REQUIRED = ('P', 'DE', 'ST')
     
-    def init(self, win=12, thr=5, molwt=None, mono=False):
+    def init(self, win=12, thr=5, mono=False):
         self.win = win
         self.thr = thr
-        self.molwt = readMolWeight() if molwt is None else molwt
         self.mono = 'mono' if mono else 'avg'
 
-    def calculate(self, amino_acid_sequence):
-        return list(self.iterPest(amino_acid_sequence))
+    def calculate(self, amino_acid_sequence, molecular_weight_set):
+        return list(self.iterPest(amino_acid_sequence, molecular_weight_set))
 
-    def iterPest(self, seq):
+    def iterPest(self, seq, molwts):
         """ Algorithm copied from EMBOSS:
             https://github.com/pjotrp/EMBOSS/blob/master/emboss/epestfind.c:278
         """
@@ -33,13 +31,13 @@ class Pest(Action):
         for fr, to in self.iterCandidates(seq):
             cnt = Counter(islice(seq, fr, to)) # islice to prevent copying
             if self.isValidPest(cnt):
-                molwt = sum(self.molwt[seq[i]][self.mono]\
+                molwt = sum(molwts[seq[i]][self.mono]\
                     for i in xrange(fr, to))
-                pstsum = sum(cnt[k] * self.molwt[k][self.mono]\
+                pstsum = sum(cnt[k] * molwts[k][self.mono]\
                     for k in 'DEPST')
-                pstsum -= sum(self.molwt[k][self.mono] for k in 'EPT')
+                pstsum -= sum(molwts[k][self.mono] for k in 'EPT')
                 pstpct = pstsum / molwt
-                hydind = sum(v * self.molwt[k][self.mono] * ltkdhi[k] / molwt\
+                hydind = sum(v * molwts[k][self.mono] * ltkdhi[k] / molwt\
                     for k, v in cnt.iteritems())
                 pstscr = 0.55 * pstpct - 0.5 * hydind
                 yield pstscr, (fr, to)
