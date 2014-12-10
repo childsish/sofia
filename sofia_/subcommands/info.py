@@ -1,9 +1,9 @@
 import argparse
 import os
 
-from lhc.tools import loadPlugins
-from common import getProgramDirectory, loadActionHyperGraph
+from common import getProgramDirectory, loadActionHyperGraph, load_plugins
 from sofia_.action import Action
+
 
 def info(args):
     if args.output is None:
@@ -17,10 +17,11 @@ def info(args):
         listActions(args)
     args.output.close()
 
+
 def listActions(args):
     program_dir = getProgramDirectory()
     action_dir = os.path.join(program_dir, 'steps')
-    action_types = loadPlugins(action_dir, Action)
+    action_types = load_plugins(action_dir, Action)
     
     if args.action is None:
         args.output.write('\nAvailable steps:\n===================\n')
@@ -31,6 +32,7 @@ def listActions(args):
     else:
         listAction(action_types[args.action], args)
 
+
 def listAction(action, args):
     args.output.write('%s\n'%action.__name__)
     if args.verbose:
@@ -40,19 +42,23 @@ def listAction(action, args):
             args.output.write(' Description:\n  %s'%action.__doc__)
         args.output.write('\n')
 
+
 def graphActions(args):
     graph = loadActionHyperGraph()
     args.output.write(str(graph))
+
 
 def main():
     parser = getParser()
     args = parser.parse_args()
     args.func(args)
 
+
 def getParser():
     parser = argparse.ArgumentParser()
     defineParser(parser)
     return parser
+
 
 def defineParser(parser):
     parser.add_argument('-g', '--graph', action='store_true',
@@ -64,7 +70,8 @@ def defineParser(parser):
     parser.add_argument('-f', '--action',
         help='list a specific action')
     parser.set_defaults(func=info)
-    
+
+
 if __name__ == '__main__':
     import sys
     sys.exit(main())

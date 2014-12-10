@@ -30,3 +30,26 @@ def loadEntityGraph():
 
 def getProgramDirectory():
     return os.path.dirname(os.path.realpath(__file__)).rsplit(os.sep, 2)[0]
+
+def load_plugins(indir, cls):
+    import os
+    import sys
+
+    sys.path.append(indir)
+    plugins = {}
+
+    fnames = (fname for fname in os.listdir(indir)\
+        if fname[0] != '.' and fname.endswith('.py'))
+
+    for fname in fnames:
+        module_name, ext = os.path.splitext(fname)
+        d = imp.load_source(module_name, os.path.join(indir, fname)).__dict__
+        for k, v in d.iteritems():
+            if k == cls.__name__:
+                continue
+            try:
+                if issubclass(v, cls):
+                    plugins[k] = v
+            except TypeError:
+                continue
+    return plugins
