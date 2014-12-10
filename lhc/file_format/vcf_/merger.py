@@ -10,9 +10,10 @@ class VcfMerger(object):
     
     CHR_REGX = re.compile('\d+$|X$|Y$|M$')
     
-    def __init__(self, fnames, quality=0, depth=0, bams=[]):
+    def __init__(self, fnames, quality=0, mapping_quality=0, depth=0, bams=[]):
         self.fnames = fnames
         self.quality = quality
+        self.mapping_quality = mapping_quality
         self.depth = depth
         self.iterators = map(VcfIterator, fnames)
         hdrs = [it.hdrs for it in self.iterators]
@@ -65,7 +66,7 @@ class VcfMerger(object):
                     top, top_alt = sample_to_top[sample_name]
                     sample_data = top.samples[sample_name]
                     if 'Q' not in format_: format_['Q'] = ''
-                    if 'GT' not in format_: format_['GT'] = '0/0'
+                    if 'GT' not in format_: format_['GT'] = './.'
                     qual = sample_data['Q'] if 'Q' in sample_data else\
                         '' if top.qual == '.' else\
                         '%.2f'%top.qual
@@ -83,7 +84,7 @@ class VcfMerger(object):
                         samples[sample_name]['AO'] =\
                             self._getAO(sample_data['AO'], top.alt, alt)
                 elif sample_name in self.sample_to_bam:
-                    if 'GT' not in format_: format_['GT'] = '0/0'
+                    if 'GT' not in format_: format_['GT'] = './.'
                     if 'RO' not in format_: format_['RO'] = '0'
                     if 'AO' not in format_: format_['AO'] =\
                         ','.join('0' * len(alt))
@@ -165,6 +166,8 @@ class VcfMerger(object):
         cnt = Counter()
         rec = sample == '3.2-2D' and pos == 178952102
         for read in bam.fetch(chr, ref_start, ref_stop):
+            if read.mapping_quality < self.mapping_quality:
+                continue
             read_start, read_stop, truncated =\
                 self._getReadInterval(read, ref_start, ref_stop)
             alt_seq = read.seq[read_start:read_stop]
