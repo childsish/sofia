@@ -3,8 +3,7 @@ import sys
 
 from sofia_.action import Resource
 
-from lhc.file_format.fasta_.set_ import FastaSet as FastaSetParser
-from lhc.file_format.fasta_.iterator import FastaIterator as FastaIteratorParser
+from modules.file_formats.fasta import FastaSet as FastaSetParser, FastaIterator as FastaIteratorParser
 
 class FastaChromosomeSequenceSet(Resource):
     
