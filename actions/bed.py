@@ -1,9 +1,12 @@
-import os
-import sys
-
 from sofia_.action import Resource, Target
-
 from modules.file_formats.bed import BedIterator as BedIteratorParser, BedSet as BedSetParser
+try:
+    from modules.file_formats.bed import IndexedBedFile
+except ImportError:
+    import sys
+    sys.stderr.write('Pysam not available. Bed file access will be slower.')
+    IndexedBedFile = lambda fname: BedSetParser(BedIteratorParser(fname))
+
 
 class BedIterator(Target):
     
@@ -26,6 +29,7 @@ class BedIterator(Target):
     def format(self, genomic_interval):
         return genomic_interval['data'].name
 
+
 class BedSet(Resource):
     
     EXT = ['.bed', '.bed.gz']
@@ -33,14 +37,4 @@ class BedSet(Resource):
     OUT = ['genomic_interval_set']
 
     def init(self):
-        fname = self.getFilename()
-        if os.path.exists('%s.tbi'%fname):
-            try:
-                from lhc.file_format.bed_.index import IndexedBedFile
-                self.parser = IndexedBedFile(fname)
-                return
-            except ImportError:
-                sys.stderr.write('Pysam not available. Parsing entire file.')
-                pass
-        self.parser = BedSetParser(BedIteratorParser(fname))
-
+        self.parser = IndexedBedFile(fname)

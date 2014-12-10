@@ -1,9 +1,12 @@
-import os
-import sys
-
 from sofia_.action import Resource, Target
-
 from modules.file_formats.vcf import VcfIterator as VcfIteratorParser, VcfSet as VcfSetParser
+try:
+    from modules.file_formats.vcf import IndexedVcfFile
+except ImportError:
+    import sys
+    sys.stderr.write('Pysam not available. Vcf file access will be slower.')
+    IndexedBedFile = lambda fname: VcfSetParser(VcfIteratorParser(fname))
+
 
 class VcfIterator(Target):
     
@@ -19,6 +22,7 @@ class VcfIterator(Target):
             'chromosome_pos': variant.pos}
         return {'genomic_position': genomic_position, 'variant': variant}
 
+
 class VcfSet(Resource):
     """A set of variants parsed from a .vcf file
     """
@@ -26,14 +30,5 @@ class VcfSet(Resource):
     EXT = ['.vcf', '.vcf.gz']
     OUT = ['variant_set']
     
-    def init(self, fr=None, to=None):
-        fname = self.getFilename()
-        if os.path.exists('%s.tbi'%fname):
-            try:
-                from lhc.file_format.vcf_.index import IndexedVcfFile
-                self.parser = IndexedVcfFile(fname)
-                return
-            except ImportError:
-                sys.stderr.write('Pysam not available. Parsing entire file.')
-                pass
-        self.parser = VcfSetParser(VcfIteratorParser(fname))
+    def init(self):
+        self.parser = IndexedVcfFile(self.getFilename())

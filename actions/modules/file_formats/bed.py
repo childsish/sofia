@@ -1,4 +1,4 @@
-from bed_ import BedIterator, BedSet
+from bed_ import BedIterator, BedSet, IndexedBedFile
 
 def iterEntries(fname):
     """ Convenience function """
