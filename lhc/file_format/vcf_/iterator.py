@@ -22,6 +22,8 @@ class VcfIterator(object):
         self.fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
         self.line_no = 0
         self.hdrs = self._parseHeaders()
+        self.samples = self.hdrs['##SAMPLES']
+        del self.hdrs['##SAMPLES']
     
     def __del__(self):
         if hasattr(self, 'fhndl') and not self.fhndl.closed:
@@ -83,7 +85,7 @@ class VcfIterator(object):
         res = {}
         if self.FORMAT < len(parts):
             keys = parts[self.FORMAT].split(':')
-            for i, sample in enumerate(self.hdrs['##SAMPLES']):
+            for i, sample in enumerate(self.samples):
                 if parts[self.FORMAT + i + 1] == '.':
                     continue
                 res[sample] = dict(izip(keys, parts[self.FORMAT + i + 1].strip().split(':')))
