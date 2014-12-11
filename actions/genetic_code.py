@@ -6,8 +6,8 @@ class GeneticCode(Resource):
 
     EXT = ['.gc']
     OUT = ['genetic_code']
+    DEFAULT = 'gc.prt'
 
-    def init(self, gc=None):
-        gc = 0 if gc is None else gc
+    def init(self, gc='Standard'):
         fname = self.getFilename()
         self.parser = GeneticCodes(fname)[gc]

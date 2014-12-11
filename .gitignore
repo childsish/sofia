@@ -1,7 +1,6 @@
 *.class
 *.pyc
 *.pyo
-*.dat
 .project
 .pydevproject
 *.dot

@@ -8,6 +8,7 @@ class MolecularWeights(Resource):
 
     EXT = ['.dat', '.mol']
     OUT = ['molecular_weight_set']
+    DEFAULT = 'Emolwt.dat'
 
     def init(self):
         fname = self.getFilename()
