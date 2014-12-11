@@ -6,6 +6,16 @@ from sequence import revcmp
 @total_ordering
 class Position(object):
     def __init__(self, chromosome, position, strand='+'):
+        """ Create a genomic position
+
+        A genomic position is a position on a chromosome and is defined as the
+        number of nucleotides from the beginning of the chromosome and the strand the position is on.
+
+        :param chromosome: the chromosome the position is on.
+        :param position: the number of nucleotides from the beginning of the chromosome.
+        :param strand: the strand the position is on.
+        :return: a genomic position
+        """
         self.chr = chromosome
         self.pos = position
         self.strand = strand
@@ -21,21 +31,30 @@ class Position(object):
         return (self.chm < other.chm) or\
             (self.chm == other.chm) and (self.pos < other.pos)
 
+    def get_upstream(self, offset):
+        return self.pos - offset if self.strand == '+' else self.pos + offset
+
+    def get_downstream(self, offset):
+        return self.get_upstream(-offset)
+
+    def get_interval(self, other):
+        return Interval(self.chr, min(self.pos, other.pos), max(self.pos, other.pos), self.strand)
+
 
 @total_ordering 
 class Interval(BaseInterval):
     
-    def __init__(self, chm, start, stop, strand='+'):
+    def __init__(self, chromosome, start, stop, strand='+'):
         """Create a genomic interval
         
-        :param string chm: the chromosome the interval is on
+        :param string chromosome: the chromosome the interval is on
         :param int start: the start position of the interval (inclusive, 0-indexed)
         :param int stop: the stop position of the interval (not inclusive)
         :param strand: the strand the interval is on
         :type strand: '+' or '-'
         """
         super(Interval, self).__init__(start, stop)
-        self.chr = chm
+        self.chr = chromosome
         self.strand = strand
     
     def __str__(self):
@@ -118,6 +137,16 @@ class Interval(BaseInterval):
         ivl = super(Interval, self).divide(other)\
             if self.chr == other.chr and self.strand == other.strand else None
         return Interval(self.chr, ivl.start, ivl.stop, self.strand)
+
+    def get_5p(self):
+        pos = self.ivl.start if self.strand == '+' else\
+            self.ivl.stop
+        return Position(self.chr, pos, self.strand)
+
+    def get_3p(self):
+        pos = self.ivl.start if self.strand == '-' else\
+            self.ivl.stop
+        return Position(self.chr, pos, self.strand)
     
     def getRelPos(self, pos):
         return pos - self.start if self.strand == '+'\
