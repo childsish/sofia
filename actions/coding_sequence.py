@@ -10,10 +10,11 @@ from modules.binf.genetic_code import RedundantCode
 class TranslateCodingSequence(Action):
 
     IN = ['coding_sequence', 'genetic_code']
-    OUT = ['amino_acid_sequence']
+    OUT = ['protein_sequence']
 
     def calculate(self, coding_sequence, genetic_code):
         return genetic_code.translate(coding_sequence)
+
 
 class CalculateCodonUsage(Action):
 

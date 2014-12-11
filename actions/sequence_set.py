@@ -2,15 +2,6 @@ from sofia_.action import Action
 
 from modules.binf.sequence import revcmp
 
-class GetCodingSequenceByGeneModel(Action):
-
-    IN = ['chromosome_sequence_set', 'major_transcript']
-    OUT = ['coding_sequence']
-
-    def calculate(self, chromosome_sequence_set, major_transcript):
-        if major_transcript is None:
-            return None
-        return major_transcript.getSubSeq(chromosome_sequence_set)#, type='CDS')
 
 class GetDownstream1000(Action):
 
