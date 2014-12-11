@@ -130,8 +130,16 @@ class ResourceSolutionIterator(object):
 
     def __iter__(self):
         if len(self.hits) == 0:
-            ERROR_MANAGER.addError('%s does not match any provided resource'%
-                                   self.action.name)
+            if hasattr(self.action, 'DEFAULT'):
+                import os
+                import sys
+
+                fname = self.action.DEFAULT
+                full_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), 'data', fname)
+                yield self._init_action_graph(full_path)
+            else:
+                ERROR_MANAGER.addError('%s does not match any provided resource' %
+                                       self.action.name)
         for hit in self.hits:
             yield self._init_action_graph(hit)
 
