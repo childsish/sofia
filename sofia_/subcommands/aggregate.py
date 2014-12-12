@@ -199,6 +199,7 @@ def getAnnotation(target):
 
     for action in requested_actions:
         solution.actions[action].reset(solution.actions)
+    solution.actions['target'].calculated = True
     target, line_no = target
     kwargs = {'target': target}
     row = []
