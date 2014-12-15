@@ -1,4 +1,5 @@
 import os
+import imp
 
 from sofia_.action import Action
 from sofia_.action_wrapper import ActionWrapper
@@ -16,7 +17,7 @@ def loadResource(fname, parsers, format=None):
 
 def loadActionHyperGraph():
     program_dir = getProgramDirectory()
-    available_actions = loadPlugins(os.path.join(program_dir, 'actions'), Action)
+    available_actions = load_plugins(os.path.join(program_dir, 'actions'), Action)
     res = ActionHyperGraph(loadEntityGraph())
     for action in available_actions.itervalues():
         res.registerAction(ActionWrapper(action))

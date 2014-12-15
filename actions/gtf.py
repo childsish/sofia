@@ -1,11 +1,12 @@
 from sofia_.action import Resource, Target
-from modules.file_formats.gtf import GtfIterator as GtfIteratorParser, GtfSet as GtfSetParser
+from modules.file_formats.gtf_.iterator import GtfIterator as GtfIteratorParser
+from modules.file_formats.gtf_.set_ import GtfSet as GtfSetParser
 try:
-    from modules.file_formats.gtf import IndexedGtfFile
+    from modules.file_formats.gtf_.index import IndexedGtfFile
 except ImportError:
     import sys
     sys.stderr.write('Pysam not available. Gtf file access will be slower.')
-    IndexedBedFile = lambda fname: GtfSetParser(GtfIteratorParser(fname))
+    IndexedGtfFile = lambda fname: GtfSetParser(GtfIteratorParser(fname))
 
 
 class GtfIterator(Target):
