@@ -13,21 +13,24 @@ class Graph(object):
                 res.append('    "%s" -> "%s" [label="%s"];'%(v1, v2, e))
         res.append('}')
         return '\n'.join(res)
+
+    def __len__(self):
+        return len(self.vs)
     
-    def addVertex(self, v):
+    def add_vertex(self, v):
         if v not in self.vs:
             self.vs[v] = {}
     
-    def addEdge(self, e, v1, v2=None):
+    def add_edge(self, e, v1, v2=None):
         self.vs[v1][e] = v2
         self.es[e].add((v1, v2))
 
-    def getParents(self, v):
+    def get_parents(self, v):
         res = set()
         for parent, edges in self.vs.iteritems():
             if v in edges.values():
                 res.add(parent)
         return res
         
-    def getChildren(self, v):
+    def get_children(self, v):
         return self.vs[v].items()

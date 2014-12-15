@@ -5,7 +5,7 @@ try:
     from modules.file_formats.bed_.index import IndexedBedFile
 except ImportError:
     import sys
-    sys.stderr.write('Pysam not available. Bed file access will be slower.')
+    sys.stderr.write('Pysam not available. Bed file access will be slower.\n')
     IndexedBedFile = lambda fname: BedSetParser(BedIteratorParser(fname))
 
 

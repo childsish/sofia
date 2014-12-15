@@ -12,12 +12,15 @@ class ActionGraph(object):
         if action is not None:
             action_name = action.name
             self.actions[action_name] = action
-            self.graph.addVertex(action_name)
+            self.graph.add_vertex(action_name)
             self.graph.name = type(action).__name__
         
     def __str__(self):
         """ Returns a dot formatted representation of the graph. """
         return str(self.graph)
+
+    def __len__(self):
+        return len(self.graph)
     
     def addResource(self, resource):
         """ Add a resource that this graph depends upon. """
@@ -25,7 +28,7 @@ class ActionGraph(object):
     
     def addEdge(self, edge, fr, to):
         """ Join two steps by a labelled edge. """
-        self.graph.addEdge(edge, fr, to)
+        self.graph.add_edge(edge, fr, to)
     
     def init(self):
         """ Initialise all the steps in the graph. """

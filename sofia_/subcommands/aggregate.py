@@ -28,7 +28,7 @@ class Aggregator(object):
 
         sys.stderr.write('    Resolving steps...\n')
         
-        solution, resolved_actions = self.resolveRequest(requested_actions, provided_resources, maps)
+        solution, resolved_actions = self.resolve_request(requested_actions, provided_resources, maps)
         if args.graph:
             sys.stdout.write('%s\n\n'%solution)
         else:
@@ -45,29 +45,32 @@ class Aggregator(object):
             pool.close()
             pool.join()
 
-    def resolveRequest(self, requested_actions, provided_resources, maps):
-        def satisfiesRequest(graph, requested_resources):
+    def resolve_request(self, requested_actions, provided_resources, maps):
+        def satisfies_request(graph, requested_resources):
             return graph.resources.intersection(requested_resources) == requested_resources
         
         action_graphs = []
         for action in requested_actions:
             ERROR_MANAGER.reset()
-            sys.stderr.write('    %s - '%\
-                str(action))
+            sys.stderr.write('    %s - ' % str(action))
             old_action_wrapper = self.hyper_graph.actions[action.name]
             action_wrapper = ActionWrapper(old_action_wrapper.action_class,
-                old_action_wrapper.name,
-                old_action_wrapper.ins,
-                old_action_wrapper.outs,
-                action.param,
-                action.attr)
-            solution_iterator = SolutionIterator(action_wrapper, self.hyper_graph, provided_resources, maps, action.resources)
-            possible_graphs = [graph for graph in solution_iterator\
-                if satisfiesRequest(graph, action.resources)]
+                                           old_action_wrapper.name,
+                                           old_action_wrapper.ins,
+                                           old_action_wrapper.outs,
+                                           action.param,
+                                           action.attr)
+            solution_iterator = SolutionIterator(action_wrapper,
+                                                 self.hyper_graph,
+                                                 provided_resources,
+                                                 maps,
+                                                 action.resources)
+            possible_graphs = [graph for graph in solution_iterator
+                               if satisfies_request(graph, action.resources)]
             if len(possible_graphs) == 0:
                 sys.stderr.write('unable to resolve action.\n')
-                sys.stderr.write('      Possible reasons: \n      * %s\n'%\
-                    '\n      * '.join(sorted(ERROR_MANAGER.errors)))
+                sys.stderr.write('      Possible reasons: \n      * %s\n' %
+                                 '\n      * '.join(sorted(ERROR_MANAGER.errors)))
                 sys.exit(1)
             elif len(possible_graphs) > 1:
                 matching_graphs = defaultdict(list)
@@ -77,7 +80,15 @@ class Aggregator(object):
                     extra_resources = resources - action.resources
                     matching_graphs[len(extra_resources)].append((graph, extra_resources))
                 count, matching_graphs = sorted(matching_graphs.iteritems())[0]
+                unique = True
                 if len(matching_graphs) > 1:
+                    match_size = defaultdict(list)
+                    for graph, extra_resources in matching_graphs:
+                        match_size[len(graph)].append((graph, extra_resources))
+                    matching_graphs = sorted(match_size.iteritems())[0][1]
+                    if len(matching_graphs) > 1:
+                        unique = False
+                if not unique:
                     for graph in possible_graphs:
                         sys.stderr.write('%s\n\n'%str(graph))
                     sys.stderr.write('    Multiple solutions found.\n')

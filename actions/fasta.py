@@ -5,7 +5,7 @@ try:
     from modules.file_formats.fasta_.index import IndexedFastaFile
 except ImportError:
     import sys
-    sys.stderr.write('Pysam not available. Fasta file access will be slower.')
+    sys.stderr.write('Pysam not available. Fasta file access will be slower.\n')
     IndexedFastaFile = lambda fname: FastaSetParser(FastaIteratorParser(fname))
 
 

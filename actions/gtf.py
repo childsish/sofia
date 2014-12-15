@@ -5,7 +5,7 @@ try:
     from modules.file_formats.gtf_.index import IndexedGtfFile
 except ImportError:
     import sys
-    sys.stderr.write('Pysam not available. Gtf file access will be slower.')
+    sys.stderr.write('Pysam not available. Gtf file access will be slower.\n')
     IndexedGtfFile = lambda fname: GtfSetParser(GtfIteratorParser(fname))
 
 

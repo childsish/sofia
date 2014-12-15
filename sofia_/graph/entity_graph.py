@@ -12,10 +12,10 @@ class EntityGraph(object):
         self.graph = Graph()
         self.attr = {}
         for entity, settings in json_obj.iteritems():
-            self.graph.addVertex(entity)
+            self.graph.add_vertex(entity)
             if 'children' in settings:
                 for child in settings['children']:
-                    self.graph.addEdge('%s_%s'%(entity, child), entity, child)
+                    self.graph.add_edge('%s_%s'%(entity, child), entity, child)
             if 'attributes' in settings:
                 self.attr[entity] = settings['attributes']
 
@@ -24,7 +24,7 @@ class EntityGraph(object):
         stk = [[entity]]
         while len(stk) > 0:
             path = stk.pop()
-            for parent in self.graph.getParents(path[-1]):
+            for parent in self.graph.get_parents(path[-1]):
                 stk.append(path + [parent])
                 res.append([parent] + path[::-1])
         return res
@@ -35,7 +35,7 @@ class EntityGraph(object):
         while len(stk) > 0:
             path = stk.pop()
             if path[-1] in self.graph.vs:
-                for edge_name, child in self.graph.getChildren(path[-1]):
+                for edge_name, child in self.graph.get_children(path[-1]):
                     stk.append(path + [child])
                     res.append(path + [child])
         return res

@@ -5,7 +5,7 @@ try:
     from modules.file_formats.vcf_.index import IndexedVcfFile
 except ImportError:
     import sys
-    sys.stderr.write('Pysam not available. Vcf file access will be slower.')
+    sys.stderr.write('Pysam not available. Vcf file access will be slower.\n')
     IndexedVcfFile = lambda fname: VcfSetParser(VcfIteratorParser(fname))
 
 
