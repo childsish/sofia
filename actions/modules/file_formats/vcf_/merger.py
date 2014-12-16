@@ -1,9 +1,9 @@
 import re
-
 from collections import OrderedDict, defaultdict, Counter
 from itertools import izip
-from lhc.binf.identifier import Chromosome
-from lhc.collection.sorted_dict import SortedDict
+
+from binf.identifier import Chromosome
+from sorted_dict import SortedDict
 from iterator import VcfIterator, Variant
 
 class VcfMerger(object):

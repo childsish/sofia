@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from lhc.tools import enum
 
 def iterGenes(fname, it):
     gene = None
@@ -54,8 +53,6 @@ class Transcript(object):
             for exon in self.exons if exon.type in valid_types])
     
 class Exon(object):
-    
-    TYPE = enum(['gene', 'transcript', 'CDS', 'UTR5', 'UTR3'])
     
     def __init__(self, ivl, type_):
         self.ivl = ivl
