@@ -10,3 +10,6 @@ class FastaSet(object):
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             return self.data[key.chr][key.start:key.stop]
         raise NotImplementedError('Fasta set random access not implemented for %s'%type(key))
+
+    def get_interval(self, chr, start, stop):
+        return self.data[chr][start:stop]
