@@ -7,6 +7,7 @@ from sofia_.graph.action_graph import ActionGraph
 from sofia_.converter import Converter
 from sofia_.action import Resource, Target
 from sofia_.error_manager import ERROR_MANAGER
+from sofia_.parser.provided_resource import ProvidedResource
 
 
 class SolutionIterator(object):
@@ -34,9 +35,9 @@ class SolutionIterator(object):
         cnt = defaultdict(list)
         for edge, edge_solutions in izip(edges, disjoint_solutions):
             cnt[len(edge_solutions)].append(edge)
-        if 0 in cnt:
-            ERROR_MANAGER.addError('%s could not find any solutions for the edges %s'%\
-                (self.action.name, ', '.join(cnt[0])))
+        #if 0 in cnt:
+        #    ERROR_MANAGER.addError('%s could not find any solutions for the edges %s'%\
+        #        (self.action.name, ', '.join(cnt[0])))
 
         res = defaultdict(list)
         for disjoint_solution in product(*disjoint_solutions):
@@ -123,31 +124,31 @@ class ResourceSolutionIterator(object):
     def __init__(self, action, resources):
         self.action = action
         self.c_hit = 0
-        self.hits = self._get_hits(action, resources)
+        self.hits = self._get_hits(action.action_class, resources)
 
     def __str__(self):
         return self.action.name
 
     def __iter__(self):
         if len(self.hits) == 0:
-            if hasattr(self.action, 'DEFAULT'):
-                import os
-                import sys
-
-                fname = self.action.DEFAULT
-                full_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), 'data', fname)
-                yield self._init_action_graph(full_path)
-            else:
-                ERROR_MANAGER.addError('%s does not match any provided resource' %
-                                       self.action.name)
+            ERROR_MANAGER.addError('%s does not match any provided resource' %
+                                   self.action.name)
         for hit in self.hits:
             yield self._init_action_graph(hit)
 
     def _get_hits(self, action, resources):
-        if issubclass(self.action.action_class, Target) and self.action.action_class.matches(resources['target']):
+        if issubclass(action, Target) and action.matches(resources['target']):
             return [resources['target']]
-        return [resource for resource in resources.itervalues()
-                if resource.name != 'target' and self.action.action_class.matches(resource)]
+        res = [resource for resource in resources.itervalues()
+               if resource.name != 'target' and action.matches(resource)]
+        if hasattr(action, 'DEFAULT'):
+            import os
+            import sys
+
+            fname = action.DEFAULT
+            full_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), 'data', fname)
+            res.append(ProvidedResource(full_path, action.OUT[0]))
+        return res
 
     def _init_action_graph(self, resource):
         """ Create a single node ActionGraph. """
