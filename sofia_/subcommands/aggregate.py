@@ -9,7 +9,7 @@ from common import getProgramDirectory, loadActionHyperGraph, loadEntityGraph
 from sofia_.error_manager import ERROR_MANAGER
 from sofia_.parser import ActionParser, ResourceParser
 from sofia_.graph.action_graph import ActionGraph
-from sofia_.solution_iterator import SolutionIterator
+from resolvers.action_solution_iterator import SolutionIterator
 from sofia_.action_wrapper import ActionWrapper
 from sofia_.attribute_map_factory import AttributeMapFactory
 
