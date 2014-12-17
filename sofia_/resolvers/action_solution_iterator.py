@@ -10,7 +10,7 @@ from sofia_.error_manager import ERROR_MANAGER
 from sofia_.parser.provided_resource import ProvidedResource
 
 
-class SolutionIterator(object):
+class ActionSolutionIterator(object):
     def __init__(self, action, graph, provided_resources, maps={}, requested_resources=set(), visited=None):
         self.action = action
         self.graph = graph
@@ -67,7 +67,7 @@ class SolutionIterator(object):
                 continue
             it = ResourceSolutionIterator(action, self.resources)\
                 if issubclass(action.action_class, Resource)\
-                else SolutionIterator(action, self.graph, self.resources, self.maps, self.requested_resources, set(self.visited))
+                else ActionSolutionIterator(action, self.graph, self.resources, self.maps, self.requested_resources, set(self.visited))
             for solution in it:
                 yield solution
 

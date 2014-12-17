@@ -9,7 +9,7 @@ from common import getProgramDirectory, loadActionHyperGraph, loadEntityGraph
 from sofia_.error_manager import ERROR_MANAGER
 from sofia_.parser import ActionParser, ResourceParser
 from sofia_.graph.action_graph import ActionGraph
-from resolvers.action_solution_iterator import SolutionIterator
+from resolvers.action_solution_iterator import ActionSolutionIterator
 from sofia_.action_wrapper import ActionWrapper
 from sofia_.attribute_map_factory import AttributeMapFactory
 
@@ -60,7 +60,7 @@ class Aggregator(object):
                                            old_action_wrapper.outs,
                                            action.param,
                                            action.attr)
-            solution_iterator = SolutionIterator(action_wrapper,
+            solution_iterator = ActionSolutionIterator(action_wrapper,
                                                  self.hyper_graph,
                                                  provided_resources,
                                                  maps,
