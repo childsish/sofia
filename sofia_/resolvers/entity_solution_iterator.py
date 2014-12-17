@@ -10,9 +10,9 @@ from sofia_.error_manager import ERROR_MANAGER
 from sofia_.parser.provided_resource import ProvidedResource
 
 
-class SolutionIterator(object):
-    def __init__(self, action, graph, provided_resources, maps={}, requested_resources=set(), visited=None):
-        self.action = action
+class EntitySolutionIterator(object):
+    def __init__(self, entity, graph, provided_resources, maps={}, requested_resources=set(), visited=None):
+        self.entity = entity
         self.graph = graph
         self.resources = provided_resources
         self.maps = maps
@@ -25,34 +25,40 @@ class SolutionIterator(object):
         return self.action.name
     
     def __iter__(self):
-        for solution in self.iterAction():
+        for solution in self.iter_action_solutions():
             yield solution
 
-    def iterAction(self):
-        edges = sorted(self.graph.vs[self.action.name])
-        disjoint_solutions = [list(self.iterEdge(edge)) for edge in edges]
+    def iter_entity_solutions(self):
+        for action_name in self.graph.es[self.entity]:
+            if action_name in self.visited:
+                continue
+            action = self.graph.actions[action_name]
+            it = ResourceSolutionIterator(action, self.resources)\
+                if issubclass(action.action_class, Resource)\
+                else self.iter_action_solutions(action)
+            for solution in it:
+                yield solution
 
-        cnt = defaultdict(list)
-        for edge, edge_solutions in izip(edges, disjoint_solutions):
-            cnt[len(edge_solutions)].append(edge)
-        #if 0 in cnt:
-        #    ERROR_MANAGER.addError('%s could not find any solutions for the edges %s'%\
-        #        (self.action.name, ', '.join(cnt[0])))
+    def iter_action_solutions(self, action):
+        entities = sorted(self.graph.vs[action.name])
+        disjoint_solutions = [list(EntitySolutionIterator(entity, self.graph, self.resources, self.maps,
+                                                          self.requested_resources, set(self.visited)))
+                              for entity in entities]
 
         res = defaultdict(list)
         for disjoint_solution in product(*disjoint_solutions):
-            ins = {e: s.action.outs[e] for e, s in izip(edges, disjoint_solution)}
+            ins = {e: s.action.outs[e] for e, s in izip(entities, disjoint_solution)}
             outs = self.action.getOutput(ins)
 
-            converters = self.getConverters(ins)
+            converters = self.get_converters(ins)
             if converters is None:
                 continue
 
             resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
-            dependencies = {e: s.action.name for e, s in izip(edges, disjoint_solution)}
+            dependencies = {e: s.action.name for e, s in izip(entities, disjoint_solution)}
             action_instance = self.action(resources, dependencies, ins=ins, outs=outs, converters=converters)
             solution = ActionGraph(action_instance)
-            for e, s in izip(edges, disjoint_solution):
+            for e, s in izip(entities, disjoint_solution):
                 solution.addEdge(e, action_instance.name, s.action.name)
                 solution.update(s)
             res[len(resources - self.requested_resources)].append(solution)
@@ -60,18 +66,7 @@ class SolutionIterator(object):
             for solution in res[min(res)]:
                 yield solution
 
-    def iterEdge(self, edge):
-        for action_name in self.graph.vs[self.action.name][edge]:
-            action = self.graph.actions[action_name]
-            if action.name in self.visited:
-                continue
-            it = ResourceSolutionIterator(action, self.resources)\
-                if issubclass(action.action_class, Resource)\
-                else SolutionIterator(action, self.graph, self.resources, self.maps, self.requested_resources, set(self.visited))
-            for solution in it:
-                yield solution
-
-    def getConverters(self, ins):
+    def get_converters(self, ins):
         matching_entities = defaultdict(lambda: defaultdict(set))
         for edge, entity in ins.iteritems():
             for entity_name, entity_value in entity.attr.iteritems():
@@ -90,22 +85,22 @@ class SolutionIterator(object):
                         ERROR_MANAGER.addError('Converter for %s has can not convert %s'%(entity_name, value))
                         return None
 
-            edge_converters = self.convertEdge(entity_name, entity_values)
+            edge_converters = self.convert_edge(entity_name, entity_values)
             if edge_converters is None:
                 return None
             for edge, converter in edge_converters.iteritems():
                 converters[edge].update(converter)
         return converters
 
-    def convertEdge(self, entity, entity_values):
+    def convert_edge(self, entity, entity_values):
         errors = set() #TODO: Use later
         for to_value in entity_values:
-            converters = self.convertEdgeTo(entity, entity_values, to_value, errors)
+            converters = self.convert_edge_to(entity, entity_values, to_value, errors)
             if converters is not None:
                 return converters
         ERROR_MANAGER.addError(str(errors))
 
-    def convertEdgeTo(self, entity, entity_values, to_value, errors):
+    def convert_edge_to(self, entity, entity_values, to_value, errors):
         converters = defaultdict(Converter)
         for fr_value, edges in entity_values.iteritems():
             if fr_value == to_value:
