@@ -1,5 +1,6 @@
-import os
 import imp
+import os
+import sys
 
 from sofia_.action import Action
 from sofia_.action_wrapper import ActionWrapper
@@ -17,6 +18,7 @@ def loadResource(fname, parsers, format=None):
 
 def loadActionHyperGraph():
     program_dir = getProgramDirectory()
+    sys.path.append(os.path.join(program_dir, 'actions', 'modules'))
     available_actions = load_plugins(os.path.join(program_dir, 'actions'), Action)
     res = ActionHyperGraph(loadEntityGraph())
     for action in available_actions.itervalues():
@@ -28,7 +30,7 @@ def loadEntityGraph():
     return EntityGraph(os.path.join(program_dir, 'entities.json'))
 
 def getProgramDirectory():
-    return os.path.dirname(os.path.realpath(__file__)).rsplit(os.sep, 2)[0]
+    return os.path.dirname(os.path.realpath(sys.argv[0]))
 
 def load_plugins(indir, cls):
     import os
