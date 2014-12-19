@@ -72,10 +72,11 @@ To Do
 
 There are still many ways in which SoFIA can be improved. Here are some that I plan to do, but I am always open to suggestions.
 
-* Incorporate programs that work on whole sets.
+Refer to the GitHub [issues][issues] page for upcoming improvements, to make suggestions and bug submissions.
 
 [python]: https://www.python.org/downloads/ "Download Python 2.7"
 [htslib]: http://www.htslib.org/ "Download htslib"
 [pysam]: https://code.google.com/p/pysam/ "Download pysam"
 [hgvs]: http://www.hgvs.org/mutnomen/ "Human Genome Variation Society"
 [so]: http://www.sequenceontology.org/ "The Sequence Ontology"
+[issues]: https://github.com/childsish/sofia/issues "To Do"
