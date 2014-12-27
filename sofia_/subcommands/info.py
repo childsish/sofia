@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from common import getProgramDirectory, loadActionHyperGraph, load_plugins
+from common import get_program_directory, load_action_hypergraph, load_plugins
 from sofia_.action import Action
 
 
@@ -19,7 +19,7 @@ def info(args):
 
 
 def list_actions(args):
-    program_dir = getProgramDirectory()
+    program_dir = get_program_directory()
     action_dir = os.path.join(program_dir, 'steps')
     action_types = load_plugins(action_dir, Action)
     
@@ -44,7 +44,7 @@ def list_action(action, args):
 
 
 def graph_actions(args):
-    graph = loadActionHyperGraph()
+    graph = load_action_hypergraph()
     args.output.write(str(graph))
 
 

@@ -5,7 +5,7 @@ import sys
 import multiprocessing
 from collections import defaultdict
 
-from common import getProgramDirectory, loadActionHyperGraph, loadEntityGraph
+from common import get_program_directory, load_action_hypergraph, load_entity_graph
 from sofia_.error_manager import ERROR_MANAGER
 from sofia_.parser import EntityParser, ResourceParser
 from sofia_.graph.action_graph import ActionGraph
@@ -15,7 +15,7 @@ from sofia_.attribute_map_factory import AttributeMapFactory
 
 class Aggregator(object):
     def __init__(self):
-        self.hyper_graph = loadActionHyperGraph()
+        self.hyper_graph = load_action_hypergraph()
 
     def aggregate(self, requested_entities, provided_resources, args, maps={}):
         def iter_resource(resource):
@@ -168,12 +168,12 @@ def aggregate(args):
 
 
 def parse_provided_resources(target, resources):
-    program_dir = getProgramDirectory()
+    program_dir = get_program_directory()
     fhndl = open(os.path.join(program_dir, 'config.json'))
     config = json.load(fhndl)
     fhndl.close()
     default_types = {type['ext']: type['type'] for type in config['default_types']}
-    entity_graph = loadEntityGraph()
+    entity_graph = load_entity_graph()
     resource_parser = ResourceParser(default_types, entity_graph)
     provided_resources = resource_parser.parseResources(resources)
     provided_resources['target'] = resource_parser.parseResource(target + ' -n target')
