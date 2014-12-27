@@ -7,10 +7,9 @@ from collections import defaultdict
 
 from common import getProgramDirectory, loadActionHyperGraph, loadEntityGraph
 from sofia_.error_manager import ERROR_MANAGER
-from sofia_.parser import ActionParser, ResourceParser
+from sofia_.parser import EntityParser, ResourceParser
 from sofia_.graph.action_graph import ActionGraph
-from resolvers.action_solution_iterator import ActionSolutionIterator
-from sofia_.action_wrapper import ActionWrapper
+from sofia_.resolvers.entity_solution_iterator import EntitySolutionIterator
 from sofia_.attribute_map_factory import AttributeMapFactory
 
 
@@ -18,66 +17,57 @@ class Aggregator(object):
     def __init__(self):
         self.hyper_graph = loadActionHyperGraph()
 
-    def aggregate(self, requested_actions, provided_resources, args, maps={}):
-        def iterResource(resource):
+    def aggregate(self, requested_entities, provided_resources, args, maps={}):
+        def iter_resource(resource):
             resource.init(**resource.param)
             line_no = 1
             while True:
                 yield resource.calculate(), line_no
                 line_no += 1
 
-        sys.stderr.write('    Resolving steps...\n')
+        sys.stderr.write('    Resolving entities...\n')
         
-        solution, resolved_actions = self.resolve_request(requested_actions, provided_resources, maps)
+        solution, resolved_actions = self.resolve_request(requested_entities, provided_resources, maps)
         if args.graph:
-            sys.stdout.write('%s\n\n'%solution)
+            sys.stdout.write('{}\n\n'.format(solution))
         else:
             sys.stderr.write('\n    Aggregating information...\n\n')
-            sys.stdout.write('\t'.join(map(str, requested_actions)))
+            sys.stdout.write('\t'.join(map(str, requested_entities)))
             sys.stdout.write('\n')
 
-            it = iterResource(solution.actions['target'])
-            pool = multiprocessing.Pool(args.processes, initAnnotation,
-                [resolved_actions, solution])
-            for row in pool.imap(getAnnotation, it, 100):
+            it = iter_resource(solution.actions['target'])
+            pool = multiprocessing.Pool(args.processes, init_annotation, [resolved_actions, solution])
+            for row in pool.imap(get_annotation, it, 100):
                 sys.stdout.write('\t'.join(row))
                 sys.stdout.write('\n')
             pool.close()
             pool.join()
 
-    def resolve_request(self, requested_actions, provided_resources, maps):
+    def resolve_request(self, requested_entities, provided_resources, maps):
         def satisfies_request(graph, requested_resources):
             return graph.resources.intersection(requested_resources) == requested_resources
         
         action_graphs = []
-        for action in requested_actions:
+        for entity in requested_entities:
             ERROR_MANAGER.reset()
-            sys.stderr.write('    %s - ' % str(action))
-            old_action_wrapper = self.hyper_graph.actions[action.name]
-            action_wrapper = ActionWrapper(old_action_wrapper.action_class,
-                                           old_action_wrapper.name,
-                                           old_action_wrapper.ins,
-                                           old_action_wrapper.outs,
-                                           action.param,
-                                           action.attr)
-            solution_iterator = ActionSolutionIterator(action_wrapper,
-                                                 self.hyper_graph,
-                                                 provided_resources,
-                                                 maps,
-                                                 action.resources)
+            sys.stderr.write('    {} - '.format(str(entity)))
+            solution_iterator = EntitySolutionIterator(entity,
+                                                       self.hyper_graph,
+                                                       provided_resources,
+                                                       maps,
+                                                       entity.resources)
             possible_graphs = [graph for graph in solution_iterator
-                               if satisfies_request(graph, action.resources)]
+                               if satisfies_request(graph, entity.resources)]
             if len(possible_graphs) == 0:
-                sys.stderr.write('unable to resolve action.\n')
-                sys.stderr.write('      Possible reasons: \n      * %s\n' %
-                                 '\n      * '.join(sorted(ERROR_MANAGER.errors)))
+                sys.stderr.write('unable to resolve entity.\n')
+                reasons = '\n      * '.join(sorted(ERROR_MANAGER.errors))
+                sys.stderr.write('      Possible reasons: \n      * {}\n'.format(reasons))
                 sys.exit(1)
             elif len(possible_graphs) > 1:
                 matching_graphs = defaultdict(list)
                 for graph in possible_graphs:
-                    resources = frozenset([r.name for r in graph.resources\
-                        if not r.name == 'target'])
-                    extra_resources = resources - action.resources
+                    resources = frozenset([r.name for r in graph.resources if not r.name == 'target'])
+                    extra_resources = resources - entity.resources
                     matching_graphs[len(extra_resources)].append((graph, extra_resources))
                 count, matching_graphs = sorted(matching_graphs.iteritems())[0]
                 unique = True
@@ -90,12 +80,13 @@ class Aggregator(object):
                         unique = False
                 if not unique:
                     for graph in possible_graphs:
-                        sys.stderr.write('%s\n\n'%str(graph))
+                        sys.stderr.write('{}\n\n'.format(str(graph)))
                     sys.stderr.write('    Multiple solutions found.\n')
                     sys.exit(1)
                 matching_graph, extra_resources = matching_graphs[0]
+                extra_resources = '\n      '.join(extra_resources)
                 err = 'unique solution found.\n' if count == 0 else\
-                    'unique solution found with %d extra resources.\n      %s\n'%(count, '\n      '.join(extra_resources))
+                    'unique solution found with {} extra resources.\n      {}\n'.format(count, extra_resources)
                 sys.stderr.write(err)
                 action_graphs.append(matching_graph)
             else:
@@ -109,40 +100,43 @@ class Aggregator(object):
             resolved_actions.append(action_graph.action.name)
         return combined_graph, resolved_actions
 
-def main(argv):
-    parser = getParser()
+
+def main():
+    parser = get_parser()
     args = parser.parse_args()
     args.func(args)
 
-def getParser():
+
+def get_parser():
     parser = argparse.ArgumentParser()
-    defineParser(parser)
+    define_parser(parser)
     return parser
 
-def defineParser(parser):
-    parser.add_argument('input', metavar='TARGET',
-        help='the file to annotate')
-    parser.add_argument('actions', nargs='*', default=[],
-        help='request a action using the following format <name>[:<arguments>][:<resources>]')
-    parser.add_argument('-A', '--action-list',
-        help='a text file with a list of requested steps')
-    parser.add_argument('-o', '--output',
-        help='direct output to named file (stdout)')
-    parser.add_argument('-p', '--processes', default=1, type=int,
-        help='the number of processes to run in parallel')
-    parser.add_argument('-r', '--resources', nargs='+', default=[],
-        help='provide a resource using the following format <file name>[;<type>][;<name>]')
-    parser.add_argument('-R', '--resource-list',
-        help='a text file with a list of provided resources')
-    parser.add_argument('-t', '--template',
-        help='specify a template string for the output')
-    parser.add_argument('-y', '--type',
-        help='specify the type of entity in the target file')
-    parser.add_argument('-g', '--graph', action='store_true',
-        help='do not run framework but print the resolved graph')
-    parser.add_argument('-m', '--maps', nargs='+', default=[],
-        help='maps for converting for entity attributes')
+
+def define_parser(parser):
+    add_arg = parser.add_argument
+    add_arg('input', metavar='TARGET',
+            help='the file to annotate')
+    add_arg('-e', '--entities', nargs='+', default=[],
+            help='request an entity')
+    add_arg('-E', '--entity-list',
+            help='a text file with a list of requested entities')
+    add_arg('-o', '--output',
+            help='direct output to named file (default: stdout)')
+    add_arg('-p', '--processes', default=None, type=int,
+            help='the number of processes to run in parallel')
+    add_arg('-r', '--resources', nargs='+', default=[],
+            help='provide a resource')
+    add_arg('-R', '--resource-list',
+            help='a text file with a list of provided resources')
+    add_arg('-t', '--template',
+            help='specify a template string for the output')
+    add_arg('-g', '--graph', action='store_true',
+            help='do not run framework but print the resolved graph')
+    add_arg('-m', '--maps', nargs='+', default=[],
+            help='maps for converting for entity attributes')
     parser.set_defaults(func=aggregate)
+
 
 def aggregate(args):
     sys.stderr.write('\n    Ebias started...\n\n')
@@ -152,29 +146,28 @@ def aggregate(args):
         fhndl = open(args.resource_list)
         resource_list = fhndl.read().strip().split('\n')
         fhndl.close()
-        provided_resources.update(parseProvidedResources(args.input,
-            resource_list))
-    provided_resources.update(parseProvidedResources(args.input,
-        args.resources))
+        provided_resources.update(parse_provided_resources(args.input, resource_list))
+    provided_resources.update(parse_provided_resources(args.input, args.resources))
     
-    requested_actions = parseRequestedActions(args.actions, provided_resources)
-    if args.action_list is not None:
-        fhndl = open(args.action_list)
-        action_list = fhndl.read().strip().split('\n')
-        requested_actions.extend(parseRequestedActions(action_list, provided_resources))
+    requested_entities = parse_requested_entities(args.entities, provided_resources)
+    if args.entity_list is not None:
+        fhndl = open(args.entity_list)
+        entity_list = fhndl.read().strip().split('\n')
         fhndl.close()
+        requested_entities.extend(parse_requested_entities(entity_list, provided_resources))
 
-    if len(requested_actions) == 0:
-        sys.stderr.write('Error: No steps were requested. Please provide'\
-            'the names of the steps you wish to calculate.')
+    if len(requested_entities) == 0:
+        sys.stderr.write('Error: No entities were requested. Please provide'
+                         'the names of the entities you wish to calculate.')
         sys.exit(1)
 
     maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
     
     aggregator = Aggregator()
-    aggregator.aggregate(requested_actions, provided_resources, args, maps)
-        
-def parseProvidedResources(target, resources):
+    aggregator.aggregate(requested_entities, provided_resources, args, maps)
+
+
+def parse_provided_resources(target, resources):
     program_dir = getProgramDirectory()
     fhndl = open(os.path.join(program_dir, 'config.json'))
     config = json.load(fhndl)
@@ -186,15 +179,17 @@ def parseProvidedResources(target, resources):
     provided_resources['target'] = resource_parser.parseResource(target + ' -n target')
     return provided_resources
 
-def parseRequestedActions(actions, provided_resources):
-    parser = ActionParser(provided_resources)
-    return parser.parseActions(actions)
+
+def parse_requested_entities(actions, provided_resources):
+    parser = EntityParser(provided_resources)
+    return parser.parse_entity_requests(actions)
 
 
 requested_actions = None
 solution = None
 
-def initAnnotation(req_ftr, sol):
+
+def init_annotation(req_ftr, sol):
     global requested_actions
     global solution
     requested_actions = req_ftr
@@ -202,7 +197,8 @@ def initAnnotation(req_ftr, sol):
 
     solution.init()
 
-def getAnnotation(target):
+
+def get_annotation(target):
     """ Calculate the steps in this graph for each entity in the target
     resource. """
     global requested_actions
@@ -219,12 +215,11 @@ def getAnnotation(target):
             item = solution.actions[action].generate(kwargs, solution.actions)
             item = '' if item is None else solution.actions[action].format(item)
             row.append(item)
-        except Exception, e:
+        except Exception:
             import sys
             import traceback
             traceback.print_exception(*sys.exc_info(), file=sys.stderr)
-            sys.stderr.write('Error processing entry on line %d\n'%\
-                (solution.actions['target'].parser.line_no))
+            sys.stderr.write('Error processing entry on line {}\n'.format(solution.actions['target'].parser.line_no))
             sys.exit(1)
     return row
     #try:

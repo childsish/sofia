@@ -1,7 +1,7 @@
 import os
 import imp
 
-from sofia_.action import Action
+from sofia_.action import Action, Extractor
 from sofia_.action_wrapper import ActionWrapper
 from sofia_.graph.action_hyper_graph import ActionHyperGraph
 from sofia_.graph.entity_graph import EntityGraph
@@ -18,9 +18,22 @@ def loadResource(fname, parsers, format=None):
 def loadActionHyperGraph():
     program_dir = getProgramDirectory()
     available_actions = load_plugins(os.path.join(program_dir, 'actions'), Action)
-    res = ActionHyperGraph(loadEntityGraph())
+    entity_graph = loadEntityGraph()
+    res = ActionHyperGraph()
     for action in available_actions.itervalues():
-        res.registerAction(ActionWrapper(action))
+        res.register_action(ActionWrapper(action))
+    for in_ in set(res.entities):
+        if in_ not in entity_graph.graph.vs:
+            continue
+        for out in entity_graph.graph.get_children(in_):
+            extractor_name = 'Get%sFrom%s'%\
+                    (entity_graph.get_entity_name(out), entity_graph.get_entity_name(in_))
+            extractor = ActionWrapper(Extractor,
+                                      extractor_name,
+                                      ins={in_: entity_graph.create_entity(in_)},
+                                      outs={out: entity_graph.create_entity(out)},
+                                      param={'path': [in_, out]})
+            res.register_action(extractor)
     return res
 
 def loadEntityGraph():
