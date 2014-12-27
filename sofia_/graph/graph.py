@@ -15,7 +15,7 @@ class Graph(object):
     def __str__(self):
         res = ['digraph {} {{'.format(self.name)]
         for v in sorted(self.vs):
-            if not v.startswith(self.anon_prefix):
+            if v.startswith(self.anon_prefix):
                 res.append('    "{}" [label=""]'.format(v))
         for e, vs in sorted(self.es.iteritems()):
             e = '' if e.startswith(self.anon_prefix) else ' [label="{}"]'.format(e)
