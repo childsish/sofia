@@ -1,18 +1,21 @@
 {
-    "variant": {
-    	"children": ["genomic_position"]
-    },
     "genomic_position": {
     	"children": ["chromosome_id"]
     },
-    "gene_model": {
-    	"children": ["gene_id", "chromosome_id"]
+    "genomic_interval": {
+    	"children": ["chromosome_id"]
     },
-    "gene_id": {
-    	"attributes": ["gene_id"]
+    "gene_model": {
+    	"children": ["gene_id", "genomic_interval"]
+    },
+    "variant": {
+    	"children": ["genomic_position", "reference_allele", "alternate_allele", "variant_quality"]
     },
     "chromosome_id": {
     	"attributes": ["chromosome_id"]
+    },
+    "gene_id": {
+    	"attributes": ["gene_id"]
     },
     "chromosome_sequence_set": {
         "attributes": ["chromosome_id"]
