@@ -3,6 +3,7 @@ import json
 from sofia_.entity import Entity
 from graph import Graph
 
+
 class EntityGraph(object):
     def __init__(self, fname):
         fhndl = open(fname)
@@ -15,11 +16,11 @@ class EntityGraph(object):
             self.graph.add_vertex(entity)
             if 'children' in settings:
                 for child in settings['children']:
-                    self.graph.add_edge('%s_%s'%(entity, child), entity, child)
+                    self.graph.add_edge(entity, child, '{}_{}'.format(entity, child))
             if 'attributes' in settings:
                 self.attr[entity] = settings['attributes']
 
-    def getAncestorPaths(self, entity):
+    def get_ancestor_paths(self, entity):
         res = []
         stk = [[entity]]
         while len(stk) > 0:
@@ -29,30 +30,34 @@ class EntityGraph(object):
                 res.append([parent] + path[::-1])
         return res
 
-    def getDescendentPaths(self, entity):
+    def get_descendent_paths(self, entity):
         res = [[entity]]
         stk = [[entity]]
         while len(stk) > 0:
             path = stk.pop()
             if path[-1] in self.graph.vs:
-                for edge_name, child in self.graph.get_children(path[-1]):
+                for child in self.graph.get_children(path[-1]):
                     stk.append(path + [child])
                     res.append(path + [child])
         return res
 
-    def getDescendentPathTo(self, ancestor, descendent):
-        paths = self.getDescendentPaths(ancestor)
+    def get_descendent_path_to(self, ancestor, descendent):
+        paths = self.get_descendent_paths(ancestor)
         for path in paths:
             if path[-1] == descendent:
                 return path
         return None
 
-    def createEntity(self, name):
+    def create_entity(self, name):
         attr = {}
-        for path in [[name]] + self.getDescendentPaths(name):
+        for path in [[name]] + self.get_descendent_paths(name):
             for step in path:
                 if step not in self.attr:
                     continue
                 for name in self.attr[step]:
                     attr[name] = None
         return Entity(name, attr)
+
+    @classmethod
+    def get_entity_name(cls, entity):
+        return ''.join(part.capitalize() for part in entity.split('_')).replace('*', '')
