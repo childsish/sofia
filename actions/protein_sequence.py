@@ -4,7 +4,7 @@ from collections import Counter
 from itertools import islice, izip
 
 
-class Pest(Action):
+class GetPest(Action):
 
     IN = ['protein_sequence', 'molecular_weight_set']
     OUT = ['pest_sequences']
@@ -58,7 +58,7 @@ class Pest(Action):
         return all(sum(cnt[r] for r in req) for req in Pest.REQUIRED)
 
 
-class NumberOfPestSequences(Action):
+class GetNumberOfPestSequences(Action):
 
     IN = ['pest_sequences']
     OUT = ['number_of_pest_sequences']
@@ -67,7 +67,7 @@ class NumberOfPestSequences(Action):
         return len(pest_sequences)
 
 
-class AveragePestSequenceLength(Action):
+class GetAveragePestSequenceLength(Action):
 
     IN = ['pest_sequences']
     OUT = ['average_pest_sequence_length']
@@ -76,7 +76,7 @@ class AveragePestSequenceLength(Action):
         return sum(len(seq) for seq in pest_sequences) / float(len(pest_sequences))
 
 
-class CalculateAminoAcidFrequency(Action):
+class GetAminoAcidFrequency(Action):
 
     IN = ['protein_sequence']
     OUt = ['amino_acid_frequency']

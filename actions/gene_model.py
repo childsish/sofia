@@ -1,14 +1,5 @@
 from sofia_.action import Action
 
-class GeneName(Action):
-    
-    IN = ['gene_model']
-    OUT = ['gene_id']
-    
-    def calculate(self, gene_model):
-        if gene_model is None:
-            return ''
-        return gene_model['gene_id']
 
 class MajorTranscript(Action):
     

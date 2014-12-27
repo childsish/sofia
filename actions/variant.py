@@ -1,25 +1,19 @@
 from sofia_.action import Action
 
-class Chromosome(Action):
-    
-    IN = ['genomic_position']
-    OUT = ['chromosome']
 
-    def calculate(self, genomic_position):
-        return genomic_position['chromosome_id']
+class GetPosition(Action):
 
-class Position(Action):
-    
     IN = ['genomic_position']
     OUT = ['position']
-    
+
     def calculate(self, genomic_position):
         return genomic_position['chromosome_pos']
 
     def format(self, position):
         return str(position + 1)
 
-class Quality(Action):
+
+class GetQuality(Action):
 
     IN = ['variant']
     OUT = ['quality']
@@ -41,7 +35,8 @@ class Quality(Action):
             return quality
         return '%.2f'%quality
 
-class VariantInfo(Action):
+
+class GetVariantInfo(Action):
     
     IN = ['variant']
     OUT = ['variant_info']
@@ -57,7 +52,8 @@ class VariantInfo(Action):
             return variant.info
         return variant.info[self.key]
 
-class VariantFormat(Action):
+
+class GetVariantFormat(Action):
     
     IN = ['variant']
     OUT = ['variant_format']
@@ -79,25 +75,8 @@ class VariantFormat(Action):
             return 'NA'
         return variant.samples[self.sample][self.key]
 
-class Reference(Action):
 
-    IN = ['variant']
-    OUT = ['reference']
-
-    def calculate(self, variant):
-        variant = variant['variant']
-        return variant.ref
-
-class Alternative(Action):
-
-    IN = ['variant']
-    OUT = ['alternative']
-
-    def calculate(self, variant):
-        variant = variant['variant']
-        return variant.alt
-
-class ReferenceCount(Action):
+class GetReferenceCount(Action):
 
     IN = ['variant']
     OUT = ['reference_count']
@@ -117,7 +96,8 @@ class ReferenceCount(Action):
     def _getCount(self, sample):
         return int(sample['RO']) if 'RO' in sample else 0
 
-class AlternativeCount(Action):
+
+class GetAlternativeCount(Action):
 
     IN = ['variant']
     OUT = ['alternative_count']
@@ -141,7 +121,8 @@ class AlternativeCount(Action):
         ao = [int(count) for count in data['AO'].split(',')]
         return sum(ao)
 
-class Depth(Action):
+
+class GetDepth(Action):
 
     IN = ['variant']
     OUT = ['depth']
@@ -168,7 +149,8 @@ class Depth(Action):
             return ao + int(sample['RO'])
         return None
 
-class VariantFrequency(Action):
+
+class GetVariantFrequency(Action):
 
     IN = ['variant']
     OUT = ['variant_frequency']
@@ -204,7 +186,8 @@ class VariantFrequency(Action):
             return ao / (ao + float(sample['RO']))
         return None
 
-class VariantCall(Action):
+
+class GetVariantCall(Action):
 
     IN = ['variant']
     OUT = ['variant_call']

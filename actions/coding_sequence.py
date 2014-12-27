@@ -16,7 +16,7 @@ class TranslateCodingSequence(Action):
         return genetic_code.translate(coding_sequence)
 
 
-class CalculateCodonUsage(Action):
+class GetCodonUsage(Action):
 
     IN = ['coding_sequence']
     OUT = ['codon_usage']
@@ -33,7 +33,7 @@ class CalculateCodonUsage(Action):
         return codon_usage
 
 
-class RelativeSynonymousCodonUsage(Action):
+class GetRelativeSynonymousCodonUsage(Action):
     """ Calculates and return the relative synonymous codon usage (rscu) and
         relative codon adaptiveness (w).
     """
@@ -56,7 +56,7 @@ class RelativeSynonymousCodonUsage(Action):
         return rscu, w
 
 
-class CodonAdaptationIndex(Action):
+class GetCodonAdaptationIndex(Action):
 
     IN = ['coding_sequence', 'relative_codon_adaptiveness']
     OUT = ['codon_adaptation_index']
@@ -74,7 +74,7 @@ class CodonAdaptationIndex(Action):
         return geometric_mean(cai)
 
 
-class EffectiveNumberOfCodons(Action):
+class GetEffectiveNumberOfCodons(Action):
     """ Calculated the number of effective codons (Nc)
     """
 
@@ -82,17 +82,17 @@ class EffectiveNumberOfCodons(Action):
     OUT = ['effective_number_of_codons']
 
     def calculate(self, codon_usage, genetic_code):
-        Fs = {aa: self.calculateF(codon_usage, genetic_code[aa])\
-            for aa in genetic_code.AMINO_ACIDS}
+        fs = {aa: self.calculate_f(codon_usage, genetic_code[aa])
+              for aa in genetic_code.AMINO_ACIDS}
         fams = defaultdict(list)
         for aa in genetic_code.AMINO_ACIDS:
-            if Fs[aa] is not None: # Assume missing aa have the mean F
-                fams[len(genetic_code[aa])].append(Fs[aa])
-        Nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / arithmetic_mean(fam_Fs)\
-            for sz, fam_Fs in fams.iteritems())
-        return Nc
+            if fs[aa] is not None: # Assume missing aa have the mean F
+                fams[len(genetic_code[aa])].append(fs[aa])
+        nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / arithmetic_mean(fam_Fs)
+                 for sz, fam_Fs in fams.iteritems())
+        return nc
 
-    def calculateF(self, cut, fam):
+    def calculate_f(self, cut, fam):
         n = float(sum(cut[cdn] for cdn in fam))
         return None if n <= 1 else n * sum((cut[cdn] / n) ** 2 for cdn in fam) / (n - 1)
 

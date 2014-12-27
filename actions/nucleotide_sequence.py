@@ -1,10 +1,8 @@
 from sofia_.action import Action
-
-from collections import Counter
 from modules.kmer import KmerCounter
 
 
-class CalculateKNucleotideFrequency(Action):
+class GetKNucleotideFrequency(Action):
 
     IN = ['nucleotide_sequence']
     OUT = ['nucleotide_frequency']
