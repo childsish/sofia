@@ -20,7 +20,7 @@ def get_parser():
     subparsers = parser.add_subparsers()
     
     aggregate_parser = subparsers.add_parser('aggregate')
-    aggregate.defineParser(aggregate_parser)
+    aggregate.define_parser(aggregate_parser)
     
     info_parser = subparsers.add_parser('info')
     info.defineParser(info_parser)
