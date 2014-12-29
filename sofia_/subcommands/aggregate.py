@@ -3,8 +3,8 @@ import json
 import os
 import sys
 import multiprocessing
-from collections import defaultdict
 
+from collections import defaultdict
 from common import get_program_directory, load_action_hypergraph, load_entity_graph
 from sofia_.error_manager import ERROR_MANAGER
 from sofia_.parser import EntityParser, ResourceParser

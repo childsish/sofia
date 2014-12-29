@@ -51,6 +51,7 @@ def load_plugins(indir, cls):
     import sys
 
     sys.path.append(indir)
+    sys.path.append(os.path.join(indir, 'modules'))
     plugins = {}
 
     fnames = (fname for fname in os.listdir(indir) if fname[0] != '.' and fname.endswith('.py'))

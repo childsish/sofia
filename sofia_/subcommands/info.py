@@ -1,26 +1,27 @@
 import argparse
 import os
+import sys
 
 from common import get_program_directory, load_action_hypergraph, load_plugins
 from sofia_.action import Action
 
 
-def info(args):
-    if args.output is None:
-        import sys
-        args.output = sys.stdout
-    else:
-        args.output = open(args.output, 'w')
-    if args.graph:
-        graph_actions(args)
-    else:
-        list_actions(args)
-    args.output.close()
+class OutputAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, open(values, 'w'))
+
+
+def generate_graph(args):
+    graph = load_action_hypergraph()
+    args.output.write(str(graph))
+
+
+def list_entities(args):
+    pass
 
 
 def list_actions(args):
-    program_dir = get_program_directory()
-    action_dir = os.path.join(program_dir, 'steps')
+    action_dir = os.path.join(get_program_directory(), 'actions')
     action_types = load_plugins(action_dir, Action)
     
     if args.action is None:
@@ -43,11 +44,6 @@ def list_action(action, args):
         args.output.write('\n')
 
 
-def graph_actions(args):
-    graph = load_action_hypergraph()
-    args.output.write(str(graph))
-
-
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -61,18 +57,28 @@ def get_parser():
 
 
 def define_parser(parser):
-    add_arg = parser.add_argument
-    add_arg('-g', '--graph', action='store_true',
-            help='print out the hyper graph in DOT format (visualise with graphviz)')
-    add_arg('-v', '--verbose', action='store_true',
-            help='print out descriptions of each action')
-    add_arg('-o', '--output',
-            help='specify where to put output')
-    add_arg('-f', '--action',
-            help='list a specific action')
-    parser.set_defaults(func=info)
+    subparsers = parser.add_subparsers()
+
+    graph_parser = subparsers.add_parser('graph')
+    graph_parser.set_defaults(func=generate_graph)
+
+    action_parser = subparsers.add_parser('action')
+    action_parser.add_argument('-v', '--verbose', action='store_true',
+                               help='print out descriptions of each action')
+    action_parser.add_argument('-a', '--action',
+                               help='list a specific action')
+    action_parser.set_defaults(func=list_actions)
+
+    entity_parser = subparsers.add_parser('entity')
+    entity_parser.add_argument('-v', '--verbose', action='store_true',
+                               help='print out descriptions of each entity')
+    entity_parser.add_argument('-e', '--entity',
+                               help='list a specific entity')
+    entity_parser.set_defaults(func=list_entities)
+
+    parser.add_argument('-o', '--output', action=OutputAction, default=sys.stdout,
+                        help='specify where to put output')
 
 
 if __name__ == '__main__':
-    import sys
     sys.exit(main())
