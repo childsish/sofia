@@ -15,7 +15,7 @@ class SortedDict(object):
             self[item[0]] = item[1]
 
     def __str__(self):
-        return '{%s}' % ', '.join(['%s:%s' % entry for entry in self.iteritems()])
+        return '{{{}}}'.format(', '.join(['{}:{}'.format(entry) for entry in self.iteritems()]))
 
     def __iter__(self):
         return self.iterkeys()

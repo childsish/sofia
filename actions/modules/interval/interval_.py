@@ -143,8 +143,8 @@ class Interval(object):
     
         """
         if pos < 0 or pos >= self.stop - self.start:
-            err = 'Relative position %d is not contained within %s'
-            raise IndexError(err)
+            err = 'Relative position {} is not contained within {}'
+            raise IndexError(err.format(pos, self))
         return self.start + pos
     
     def get_rel_pos(self, pos):

@@ -15,13 +15,13 @@ def compare(a_fname, b_fname):
     b_hdrs = _get_headers(b_fname)
 
     a_only = sorted(a_hdrs - b_hdrs)
-    print '%d headers unique to first fasta:' % len(a_only)
+    print '{} headers unique to first fasta:'.format(len(a_only))
     print '\n'.join(a_only)
     b_only = sorted(b_hdrs - a_hdrs)
-    print '%d headers unique to second fasta:' % len(b_only)
+    print '{} headers unique to second fasta:'.format(len(b_only))
     print '\n'.join(b_only)
     both = sorted(a_hdrs & b_hdrs)
-    print '%d headers common to both fastas:' % len(both)
+    print '{} headers common to both fastas:'.format(len(both))
     print '\n'.join(both)
 
     print 'The common headers differ at the following positions:'
@@ -30,7 +30,7 @@ def compare(a_fname, b_fname):
     for hdr in both:
         for i, (a, b) in enumerate(izip(a_parser[hdr], b_parser[hdr])):
             if a.lower() != b.lower():
-                print '%s starts to differ at position %d: %s %s' % (hdr, i, a, b)
+                print '{} starts to differ at position {}: {} {}'.format(hdr, i, a, b)
                 break
 
 

@@ -12,7 +12,7 @@ class IndexedVcfFile(object):
             Must end in .vcf or .vcf.gz
         """
         self.fname = os.path.abspath(fname)
-        iname = '%s.tbi' % self.fname
+        iname = '{}.tbi'.format(self.fname)
         if not os.path.exists(iname):
             raise ValueError('File missing interval index. Try: tabix -p vcf <FILENAME>.')
         self.index = pysam.Tabixfile(self.fname)

@@ -20,10 +20,10 @@ def index(fname):
             continue
         type, ivl, attr = GtfIterator._parse_line(line)
         if type == 'gene':
-            index.append('%s\t%s\t%d\t%d' % (attr['gene_name'], ivl.chr, ivl.start + 1, ivl.stop + 1))
+            index.append('{}\t{}\t{}\t{}'.format(attr['gene_name'], ivl.chr, ivl.start + 1, ivl.stop + 1))
     fhndl.close()
 
-    iname = '%s.lhci' % fname
+    iname = '{}.lhci'.format(fname)
     fhndl = open(iname, 'w')
     fhndl.write('\n'.join(index))
     fhndl.close()

@@ -10,7 +10,7 @@ class Chromosome(object):
         self.name = name
         match = self.CHR_REGX.search(name)
         if match is None:
-            raise ValueError('Unknown chromosome name: %s' % name)
+            raise ValueError('Unknown chromosome name: {}'.format(name))
         self.suffix = match.group(0)
         self.suffix = int(self.suffix) if self.suffix.isdigit() else self.suffix
     

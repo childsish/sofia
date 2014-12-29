@@ -16,7 +16,7 @@ class IndexedGtfFile(object):
         #        'Try: python -m lhc.file_formats.gtf index <FILENAME>.')
         #self.key_index = {parts[0]: [parts[1], int(parts[2]), int(parts[3])]\
         #    for parts in (line.strip().split('\t') for line in open(kiname))}
-        iiname = '%s.tbi' % self.fname
+        iiname = '{}.tbi'.format(self.fname)
         if not os.path.exists(iiname):
             raise ValueError('File missing interval index. Try: tabix -p gff <FILENAME>.')
         self.ivl_index = pysam.Tabixfile(self.fname)
@@ -29,7 +29,7 @@ class IndexedGtfFile(object):
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             return self.get_genes_in_interval(key.chr, key.start, key.stop)
         else:
-            raise NotImplementedError('Random access not implemented for %s' % type(key))
+            raise NotImplementedError('Random access not implemented for {}'.format(type(key)))
 
     def get_gene_by_gene_id(self, gene_id):
         chr, start, stop = self.key_index[gene_id]
