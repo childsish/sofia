@@ -2,6 +2,7 @@ import unittest
 
 from sofia_.parser.requested_entity import RequestedEntity
 
+
 class TestRequestedAction(unittest.TestCase):
     def test_equivalence(self):
         f1 = RequestedEntity('f1', ['r1', 'r2'])

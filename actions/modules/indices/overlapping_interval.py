@@ -15,28 +15,26 @@ class OverlappingIntervalIndex(Accessor):
         self.bins = defaultdict(dict)
     
     def __contains__(self, key):
-        bin = self.binner.getBin(key)
+        bin = self.binner.get_bin(key)
         return bin in self.bins and key in self.bins[bin]
     
     def __getitem__(self, key):
         res = []
-        bins = self.binner.getOverlappingBins(key)
+        bins = self.binner.get_overlapping_bins(key)
         for bin_fr, bin_to in bins:
             if bin_fr == bin_to:
                 if bin_fr not in self.bins:
                     continue
-                res.extend(v for k, v in self.bins[bin_fr].iteritems()\
-                    if k.overlaps(key))
+                res.extend(v for k, v in self.bins[bin_fr].iteritems() if k.overlaps(key))
             else:
                 for bin in xrange(bin_fr, bin_to):
                     if bin not in self.bins:
                         continue
-                    res.extend(v for k, v in self.bins[bin_fr].iteritems()\
-                        if k.overlaps(key))
+                    res.extend(v for k, v in self.bins[bin_fr].iteritems() if k.overlaps(key))
         return res
     
     def __setitem__(self, key, value):
-        bin = self.binner.getBin(key)
+        bin = self.binner.get_bin(key)
         self.bins[bin][Interval(key.start, key.stop)] = value
     
     def __getstate__(self):

@@ -1,6 +1,7 @@
 from functools import total_ordering
 from collections import namedtuple
 
+
 @total_ordering
 class Interval(object):
     __slots__ = ('start', 'stop')
@@ -86,7 +87,7 @@ class Interval(object):
         If self is cut on the upper side, the result is at .left.
         If self is cut in the middle, the result in in both .left and .right
         """
-        if not self.overlaps(self, other):
+        if not self.overlaps(other):
             return Interval.INTERVAL_PAIR(self, None)
         
         left, right = None
@@ -135,7 +136,7 @@ class Interval(object):
     
     # Position functions
     
-    def getAbsPos(self, pos):
+    def get_abs_pos(self, pos):
         """Get the absolute position of a position relative to a interval
         
         :param int pos: the position relative to the interval
@@ -146,20 +147,20 @@ class Interval(object):
             raise IndexError(err)
         return self.start + pos
     
-    def getRelPos(self, pos):
+    def get_rel_pos(self, pos):
         """Get the position relative to a interval of a position.
     
         :param int pos: the position to calculate relative to the interval
     
         """
         if pos < self.start or pos >= self.stop:
-            err = 'Absolute position %d is not contained within %s'
-            raise IndexError(err%(pos, self))
+            err = 'Absolute position {} is not contained within {}'
+            raise IndexError(err.format(pos, self))
         return pos - self.start
     
     # Sequence functions
     
-    def getSubSeq(self, seq):
+    def get_sub_seq(self, seq):
         return seq[self.start:self.stop]
     
     INTERVAL_PAIR = namedtuple('IntervalPair', ('left', 'right'))

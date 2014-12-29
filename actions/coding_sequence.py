@@ -52,7 +52,7 @@ class GetRelativeSynonymousCodonUsage(Action):
         rscu = {}
         w = {}
         for aa in genetic_code.AMINO_ACIDS:
-            cdns = genetic_code.getCodons(aa)
+            cdns = genetic_code.get_codons(aa)
             usgs = [codon_usage[cdn] for cdn in cdns]
             ttl_usg = sum(usgs) / float(len(usgs))
             rscus = [usg / ttl_usg for usg in usgs]
@@ -75,7 +75,7 @@ class GetCodonAdaptationIndex(Action):
         cai = []
         for i in xrange(0, len(coding_sequence), 3):
             cdn = coding_sequence[i:i+3]
-            red = set(cdn) & RedundantCode.REDUNDANT_BASES
+            #red = set(cdn) & RedundantCode.REDUNDANT_BASES
             #if len(red) > 0:
             #    warnings.warn('Redundant bases "%s" encountered in codon. Codon "%s" has been ignored.'%(','.join(sorted(red)), cdn))
             #    continue
@@ -97,7 +97,7 @@ class GetEffectiveNumberOfCodons(Action):
               for aa in genetic_code.AMINO_ACIDS}
         fams = defaultdict(list)
         for aa in genetic_code.AMINO_ACIDS:
-            if fs[aa] is not None: # Assume missing aa have the mean F
+            if fs[aa] is not None:  # Assume missing aa have the mean F
                 fams[len(genetic_code[aa])].append(fs[aa])
         nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / arithmetic_mean(fam_Fs)
                  for sz, fam_Fs in fams.iteritems())
@@ -110,6 +110,7 @@ class GetEffectiveNumberOfCodons(Action):
 
 def arithmetic_mean(iterable):
     return reduce(add, iterable) / float(len(iterable))
+
 
 def geometric_mean(iterable):
     return reduce(mul, iterable) ** (1 / len(iterable))

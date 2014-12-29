@@ -12,7 +12,7 @@ class MajorTranscript(Action):
     def calculate(self, gene_model):
         if gene_model is None:
             return None
-        return gene_model['gene_model'].getMajorTranscript()
+        return gene_model['gene_model'].get_major_transcript()
     
     def format(self, major_transcript):
         return major_transcript.name

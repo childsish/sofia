@@ -36,7 +36,7 @@ class ActionSolutionIterator(object):
         res = defaultdict(list)
         for disjoint_solution in product(*disjoint_solutions):
             ins = {e: s.action.outs[e] for e, s in izip(entities, disjoint_solution)}
-            outs = self.action.getOutput(ins)
+            outs = self.action.get_output(ins)
 
             converters = self.get_converters(ins)
             if converters is None:
@@ -65,12 +65,12 @@ class ActionSolutionIterator(object):
             if len(entity_values) == 1:
                 continue
             elif entity_name not in self.maps:
-                ERROR_MANAGER.addError('There are no converters for %s'%entity_name)
+                ERROR_MANAGER.add_error('There are no converters for {}'.format(entity_name))
                 return None
             else:
                 for value in entity_values:
                     if value not in self.maps[entity_name].hdrs:
-                        ERROR_MANAGER.addError('Converter for %s has can not convert %s'%(entity_name, value))
+                        ERROR_MANAGER.add_error('Converter for {} has can not convert {}'.format(entity_name, value))
                         return None
 
             edge_converters = self.convert_edge(entity_name, entity_values)
@@ -86,7 +86,7 @@ class ActionSolutionIterator(object):
             converters = self.convert_edge_to(entity, entity_values, to_value, errors)
             if converters is not None:
                 return converters
-        ERROR_MANAGER.addError(str(errors))
+        ERROR_MANAGER.add_error(str(errors))
 
     def convert_edge_to(self, entity, entity_values, to_value, errors):
         converters = defaultdict(Converter)

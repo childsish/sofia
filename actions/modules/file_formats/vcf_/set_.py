@@ -1,6 +1,7 @@
 from indices import Index, ExactKeyIndex, OverlappingIntervalIndex
 from interval import Interval
 
+
 class VcfSet(object):
     def __init__(self, iterator):
         self.data = list(iterator)
@@ -17,5 +18,5 @@ class VcfSet(object):
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             idxs = self.ivl_index[(key.chr, key)]
         else:
-            raise NotImplementedError('Variant set random access not implemented for type: %s'%type(key))
+            raise NotImplementedError('Variant set random access not implemented for type: %s' % type(key))
         return [self.data[v] for v in idxs.itervalues()]

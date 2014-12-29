@@ -4,6 +4,7 @@ import unittest
 
 from ebias.entity_graph import EntityGraph
 
+
 class TestEntityGraph(unittest.TestCase):
     def setUp(self):
         fhndl, fname = tempfile.mkstemp()
@@ -19,13 +20,13 @@ class TestEntityGraph(unittest.TestCase):
         os.close(fhndl)
         self.graph = EntityGraph(fname)
 
-    def test_getAncestorPaths(self):
+    def test_get_ancestor_paths(self):
         paths = self.graph.getAncestorPaths('chromosome_pos')
         self.assertEquals(len(paths), 2)
         self.assertEquals(paths[0], ['genomic_position', 'chromosome_pos'])
         self.assertEquals(paths[1], ['variant', 'genomic_position', 'chromosome_pos'])
 
-    def test_getDescendentsPaths(self):
+    def test_get_descendents_paths(self):
         paths = sorted(self.graph.getDescendentPaths('variant'))
         self.assertEquals(len(paths), 7)
         self.assertEquals(paths[0], ['variant', 'alt*'])

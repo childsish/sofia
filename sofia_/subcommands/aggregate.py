@@ -175,8 +175,8 @@ def parse_provided_resources(target, resources):
     default_types = {type['ext']: type['type'] for type in config['default_types']}
     entity_graph = load_entity_graph()
     resource_parser = ResourceParser(default_types, entity_graph)
-    provided_resources = resource_parser.parseResources(resources)
-    provided_resources['target'] = resource_parser.parseResource(target + ' -n target')
+    provided_resources = resource_parser.parse_resources(resources)
+    provided_resources['target'] = resource_parser.parse_resource(target + ' -n target')
     return provided_resources
 
 
@@ -228,4 +228,4 @@ def get_annotation(target):
     #    sys.exit(1)
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    sys.exit(main())

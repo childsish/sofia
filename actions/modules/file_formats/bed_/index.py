@@ -3,10 +3,11 @@ import pysam
 
 from iterator import BedIterator
 
+
 class IndexedBedFile(object):
     def __init__(self, fname):
         self.fname = os.path.abspath(fname)
-        iname = '%s.tbi'%self.fname
+        iname = '%s.tbi' % self.fname
         if not os.path.exists(iname):
             raise ValueError('File missing interval index. Try: tabix -p bed <FILENAME>.')
         self.index = pysam.Tabixfile(self.fname)
@@ -19,10 +20,9 @@ class IndexedBedFile(object):
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             lines = self.index.fetch(key.chr, key.start, key.stop)
         else:
-            raise NotImplementedError('Random access not implemented for %s'%type(key))
+            raise NotImplementedError('Random access not implemented for %s' % type(key))
         
-        return [BedIterator._parseLine(line) for line in lines]
+        return [BedIterator._parse_line(line) for line in lines]
     
-    def getIntervalsAtPosition(self, chr, pos):
-        return [BedIterator._parseLine(line) for line in\
-            self.index.fetch(chr, pos, pos + 1)]
+    def get_intervals_at_position(self, chr, pos):
+        return [BedIterator._parse_line(line) for line in self.index.fetch(chr, pos, pos + 1)]

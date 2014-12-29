@@ -2,6 +2,7 @@ from sofia_.action import Resource
 
 from modules.binf.genetic_code import GeneticCodes
 
+
 class GeneticCode(Resource):
 
     EXT = ['.gc']
@@ -9,5 +10,5 @@ class GeneticCode(Resource):
     DEFAULT = 'gc.prt'
 
     def init(self, gc='Standard'):
-        fname = self.getFilename()
+        fname = self.get_filename()
         self.parser = GeneticCodes(fname)[gc]

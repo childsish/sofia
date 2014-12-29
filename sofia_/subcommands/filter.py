@@ -1,24 +1,26 @@
 import argparse
 import re
-import sys
 
-from functools import partial
 from operator import eq, ne, gt, ge, lt, le
 
+
 def main():
-    parser = getParser()
+    parser = get_parser()
     args = parser.parse_args()
     args.func(args)
 
-def getParser():
+
+def get_parser():
     parser = argparse.ArgumentParser()
-    defineParser(parser)
+    define_parser(parser)
     return parser
 
-def defineParser(parser):
+
+def define_parser(parser):
     parser.add_argument('input')
     parser.add_argument('filters', nargs='+')
     parser.set_defaults(func=filter)
+
 
 def filter(args):
     ops = {
@@ -38,7 +40,7 @@ def filter(args):
     for filter in args.filters:
         match = op_regx.match(filter)
         if match is None:
-            raise ValueError('Invalid filter definition: %s'%filter)
+            raise ValueError('Invalid filter definition: {}'.format(filter))
         else:
             op, type = ops[match.group('op')]
             key = match.group('key')

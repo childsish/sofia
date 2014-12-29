@@ -4,6 +4,7 @@ from collections import namedtuple
 
 FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
 
+
 class FastaIterator(object):
     def __init__(self, fname):
         self.fname = fname

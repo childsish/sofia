@@ -12,7 +12,7 @@ class MolecularWeights(Resource):
     DEFAULT = 'Emolwt.dat'
 
     def init(self):
-        fname = self.getFilename()
+        fname = self.get_filename()
         infile = open(fname)
         data = infile.read()
         infile.close()

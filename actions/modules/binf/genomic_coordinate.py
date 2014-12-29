@@ -21,7 +21,7 @@ class Position(object):
         self.strand = strand
     
     def __str__(self):
-        return '%s:%s'%(self.chr, self.pos)
+        return '{}:{}'.format(self.chr, self.pos)
     
     def __eq__(self, other):
         return self.chr == other.chr and self.pos == other.pos and\
@@ -43,7 +43,6 @@ class Position(object):
 
 @total_ordering 
 class Interval(BaseInterval):
-    
     def __init__(self, chromosome, start, stop, strand='+'):
         """Create a genomic interval
         
@@ -58,7 +57,7 @@ class Interval(BaseInterval):
         self.strand = strand
     
     def __str__(self):
-        return '%s:%s-%s'%(self.chr, self.start, self.stop)
+        return '{}:{}-{}'.format(self.chr, self.start, self.stop)
     
     def __repr__(self):
         return 'GenomicInterval({s})'.format(s=str(self))
@@ -148,11 +147,11 @@ class Interval(BaseInterval):
             self.ivl.stop
         return Position(self.chr, pos, self.strand)
     
-    def getRelPos(self, pos):
+    def get_rel_pos(self, pos):
         return pos - self.start if self.strand == '+'\
             else self.stop - pos - 1
     
-    def getSubSeq(self, seq, fr=None, to=None):
+    def get_sub_seq(self, seq, fr=None, to=None):
         fr = self.start if fr is None else max(self.start, fr)
         to = self.stop if to is None else min(self.stop, to)
         res = seq[self.chr][fr:to]

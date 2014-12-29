@@ -18,7 +18,7 @@ class GetHomopolymerLength(Action):
         for alt in variant.alt.split(','):
             indel = len(variant.ref) != len(alt)
             pos = variant.pos + indel
-            seq = chromosome_sequence_set.getInterval(variant.chr, pos, pos + self.max_length)
+            seq = chromosome_sequence_set.get_interval(variant.chr, pos, pos + self.max_length)
             
             ref = variant.ref if len(variant.ref) >= len(alt) else alt
             i = 0

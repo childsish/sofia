@@ -1,5 +1,6 @@
 from itertools import izip
 
+
 class Converter(object):
     def __init__(self, path=None, id_map=None):
         self.path = [] if path is None else [path]

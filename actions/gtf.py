@@ -16,7 +16,7 @@ class GtfIterator(Target):
     OUT = ['gene_model_iterator']
 
     def init(self):
-        self.parser = GtfIteratorParser(self.getFilename())
+        self.parser = GtfIteratorParser(self.get_filename())
 
 
 class GtfSet(Resource):
@@ -26,4 +26,4 @@ class GtfSet(Resource):
     OUT = ['gene_model_set']
 
     def init(self):
-        self.parser = IndexedGtfFile(self.getFilename())
+        self.parser = IndexedGtfFile(self.get_filename())

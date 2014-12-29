@@ -15,18 +15,19 @@ class VcfIterator(Target):
     OUT = ['variant']
     
     def init(self):
-        self.parser = VcfIteratorParser(self.getFilename())
+        self.parser = VcfIteratorParser(self.get_filename())
 
     def calculate(self):
         variant = self.parser.next()
-        return {'variant': variant,
-                'genomic_position': {
-                    'chromosome_id': variant.chr,
-                    'chromosome_pos': variant.pos
-                },
-                'reference_allele': variant.ref,
-                'alternate_allele': variant.alt,
-                'variant_quality': variant.qual
+        return {
+            'variant': variant,
+            'genomic_position': {
+                'chromosome_id': variant.chr,
+                'chromosome_pos': variant.pos
+            },
+            'reference_allele': variant.ref,
+            'alternate_allele': variant.alt,
+            'variant_quality': variant.qual
         }
 
 
@@ -38,4 +39,4 @@ class VcfSet(Resource):
     OUT = ['variant_set']
     
     def init(self):
-        self.parser = IndexedVcfFile(self.getFilename())
+        self.parser = IndexedVcfFile(self.get_filename())

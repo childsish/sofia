@@ -16,7 +16,7 @@ class BedIterator(Target):
     OUT = ['genomic_interval']
     
     def init(self):
-        self.parser = BedIteratorParser(self.getFilename())
+        self.parser = BedIteratorParser(self.get_filename())
 
     def calculate(self):
         interval = self.parser.next()
@@ -38,4 +38,4 @@ class BedSet(Resource):
     OUT = ['genomic_interval_set']
 
     def init(self):
-        self.parser = IndexedBedFile(fname)
+        self.parser = IndexedBedFile(self.get_filename())

@@ -1,12 +1,13 @@
 from sofia_.action import Action
 
+
 class GetIntervalByPosition(Action):
     
     IN = ['genomic_interval_set', 'genomic_position']
     OUT = ['genomic_interval']
 
     def calculate(self, genomic_interval_set, genomic_position):
-        interval = genomic_interval_set.getIntervalsAtPosition(
+        interval = genomic_interval_set.get_intervals_at_position(
             genomic_position['chromosome_id'],
             genomic_position['chromosome_pos'])
         return {

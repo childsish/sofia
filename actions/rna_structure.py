@@ -48,7 +48,8 @@ class GetStructuralFeatures(Action):
     IN = ['rna_secondary_structure']
     OUT = ['rna_secondary_structure_features']
 
-def structuralFeatures(stc):
+
+def structural_features(stc):
     hloops = []
     mloops = []
     iloops = []

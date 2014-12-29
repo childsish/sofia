@@ -5,6 +5,7 @@ from itertools import izip
 
 Variant = namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'samples'))
 
+
 class VcfIterator(object):
 
     CHR = 0
@@ -21,7 +22,7 @@ class VcfIterator(object):
         self.fname = fname
         self.fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
         self.line_no = 0
-        self.hdrs = self._parseHeaders()
+        self.hdrs = self._parse_headers()
         self.samples = self.hdrs['##SAMPLES']
         del self.hdrs['##SAMPLES']
     
@@ -34,18 +35,18 @@ class VcfIterator(object):
     
     def next(self):
         self.line_no += 1
-        return self._parseLine(self.fhndl.next())
+        return self._parse_line(self.fhndl.next())
     
     def seek(self, fpos):
         self.fhndl.seek(fpos)
     
-    def _parseHeaders(self):
+    def _parse_headers(self):
         fhndl = self.fhndl
         hdrs = OrderedDict()
         line = fhndl.next().strip()
         self.line_no += 1
         if 'VCF' not in line:
-            raise ValueError('Invalid VCF file. Line 1: %s'%line.strip())
+            raise ValueError('Invalid VCF file. Line 1: {}'.format(line.strip()))
         while line.startswith('##'):
             key, value = line.split('=', 1)
             if key not in hdrs:
@@ -56,19 +57,19 @@ class VcfIterator(object):
         hdrs['##SAMPLES'] = line.strip().split('\t')[9:]
         return hdrs
     
-    def _parseLine(self, line):
+    def _parse_line(self, line):
         parts = line.strip().split('\t')
         return Variant(parts[self.CHR],
-            int(parts[self.POS]) - 1,
-            parts[self.ID],
-            parts[self.REF],
-            parts[self.ALT],
-            self._parseQuality(parts[self.QUAL]),
-            parts[self.FILTER],
-            self._parseAttributes(parts[self.INFO]),
-            self._parseSamples(parts))
+                       int(parts[self.POS]) - 1,
+                       parts[self.ID],
+                       parts[self.REF],
+                       parts[self.ALT],
+                       self._parse_quality(parts[self.QUAL]),
+                       parts[self.FILTER],
+                       self._parse_attributes(parts[self.INFO]),
+                       self._parse_samples(parts))
 
-    def _parseQuality(self, qual):
+    def _parse_quality(self, qual):
         if qual == '.':
             return '.'
         try:
@@ -77,11 +78,10 @@ class VcfIterator(object):
             return '.'
         return res
     
-    def _parseAttributes(self, attr_line):
-        return dict(attr.split('=', 1) if '=' in attr else (attr, attr)\
-            for attr in attr_line.strip().split(';'))
+    def _parse_attributes(self, attr_line):
+        return dict(attr.split('=', 1) if '=' in attr else (attr, attr) for attr in attr_line.strip().split(';'))
     
-    def _parseSamples(self, parts):
+    def _parse_samples(self, parts):
         res = {}
         if self.FORMAT < len(parts):
             keys = parts[self.FORMAT].split(':')
@@ -90,4 +90,3 @@ class VcfIterator(object):
                     continue
                 res[sample] = dict(izip(keys, parts[self.FORMAT + i + 1].strip().split(':')))
         return res
-

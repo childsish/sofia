@@ -1,5 +1,6 @@
 from index import Accessor
 
+
 class ExactKeyIndex(Accessor):
     
     __slots__ = ('index',)
@@ -18,8 +19,7 @@ class ExactKeyIndex(Accessor):
     
     def __setitem__(self, key, value):
         self.index[key] = value
-    
-    
+
     def __getstate__(self):
         return dict((attr, getattr(self, attr)) for attr in self.__slots__)
 

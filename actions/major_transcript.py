@@ -12,7 +12,7 @@ class GetMajorTranscriptCodingSequence(Action):
     def calculate(self, chromosome_sequence_set, major_transcript):
         if major_transcript is None:
             return None
-        return major_transcript.getSubSeq(chromosome_sequence_set)#, type='CDS')
+        return major_transcript.get_sub_seq(chromosome_sequence_set)  # , type='CDS')
 
 
 class GetFivePrimeUtr(Action):
@@ -26,7 +26,7 @@ class GetFivePrimeUtr(Action):
     def calculate(self, chromosome_sequence_set, major_transcript):
         if major_transcript is None:
             return None
-        return major_transcript.getSubSeq(chromosome_sequence_set, type="5'UTR5")
+        return major_transcript.get_sub_seq(chromosome_sequence_set, type="5'UTR5")
 
 
 class GetThreePrimeUtr(Action):
@@ -40,4 +40,4 @@ class GetThreePrimeUtr(Action):
     def calculate(self, chromosome_sequence_set, major_transcript):
         if major_transcript is None:
             return None
-        return major_transcript.getSubSeq(chromosome_sequence_set, type="3'UTR")
+        return major_transcript.get_sub_seq(chromosome_sequence_set, type="3'UTR")

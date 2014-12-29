@@ -15,8 +15,7 @@ class ResourceSolutionIterator(object):
 
     def __iter__(self):
         if len(self.hits) == 0:
-            ERROR_MANAGER.addError('%s does not match any provided resource' %
-                                   self.action.name)
+            ERROR_MANAGER.add_error('{} does not match any provided resource'.format(self.action.name))
         for hit in self.hits:
             yield self._init_action_graph(hit)
 
@@ -37,7 +36,7 @@ class ResourceSolutionIterator(object):
 
     def _init_action_graph(self, resource):
         """ Create a single node ActionGraph. """
-        outs = self.action.getOutput({'resource': resource})
+        outs = self.action.get_output({'resource': resource})
         action_instance = self.action({resource}, {}, {}, outs)
         res = ActionGraph(action_instance)
         res.add_resource(resource)
