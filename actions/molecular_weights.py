@@ -1,10 +1,11 @@
 from sofia_.action import Resource
 
-class MolecularWeights(Resource):
-    """ Reads in a set of molecular weights.
 
+class MolecularWeights(Resource):
     """
-    #TODO include url where molecular weights can be obtained.
+    Reads in a set of molecular weights. The file of molecular weights can be obtained from
+    http://emboss.sourceforge.net/.
+    """
 
     EXT = ['.dat', '.mol']
     OUT = ['molecular_weight_set']

@@ -2,6 +2,9 @@ from sofia_.action import Action
 
 
 class MajorTranscript(Action):
+    """
+    Get the major transcript of a gene model. Defined as the longest transcript (ie. most complete).
+    """
     
     IN = ['gene_model']
     OUT = ['major_transcript']

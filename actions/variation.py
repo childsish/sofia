@@ -3,10 +3,10 @@ from itertools import izip
 from modules.binf.sequence import revcmp
 from sofia_.action import Action
 
+
 class VariantType(Action):
-    """ Determines the variant type.
-    
-    Determined the variant type according to the sequence ontology
+    """
+    Determines the variant type according to the sequence ontology
     (http://www.sequenceontology.org)
     """
     
@@ -142,7 +142,12 @@ class CodonVariation(Action):
 
 AminoAcidVariant = namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'))
 
+
 class AminoAcidVariation(Action):
+    """
+    Get the amino acid variant. The nomenclature defined by the Human Genome Variation Society has been largely
+    adopted (www.hgvs.org/mutnomen/).
+    """
     
     IN = ['codon_variant', 'genetic_code']
     OUT = ['amino_acid_variant']

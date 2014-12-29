@@ -8,6 +8,9 @@ from modules.binf.genetic_code import RedundantCode
 
 
 class TranslateCodingSequence(Action):
+    """
+    Translates a coding sequence into an amino acid sequence using the standard genetic code.
+    """
 
     IN = ['coding_sequence', 'genetic_code']
     OUT = ['protein_sequence']
@@ -17,6 +20,9 @@ class TranslateCodingSequence(Action):
 
 
 class GetCodonUsage(Action):
+    """
+    Calculate the codon usage of a coding sequence.
+    """
 
     IN = ['coding_sequence']
     OUT = ['codon_usage']
@@ -34,8 +40,9 @@ class GetCodonUsage(Action):
 
 
 class GetRelativeSynonymousCodonUsage(Action):
-    """ Calculates and return the relative synonymous codon usage (rscu) and
-        relative codon adaptiveness (w).
+    """
+    Calculates and return the relative synonymous codon usage (rscu) and relative codon adaptiveness (w)
+    as defined by Sharp et. al. 1987
     """
 
     IN = ['codon_usage', 'genetic_code']
@@ -57,6 +64,9 @@ class GetRelativeSynonymousCodonUsage(Action):
 
 
 class GetCodonAdaptationIndex(Action):
+    """
+    Calculate the Codon Adaptation Index as defined by Sharp et. al. 1987.
+    """
 
     IN = ['coding_sequence', 'relative_codon_adaptiveness']
     OUT = ['codon_adaptation_index']
@@ -75,7 +85,8 @@ class GetCodonAdaptationIndex(Action):
 
 
 class GetEffectiveNumberOfCodons(Action):
-    """ Calculated the number of effective codons (Nc)
+    """
+    Calculated the number of effective codons (Nc) as defined by Sun et. al. 2013
     """
 
     IN = ['codon_usage', 'genetic_code']

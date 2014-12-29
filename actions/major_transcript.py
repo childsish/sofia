@@ -1,7 +1,10 @@
 from sofia_.action import Action
 
 
-class GetCodingSequenceByGeneModel(Action):
+class GetMajorTranscriptCodingSequence(Action):
+    """
+    Get the coding sequence of the major transcript.
+    """
 
     IN = ['chromosome_sequence_set', 'major_transcript']
     OUT = ['coding_sequence']
@@ -13,6 +16,9 @@ class GetCodingSequenceByGeneModel(Action):
 
 
 class GetFivePrimeUtr(Action):
+    """
+    Get the 5' untranslated region of the major transcript.
+    """
 
     IN = ['chromosome_sequence_set', 'major_transcript']
     OUT = ['five_prime_utr']
@@ -24,6 +30,9 @@ class GetFivePrimeUtr(Action):
 
 
 class GetThreePrimeUtr(Action):
+    """
+    Get the 3' untranslated region of the major transcript.
+    """
 
     IN = ['chromosome_sequence_set', 'major_transcript']
     OUT = ['three_prime_utr']

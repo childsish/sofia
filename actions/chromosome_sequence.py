@@ -2,6 +2,9 @@ from sofia_.action import Action
 
 
 class GetHomopolymerLength(Action):
+    """
+    Count the number of downstream nucleotides that have the same identity at the given position.
+    """
     
     IN = ['variant', 'chromosome_sequence_set']
     OUT = ['homopolymer_length']

@@ -4,6 +4,9 @@ from collections import Counter
 
 
 class GetCodingNucleotideSkew(Action):
+    """
+    Get the nucleotide skews of the given coding sequence. AT skew is (|A| - |T|) / (|A| + |T|). GC skew is similar.
+    """
 
     IN = ['coding_sequence']
     OUT = ['coding_nucleotide_skew']

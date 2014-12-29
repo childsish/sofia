@@ -5,6 +5,10 @@ from itertools import islice, izip
 
 
 class GetPest(Action):
+    """
+    Finds regions rich in P, E, S and T. These sequences are associated with protein that have a short half life.
+    PEST rich is defined by Rogers et. al. (1986).
+    """
 
     IN = ['protein_sequence', 'molecular_weight_set']
     OUT = ['pest_sequences']

@@ -2,6 +2,9 @@ from sofia_.action import Action
 
 
 class GetUpstreamSequence(Action):
+    """
+    Get the region 1000 nucleotides upstream of the major transcript transcriptional start site.
+    """
 
     IN = ['major_transcript', 'chromosome_sequence_set']
     OUT = ['upstream_sequence']
@@ -16,6 +19,9 @@ class GetUpstreamSequence(Action):
 
 
 class GetUpstreamORFs(Action):
+    """
+    Get the ORFs in the upstream region.
+    """
 
     IN = ['upstream_sequence', 'genetic_code']
     OUT = ['upstream_orfs']

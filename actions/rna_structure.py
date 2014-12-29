@@ -13,7 +13,11 @@ try:
 except ImportError:
     RNA = DummyRNAModule()
 
-def GetTranslationStartMinimumFreeEnergy(Action):
+
+class GetTranslationStartMinimumFreeEnergy(Action):
+    """
+    Get the minimum free energy around the start codon of the major transcript.
+    """
 
     IN = ['major_transcript', 'chromosome_sequence_set']
     OUT = ['translation_start_mfe']
@@ -37,6 +41,9 @@ def GetTranslationStartMinimumFreeEnergy(Action):
 
 
 class GetStructuralFeatures(Action):
+    """
+    Incomplete. Get the RNA secondary structural features of the given sequence.
+    """
 
     IN = ['rna_secondary_structure']
     OUT = ['rna_secondary_structure_features']

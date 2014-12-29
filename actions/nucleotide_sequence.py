@@ -3,6 +3,9 @@ from modules.kmer import KmerCounter
 
 
 class GetKNucleotideFrequency(Action):
+    """
+    Tally the number of times A, C, G and T are used in the given sequence.
+    """
 
     IN = ['nucleotide_sequence']
     OUT = ['nucleotide_frequency']
