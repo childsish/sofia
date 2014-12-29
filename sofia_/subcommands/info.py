@@ -1,9 +1,11 @@
 import argparse
+import json
 import os
 import sys
 
 from common import get_program_directory, load_action_hypergraph, load_plugins
 from sofia_.action import Action
+from textwrap import wrap
 
 
 class OutputAction(argparse.Action):
@@ -17,7 +19,17 @@ def generate_graph(args):
 
 
 def list_entities(args):
-    pass
+    program_dir = get_program_directory()
+    fhndl = open(os.path.join(program_dir, 'entities.json'))
+    json_obj = json.load(fhndl)
+    fhndl.close()
+
+    res = []
+    for entity, settings in json_obj.iteritems():
+        res.append(entity)
+        if 'description' in settings:
+            res.append('\n'.join(wrap(settings['description'], initial_indent='    ', subsequent_indent='    ')))
+    args.output.write('\n'.join(res))
 
 
 def list_actions(args):
