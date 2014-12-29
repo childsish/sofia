@@ -1,32 +1,42 @@
 {
     "genomic_position": {
-    	"children": ["chromosome_id"]
+    	"children": ["chromosome_id"],
+    	"description": "A position on a chromosome."
     },
     "genomic_interval": {
-    	"children": ["chromosome_id"]
+    	"children": ["chromosome_id"],
+    	"description": "An interval on a chromosome."
     },
     "gene_model": {
-    	"children": ["gene_id", "genomic_interval"]
+    	"children": ["gene_id", "genomic_interval"],
+    	"description": "A model of transcribed DNA. This includes all alternative transcriptions."
     },
     "variant": {
-    	"children": ["genomic_position", "reference_allele", "alternate_allele", "variant_quality"]
+    	"children": ["genomic_position", "reference_allele", "alternate_allele", "variant_quality"],
+    	"description": "A sequence variant. Similar to an entry in a VCF file."
     },
     "chromosome_id": {
-    	"attributes": ["chromosome_id"]
+    	"attributes": ["chromosome_id"],
+    	"description": "A chromosome identifier. Just the name of the chromosome, but different groups tend to use different names. eg. \"Chr1\" vs. \"1\"."
     },
     "gene_id": {
-    	"attributes": ["gene_id"]
+    	"attributes": ["gene_id"],
+    	"description": "A gene identifier."
     },
     "chromosome_sequence_set": {
-        "attributes": ["chromosome_id"]
+        "attributes": ["chromosome_id"],
+        "description": "A set of chromosome sequences. The attributes of the chromosome_id can be set. eg. FASTA"
     },
     "variant_set": {
-    	"attributes": ["chromosome_id"]
+    	"attributes": ["chromosome_id"],
+        "description": "A set of sequence variants. The attributes of the chromosome_id can be set. eg. VCF"
     },
     "gene_model_set": {
-    	"attributes": ["chromosome_id", "gene_id"]
+    	"attributes": ["chromosome_id", "gene_id"],
+        "description": "A set of gene_models. The attributes of the chromosome_id and gene_id can be set. eg. GTF"
     },
     "genomic_interval_set": {
-        "attributes": ["chromosome_id"]
+        "attributes": ["chromosome_id"],
+        "description": "A set of genomic_intervals. The attributes of the chromosome_id can be set. eg. BED"
     }
 }
