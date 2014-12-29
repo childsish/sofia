@@ -18,7 +18,7 @@ class HyperGraph(object):
             res.append('    {} [shape=box];'.format(e))
         for e, vs in sorted(self.graph.es.iteritems()):
             for v in vs:
-                res.append('    "{}" -> "{}";'.format(v))
+                res.append('    "{}" -> "{}";'.format(*v))
         res.append('}')
         return '\n'.join(res)
     
