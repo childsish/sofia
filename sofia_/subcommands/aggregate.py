@@ -194,7 +194,6 @@ def init_annotation(req_ftr, sol):
     global solution
     requested_actions = req_ftr
     solution = sol
-
     solution.init()
 
 

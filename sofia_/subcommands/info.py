@@ -49,10 +49,12 @@ def list_actions(args):
 def list_action(action, args):
     args.output.write('{}\n'.format(action.__name__))
     if args.verbose:
-        args.output.write(' Input:\n  {}\n'.format(', '.join(action.IN)))
-        args.output.write(' Output:\n  {}\n'.format(', '.join(action.OUT)))
+        if len(action.IN) > 0:
+            args.output.write(' Input:\n  {}\n'.format(', '.join(action.IN)))
+        if len(action.OUT) > 0:
+            args.output.write(' Output:\n  {}\n'.format(', '.join(action.OUT)))
         if action.__doc__ is not None:
-            args.output.write(' Description:\n  {}'.format(action.__doc__))
+            args.output.write(' Description:\n  {}\n'.format(action.__doc__.strip()))
         args.output.write('\n')
 
 
