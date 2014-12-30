@@ -1,5 +1,5 @@
 from sofia_.action import Resource, Target
-from modules.file_formats.vcf_.iterator import VcfIterator as VcfIteratorParser
+from modules.file_formats.vcf_.iterator import VcfEntryIterator as VcfIteratorParser
 from modules.file_formats.vcf_.set_ import VcfSet as VcfSetParser
 try:
     from modules.file_formats.vcf_.index import IndexedVcfFile
@@ -15,7 +15,7 @@ class VcfIterator(Target):
     OUT = ['variant']
     
     def init(self):
-        self.parser = VcfIteratorParser(self.get_filename())
+        self.parser = iter(VcfIteratorParser(self.get_filename()))
 
     def calculate(self):
         variant = self.parser.next()

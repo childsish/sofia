@@ -3,13 +3,13 @@ import glob
 import sys
 
 from vcf_.index import IndexedVcfFile
-from vcf_.iterator import VcfIterator
+from vcf_.iterator import VcfEntryIterator
 from vcf_.merger import VcfMerger
 from vcf_.set_ import VcfSet
 
 
 def iter_entries(fname):
-    return VcfIterator(fname)
+    return VcfEntryIterator(fname)
 
 
 def merge(glob_fnames, quality=50.0, out=None, bams=[]):

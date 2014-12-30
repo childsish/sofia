@@ -1,7 +1,7 @@
 import os
 import pysam
 
-from iterator import VcfIterator
+from iterator import VcfEntryIterator
 
 
 class IndexedVcfFile(object):
@@ -16,7 +16,7 @@ class IndexedVcfFile(object):
         if not os.path.exists(iname):
             raise ValueError('File missing interval index. Try: tabix -p vcf <FILENAME>.')
         self.index = pysam.Tabixfile(self.fname)
-        self.iterator = VcfIterator(self.fname)
+        self.iterator = VcfEntryIterator(self.fname)
 
     def __getitem__(self, key):
         if not hasattr(key, 'chr'):

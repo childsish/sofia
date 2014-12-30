@@ -1,45 +1,36 @@
+import bz2
 import gzip
 
 from collections import OrderedDict, namedtuple
-from itertools import izip
 
+VcfLine = namedtuple('VcfLine', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'format', 'samples'))
+VcfLine.__new__.__defaults__ = (None, None, None, None, None, None, None, None, '', [])
 Variant = namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'samples'))
+Variant.__new__.__defaults__ = (None, None, None, None, None, None, None, None, {})
 
 
-class VcfIterator(object):
-
-    CHR = 0
-    POS = 1
-    ID = 2
-    REF = 3
-    ALT = 4
-    QUAL = 5
-    FILTER = 6
-    INFO = 7
-    FORMAT = 8
-    
+class VcfLineIterator(object):
     def __init__(self, fname):
         self.fname = fname
-        self.fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
+        self.fhndl =\
+            gzip.open(fname) if fname.endswith('.gz') else\
+            bz2.BZ2File(fname) if fname.endswith('.bz2') else\
+            open(fname)
         self.line_no = 0
         self.hdrs = self._parse_headers()
         self.samples = self.hdrs['##SAMPLES']
         del self.hdrs['##SAMPLES']
-    
-    def __del__(self):
+
+    def __iter__(self):
+        for line in self.fhndl:
+            parts = line.split('\t', 9)
+            parts[1] = int(parts[1]) - 1
+            yield VcfLine(*parts)
+
+    def close(self):
         if hasattr(self, 'fhndl') and not self.fhndl.closed:
             self.fhndl.close()
-    
-    def __iter__(self):
-        return self
-    
-    def next(self):
-        self.line_no += 1
-        return self._parse_line(self.fhndl.next())
-    
-    def seek(self, fpos):
-        self.fhndl.seek(fpos)
-    
+
     def _parse_headers(self):
         fhndl = self.fhndl
         hdrs = OrderedDict()
@@ -56,37 +47,43 @@ class VcfIterator(object):
             self.line_no += 1
         hdrs['##SAMPLES'] = line.strip().split('\t')[9:]
         return hdrs
-    
-    def _parse_line(self, line):
-        parts = line.strip().split('\t')
-        return Variant(parts[self.CHR],
-                       int(parts[self.POS]) - 1,
-                       parts[self.ID],
-                       parts[self.REF],
-                       parts[self.ALT],
-                       self._parse_quality(parts[self.QUAL]),
-                       parts[self.FILTER],
-                       self._parse_attributes(parts[self.INFO]),
-                       self._parse_samples(parts))
 
-    def _parse_quality(self, qual):
-        if qual == '.':
-            return '.'
+    def __del__(self):
+        self.close()
+
+
+class VcfEntryIterator(VcfLineIterator):
+    
+    def __init__(self, fname):
+        super(VcfEntryIterator, self).__init__(fname)
+
+    def __iter__(self):
+        for line in super(VcfEntryIterator, self).__iter__():
+            samples = self._parse_samples(line.format.split(':'), line.samples.split('\t'))
+            yield Variant(line.chr,
+                          line.pos,
+                          line.id,
+                          line.ref,
+                          line.alt,
+                          self._parse_quality(line.qual),
+                          line.filter,
+                          self._parse_info(line.info),
+                          samples)
+
+    @staticmethod
+    def _parse_quality(qual):
         try:
             res = float(qual)
         except TypeError:
             return '.'
         return res
+
+    @staticmethod
+    def _parse_info(info):
+        return dict(i.split('=', 1) if '=' in i else (i, i) for i in info.strip().split(';'))
     
-    def _parse_attributes(self, attr_line):
-        return dict(attr.split('=', 1) if '=' in attr else (attr, attr) for attr in attr_line.strip().split(';'))
-    
-    def _parse_samples(self, parts):
+    def _parse_samples(self, format, sample_data):
         res = {}
-        if self.FORMAT < len(parts):
-            keys = parts[self.FORMAT].split(':')
-            for i, sample in enumerate(self.samples):
-                if parts[self.FORMAT + i + 1] == '.':
-                    continue
-                res[sample] = dict(izip(keys, parts[self.FORMAT + i + 1].strip().split(':')))
+        for sample, data in zip(self.samples, sample_data):
+            res[sample] = dict(zip(format, sample.split(':')))
         return res

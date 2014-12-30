@@ -4,7 +4,7 @@ from itertools import izip
 
 from binf.identifier import Chromosome
 from sorted_dict import SortedDict
-from iterator import VcfIterator, Variant
+from iterator import VcfEntryIterator, Variant
 
 
 class VcfMerger(object):
@@ -15,7 +15,7 @@ class VcfMerger(object):
         self.fnames = fnames
         self.quality = quality
         self.depth = depth
-        self.iterators = map(VcfIterator, fnames)
+        self.iterators = map(VcfEntryIterator, fnames)
         hdrs = [it.hdrs for it in self.iterators]
         self.hdrs = self._merge_headers(hdrs)
         self.sample_names = self.hdrs['##SAMPLES']
