@@ -3,14 +3,18 @@ from itertools import izip
 
 
 class SortedDict(object):
-    def __init__(self, iterable=[]):
+    """ A dictionary sorted by key.
+    """
+    def __init__(self, iterable=[], key=None):
         """Create a sorted dictionary
         
         :param iterable: the initial key:value pairs to put in the dictionary
         :type iterable: list of tuple
         """
+        self._keys = []
         self.keys = []
         self.values = []
+        self.key = (lambda x: x) if key is None else key
         for item in iterable:
             self[item[0]] = item[1]
 
@@ -24,26 +28,30 @@ class SortedDict(object):
         return len(self.keys)
 
     def __contains__(self, key):
-        idx = bisect_left(self.keys, key)
+        idx = bisect_left(self._keys, self.key(key))
         return idx < len(self.keys) and self.keys[idx] == key
 
     def __getitem__(self, key):
-        idx = bisect_left(self.keys, key)
+        idx = bisect_left(self._keys, self.key(key))
         if self.keys[idx] != key:
             raise KeyError(key)
         return self.values[idx]
 
     def __setitem__(self, key, value):
-        idx = bisect_left(self.keys, key)
+        _key = self.key(key)
+        idx = bisect_left(self._keys, _key)
         if idx >= len(self.keys) or self.keys[idx] != key:
+            self._keys.insert(idx, _key)
             self.keys.insert(idx, key)
             self.values.insert(idx, value)
         else:
             self.values[idx] = value
 
     def get(self, key, default):
-        idx = bisect_left(self.keys, key)
+        _key = self.key(key)
+        idx = bisect_left(self._keys, _key)
         if idx >= len(self.keys) or self.keys[idx] != key:
+            self._keys.insert(idx, _key)
             self.keys.insert(idx, key)
             self.values.insert(idx, default)
         return self.values[idx]
@@ -58,11 +66,9 @@ class SortedDict(object):
         return izip(self.keys, self.values)
 
     def pop_highest(self):
-        key = self.keys.pop()
-        value = self.values.pop()
-        return key, value
+        self._keys.pop()
+        return self.keys.pop(), self.values.pop()
 
     def pop_lowest(self):
-        key = self.keys.pop(0)
-        value = self.values.pop(0)
-        return key, value
+        self._keys.pop(0)
+        return self.keys.pop(0), self.values.pop(0)
