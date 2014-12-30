@@ -3,10 +3,21 @@ import gzip
 
 from collections import OrderedDict, namedtuple
 
-VcfLine = namedtuple('VcfLine', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'format', 'samples'))
-VcfLine.__new__.__defaults__ = (None, None, None, None, None, None, None, None, '', [])
+
 Variant = namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'samples'))
 Variant.__new__.__defaults__ = (None, None, None, None, None, None, None, None, {})
+
+
+class VcfLine(namedtuple('VcfLine', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'format', 'samples'))):
+    def __new__(cls, chr, pos, id, ref, alt, qual, filter, info, format='', samples=''):
+        return super(VcfLine, cls).__new__(cls, chr, pos, id, ref, alt, qual, filter, info, format, samples)
+
+    def __str__(self):
+        res = [self.chr, str(self.pos + 1), self.id, self.ref, self.alt, self.qual, self.filter, self.info]
+        if self.format != '':
+            res.append(self.format)
+            res.append(self.samples)
+        return '\t'.join(res)
 
 
 class VcfLineIterator(object):
