@@ -5,8 +5,6 @@ from interval import Interval, IntervalBinner
 
 class OverlappingIntervalIndex(Accessor):
     
-    __slots__ = ('bins',)
-    
     RETURN = 'multiple'
     TYPE = 'inexact'
     
@@ -15,12 +13,12 @@ class OverlappingIntervalIndex(Accessor):
         self.bins = defaultdict(dict)
     
     def __contains__(self, key):
-        bin = self.binner.get_bin(key)
+        bin = self.binner.get_bin(key.start, key.stop)
         return bin in self.bins and key in self.bins[bin]
     
     def __getitem__(self, key):
         res = []
-        bins = self.binner.get_overlapping_bins(key)
+        bins = self.binner.get_overlapping_bins(key.start, key.stop)
         for bin_fr, bin_to in bins:
             if bin_fr == bin_to:
                 if bin_fr not in self.bins:
@@ -34,14 +32,16 @@ class OverlappingIntervalIndex(Accessor):
         return res
     
     def __setitem__(self, key, value):
-        bin = self.binner.get_bin(key)
+        bin = self.binner.get_bin(key.start, key.stop)
         self.bins[bin][Interval(key.start, key.stop)] = value
     
     def __getstate__(self):
-        return dict((attr, getattr(self, attr)) for attr in self.__slots__)
+        return {
+            'bins': self.bins,
+            'minbin': self.binner.minbin,
+            'maxbin': self.binner.maxbin
+        }
 
     def __setstate__(self, state):
-        self.binner = IntervalBinner()
-        for attr in self.__slots__:
-            setattr(self, attr, state[attr])
-
+        self.bins = state['bins']
+        self.binner = IntervalBinner(state['minbin'], state['maxbin'])
