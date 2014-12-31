@@ -30,6 +30,12 @@ class StreamMerger(object):
                 yield tops[idx]
             self._update_sorting(sorted_tops, tops, idxs)
 
+    def close(self):
+        if hasattr(self, 'iterators'):
+            for it in self.iterators:
+                if hasattr(it, 'close'):
+                    it.close()
+
     def _update_sorting(self, sorted_tops, tops, idxs):
         """ Insert new entries into the merged stream.
 
