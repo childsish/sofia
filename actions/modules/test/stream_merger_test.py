@@ -3,7 +3,7 @@ import string
 import unittest
 
 
-from stream_merger import StreamMerger
+from sorted_iterator_merger import SortedIteratorMerger
 
 
 class StreamMergerTest(unittest.TestCase):
@@ -15,13 +15,13 @@ class StreamMergerTest(unittest.TestCase):
 
     def test_merger(self):
         iterators = [iter(sorted(l)) for l in self.lists]
-        it = StreamMerger(iterators)
+        it = SortedIteratorMerger(iterators)
 
         self.assertEqual(sorted(string.letters), list(it))
 
     def test_key(self):
         key = lambda x: ord('z') - ord(x)
         iterators = [iter(sorted(l, key=key)) for l in self.lists]
-        it = StreamMerger(iterators, key=key)
+        it = SortedIteratorMerger(iterators, key=key)
 
         self.assertEqual(sorted(string.letters)[::-1], list(it))
