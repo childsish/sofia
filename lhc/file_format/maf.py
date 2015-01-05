@@ -1,9 +1,10 @@
 import argparse
 import os
 
-from lhc.filepool import FilePool
+from lhc.filetools.filepool import FilePool
 from lhc.binf.variant import Variant
 from lhc.binf.genomic_coordinate import Interval
+
 
 CHR = 4
 START = 5
