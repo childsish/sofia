@@ -1,7 +1,7 @@
 import gzip
 
-from binf.gene_model import Gene, Transcript, Exon
-from binf.genomic_coordinate import Interval
+from lhc.binf.gene_model import Gene, Transcript, Exon
+from lhc.binf.genomic_coordinate import Interval
 
 
 class GtfIterator(object):
