@@ -4,7 +4,7 @@ import unittest
 
 from subprocess import Popen
 from lhc.binf.genomic_coordinate import Interval
-from lhc.file_format.gtf_.iterator import GtfIterator
+from lhc.file_format.gtf_.iterator import GtfEntityIterator
 from lhc.file_format.gtf_.set_ import GtfSet
 from lhc.file_format.gtf_.index import IndexedGtfFile
 
@@ -39,7 +39,7 @@ class TestGtf(unittest.TestCase):
         prc.wait()
     
     def test_iterEntries(self):
-        it = GtfIterator('%s.gz'%self.fname)
+        it = GtfEntityIterator('%s.gz'%self.fname)
         
         gene = it.next()
         self.assertEquals(gene.name, 'a')
@@ -58,7 +58,7 @@ class TestGtf(unittest.TestCase):
         self.assertRaises(StopIteration, it.next)
     
     def test_getItemByKey(self):
-        parser = GtfSet(GtfIterator('%s.gz'%self.fname))
+        parser = GtfSet(GtfEntityIterator('%s.gz'%self.fname))
         
         gene = parser['a']
         self.assertEquals(gene.name, 'a')
@@ -75,7 +75,7 @@ class TestGtf(unittest.TestCase):
         self.assertEquals(len(gene.transcripts.values()[0].exons), 1)
      
     def test_getItemInterval(self):
-        parser = GtfSet(GtfIterator('%s.gz'%self.fname))
+        parser = GtfSet(GtfEntityIterator('%s.gz'%self.fname))
         
         genes = parser[Interval('chr1', 500, 1500)]
         self.assertEquals(len(genes), 1)

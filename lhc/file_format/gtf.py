@@ -3,12 +3,12 @@ import gzip
 
 from gtf_.index import IndexedGtfFile
 from gtf_.set_ import GtfSet
-from gtf_.iterator import GtfIterator
+from gtf_.iterator import GtfEntityIterator
 
 
 def iter_entries(fname):
     """ Convenience function """
-    return GtfIterator(fname)
+    return GtfEntityIterator(fname)
 
 
 def index(fname):
@@ -18,7 +18,7 @@ def index(fname):
     for line in fhndl:
         if line.startswith('#'):
             continue
-        type, ivl, attr = GtfIterator._parse_line(line)
+        type, ivl, attr = GtfEntityIterator._parse_line(line)
         if type == 'gene':
             index.append('{}\t{}\t{}\t{}'.format(attr['gene_name'], ivl.chr, ivl.start + 1, ivl.stop + 1))
     fhndl.close()

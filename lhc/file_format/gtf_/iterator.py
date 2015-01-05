@@ -4,7 +4,7 @@ from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.binf.genomic_coordinate import Interval
 
 
-class GtfIterator(object):
+class GtfEntityIterator(object):
     
     CHR = 0
     SRC = 1
