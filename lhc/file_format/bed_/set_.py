@@ -1,5 +1,5 @@
-from indices import Index, ExactKeyIndex, OverlappingIntervalIndex
-from interval import Interval
+from lhc.indices import Index, ExactKeyIndex, OverlappingIntervalIndex
+from lhc.interval import Interval
 
 
 class BedSet(object):
