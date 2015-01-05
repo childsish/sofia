@@ -1,9 +1,9 @@
 import gzip
 
 from collections import namedtuple
-from lhc.binf.genomic_coordinate import Interval
 
 BedEntry = namedtuple('BedEntry', ('chr', 'start', 'stop', 'name', 'score', 'strand'))
+
 
 class BedIterator(object):
     #TODO: Implemented BED headers
@@ -29,21 +29,20 @@ class BedIterator(object):
     
     def next(self):
         line = self.fhndl.next()
-        while line[:5] in ['brows', 'track']: #TODO: remove when bed headers implemented
+        while line[:5] in ['brows', 'track']:  # TODO: remove when bed headers implemented
             line = self.fhndl.next()
         self.line_no += 1
-        return self._parseLine(line)
+        return self._parse_line(line)
 
     def seek(self, fpos):
         self.fhndl.seek(fpos)
 
     @classmethod
-    def _parseLine(cls, line):
+    def _parse_line(cls, line):
         parts = line.strip().split('\t')
         return BedEntry(parts[cls.CHR],
-            int(parts[cls.START]) - 1,
-            int(parts[cls.STOP]),
-            parts[cls.NAME],
-            parts[cls.SCORE],
-            parts[cls.STRAND])
- 
+                        int(parts[cls.START]) - 1,
+                        int(parts[cls.STOP]),
+                        parts[cls.NAME],
+                        parts[cls.SCORE],
+                        parts[cls.STRAND])
