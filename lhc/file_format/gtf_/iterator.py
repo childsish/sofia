@@ -1,7 +1,8 @@
 import gzip
 
-from lhc.binf.gene_model import Gene, Transcript, Exon
-from lhc.binf.genomic_coordinate import Interval
+from binf.gene_model import Gene, Transcript, Exon
+from binf.genomic_coordinate import Interval
+
 
 class GtfIterator(object):
     
@@ -34,7 +35,7 @@ class GtfIterator(object):
         for line in self.fhndl:
             if line.startswith('#'):
                 continue
-            type, ivl, attr = self._parseLine(line)
+            type, ivl, attr = self._parse_line(line)
             if type == 'gene':
                 res = self.gene
                 self.gene = Gene(attr['gene_name'], ivl)
@@ -54,22 +55,21 @@ class GtfIterator(object):
         line = self.fhndl.next()
         while line[0] == '#':
             line = self.fhndl.next()
-        type, ivl, attr = self._parseLine(line)
+        type, ivl, attr = self._parse_line(line)
         while type != 'gene':
             line = self.fhndl.next()
-            type, ivl, attr = self._parseLine(line)
+            type, ivl, attr = self._parse_line(line)
         self.gene = Gene(attr['gene_name'], ivl)
     
     @classmethod
-    def _parseLine(cls, line):
+    def _parse_line(cls, line):
         parts = line.strip().split('\t')
-        ivl = Interval(parts[cls.CHR], int(parts[cls.START]) - 1,\
-            int(parts[cls.STOP]), parts[cls.STRAND])
-        attr = cls._parseAttributes(parts[cls.ATTR])
+        ivl = Interval(parts[cls.CHR], int(parts[cls.START]) - 1, int(parts[cls.STOP]), parts[cls.STRAND])
+        attr = cls._parse_attributes(parts[cls.ATTR])
         return parts[cls.TYPE], ivl, attr
     
     @classmethod
-    def _parseAttributes(cls, attr):
+    def _parse_attributes(cls, attr):
         parts = (part.strip() for part in attr.split(';'))
         parts = [part.split(' ', 1) for part in parts if part != '']
         for part in parts:

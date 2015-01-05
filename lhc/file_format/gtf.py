@@ -1,11 +1,15 @@
 import argparse
 import gzip
 
-from lhc.file_format.gtf_.iterator import GtfIterator
+from gtf_.index import IndexedGtfFile
+from gtf_.set_ import GtfSet
+from gtf_.iterator import GtfIterator
 
-def iterEntries(fname):
+
+def iter_entries(fname):
     """ Convenience function """
     return GtfIterator(fname)
+
 
 def index(fname):
     """ Query a gtf file by model name. Use tabix for interval queries. """
@@ -14,22 +18,24 @@ def index(fname):
     for line in fhndl:
         if line.startswith('#'):
             continue
-        type, ivl, attr = GtfIterator._parseLine(line)
+        type, ivl, attr = GtfIterator._parse_line(line)
         if type == 'gene':
-            index.append('%s\t%s\t%d\t%d'%(attr['gene_name'], ivl.chr, ivl.start + 1, ivl.stop + 1))
+            index.append('{}\t{}\t{}\t{}'.format(attr['gene_name'], ivl.chr, ivl.start + 1, ivl.stop + 1))
     fhndl.close()
-    
-    iname = '%s.lhci'%fname
+
+    iname = '{}.lhci'.format(fname)
     fhndl = open(iname, 'w')
     fhndl.write('\n'.join(index))
     fhndl.close()
 
+
 def main():
-    parser = getArgumentParser()
+    parser = get_parser()
     args = parser.parse_args()
     args.func(args)
 
-def getArgumentParser():
+
+def get_parser():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
@@ -38,6 +44,7 @@ def getArgumentParser():
     index_parser.set_defaults(func=lambda args: index(args.input))
 
     return parser
+
 
 if __name__ == '__main__':
     import sys
