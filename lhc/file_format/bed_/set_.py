@@ -22,4 +22,7 @@ class BedSet(object):
         return [self.data[v] for k, v in idxs]
 
     def get_intervals_at_position(self, chr, pos):
-        return [self.data[v] for k, v in self.ivl_index[(chr, Interval(pos, pos + 1))]]
+        return self.get_overlapping_intervals(chr, pos, pos + 1)
+
+    def get_overlapping_intervals(self, chr, start, stop):
+        return [self.data[v] for k, v in self.ivl_index[(chr, Interval(start, stop))]]
