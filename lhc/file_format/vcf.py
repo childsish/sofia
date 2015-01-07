@@ -3,7 +3,7 @@ import glob
 import sys
 
 from vcf_.index import IndexedVcfFile
-from vcf_.iterator import VcfEntryIterator
+from vcf_.iterator import VcfEntryIterator, VcfLineIterator
 from vcf_.merger import VcfMerger
 from vcf_.set_ import VcfSet
 
@@ -44,6 +44,20 @@ def merge(glob_fnames, quality=50.0, out=None, bams=[]):
     out.close()
 
 
+def filter(args):
+    it = VcfLineIterator(args.input)
+    fhndl = sys.stdout if args.output is None else open(args.output, 'w')
+    for k, vs in it.hdrs.iteritems():
+        for v in vs:
+            fhndl.write('{}={}\n'.format(k, v))
+    fhndl.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t' + '\t'.join(it.samples) + '\n')
+    for line in it:
+        if args.quality is not None and float(line.qual) < args.quality:
+            continue
+        fhndl.write(line)
+    fhndl.close()
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -60,6 +74,12 @@ def get_parser():
     merge_parser.add_argument('-q', '--quality', type=float)
     merge_parser.add_argument('-o', '--output')
     merge_parser.set_defaults(func=lambda args: merge(args.inputs, args.quality, args.output, args.bams))
+
+    filter_parser = subparsers.add_parser('filter')
+    filter_parser.add_argument('input')
+    filter_parser.add_argument('-o', '--output')
+    filter_parser.add_argument('-q', '--quality')
+    filter_parser.set_defaults(func=filter)
 
     return parser
 
