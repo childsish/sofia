@@ -1,7 +1,34 @@
+import bz2
 import gzip
 
+from collections import namedtuple
 from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.binf.genomic_coordinate import Interval
+
+
+GtfLine = namedtuple('GtfLine', ('chr', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attr'))
+
+
+class GtfLineIterator(object):
+    def __init__(self, fname):
+        self.fname = fname
+        self.fhndl = bz2.BZ2File(fname) if fname.endswith('.bz2') else\
+            gzip.open(fname) if fname.endswith('.gz') else\
+            open(fname)
+
+    def __iter__(self):
+        fhndl = self.fhndl
+        for line in fhndl:
+            if line.startswith('#'):
+                continue
+            yield GtfLine(*line.strip().split('\t'))
+
+    def close(self):
+        if hasattr(self, 'fhndl'):
+            self.fhndl.close()
+
+    def __del__(self):
+        self.close()
 
 
 class GtfEntityIterator(object):
@@ -18,60 +45,35 @@ class GtfEntityIterator(object):
     
     def __init__(self, fname):
         self.fname = fname
-        self.fhndl = gzip.open(fname) if fname.endswith('.gz') else open(fname)
-        self.seek(0)
-    
-    def __del__(self):
-        if hasattr(self, 'fhndl') and not self.fhndl.closed:
-            self.fhndl.close()
+        self.it = GtfLineIterator(fname)
     
     def __iter__(self):
-        return self
-    
-    def next(self):
-        if self.gene is None:
-            raise StopIteration()
-        res = None
-        for line in self.fhndl:
-            if line.startswith('#'):
-                continue
-            type, ivl, attr = self._parse_line(line)
-            if type == 'gene':
-                res = self.gene
-                self.gene = Gene(attr['gene_name'], ivl)
+        for line in self.it:
+            if line.type == 'gene':
+                gene = Gene(line.attr['gene_name'])
                 break
-            elif type == 'transcript':
-                self.gene.transcripts[attr['transcript_name']] =\
-                    Transcript(attr['transcript_name'], ivl)
-            elif type == 'CDS':
-                self.gene.transcripts[attr['transcript_name']].exons.append(Exon(ivl, 'CDS'))
-        if res is None:
-            res = self.gene
-            self.gene = None
-        return res
+        for line in self.it:
+            ivl = Interval(line.chr, int(line.start) - 1, int(line.stop), line.strand)
+            attr = self._parse_attributes(line.attr)
+            if line.type == 'gene':
+                yield gene
+                gene = Gene(attr(['gene_name']))
+            elif line.type == 'transcript':
+                transcript_name = attr['transcript_name']
+                gene.transcripts[transcript_name] = Transcript(transcript_name, ivl)
+            elif line.type == 'CDS':
+                transcript_name = attr['transcript_name']
+                gene.transcripts[transcript_name].exons.append(Exon(ivl, 'CDS'))
+        yield gene
     
-    def seek(self, fpos):
-        self.fhndl.seek(fpos)
-        line = self.fhndl.next()
-        while line[0] == '#':
-            line = self.fhndl.next()
-        type, ivl, attr = self._parse_line(line)
-        while type != 'gene':
-            line = self.fhndl.next()
-            type, ivl, attr = self._parse_line(line)
-        self.gene = Gene(attr['gene_name'], ivl)
-    
-    @classmethod
-    def _parse_line(cls, line):
-        parts = line.strip().split('\t')
-        ivl = Interval(parts[cls.CHR], int(parts[cls.START]) - 1, int(parts[cls.STOP]), parts[cls.STRAND])
-        attr = cls._parse_attributes(parts[cls.ATTR])
-        return parts[cls.TYPE], ivl, attr
-    
-    @classmethod
-    def _parse_attributes(cls, attr):
+    @staticmethod
+    def _parse_attributes(attr):
         parts = (part.strip() for part in attr.split(';'))
         parts = [part.split(' ', 1) for part in parts if part != '']
         for part in parts:
             part[1] = part[1][1:-1] if part[1].startswith('"') else int(part[1])
         return dict(parts)
+
+    def __del__(self):
+        if hasattr(self, 'it'):
+            self.it.close()
