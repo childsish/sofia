@@ -1,21 +1,12 @@
 import argparse
-import sys
 
-from collections import namedtuple
-from itertools import izip_longest
-from lhc.file_format.entry_set import EntrySet
+from fastq_.iterator import FastqEntryIterator
 
-FastqEntry = namedtuple('FastqEntry', ('seq_hdr', 'seq', 'qual_hdr', 'qual'))
 
-def iterEntries(fname):
-    parser = FastqParser(fname)
-    return iter(parser)
+def iter_entries(fname):
+    for entry in FastqEntryIterator(fname):
+        return entry
 
-class FastqParser(EntrySet):
-    def _iterHandle(self, infile):
-        it = izip_longest([infile] * 4)
-        for entry in it:
-            yield(FastqEntry(*entry))
 
 def main(argv):
     parser = argparse.ArgumentParser()
@@ -35,6 +26,7 @@ def main(argv):
     args = parser.parse_args(argv[1:])
     args.func(args)
 
+
 def rmdup(infname, outfname=None):
     def meanQuality(v):
         return mean(quality(v[2]))
@@ -45,7 +37,7 @@ def rmdup(infname, outfname=None):
     if outfname is None:
         outfname = '%s.unq.fastq'%infname.rsplit('.', 1)[1]
     visited = defaultdict(list)
-    for hdr, seq, plus, qua in iterEntries(infname):
+    for hdr, seq, plus, qua in iter_entries(infname):
         visited[seq].append((hdr, seq, qua))
     print visited.values()[0]
     outfile = open(outfname, 'w')
@@ -58,8 +50,10 @@ def rmdup(infname, outfname=None):
         outfile.write('\n')
     outfile.close()
 
+
 def quality(qua, offset=33):
     return [ord(char) - offset for char in qua]
+
 
 def interleave(fastq1, fastq2, outfile=sys.stdout):
     infile1 = open(fastq1)
@@ -76,6 +70,7 @@ def interleave(fastq1, fastq2, outfile=sys.stdout):
 
     infile1.close()
     infile2.close()
+
 
 if __name__ == '__main__':
     import sys
