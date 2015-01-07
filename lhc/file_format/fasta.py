@@ -1,13 +1,13 @@
 from argparse import ArgumentParser
 from itertools import izip
 from fasta_.index import IndexedFastaFile
-from fasta_.iterator import FastaIterator
+from fasta_.iterator import FastaEntryIterator
 from fasta_.set_ import FastaSet
 
 
 def iter_entries(fname):
     """ Convenience function """
-    return FastaIterator(fname)
+    return FastaEntryIterator(fname)
 
 
 def compare(a_fname, b_fname):
@@ -25,8 +25,8 @@ def compare(a_fname, b_fname):
     print '\n'.join(both)
 
     print 'The common headers differ at the following positions:'
-    a_parser = FastaIterator(a_fname)
-    b_parser = FastaIterator(b_fname)
+    a_parser = FastaEntryIterator(a_fname)
+    b_parser = FastaEntryIterator(b_fname)
     for hdr in both:
         for i, (a, b) in enumerate(izip(a_parser[hdr], b_parser[hdr])):
             if a.lower() != b.lower():

@@ -5,7 +5,7 @@ import unittest
 from subprocess import Popen
 
 from lhc.binf.genomic_coordinate import Position, Interval
-from lhc.file_format.fasta_.iterator import FastaIterator
+from lhc.file_format.fasta_.iterator import FastaEntryIterator
 from lhc.file_format.fasta_.set_ import FastaSet
 from lhc.file_format.fasta_.index import IndexedFastaFile
 
@@ -20,26 +20,26 @@ class TestFasta(unittest.TestCase):
         prc.wait()
     
     def test_iterEntries(self):
-        it = FastaIterator(self.fname)
+        it = FastaEntryIterator(self.fname)
         
         self.assertEquals(tuple(it.next()), ('a', 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee'))
         self.assertEquals(tuple(it.next()), ('b', 'ffffffffffgggggggggghhhhh'))
         self.assertRaises(StopIteration, it.next)
     
     def test_getItemByKey(self):
-        parser = FastaSet(FastaIterator(self.fname))
+        parser = FastaSet(FastaEntryIterator(self.fname))
         
         self.assertEquals(parser['a'], 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee')
         self.assertEquals(parser['b'], 'ffffffffffgggggggggghhhhh')
     
     def test_getItemSinglePosition(self):
-        parser = FastaSet(FastaIterator(self.fname))
+        parser = FastaSet(FastaEntryIterator(self.fname))
         
         self.assertEquals(parser[Position('a', 10)], 'b')
         self.assertEquals(parser[Position('b', 10)], 'g')
     
     def test_getItemInterval(self):
-        parser = FastaSet(FastaIterator(self.fname))
+        parser = FastaSet(FastaEntryIterator(self.fname))
         
         self.assertEquals(parser[Interval('a', 10, 20)], 'bbbbbbbbbb')
         self.assertEquals(parser[Interval('b', 10, 20)], 'gggggggggg')
