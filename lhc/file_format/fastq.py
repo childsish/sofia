@@ -1,11 +1,12 @@
 import argparse
+import sys
 
 from fastq_.iterator import FastqEntryIterator
 
 
 def iter_entries(fname):
     for entry in FastqEntryIterator(fname):
-        return entry
+        yield entry
 
 
 def main(argv):
