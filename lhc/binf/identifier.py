@@ -23,7 +23,7 @@ class Chromosome(object):
         return self.suffix < other.suffix
 
     @classmethod
-    def getIdentifier(cls, name):
+    def get_identifier(cls, name):
         if name not in cls.CREATED:
             cls.CREATED[name] = Chromosome(name)
         return cls.CREATED[name]

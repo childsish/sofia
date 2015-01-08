@@ -58,12 +58,12 @@ class SortedDict(object):
     def iteritems(self):
         return izip(self.keys, self.values)
 
-    def popHighest(self):
+    def pop_highest(self):
         key = self.keys.pop()
         value = self.values.pop()
         return (key, value)
 
-    def popLowest(self):
+    def pop_lowest(self):
         key = self.keys.pop(0)
         value = self.values.pop(0)
         return (key, value)
