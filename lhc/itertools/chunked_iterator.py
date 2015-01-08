@@ -6,5 +6,5 @@ class ChunkedIterator(object):
         self.zip = chunk * (it,)
 
     def __iter__(self):
-        for lines in itertools.izip_longest(self.zip):
+        for lines in itertools.izip_longest(*self.zip):
             yield lines
