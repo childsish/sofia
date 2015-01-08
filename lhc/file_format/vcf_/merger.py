@@ -2,8 +2,9 @@ import re
 
 from collections import OrderedDict, defaultdict, Counter
 from itertools import izip
+from operator import add
 from lhc.binf.identifier import Chromosome
-from lhc.collection.sorted_dict import SortedDict
+from lhc.collections.sorted_dict import SortedDict
 from iterator import VcfEntryIterator, Variant
 
 
@@ -15,12 +16,11 @@ class VcfMerger(object):
         self.fnames = fnames
         self.quality = quality
         self.depth = depth
-        self.iterators = map(VcfEntryIterator, fnames)
+        self.iterators = [VcfEntryIterator(fname) for fname in fnames]
         hdrs = [it.hdrs for it in self.iterators]
         self.hdrs = self._merge_headers(hdrs)
-        self.sample_names = self.hdrs['##SAMPLES']
-        del self.hdrs['##SAMPLES']
-        if len(bams) == 0:
+        self.samples = reduce(add, [it.samples for it in self.iterators])
+        if bams is None or len(bams) == 0:
             self.bams = []
             self.sample_to_bam = {}
         else:
@@ -30,7 +30,7 @@ class VcfMerger(object):
             for bam_name in bams:
                 bam = pysam.Samfile(bam_name)
                 sample = bam.header['RG'][0]['SM'].strip()
-                if sample in self.sample_names:
+                if sample in self.samples:
                     self.bams.append(bam)
                     self.sample_to_bam[sample] = bam
                 else:
@@ -60,7 +60,7 @@ class VcfMerger(object):
             
             format_ = {}
             samples = {}
-            for sample_name in self.sample_names:
+            for sample_name in self.samples:
                 if sample_name in sample_to_top:
                     top, top_alt = sample_to_top[sample_name]
                     sample_data = top.samples[sample_name]
