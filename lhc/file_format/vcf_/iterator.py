@@ -33,10 +33,12 @@ class VcfLineIterator(object):
         del self.hdrs['##SAMPLES']
 
     def __iter__(self):
-        for line in self.fhndl:
-            parts = line.split('\t', 9)
-            parts[1] = int(parts[1]) - 1
-            yield VcfLine(*parts)
+        return self
+
+    def next(self):
+        parts = self.fhndl.next().split('\t', 9)
+        parts[1] = int(parts[1]) - 1
+        return VcfLine(*parts)
 
     def close(self):
         if hasattr(self, 'fhndl') and not self.fhndl.closed:
@@ -69,17 +71,20 @@ class VcfEntryIterator(VcfLineIterator):
         super(VcfEntryIterator, self).__init__(fname)
 
     def __iter__(self):
-        for line in super(VcfEntryIterator, self).__iter__():
-            samples = self._parse_samples(line.format.split(':'), line.samples.split('\t'))
-            yield Variant(line.chr,
-                          line.pos,
-                          line.id,
-                          line.ref,
-                          line.alt,
-                          self._parse_quality(line.qual),
-                          line.filter,
-                          self._parse_info(line.info),
-                          samples)
+        return self
+    
+    def next(self):
+        line = super(VcfEntryIterator, self).next()
+        samples = self._parse_samples(line.format.split(':'), line.samples.split('\t'))
+        return Variant(line.chr,
+                       line.pos,
+                       line.id,
+                       line.ref,
+                       line.alt,
+                       self._parse_quality(line.qual),
+                       line.filter,
+                       self._parse_info(line.info),
+                       samples)
 
     @staticmethod
     def _parse_quality(qual):
@@ -96,5 +101,5 @@ class VcfEntryIterator(VcfLineIterator):
     def _parse_samples(self, format, sample_data):
         res = {}
         for sample, data in zip(self.samples, sample_data):
-            res[sample] = dict(zip(format, sample.split(':')))
+            res[sample] = dict(zip(format, data.split(':')))
         return res
