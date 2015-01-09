@@ -6,7 +6,7 @@ def subset(args):
     if args.bed is not None:
         subset_bed(args.input, args.output, args.bed)
     elif args.random is not None:
-        subset_random(args.input, args.output, args.proportion)
+        subset_random(args.input, args.output, args.random)
 
 
 def subset_bed(input, output, bed):
@@ -41,11 +41,8 @@ def define_parser(parser):
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-b', '--bed',
                        help='Get reads that overlap with the ranges defined in a bed file.')
-    random_group = group.add_argument_group()
-    random_group.add_argument('-r', '--random', action='store_true',
-                              help='If set, then a random sample of entries is taken.')
-    random_group.add_argument('-p', '--proportion', type=float, default=0.1,
-                              help='Only valid with -r. The proportion of reads to sample (default 0.1).')
+    group.add_argument('-r', '--random', type=float, default=0.1,
+                              help='Sample the given proportion of reads from the input.')
 
     add_arg = parser.add_argument
     add_arg('-i', '--input', default='-',
