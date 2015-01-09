@@ -1,31 +1,25 @@
 import argparse
-import pysam
 
-def rename_sample(args):
-    in_fhndl = pysam.AlignmentFile(args.input)
-    header = in_fhndl.header.copy()
-    header['RG'][0]['SM'] = args.sample
-    out_fhndl = pysam.AlignmentFile(args.output, 'wb', header=header)
-    for read in in_fhndl:
-        out_fhndl.write(read)
+from bam_ import rename_sample
+
 
 def main():
-    parser = get_parser()
-    args = parser.parse_args()
-    if args.sample:
-        rename_sample(args)
+    args = get_parser().parse_args()
+    args.func(args)
+
 
 def get_parser():
-    parser = argparse.ArgumentParser()
-    return define_parser(parser)
+    return define_parser(argparse.ArgumentParser())
+
 
 def define_parser(parser):
-    parser.add_argument('input')
-    parser.add_argument('-o', '--output', default='-',
-        help='The output destination (default: stdout)')
-    parser.add_argument('-s', '--sample',
-        help='Rename sample')
+    subparsers = parser.add_subparsers()
+
+    rename_parser = subparsers.add_parser('rename')
+    rename_sample.define_parser(rename_parser)
+
     return parser
+
 
 if __name__ == '__main__':
     import sys
