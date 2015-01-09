@@ -1,6 +1,6 @@
 import argparse
 
-from bam_ import rename_sample
+from bam_ import rename, subset
 
 
 def main():
@@ -16,7 +16,10 @@ def define_parser(parser):
     subparsers = parser.add_subparsers()
 
     rename_parser = subparsers.add_parser('rename')
-    rename_sample.define_parser(rename_parser)
+    rename.define_parser(rename_parser)
+
+    subset_parser = subparsers.add_parser('subset')
+    subset.define_parser(subset_parser)
 
     return parser
 
