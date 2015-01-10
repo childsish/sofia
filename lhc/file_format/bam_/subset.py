@@ -11,11 +11,15 @@ def subset(args):
 
 def subset_bed(input, output, bed):
     from lhc.file_format.bed import iter_entries as iter_bed
+    visited = set()
     in_fhndl = pysam.AlignmentFile(input)
     out_fhndl = pysam.AlignmentFile(output, 'wb', template=in_fhndl)
     for entry in iter_bed(bed):
         for read in in_fhndl.fetch(entry.chr, entry.start, entry.stop):
-            out_fhndl.write(read)
+            key = (read.query_name, read.flag)
+            if key not in visited:
+                visited.add(key)
+                out_fhndl.write(read)
     in_fhndl.close()
     out_fhndl.close()
 
