@@ -36,8 +36,12 @@ class VcfLineIterator(object):
         return self
 
     def next(self):
-        parts = self.fhndl.next().split('\t', 9)
+        line = self.fhndl.next().rstrip('\r\n')
+        if line == '':
+            raise StopIteration()
+        parts = line.split('\t', 9)
         parts[1] = int(parts[1]) - 1
+        self.line_no += 1
         return VcfLine(*parts)
 
     def close(self):
