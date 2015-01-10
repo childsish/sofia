@@ -1,7 +1,7 @@
 import os
 import pysam
 
-from iterator import BedIterator
+from iterator import BedEntryIterator
 
 
 class IndexedBedFile(object):
@@ -22,7 +22,7 @@ class IndexedBedFile(object):
         else:
             raise NotImplementedError('Random access not implemented for {}'.format(type(key)))
         
-        return [BedIterator._parse_line(line) for line in lines]
+        return [BedEntryIterator._parse_line(line) for line in lines]
     
     def get_intervals_at_position(self, chr, pos):
-        return [BedIterator._parse_line(line) for line in self.index.fetch(chr, pos, pos + 1)]
+        return [BedEntryIterator._parse_line(line) for line in self.index.fetch(chr, pos, pos + 1)]
