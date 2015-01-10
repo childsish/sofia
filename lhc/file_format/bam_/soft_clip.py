@@ -5,8 +5,7 @@ from lhc.file_format.bed import BedIterator, BedSet
 
 
 def main():
-    parser = get_parser()
-    args = parser.parse_arguments()
+    args = get_parser().parse_arguments()
     in_fhndl = pysam.AlignmentFile(args.input)
     out_fhndl = pysam.AlignmentFile(args.output, template=in_fhndl)
     intervals = BedSet(BedIterator(args.intervals))
@@ -47,7 +46,7 @@ def contract_cigar(cigar):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser()
+    return define_parser(argparse.ArgumentParser())
 
 
 def define_parser(parser):
@@ -55,6 +54,7 @@ def define_parser(parser):
     add_arg('input')
     add_arg('-o', '--output', default='-')
     add_arg('-i', '--intervals')
+    return parser
 
 
 if __name__ == '__main__':
