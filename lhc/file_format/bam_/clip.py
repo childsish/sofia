@@ -16,20 +16,11 @@ def clip(args):
             continue
         match = sorted(matches, key=lambda x: entry.get_overlap(x.start, x.stop))[-1]
         cigar = expand_cigar(entry.cigartuples)
-        sys.stderr.write('{}\n'.format(entry.query_name))
-        sys.stderr.write('{}\t{}\t{}\t{}\n'.format(in_fhndl.getrname(entry.reference_id),
-                                                   entry.reference_start, entry.reference_end, entry.is_reverse))
-        sys.stderr.write('{}\t{}\t{}\n'.format(match.chr, match.start, match.stop))
         if entry.reference_start < match.start:
             cigar = clip_read(cigar, match.start - entry.reference_start + 1, '5p', entry.is_reverse)
             entry.reference_start = match.start + 1
         if match.stop < entry.reference_end:
             cigar = clip_read(cigar, entry.reference_end - match.stop, '3p', entry.is_reverse)
-        sys.stderr.write(str(entry.cigartuples))
-        sys.stderr.write('\n')
-        sys.stderr.write(str(contract_cigar(cigar)))
-        sys.stderr.write('\n')
-        sys.stderr.write('\n')
         entry.cigartuples = contract_cigar(cigar)
         out_fhndl.write(entry)
 
