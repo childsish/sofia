@@ -73,7 +73,8 @@ class VcfMerger(object):
                         '{:.2f}'.format(top.qual)
                     samples[sample_name] = {'Q': qual}
                     samples[sample_name]['GT'] =\
-                        self._get_gt(sample_data['GT'], top_alt, alt)
+                        self._get_gt(sample_data['GT'], top_alt, alt) if 'GT' in sample_data else\
+                        './.'
                     if 'GQ' in sample_data:
                         if 'GQ' not in format_:
                             format_['GQ'] = ''
@@ -149,7 +150,10 @@ class VcfMerger(object):
         return res
     
     def _get_gt(self, gt, old_alt, new_alt):
-        a1, a2 = map(int, gt.split('/'))
+        try:
+            a1, a2 = map(int, gt.split('/'))
+        except ValueError:
+            return './.'
         if a1 != '0':
             a1 = str(new_alt.index(old_alt[a1 - 1]) + 1)
         if a2 != '0':
