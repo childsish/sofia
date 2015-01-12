@@ -28,6 +28,7 @@ def get_parser():
 
 
 def define_parser(parser):
+    import sys
     add_arg = parser.add_argument
     add_arg('-i', '--input', default=sys.stdin, action=OpenReadableFile,
             help='The name of the vcf file to be filtered.')

@@ -244,6 +244,7 @@ def get_parser():
 
 
 def define_parser(parser):
+    import sys
     add_arg = parser.add_argument
     add_arg('inputs', nargs='+')
     add_arg('-b', '--bams', nargs='+',

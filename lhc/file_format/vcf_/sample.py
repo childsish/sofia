@@ -17,11 +17,12 @@ def get_parser():
 
 
 def define_parser(parser):
+    import sys
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-b', '--bed')
     add_arg = parser.add_argument
     add_arg('-i', '--input', default=sys.stdin, action=OpenReadableFile)
-    add_arg('-o', '--output', default=sys.stdout, actions=OpenWritableFile)
+    add_arg('-o', '--output', default=sys.stdout, action=OpenWritableFile)
     add_arg('number', type=int)
     add_arg('-r', '--randomise', action='store_true')
     add_arg('-s', '--seed', type=int)

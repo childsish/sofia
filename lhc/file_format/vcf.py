@@ -1,5 +1,4 @@
 import argparse
-import sys
 
 from vcf_.iterator import VcfEntryIterator, VcfLineIterator
 from vcf_ import merger, sample, filter
@@ -32,4 +31,5 @@ def get_parser():
 
 
 if __name__ == '__main__':
+    import sys
     sys.exit(main())
