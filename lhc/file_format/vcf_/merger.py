@@ -1,3 +1,5 @@
+import argparse
+import glob
 import re
 
 from collections import OrderedDict, defaultdict, Counter
@@ -5,6 +7,7 @@ from itertools import izip
 from operator import add
 from lhc.binf.identifier import Chromosome
 from lhc.collections.sorted_dict import SortedDict
+from lhc.argparse import OpenWritableFile
 from iterator import VcfEntryIterator, Variant
 
 
@@ -197,3 +200,62 @@ class VcfMerger(object):
             ref_pos += ref_ext
         read_stop = read_pos + (ref_stop - ref_pos - read.pos)
         return read_start, read_stop, truncated
+
+
+def merge(glob_fnames, quality=50.0, out=None, bams=[]):
+    fnames = []
+    for glob_fname in glob_fnames:
+        fname = glob.glob(glob_fname)
+        if len(fname) == 0:
+            raise ValueError('{} does not match any existing files'.format(glob_fname))
+        fnames.extend(fname)
+    out = sys.stdout if out is None else open(out, 'w')
+    merger = VcfMerger(fnames, quality, bams=bams)
+    for key, values in merger.hdrs.iteritems():
+        for value in values:
+            out.write('{}={}\n'.format(key, value))
+    out.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t' + '\t'.join(merger.samples) + '\n')
+    for entry in merger:
+        format = sorted(key for key in entry.samples.itervalues().next().keys() if key != '.')
+        out.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
+            entry.chr,
+            entry.pos + 1,
+            entry.id,
+            entry.ref,
+            entry.alt,
+            entry.qual,
+            entry.filter,
+            entry.info,
+            ':'.join(format),
+            '\t'.join('.' if '.' in entry.samples[sample] else
+                      ':'.join(entry.samples[sample][f] for f in format)
+                      for sample in merger.samples)
+        ))
+    out.close()
+
+
+def main():
+    args = get_parser().parse_args()
+    args.func(args)
+
+
+def get_parser():
+    return define_parser(argparse.ArgumentParser())
+
+
+def define_parser(parser):
+    add_arg = parser.add_argument
+    add_arg('inputs', nargs='+')
+    add_arg('-b', '--bams', nargs='+',
+            help='If provided, the read counts from the bam files with be included.')
+    add_arg('-q', '--quality', type=float, default=0,
+            help='Variants below the given quality are filtered.')
+    add_arg('-o', '--output', default=sys.stdout, action=OpenWritableFile,
+            help='The name of the merged vcf (default: stdout).')
+    parser.set_defaults(func=lambda args: merge(args.inputs, args.quality, args.output, args.bams))
+    return parser
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(main())
