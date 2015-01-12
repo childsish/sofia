@@ -1,31 +1,56 @@
 import argparse
 import pysam
-import sys
 
 from lhc.file_format.bed import BedEntryIterator, BedSet
+
+IN_READ_OPERATIONS =frozenset((0, 1, 4, 7, 8))
 
 
 def clip(args):
     in_fhndl = pysam.AlignmentFile(args.input)
     out_fhndl = pysam.AlignmentFile(args.output, 'wb', template=in_fhndl)
     intervals = BedSet(BedEntryIterator(args.bed))
-    for entry in in_fhndl:
-        matches = intervals.get_overlapping_intervals(in_fhndl.getrname(entry.reference_id),
-                                                      entry.reference_start, entry.reference_end)
+    for read in in_fhndl:
+        if read.reference_id == -1:
+            continue
+        try:
+            matches = intervals.get_overlapping_intervals(in_fhndl.getrname(read.reference_id),
+                                                          read.reference_start, read.reference_end)
+        except KeyError, e:
+            sys.stderr.write('Warning, {} not found\n'.format(str(e)))
+            continue
         if len(matches) == 0:
             continue
-        match = sorted(matches, key=lambda x: entry.get_overlap(x.start, x.stop))[-1]
-        cigar = expand_cigar(entry.cigartuples)
-        if entry.reference_start < match.start:
-            cigar = clip_read(cigar, match.start - entry.reference_start + 1, '5p', entry.is_reverse)
-            entry.reference_start = match.start + 1
-        if match.stop < entry.reference_end:
-            cigar = clip_read(cigar, entry.reference_end - match.stop, '3p', entry.is_reverse)
-        entry.cigartuples = contract_cigar(cigar)
-        out_fhndl.write(entry)
+        match = sorted(matches, key=lambda x: read.get_overlap(x.start, x.stop))[-1]
+        out_fhndl.write(clip_read(read, match))
 
 
-def clip_read(cigar, overlap, end='5p', is_reverse=False):
+
+def clip_read(read, match):
+    if read.reference_start < match.start:
+        read.reference_start = match.start
+
+    cigar = expand_cigar(read.cigartuples)
+    match_length = match.stop - read.reference_start
+
+    i = 0
+    cnt = read.reference_start - match.start
+    while i < len(cigar) and cnt < 0:
+        cnt += cigar[i] in IN_READ_OPERATIONS #  MIS=X: match, insert, soft clip, equal, different
+        cigar[i] = 4
+        i += 1
+    while i < len(cigar) and cnt < match_length:
+        cnt += cigar[i] in IN_READ_OPERATIONS #  MIS=X: match, insert, soft clip, equal, different
+        i += 1
+    while i < len(cigar):
+        cigar[i] = 4
+        i += 1
+
+    read.cigartuples = contract_cigar(cigar)
+    return read
+
+
+def _clip_read(cigar, overlap, end='5p', is_reverse=False):
     it = xrange(-overlap, 0) if end == '3p' else\
         xrange(0, overlap)
     #it = xrange(-overlap, 0) if (end == '5p' and is_reverse) or (end == '3p' and not is_reverse) else\
@@ -37,28 +62,6 @@ def clip_read(cigar, overlap, end='5p', is_reverse=False):
             cnt += 1
         cigar[i] = 4
         i += 1
-    return cigar
-
-
-def hard_clip_5p(cigar, to):
-    ref_pos = 0
-    read_pos = 0
-    while ref_pos < to:
-        op = cigar[read_pos]
-        cigar[read_pos] = 5
-        ref_pos += [1, 1, 0, 1, 1, 1, 1, 1, 1][op]
-        read_pos += 1
-    return cigar
-
-
-def hard_clip_3p(cigar, fr):
-    ref_pos = fr
-    read_pos = fr
-    while ref_pos < 0:
-        op = cigar[read_pos]
-        cigar[read_pos] = 5
-        ref_pos += [1, 1, 0, 1, 1, 1, 1, 1, 1][op]
-        read_pos += 1
     return cigar
 
 
@@ -94,9 +97,12 @@ def get_parser():
 
 def define_parser(parser):
     add_arg = parser.add_argument
-    add_arg('-i', '--input', default='-')
-    add_arg('-o', '--output', default='-')
-    add_arg('-b', '--bed')
+    add_arg('input', default='-',
+            help='The input bam file.')
+    add_arg('-o', '--output', default='-',
+            help='The output bam file (default: stdout).')
+    add_arg('-b', '--bed',
+            help='The intervals to clip the reads to.')
     parser.set_defaults(func=clip)
     return parser
 
