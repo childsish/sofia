@@ -4,7 +4,14 @@ import gzip
 from collections import namedtuple
 
 
-FastaEntry = namedtuple('FastaEntry', ('hdr', 'seq'))
+class FastaEntry(namedtuple('FastaEntry', ('hdr', 'seq'))):
+    def __str__(self):
+        """
+        Represent the entry as a string. Only intended for entries with short sequences.
+
+        :return: The fasta entry as a string
+        """
+        return '{}\n{}\n'.format(self.hdr, self.seq)
 
 
 class FastaEntryIterator(object):
