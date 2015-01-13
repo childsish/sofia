@@ -1,8 +1,11 @@
 import argparse
 import os
 
+from functools import partial
 from itertools import chain
+from lhc.argparse import OpenWritableFile, OpenReadableFile
 from lhc.itertools import ChunkedIterator, SortedIteratorMerger
+from lhc.file_format.txt import extract_typed_columns
 
 
 def default_key(line):
@@ -49,8 +52,17 @@ class Sorter(object):
         out_fhndl.close()
 
 
-def sort():
-    pass
+def sort(args):
+    types = {
+        's': str,
+        'f': float,
+        'i': int
+    }
+    columns = [(int(c[0]), types[c[1]]) for c in args.columns]
+    typed_column_extractor = partial(extract_typed_columns, columns=columns, sep=args.separator)
+    sorter = Sorter(args.input, typed_column_extractor)
+    for line in sorter:
+        args.output.write(line)
 
 
 def main():
@@ -63,6 +75,16 @@ def get_parser():
 
 
 def define_parser(parser):
+    add_arg = parser.add_argument
+    add_arg('-c', '--columns', nargs='+',
+            help='Which columns and types to extract (default: 1s).')
+    add_arg('-i', '--input', action=OpenReadableFile, default=sys.stdin,
+            help='The input file (default: stdin).')
+    add_arg('-o', '--output', action=OpenWritableFile, default=sys.stdout,
+            help='The output file (default: stdout')
+    add_arg('-s', '--separator', default='\t',
+            help='The character seperating the columns (default: \\t).')
+    parser.set_defaults(func=sort)
     return parser
 
 if __name__ == '__main__':
