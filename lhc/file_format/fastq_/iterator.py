@@ -5,7 +5,9 @@ from collections import namedtuple
 from lhc.itertools.chunked_iterator import ChunkedIterator
 
 
-FastqEntry = namedtuple('FastqEntry', ('seq_hdr', 'seq', 'qual_hdr', 'qual'))
+class FastqEntry(namedtuple('FastqEntry', ('hdr', 'seq', 'qual_hdr', 'qual'))):
+    def __str__(self):
+        return '@{}\n{}\n{}+\n{}\n'.format(self.hdr, self.seq, self.qual_hdr, self.qual)
 
 
 class FastqEntryIterator(object):
