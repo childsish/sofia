@@ -1,5 +1,6 @@
 from sofia_.action import Action
 
+
 class GetPathwayByGene(Action):
     
     IN = ['gene_id', 'gene_pathway_map']

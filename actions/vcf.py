@@ -1,5 +1,5 @@
 from sofia_.action import Resource, Target
-from modules.file_formats.vcf_.iterator import VcfIterator as VcfIteratorParser
+from modules.file_formats.vcf_.iterator import VcfEntryIterator as VcfIteratorParser
 from modules.file_formats.vcf_.set_ import VcfSet as VcfSetParser
 try:
     from modules.file_formats.vcf_.index import IndexedVcfFile
@@ -15,13 +15,20 @@ class VcfIterator(Target):
     OUT = ['variant']
     
     def init(self):
-        self.parser = VcfIteratorParser(self.getFilename())
+        self.parser = iter(VcfIteratorParser(self.get_filename()))
 
     def calculate(self):
         variant = self.parser.next()
-        genomic_position = {'chromosome_id': variant.chr,
-            'chromosome_pos': variant.pos}
-        return {'genomic_position': genomic_position, 'variant': variant}
+        return {
+            'variant': variant,
+            'genomic_position': {
+                'chromosome_id': variant.chr,
+                'chromosome_pos': variant.pos
+            },
+            'reference_allele': variant.ref,
+            'alternate_allele': variant.alt,
+            'variant_quality': variant.qual
+        }
 
 
 class VcfSet(Resource):
@@ -32,4 +39,4 @@ class VcfSet(Resource):
     OUT = ['variant_set']
     
     def init(self):
-        self.parser = IndexedVcfFile(self.getFilename())
+        self.parser = IndexedVcfFile(self.get_filename())

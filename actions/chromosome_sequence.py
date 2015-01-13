@@ -1,6 +1,10 @@
 from sofia_.action import Action
 
-class HomopolymerLength(Action):
+
+class GetHomopolymerLength(Action):
+    """
+    Count the number of downstream nucleotides that have the same identity at the given position.
+    """
     
     IN = ['variant', 'chromosome_sequence_set']
     OUT = ['homopolymer_length']
@@ -12,13 +16,11 @@ class HomopolymerLength(Action):
         variant = variant['variant']
         res = []
         for alt in variant.alt.split(','):
-            indel = len(variant.ref) != len(variant.alt)
+            indel = len(variant.ref) != len(alt)
             pos = variant.pos + indel
-            seq = chromosome_sequence_set.getInterval(variant.chr, pos,
-                pos + self.max_length)
+            seq = chromosome_sequence_set.get_interval(variant.chr, pos, pos + self.max_length)
             
-            ref = variant.ref if len(variant.ref) >= len(variant.alt) else\
-                variant.alt
+            ref = variant.ref if len(variant.ref) >= len(alt) else alt
             i = 0
             while i < len(seq) and seq[i] == ref[indel]:
                 i += 1

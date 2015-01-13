@@ -1,2 +1,2 @@
 from resource_parser import ResourceParser
-from action_parser import ActionParser
+from entity_parser import EntityParser

@@ -1,6 +1,7 @@
 from indices import Index, ExactKeyIndex, OverlappingIntervalIndex
 from interval import Interval
 
+
 class GtfSet(object):
     def __init__(self, iterator):
         self.key_index = ExactKeyIndex()
@@ -20,11 +21,11 @@ class GtfSet(object):
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             idxs = self.ivl_index[(key.chr, key)]
         else:
-            raise NotImplementedError('Gene model set random access not implemented for %s'%type(key))
+            raise NotImplementedError('Gene model set random access not implemented for {}'.format(type(key)))
         return [self.data[v] for k, v in idxs]
 
-    def getGenesAtPosition(self, chr, pos):
-        return self.getGenesInInterval(chr, pos, pos + 1)
+    def get_genes_at_position(self, chr, pos):
+        return self.get_genes_in_interval(chr, pos, pos + 1)
     
-    def getGenesInInterval(self, chr, start, stop):
+    def get_genes_in_interval(self, chr, start, stop):
         return [self.data[v] for k, v in self.ivl_index[chr, Interval(start, stop)]]

@@ -3,7 +3,10 @@ from sofia_.action import Action
 from collections import Counter
 
 
-class CodingNucleotideSkew(Action):
+class GetCodingNucleotideSkew(Action):
+    """
+    Get the nucleotide skews of the given coding sequence. AT skew is (|A| - |T|) / (|A| + |T|). GC skew is similar.
+    """
 
     IN = ['coding_sequence']
     OUT = ['coding_nucleotide_skew']
@@ -15,7 +18,7 @@ class CodingNucleotideSkew(Action):
         return get_skew(coding_sequence, self.skew)
 
 
-class UTR5NucleotideSkew(Action):
+class GetUTR5NucleotideSkew(Action):
 
     IN = ['five_prime_utr']
     OUT = ['utr5_nucleotide_skew']
@@ -27,7 +30,7 @@ class UTR5NucleotideSkew(Action):
         return get_skew(five_prime_utr, self.skew)
 
 
-class UTR3NucleotideSkew(Action):
+class GetUTR3NucleotideSkew(Action):
 
     IN = ['three_prime_utr']
     OUT = ['utr3_nucleotide_skew']

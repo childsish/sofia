@@ -1,7 +1,6 @@
-from collections import defaultdict
-from operator import and_
 from sofia_.entity import Entity
 from sofia_.error_manager import ERROR_MANAGER
+
 
 class Action(object):
     """ A action that can be calculated from resources and other steps. """
@@ -17,7 +16,7 @@ class Action(object):
         self.param = param
         self.ins = {in_: in_ for in_ in self.IN} if ins is None else ins
         self.outs = {out: Entity(out) for out in self.OUT} if outs is None else outs
-        self.name = self._getName()
+        self.name = self._get_name()
         self.converters = converters
     
     def __str__(self):
@@ -94,36 +93,34 @@ class Action(object):
         for action in self.dependencies.itervalues():
             actions[action].reset(actions)
     
-    def getAttributes(self):
+    def get_attributes(self):
         res = {}
         for out in self.outs.itervalues():
             res.update(out.attr)
         return res
     
-    def _getName(self):
+    def _get_name(self):
         """ Return the name of the action based on it's resources and
         arguments. """
         name = [type(self).__name__]
         if len(self.resources) != 0:
-            tmp = ','.join(resource.name for resource in self.resources\
-                if resource.name != 'target')
+            tmp = ','.join(resource.name for resource in self.resources if resource.name != 'target')
             if len(tmp) > 0:
                 name.append('-r ' + tmp)
         if len(self.param) != 0:
-            tmp = ','.join('%s=%s'%e for e in self.param.iteritems())
+            tmp = ','.join('{0}={0}'.format(e) for e in self.param.iteritems())
             name.append('-p ' + tmp)
         if len(self.outs) != 0:
             tmp = []
             for entity in self.outs.itervalues():
-                tmp.extend((k, v) for k, v in entity.attr.iteritems()\
-                    if v is not None)
-            tmp = ','.join('%s=%s'%e for e in tmp)
+                tmp.extend((k, v) for k, v in entity.attr.iteritems() if v is not None)
+            tmp = ','.join('{0}={0}'.format(e) for e in tmp)
             if len(tmp) > 0:
                 name.append('-a ' + tmp)
         return '\\n'.join(name)
     
     @classmethod
-    def getOutput(cls, ins={}, outs={}, requested_attr={}):
+    def get_output(cls, ins={}, outs={}, requested_attr={}):
         """ Determine the attributes of the outputs
 
         Given the provided and requested attributes, determine the output
@@ -137,8 +134,8 @@ class Action(object):
             for entity in ins.itervalues():
                 common_attr.add(entity.attr[name])
             if len(common_attr) > 1:
-                ERROR_MANAGER.addError('%s could not match %s attributes: %s'%\
-                    (cls.__name__, name, ', '.join('(%s: %s)'%(k, v.attr[name]) for k, v in ins.iteritems())))
+                attributes = ', '.join('({}: {})'.format(k, v.attr[name]) for k, v in ins.iteritems())
+                ERROR_MANAGER.add_error('{} could not match {} attributes: {}'.format(cls.__name__, name, attributes))
                 return None
         
         # Yield the output entities

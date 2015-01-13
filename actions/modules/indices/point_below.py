@@ -1,6 +1,7 @@
 from bisect import bisect_left, bisect_right
 from index import Accessor
 
+
 class PointBelowIndex(Accessor):
     
     __slots__ = ('keys', 'values')
@@ -27,7 +28,6 @@ class PointBelowIndex(Accessor):
             self.values.insert(idx, value)
         else:
             self.values[idx] = value
-
 
     def __getstate__(self):
         return dict((attr, getattr(self, attr)) for attr in self.__slots__)

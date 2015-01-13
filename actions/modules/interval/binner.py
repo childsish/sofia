@@ -1,24 +1,22 @@
 class IntervalBinner(object):
-    
-    def __init__(self, minbin=2, maxbin=7):
+    def __init__(self, minbin=2, maxbin=8):
         self.minbin = minbin
         self.maxbin = maxbin
     
-    def getBin(self, ivl):
-        for i in range(self.minbin, self.maxbin + 1):
-            binLevel = 10 ** i
-            if int(ivl.start / binLevel) == int(ivl.stop / binLevel):
-                return int(i * 10 ** (self.maxbin + 1) + int(ivl.start / binLevel))
-        return int((self.maxbin + 1) * 10 ** (self.maxbin + 1))
+    def get_bin(self, start, stop):
+        for i in range(self.minbin, self.maxbin):
+            bin_level = 10 ** i
+            if int(start / bin_level) == int(stop / bin_level):
+                return int(i * 10 ** self.maxbin + int(start / bin_level))
+        return int(self.maxbin * 10 ** self.maxbin)
 
-    def getOverlappingBins(self, ivl):
+    def get_overlapping_bins(self, start, stop):
         res = []
-        bigBin = int((self.maxbin + 1) * 10 ** (self.maxbin + 1))
+        big_bin = int(self.maxbin * 10 ** self.maxbin)
         for i in range(self.minbin, self.maxbin + 1):
-            binLevel = 10 ** i
-            fr = int(i * 10 ** (self.maxbin + 1) + int(ivl.start / binLevel))
-            to = int(i * 10 ** (self.maxbin + 1) + int(ivl.stop / binLevel))
+            bin_level = 10 ** i
+            fr = int(i * 10 ** self.maxbin + int(start / bin_level))
+            to = int(i * 10 ** self.maxbin + int(stop / bin_level))
             res.append((fr, to))
-        res.append((bigBin, bigBin))
+        res.append((big_bin, big_bin))
         return res
-

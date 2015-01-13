@@ -11,7 +11,6 @@ class AttributeMapFactory(object):
         to_idx = self.hdrs.index(to)
         fhndl = open(self.fname)
         fhndl.next()
-        attribute_map = {parts[fr_idx].strip(): parts[to_idx].strip()\
-            for parts in (line.split('\t') for line in fhndl)}
+        attribute_map = {parts[fr_idx].strip(): parts[to_idx].strip() for parts in (line.split('\t') for line in fhndl)}
         fhndl.close()
         return attribute_map

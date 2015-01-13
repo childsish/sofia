@@ -1,6 +1,7 @@
 from indices import Index, ExactKeyIndex, OverlappingIntervalIndex
 from interval import Interval
 
+
 class BedSet(object):
     def __init__(self, iterator):
         self.data = list(iterator)
@@ -17,9 +18,8 @@ class BedSet(object):
         elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
             idxs = self.ivl_index[(key.chr, key)]
         else:
-            raise NotImplementedError('Variant set random access not implemented for type: %s'%type(key))
+            raise NotImplementedError('Variant set random access not implemented for type: {}'.format(type(key)))
         return [self.data[v] for k, v in idxs]
 
-    def getIntervalsAtPosition(self, chr, pos):
-        return [self.data[v] for k, v in\
-            self.ivl_index[(chr, Interval(pos, pos + 1))]]
+    def get_intervals_at_position(self, chr, pos):
+        return [self.data[v] for k, v in self.ivl_index[(chr, Interval(pos, pos + 1))]]

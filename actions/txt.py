@@ -9,7 +9,7 @@ class GenePathwayMap(Resource):
     OUT = ['gene_pathway_map']
 
     def init(self):
-        fhndl = open(self.getFilename())
+        fhndl = open(self.get_filename())
         fhndl.next()
         self.parser = defaultdict(set)
         for line in fhndl:
@@ -24,11 +24,11 @@ class GeneGotermMap(Resource):
     OUT = ['gene_goterm_map']
 
     def init(self):
-        fhndl = open(self.getFilename())
+        fhndl = open(self.get_filename())
         fhndl.next()
         self.parser = defaultdict(set)
         for line in fhndl:
-            parts =[part.strip() for part in  line.split('\t')]
+            parts = [part.strip() for part in line.split('\t')]
             self.parser[parts[0]].add((parts[1], parts[2]))
         fhndl.close()
 
@@ -39,7 +39,7 @@ class GeneIdIterator(Resource):
     OUT = ['gene_id']
 
     def init(self):
-        fhndl = open(self.getFilename())
+        fhndl = open(self.get_filename())
         self.parser = (line.strip() for line in fhndl.read().split('\n'))
         fhndl.close()
 

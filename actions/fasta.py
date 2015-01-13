@@ -15,4 +15,4 @@ class FastaChromosomeSequenceSet(Resource):
     OUT = ['chromosome_sequence_set']
     
     def init(self):
-        self.parser = IndexedFastaFile(self.getFilename())
+        self.parser = IndexedFastaFile(self.get_filename())

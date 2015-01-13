@@ -1,33 +1,69 @@
-from collections import defaultdict
+from graph import Graph
+
 
 class HyperGraph(object):
     def __init__(self, name=None):
         self.name = 'G' if name is None else name
-        self.vs = {}
-        self.es = defaultdict(set)
+        self.graph = Graph()
+        self.vs = set()
+        self.es = set()
     
     def __str__(self):
-        res = ['digraph %s {'%self.name]
-        for e in self.es:
-            res.append('    %s [shape=box];'%e)
-        edges = set()
-        for v1, es in self.vs.iteritems():
-            for e, v2s in es.iteritems():
-                edges.add((v1, e))
-                for v2 in v2s:
-                    edges.add((e, v2))
-        res.extend('    %s -> %s;'%edge for edge in edges)
+        """ Convert to string
+
+        :return: A string representing the graph in Graphviz format.
+        """
+        res = ['digraph {} {{'.format(self.name)]
+        for e in sorted(self.es):
+            res.append('    {} [shape=box];'.format(e))
+        for e, vs in sorted(self.graph.es.iteritems()):
+            for v in vs:
+                res.append('    "{}" -> "{}";'.format(*v))
         res.append('}')
         return '\n'.join(res)
     
-    def addVertex(self, v):
-        if v not in self.vs:
-            self.vs[v] = defaultdict(set)
-    
-    def addEdge(self, e, v1, v2=None):
-        if v2 is None:
-            self.vs[v1][e] = set()
-            self.es[e] = set()
-        else:
-            self.vs[v1][e].add(v2)
-            self.es[e].add((v1, v2))
+    def add_vertex(self, v):
+        """ Add a vertex to the graph
+
+        :param v: The vertex name.
+        """
+        self.graph.add_vertex(v)
+        self.vs.add(v)
+
+    def add_outward_edge(self, v, e):
+        """ Add an outward edge to a vertex
+
+        :param v: The source vertex.
+        :param e: The name of the outward edge.
+        """
+        self.add_vertex(v)
+        self.graph.add_vertex(e)
+        self.es.add(e)
+        self.graph.add_edge(e, v)
+
+    def add_inward_edge(self, v, e):
+        """ Add an inward edge to a vertex
+
+        :param v: The destination vertex.
+        :param e: The name of the inward edge.
+        """
+        self.add_vertex(v)
+        self.graph.add_vertex(e)
+        self.es.add(e)
+        self.graph.add_edge(v, e)
+
+    def get_parents(self, n):
+        """ Get the parents of a vertex or edge.
+
+        :param n: A vertex or edge.
+        :return: The children of the given vertex or edge.
+        """
+        return self.graph.get_parents(n)
+
+    def get_children(self, n):
+        """ Get the children of a vertex or edge.
+
+        :param n: A vertex or edge.
+        :return: The children of the given vertex or edge.
+        """
+        return self.graph.get_children(n)

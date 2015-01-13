@@ -1,5 +1,6 @@
 from action import Action
 
+
 class Extractor(Action):
     def init(self, path):
         self.path = path

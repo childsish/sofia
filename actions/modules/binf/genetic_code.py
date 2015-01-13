@@ -1,22 +1,20 @@
-from pkg_resources import resource_string
-
 class RedundantCode:
     BASES = set("actgu")
     REDUNDANT_BASES = set("bdhkmnrsvwy")
     AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWY*.BZX")
     CODE = {'a': 'a', 'c': 'c', 'g': 'g', 't': 't', 'u': 'u',
-        'm': 'ac', 'r': 'ag', 'w': 'at',
-        'k': 'gt', 'y': 'tc', 's': 'cg',
-        'b': 'cgt', 'd': 'agt', 'h': 'act', 'v': 'acg', 'n': 'acgt'}
-    REV  = {'a': 'a', 'c': 'c', 'g': 'g', 't': 't', 'u': 'u',
-        'ac': 'm', 'ag': 'r', 'at': 'w',
-        'gt': 'k', 'tc': 'y', 'cg': 's',
-        'cgt': 'b', 'agt': 'd', 'act': 'h', 'acg': 'v', 'acgt': 'n'}
+            'm': 'ac', 'r': 'ag', 'w': 'at',
+            'k': 'gt', 'y': 'tc', 's': 'cg',
+            'b': 'cgt', 'd': 'agt', 'h': 'act', 'v': 'acg', 'n': 'acgt'}
+    REV = {'a': 'a', 'c': 'c', 'g': 'g', 't': 't', 'u': 'u',
+           'ac': 'm', 'ag': 'r', 'at': 'w',
+           'gt': 'k', 'tc': 'y', 'cg': 's',
+           'cgt': 'b', 'agt': 'd', 'act': 'h', 'acg': 'v', 'acgt': 'n'}
     
     def __init__(self):
         pass
 
-    def decodeCodon(self, codon):
+    def decode_codon(self, codon):
         codon = codon.lower()
         code = RedundantCode.CODE
         res = []
@@ -26,7 +24,7 @@ class RedundantCode:
                     res.append(b1+b2+b3)
         return res
 
-    def encodeCodon(self, codons):
+    def encode_codon(self, codons):
         rev = RedundantCode.REV
         b1 = set()
         b2 = set()
@@ -37,15 +35,16 @@ class RedundantCode:
             b3.add(codon[2])
         
         return rev[''.join(sorted(list(b1)))] +\
-               rev[''.join(sorted(list(b2)))] +\
-               rev[''.join(sorted(list(b3)))]
+            rev[''.join(sorted(list(b2)))] +\
+            rev[''.join(sorted(list(b3)))]
     
-    def validCodon(self, codon):
+    def valid_codon(self, codon):
         for c in codon:
             if not c in RedundantCode.CODE:
                 return False
         return True
-    
+
+
 class GeneticCode:
 
     NCODONS = 64
@@ -68,7 +67,7 @@ class GeneticCode:
         
         if key.upper() in GeneticCode.REDUNDANT_CODE.AMINO_ACIDS:
             return True
-        return GeneticCode.REDUNDANT_CODE.validCodon(key)
+        return GeneticCode.REDUNDANT_CODE.valid_codon(key)
     
     def __getitem__(self, key):
         if isinstance(key, list):
@@ -76,35 +75,35 @@ class GeneticCode:
         if not isinstance(key, str):
             raise TypeError('Expected codon or amino acid. Got ' + str(type(key)) + ': ' + str(key))
         elif len(key) != 1 and len(key) != 3:
-            raise TypeError('Expected codon or amino acid. Got ' + str(type(key)) + ': ' + str(key) + ' len:' + str(len(key)))
+            msg = str(type(key)) + ': ' + str(key) + ' len:' + str(len(key))
+            raise TypeError('Expected codon or amino acid. Got ' + msg)
         
         if key.upper() in GeneticCode.REDUNDANT_CODE.AMINO_ACIDS:
             return self.__aa2na[key.upper()]
-        decodeCodon = GeneticCode.REDUNDANT_CODE.decodeCodon #SPEED_HACK
-        res = set([self.__na2aa[self.__codon2index(codon)]
-                   for codon in decodeCodon(key)])
+        decode_codon = GeneticCode.REDUNDANT_CODE.decode_codon  # SPEED_HACK
+        res = set([self.__na2aa[self.__codon2index(codon)] for codon in decode_codon(key)])
         if len(res) > 1:
             #raise ValueError('Codon "%s" does not match a specific codon family: %s'%\
             # (key, str(list(res))))
             res = ['X']
         return list(res)[0]
 
-    def getCodons(self, aa):
+    def get_codons(self, aa):
         if not aa in GeneticCode.REDUNDANT_CODE.AMINO_ACIDS:
             aa = self[aa]
         return self.__aa2na[aa]
 
-    def getAminoAcid(self, codon):
+    def get_amino_acid(self, codon):
         return self.__na2aa[self.__codon2index(codon)]
     
     def translate(self, na):
         aa = (len(na) / 3) * [None]
         for i in xrange(len(aa)):
-            aa[i] = self[na[i*3:(i*3)+3]]
+            aa[i] = self[na[i * 3:(i * 3) + 3]]
         return ''.join(aa)
     
     def __init_aa2na(self, na2aa):
-        setdefault = self.__aa2na.setdefault #SPEED_HACK
+        setdefault = self.__aa2na.setdefault  # SPEED_HACK
         for key, val in na2aa.iteritems():
             setdefault(val, []).append(key)
 
@@ -117,13 +116,14 @@ class GeneticCode:
         codon = codon.lower()
         return 16 * GeneticCode.BASE2IDX[codon[0]] +\
             4 * GeneticCode.BASE2IDX[codon[1]] +\
-                GeneticCode.BASE2IDX[codon[2]]
+            GeneticCode.BASE2IDX[codon[2]]
         
     def __index2codon(self, index):
-        codon = [GeneticCode.IDX2BASE[index/16],
-             GeneticCode.IDX2BASE[(index%16)/4],
-             GeneticCode.IDX2BASE[index%4]]
+        codon = [GeneticCode.IDX2BASE[index / 16],
+                 GeneticCode.IDX2BASE[(index % 16) / 4],
+                 GeneticCode.IDX2BASE[index % 4]]
         return "".join(codon)
+
 
 class GeneticCodes:
     def __init__(self, fname):
@@ -132,23 +132,23 @@ class GeneticCodes:
         infile.close()
         self.codes = {}
         self.name2id = {}
-        self.__parseFile(data)
+        self._parse_file(data)
 
     def __getitem__(self, key):
         if isinstance(key, basestring):
             key = self.name2id[key]
         return self.codes[key]
 
-    def getCode(self, id):
+    def get_code(self, id):
         return self[id]
     
     def translate(self, seq, id):
         return self[id].translate(seq)
     
-    def getValidNames(self):
+    def get_valid_names(self):
         return self.name2id.keys()
     
-    def __parseFile(self, data):
+    def _parse_file(self, data):
         lines = iter(data.split('\n'))
         line = lines.next()
         names = []
@@ -157,7 +157,7 @@ class GeneticCodes:
                 names.append(line[line.find('"') + 1: line.rfind('"')])
             elif line[2:4] == 'id':
                 id_ = int(line[5:line.find(',')].strip())
-                na2aa = self.__parseCode(lines)
+                na2aa = self._parse_code(lines)
                 self.codes[id_] = GeneticCode(na2aa)
                 for name in names:
                     self.name2id[name] = id_
@@ -167,8 +167,8 @@ class GeneticCodes:
             except StopIteration:
                 break
 
-    def __parseCode(self, lines):
-        na2aa = {}#'NNN': 'X'}
+    def _parse_code(self, lines):
+        na2aa = {}  # 'NNN': 'X'}
         aa_line = lines.next()
         lines.next()
         _1 = lines.next()

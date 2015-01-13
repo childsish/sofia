@@ -22,13 +22,13 @@ class ActionGraph(object):
     def __len__(self):
         return len(self.graph)
     
-    def addResource(self, resource):
+    def add_resource(self, resource):
         """ Add a resource that this graph depends upon. """
         self.resources.add(resource)
     
-    def addEdge(self, edge, fr, to):
+    def add_edge(self, edge, fr, to):
         """ Join two steps by a labelled edge. """
-        self.graph.add_edge(edge, fr, to)
+        self.graph.add_edge(fr, to, edge)
     
     def init(self):
         """ Initialise all the steps in the graph. """

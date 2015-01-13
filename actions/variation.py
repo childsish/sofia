@@ -3,10 +3,10 @@ from itertools import izip
 from modules.binf.sequence import revcmp
 from sofia_.action import Action
 
+
 class VariantType(Action):
-    """ Determines the variant type.
-    
-    Determined the variant type according to the sequence ontology
+    """
+    Determines the variant type according to the sequence ontology
     (http://www.sequenceontology.org)
     """
     
@@ -23,8 +23,7 @@ class VariantType(Action):
         res = []
         for na_alt, aa_alt, fs in izip(variant.alt.split(','), amino_acid_variant.alt, amino_acid_variant.fs):
             if fs is None:
-                res.append(self._getAminoAcidType(amino_acid_variant.pos, 
-                    amino_acid_variant.ref, aa_alt))
+                res.append(self._get_amino_acid_type(amino_acid_variant.pos, amino_acid_variant.ref, aa_alt))
             elif len(na_alt) > len(variant.ref):
                 if (len(na_alt) - len(variant.ref)) % 3 == 0:
                     res.append('inframe_insertion')
@@ -40,7 +39,7 @@ class VariantType(Action):
     def format(self, variant_type):
         return ','.join(variant_type)
 
-    def _getAminoAcidType(self, pos, ref, alt):
+    def _get_amino_acid_type(self, pos, ref, alt):
         if ref == alt:
             if pos == 0:
                 return 'start_retained_variant'
@@ -58,6 +57,7 @@ class VariantType(Action):
 
 CodingVariant = namedtuple('CodingVariant', ('pos', 'ref', 'alt'))
 
+
 class CodingVariation(Action):
     
     IN = ['major_transcript', 'variant']
@@ -68,9 +68,9 @@ class CodingVariation(Action):
         if major_transcript is None:
             return None
         ref = variant.ref
-        coding_position = major_transcript.getRelPos(variant.pos)\
+        coding_position = major_transcript.get_rel_pos(variant.pos)\
             if major_transcript.ivl.strand == '+'\
-            else major_transcript.getRelPos(variant.pos + len(ref) - 1)
+            else major_transcript.get_rel_pos(variant.pos + len(ref) - 1)
         if coding_position is None:
             return None
         alt = variant.alt.split(',')
@@ -86,23 +86,22 @@ class CodingVariation(Action):
         for alt in coding_variant.alt:
             if len(coding_variant.ref) > len(alt):
                 d = len(coding_variant.ref) - len(alt)
-                rng = '%d'%(pos + len(ref) - 1,) if d == 1 else\
-                    '%d_%d'%(pos + len(ref) - d, pos + len(ref) - 1)
-                res.append('c.%sdel%s'%(rng, ref[-d - 1:-1]))
+                rng = str(pos + len(ref) - 1,) if d == 1 else '{}_{}'.format(pos + len(ref) - d, pos + len(ref) - 1)
+                res.append('c.{}del{}'.format(rng, ref[-d - 1:-1]))
             elif len(alt) > len(coding_variant.ref):
                 d = len(alt) - len(coding_variant.ref)
                 typ = 'dup' if alt[-d - 1:-1] == ref[-d - 1:-1] else 'ins'
-                rng = '%d'%(pos + len(alt) - 1,) if d == 1 else\
-                    '%d_%d'%(pos + len(alt) - d, pos + len(alt) - 1)
-                res.append('c.%s%s%s'%(rng, typ, alt[-d - 1:-1]))
+                rng = str(pos + len(alt) - 1,) if d == 1 else '{}_{}'.format(pos + len(alt) - d, pos + len(alt) - 1)
+                res.append('c.{}{}{}'.format(rng, typ, alt[-d - 1:-1]))
             else:
                 if len(ref) > 1 and ref == alt[::-1]:
-                    res.append('c.%d_%dinv'%(pos + 1, pos + len(ref)))
+                    res.append('c.{}_{}inv'.format(pos + 1, pos + len(ref)))
                 else:
-                    res.append('c.%d%s>%s'%(pos + 1, ref, alt))
+                    res.append('c.{}{}>{}'.format(pos + 1, ref, alt))
         return ','.join(res)
 
 CodonVariant = namedtuple('CodonVariant', ['pos', 'ref', 'alt', 'fs'])
+
 
 class CodonVariation(Action):
     
@@ -142,7 +141,12 @@ class CodonVariation(Action):
 
 AminoAcidVariant = namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'))
 
+
 class AminoAcidVariation(Action):
+    """
+    Get the amino acid variant. The nomenclature defined by the Human Genome Variation Society has been largely
+    adopted (www.hgvs.org/mutnomen/).
+    """
     
     IN = ['codon_variant', 'genetic_code']
     OUT = ['amino_acid_variant']
@@ -163,30 +167,24 @@ class AminoAcidVariation(Action):
     def calculate(self, codon_variant, genetic_code):
         if codon_variant is None:
             return None
-        alts = []
-        alts = [None if alt is None else genetic_code.translate(alt)\
-            for alt in codon_variant.alt]
+        alts = [None if alt is None else genetic_code.translate(alt) for alt in codon_variant.alt]
         fs = [None if fs_ is None else fs_ / 3 for fs_ in codon_variant.fs]
-        return AminoAcidVariant(codon_variant.pos / 3,
-            genetic_code.translate(codon_variant.ref), alts, fs)
+        return AminoAcidVariant(codon_variant.pos / 3, genetic_code.translate(codon_variant.ref), alts, fs)
     
     def format(self, amino_acid_variant):
         res = []
         pos = amino_acid_variant.pos
         ref = amino_acid_variant.ref
         for alt, fs in izip(amino_acid_variant.alt, amino_acid_variant.fs):
-            r = None
             if len(amino_acid_variant.ref) > len(alt):
                 d = len(amino_acid_variant.ref) - len(alt)
-                rng = '%d'%(pos + len(ref) - 1,) if d == 1 else\
-                    '%d_%d'%(pos + len(ref) - d, pos + len(ref) - 1)
-                r = 'p.%sdel%s'%(rng, ref[-d - 1:-1])
+                rng = str(pos + len(ref) - 1,) if d == 1 else '{}_{}'.format(pos + len(ref) - d, pos + len(ref) - 1)
+                r = 'p.{}del{}'.format(rng, ref[-d - 1:-1])
             elif len(alt) > len(amino_acid_variant.ref):
                 d = len(alt) - len(amino_acid_variant.ref)
                 typ = 'dup' if alt[-d - 1:-1] == ref[-d - 1:-1] else 'ins'
-                rng = '%d'%(pos + len(alt) - 1,) if d == 1 else\
-                    '%d_%d'%(pos + len(alt) - d, pos + len(alt) - 1)
-                r = 'p.%s%s%s'%(rng, typ, alt[-d - 1:-1])
+                rng = str(pos + len(alt) - 1,) if d == 1 else '{}_{}'.format(pos + len(alt) - d, pos + len(alt) - 1)
+                r = 'p.{}{}{}'.format(rng, typ, alt[-d - 1:-1])
             else:
                 i = 0
                 j = len(ref) - 1
@@ -196,8 +194,8 @@ class AminoAcidVariation(Action):
                     while ref[j] == alt[j]:
                         j -= 1
                     j += 1
-                r = 'p.%s%d%s'%(ref[i:j + 1], pos + i + 1, alt[i:j + 1])
+                r = 'p.{}{}{}'.format(ref[i:j + 1], pos + i + 1, alt[i:j + 1])
                 if fs is not None:
-                    r += 'fs*%d'%fs
+                    r += 'fs*{}'.format(fs)
             res.append(r)
         return ','.join(res)

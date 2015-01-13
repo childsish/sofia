@@ -4,7 +4,8 @@ from itertools import izip
 
 from binf.identifier import Chromosome
 from sorted_dict import SortedDict
-from iterator import VcfIterator, Variant
+from iterator import VcfEntryIterator, Variant
+
 
 class VcfMerger(object):
     
@@ -14,9 +15,9 @@ class VcfMerger(object):
         self.fnames = fnames
         self.quality = quality
         self.depth = depth
-        self.iterators = map(VcfIterator, fnames)
+        self.iterators = map(VcfEntryIterator, fnames)
         hdrs = [it.hdrs for it in self.iterators]
-        self.hdrs = self._mergeHeaders(hdrs)
+        self.hdrs = self._merge_headers(hdrs)
         self.sample_names = self.hdrs['##SAMPLES']
         del self.hdrs['##SAMPLES']
         if len(bams) == 0:
@@ -40,14 +41,13 @@ class VcfMerger(object):
     
         TODO: phased genotypes aren't handled
         """
-        tops = [self._nextLine(idx) for idx in xrange(len(self.iterators))]
-        sorted_tops = self._initSorting(tops)
+        tops = [self._next_line(idx) for idx in xrange(len(self.iterators))]
+        sorted_tops = self._init_sorting(tops)
 
         while len(sorted_tops) > 0:
-            key, idxs = sorted_tops.popLowest()
+            key, idxs = sorted_tops.pop_lowest()
             
-            ref = sorted((tops[idx].ref for idx in idxs),\
-                key=lambda x:len(x))[-1]
+            ref = sorted((tops[idx].ref for idx in idxs), key=lambda x: len(x))[-1]
             alt = set()
             sample_to_top = {}
             for idx in idxs:
@@ -64,36 +64,36 @@ class VcfMerger(object):
                 if sample_name in sample_to_top:
                     top, top_alt = sample_to_top[sample_name]
                     sample_data = top.samples[sample_name]
-                    if 'Q' not in format_: format_['Q'] = ''
-                    if 'GT' not in format_: format_['GT'] = '0/0'
+                    if 'Q' not in format_:
+                        format_['Q'] = ''
+                    if 'GT' not in format_:
+                        format_['GT'] = '0/0'
                     qual = sample_data['Q'] if 'Q' in sample_data else\
                         '' if top.qual == '.' else\
-                        '%.2f'%top.qual
+                        '{:.2f}'.format(top.qual)
                     samples[sample_name] = {'Q': qual}
                     samples[sample_name]['GT'] =\
-                        self._getGT(sample_data['GT'], top_alt, alt)
+                        self._get_gt(sample_data['GT'], top_alt, alt)
                     if 'GQ' in sample_data:
-                        if 'GQ' not in format_: format_['GQ'] = ''
+                        if 'GQ' not in format_:
+                            format_['GQ'] = ''
                         samples[sample_name]['GQ'] = sample_data['GQ']
                     if 'RO' in sample_data:
-                        if 'RO' not in format_: format_['RO'] = '0'
-                        if 'AO' not in format_: format_['AO'] =\
-                            ','.join('0' * len(alt))
+                        if 'RO' not in format_:
+                            format_['RO'] = '0'
+                        if 'AO' not in format_:
+                            format_['AO'] = ','.join('0' * len(alt))
                         samples[sample_name]['RO'] = sample_data['RO']
-                        samples[sample_name]['AO'] =\
-                            self._getAO(sample_data['AO'], top.alt, alt)
+                        samples[sample_name]['AO'] = self._get_ao(sample_data['AO'], top.alt, alt)
                 elif sample_name in self.sample_to_bam:
-                    if 'GT' not in format_: format_['GT'] = '0/0'
-                    if 'RO' not in format_: format_['RO'] = '0'
-                    if 'AO' not in format_: format_['AO'] =\
-                        ','.join('0' * len(alt))
-                    ro, ao = self._getDepth(sample_name,
-                        tops[idxs[0]].chr,
-                        tops[idxs[0]].pos,
-                        ref,
-                        alt)
-                    samples[sample_name] = {'.': '.'} if ro is None\
-                        else {'RO': ro, 'AO': ao}
+                    if 'GT' not in format_:
+                        format_['GT'] = '0/0'
+                    if 'RO' not in format_:
+                        format_['RO'] = '0'
+                    if 'AO' not in format_:
+                        format_['AO'] = ','.join('0' * len(alt))
+                    ro, ao = self._get_depth(sample_name, tops[idxs[0]].chr, tops[idxs[0]].pos, ref, alt)
+                    samples[sample_name] = {'.': '.'} if ro is None else {'RO': ro, 'AO': ao}
                 else:
                     samples[sample_name] = {'.': '.'}
             
@@ -103,39 +103,39 @@ class VcfMerger(object):
                         sample[fmt] = default
 
             yield Variant(tops[idxs[0]].chr,
-                tops[idxs[0]].pos,
-                tops[idxs[0]].id,
-                ref,
-                ','.join(alt),
-                min(tops[idx].qual for idx in idxs),
-                '.',
-                '.',
-                samples)
+                          tops[idxs[0]].pos,
+                          tops[idxs[0]].id,
+                          ref,
+                          ','.join(alt),
+                          min(tops[idx].qual for idx in idxs),
+                          '.',
+                          '.',
+                          samples)
 
             for idx in idxs:
                 try:
-                    tops[idx] = self._nextLine(idx)
-                    self._updateSorting(sorted_tops, tops[idx], idx)
+                    tops[idx] = self._next_line(idx)
+                    self._update_sorting(sorted_tops, tops[idx], idx)
                 except StopIteration:
                     pass
     
-    def _nextLine(self, idx):
+    def _next_line(self, idx):
         entry = self.iterators[idx].next()
         while entry.filter not in ['.', 'PASS'] or entry.qual < self.quality:
             entry = self.iterators[idx].next()
         return entry
     
-    def _initSorting(self, tops):
+    def _init_sorting(self, tops):
         sorted_tops = SortedDict()
         for idx, entry in enumerate(tops):
-            self._updateSorting(sorted_tops, entry, idx)
+            self._update_sorting(sorted_tops, entry, idx)
         return sorted_tops
     
-    def _updateSorting(self, sorted_tops, entry, idx):
-        key = (Chromosome.getIdentifier(entry.chr), entry.pos)
+    def _update_sorting(self, sorted_tops, entry, idx):
+        key = (Chromosome.get_identifier(entry.chr), entry.pos)
         sorted_tops.get(key, []).append(idx)
     
-    def _mergeHeaders(self, hdrs):
+    def _merge_headers(self, hdrs):
         all_keys = defaultdict(list)
         for hdr in hdrs:
             for i, key in enumerate(hdr):
@@ -148,36 +148,36 @@ class VcfMerger(object):
             res[k] = list(values)
         return res
     
-    def _getGT(self, gt, old_alt, new_alt):
+    def _get_gt(self, gt, old_alt, new_alt):
         a1, a2 = map(int, gt.split('/'))
-        if a1 != '0': a1 = str(new_alt.index(old_alt[a1 - 1]) + 1)
-        if a2 != '0': a2 = str(new_alt.index(old_alt[a2 - 1]) + 1)
-        return '%s/%s'%(a1, a2)
+        if a1 != '0':
+            a1 = str(new_alt.index(old_alt[a1 - 1]) + 1)
+        if a2 != '0':
+            a2 = str(new_alt.index(old_alt[a2 - 1]) + 1)
+        return '{}/{}'.format(a1, a2)
     
-    def _getAO(self, ao, old_alt, new_alt):
+    def _get_ao(self, ao, old_alt, new_alt):
         res = {k: v for k, v in izip(old_alt.split(','), ao.split(','))}
         return ','.join(res[a] if a in res else '0' for a in new_alt)
     
-    def _getDepth(self, sample, chr, pos, ref, alt):
+    def _get_depth(self, sample, chr, pos, ref, alt):
         bam = self.sample_to_bam[sample]
         ref_start = pos
         ref_stop = pos + len(ref)
         cnt = Counter()
-        rec = sample == '3.2-2D' and pos == 178952102
         for read in bam.fetch(chr, ref_start, ref_stop):
             read_start, read_stop, truncated =\
-                self._getReadInterval(read, ref_start, ref_stop)
+                self._get_read_interval(read, ref_start, ref_stop)
             alt_seq = read.seq[read_start:read_stop]
-            if truncated: # assume reference
+            if truncated:  # assume reference
                 alt_seq += ref[len(alt_seq):]
             cnt[alt_seq] += 1
         if cnt[ref] == 0 and all(cnt[a] == 0 for a in alt):
             return None, None
         return str(cnt[ref]), ','.join(str(cnt[a]) for a in alt)
     
-    def _getReadInterval(self, read, ref_start, ref_stop):
+    def _get_read_interval(self, read, ref_start, ref_stop):
         read_start = 0
-        read_stop = 0
         ref_pos = 0
         truncated = True
         read_pos = read.qstart
@@ -193,4 +193,3 @@ class VcfMerger(object):
             ref_pos += ref_ext
         read_stop = read_pos + (ref_stop - ref_pos - read.pos)
         return read_start, read_stop, truncated
-

@@ -13,7 +13,7 @@ class ErrorManager(object):
         """ Empty the ErrorManager of accumulated error messages. """
         self.errors = set()
         
-    def addError(self, msg):
+    def add_error(self, msg):
         """ Add an error message to the ErrorManager. """
         self.errors.add(msg)
 

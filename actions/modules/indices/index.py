@@ -2,6 +2,7 @@ from collections import namedtuple
 
 KeyValuePair = namedtuple('KeyValuePair', ('key', 'value'))
 
+
 class Index(object):
 
     __slots__ = ('accessors', 'index', 'type', 'return_')
@@ -28,7 +29,7 @@ class Index(object):
                 elif index.RETURN == 'multiple':
                     next_level.extend(index[key[i]])
                 else:
-                    msg = 'Can not handle indices with %s returns'%index.RETURN
+                    msg = 'Can not handle indices with {} returns'.format(index.RETURN)
                     raise NotImplementedError(msg)
             indices = next_level
         if self.type == 'exact':
@@ -53,7 +54,6 @@ class Index(object):
                     index[key[i]] = self.accessors[i + 1]()
                 next_level.append(index[key[i]])
             indices = next_level
-    
 
     def __getstate__(self):
         return dict((attr, getattr(self, attr)) for attr in self.__slots__)

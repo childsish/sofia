@@ -4,6 +4,9 @@ from modules.binf.sequence import revcmp
 
 
 class GetDownstream1000(Action):
+    """
+    Get the sequence from the given genomic position to 1000 nucleotides downstream.
+    """
 
     IN = ['chromosome_sequence_set', 'genomic_position', 'major_transcript']
     OUT = ['downstream_1000']
