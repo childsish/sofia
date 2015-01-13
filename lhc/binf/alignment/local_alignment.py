@@ -41,6 +41,10 @@ class LocalAlignment(object):
         if self._start is None:
             self._start = self._trace_alignment()
         return self._start
+
+    @property
+    def score(self):
+        return self.scores[self.stop]
     
     def get_score(self, i, j):
         return self.scores[i, j]
@@ -55,9 +59,6 @@ class LocalAlignment(object):
 
     def set_pointer(self, i, j, pointer):
         self.pointers[i, j] = pointer
-    
-    def get_alignment_score(self):
-        return self.scores[self.stop]
 
     def _trace_alignment(self):
         i, j = self.stop
