@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from fastq_.iterator import FastqEntryIterator
+from fastq_ import split
 
 
 def iter_entries(fname):
@@ -23,6 +24,9 @@ def main(argv):
     parser_interleave.add_argument('fastq2')
     parser_interleave.set_defaults(\
         func=lambda args:interleave(args.fastq1, args.fastq2))
+
+    parser_split = subparsers.add_parser('split')
+    split.define_parser(parser_split)
     
     args = parser.parse_args(argv[1:])
     args.func(args)
