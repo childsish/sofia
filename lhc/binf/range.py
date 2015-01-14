@@ -315,7 +315,7 @@ class SuperRange(object):
 		if i == len(self.__rngs):
 			raise IndexError('Relative position %d is not contained within this range'%pos)
 		
-		return self.__rngs[i].getAbsPos(pos)
+		return self.__rngs[i].get_abs_pos(pos)
 	
 	def getRelPos(self, pos):
 		""" Converts a position relative to 0 to one relative to the range. """
@@ -328,10 +328,10 @@ class SuperRange(object):
 		if i == len(self.__rngs):
 			raise IndexError('Absolute position %d is not contained within this range.'%pos)
 		
-		return sum([len(self.__rngs[j]) for j in xrange(i)]) + self.__rngs[i].getRelPos(pos)
+		return sum([len(self.__rngs[j]) for j in xrange(i)]) + self.__rngs[i].get_rel_pos(pos)
 
 	def getSubSeq(self, seq):
-		res = (rng.getSubSeq(seq) for rng in self.__rngs)
+		res = (rng.get_sub_seq(seq) for rng in self.__rngs)
 		return reduce(add, res)
 		
 		#if isinstance(seq, basestring):
