@@ -14,7 +14,7 @@ def split(args):
     barcodes_ = [(hdr, seq.lower(), args.min_score if args.min_score else len(seq) - 1)
                  for hdr, seq in FastaEntryIterator(args.barcodes)]
     barcodes_.extend((hdr, revcmp(seq.lower()), score) for hdr, seq, score in barcodes_)
-    pool = multiprocessing.Pool(initializer=init_worker, initargs=[barcodes_, args.gap_penalty])
+    pool = multiprocessing.Pool(args.cpus, initializer=init_worker, initargs=[barcodes_, args.gap_penalty])
     out_fhndls = {}
     iterator = FastqEntryIterator(args.input)
     for hdr, entry in pool.imap(find_barcode, iterator, 1000):
@@ -63,14 +63,16 @@ def define_parser(parser):
     add_arg = parser.add_argument
     add_arg('barcodes',
             help='A fasta file of sequences')
+    add_arg('-c', '--cpus',
+            help='The number of cpus to use (default: all).')
     add_arg('-i', '--input', default=sys.stdin, action=OpenReadableFile,
             help='The input fastq file to split (default: stdin)')
     add_arg('-O', '--output',
             help='The output directory.')
-    add_arg('-s', '--min-score', type=float,
-            help='The minimum score to allow a match (default: length of the barcode).')
     add_arg('-p', '--gap-penalty', type=int,
             help='The gap penalty (default: -10).')
+    add_arg('-s', '--min-score', type=float,
+            help='The minimum score to allow a match (default: length of the barcode).')
     parser.set_defaults(func=split)
     return parser
 
