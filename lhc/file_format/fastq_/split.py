@@ -13,7 +13,7 @@ from lhc.file_format.fasta import FastaEntryIterator
 def split(args):
     barcodes_ = [(hdr, seq.lower(), args.min_score if args.min_score else len(seq) - 1)
                  for hdr, seq in FastaEntryIterator(args.barcodes)]
-    barcodes_.extend((hdr, revcmp(seq.lower()), score) for hdr, seq, score in barcodes_)
+    barcodes_.extend([(hdr, revcmp(seq), score) for hdr, seq, score in barcodes_])
     pool = multiprocessing.Pool(args.cpus, initializer=init_worker, initargs=[barcodes_, args.gap_penalty])
     out_fhndls = {}
     iterator = FastqEntryIterator(args.input)
