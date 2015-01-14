@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from itertools import izip
-from fasta_.index import IndexedFastaFile
 from fasta_.iterator import FastaEntryIterator
 from fasta_.set_ import FastaSet
 
