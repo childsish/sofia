@@ -1,6 +1,3 @@
-import bz2
-import gzip
-
 from collections import namedtuple
 from lhc.filetools.flexible_opener import open_flexibly
 

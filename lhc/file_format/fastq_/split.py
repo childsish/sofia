@@ -6,12 +6,14 @@ import sys
 from iterator import FastqEntryIterator
 from lhc.argparse import OpenReadableFile
 from lhc.binf.alignment.local_aligner import LocalAligner
+from lhc.binf.sequence import revcmp
 from lhc.file_format.fasta import FastaEntryIterator
 
 
 def split(args):
     barcodes_ = [(hdr, seq.lower(), args.min_score if args.min_score else len(seq) - 1)
                  for hdr, seq in FastaEntryIterator(args.barcodes)]
+    barcodes_.extend((hdr, revcmp(seq.lower()), score) for hdr, seq, score in barcodes_)
     pool = multiprocessing.Pool(initializer=init_worker, initargs=[barcodes_, args.gap_penalty])
     out_fhndls = {}
     iterator = FastqEntryIterator(args.input)

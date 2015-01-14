@@ -1,7 +1,3 @@
-import bz2
-import gzip
-import sys
-
 from collections import namedtuple
 from lhc.filetools.flexible_opener import open_flexibly
 from lhc.itertools.chunked_iterator import ChunkedIterator
