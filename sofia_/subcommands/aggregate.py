@@ -139,7 +139,7 @@ def define_parser(parser):
 
 
 def aggregate(args):
-    sys.stderr.write('\n    Ebias started...\n\n')
+    sys.stderr.write('\n    SoFIA started...\n\n')
     
     provided_resources = {}
     if args.resource_list is not None:
