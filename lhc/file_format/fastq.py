@@ -3,6 +3,7 @@ import sys
 
 from fastq_.iterator import FastqEntryIterator
 from fastq_ import split
+from lhc.argparse import OpenReadableFile, OpenWritableFile
 
 
 def iter_entries(fname):
@@ -27,6 +28,13 @@ def main(argv):
 
     parser_split = subparsers.add_parser('split')
     split.define_parser(parser_split)
+    
+    parser_to_fasta = subparsers.add_parser('to_fasta')
+    parser_to_fasta.add_argument('-i', '--input', default=sys.stdin, action=OpenReadableFile,
+                                help='Input fastq file (default: stdin).')
+    parser_to_fasta.add_argument('-o', '--output', default=sys.stdout, action=OpenWritableFile,
+                                help='Output fasta file (default: stdout).')
+    parser_to_fasta.set_defaults(func=lambda args: to_fasta(FastqEntryIterator(args.input), args.output))
     
     args = parser.parse_args(argv[1:])
     args.func(args)
@@ -75,6 +83,10 @@ def interleave(fastq1, fastq2, outfile=sys.stdout):
 
     infile1.close()
     infile2.close()
+
+def to_fasta(in_fhndl, out_fhndl):
+    for entry in in_fhndl:
+        out_fhndl.write('>{}\n{}\n'.format(entry.hdr, entry.seq))
 
 
 if __name__ == '__main__':
