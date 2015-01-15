@@ -1,8 +1,8 @@
 from sofia_.action import Resource
-from modules.file_formats.fasta_.iterator import FastaIterator as FastaIteratorParser
-from modules.file_formats.fasta_.set_ import FastaSet as FastaSetParser
+from lhc.file_format.fasta_.iterator import FastaEntryIterator as FastaIteratorParser
+from lhc.file_format.fasta_.set_ import FastaSet as FastaSetParser
 try:
-    from modules.file_formats.fasta_.index import IndexedFastaFile
+    from lhc.file_format.fasta_.index import IndexedFastaFile
 except ImportError:
     import sys
     sys.stderr.write('Pysam not available. Fasta file access will be slower.\n')

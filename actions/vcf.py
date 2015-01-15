@@ -1,8 +1,8 @@
 from sofia_.action import Resource, Target
-from modules.file_formats.vcf_.iterator import VcfEntryIterator as VcfIteratorParser
-from modules.file_formats.vcf_.set_ import VcfSet as VcfSetParser
+from lhc.file_format.vcf_.iterator import VcfEntryIterator as VcfIteratorParser
+from lhc.file_format.vcf_.set_ import VcfSet as VcfSetParser
 try:
-    from modules.file_formats.vcf_.index import IndexedVcfFile
+    from lhc.file_format.vcf_.index import IndexedVcfFile
 except ImportError:
     import sys
     sys.stderr.write('Pysam not available. Vcf file access will be slower.\n')

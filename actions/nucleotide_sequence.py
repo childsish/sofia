@@ -1,5 +1,5 @@
 from sofia_.action import Action
-from modules.kmer import KmerCounter
+from lhc.binf.kmer import KmerCounter
 
 
 class GetKNucleotideFrequency(Action):

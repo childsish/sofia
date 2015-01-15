@@ -1,6 +1,6 @@
 from sofia_.action import Action
 
-from modules.binf.sequence import revcmp
+from lhc.binf.sequence import revcmp
 
 
 class GetDownstream1000(Action):
