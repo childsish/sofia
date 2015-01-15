@@ -4,6 +4,7 @@ import multiprocessing
 import os
 import sys
 
+from collections import Counter
 from iterator import FastqEntryIterator
 from lhc.argparse import OpenReadableFile
 from lhc.binf.sequence import revcmp
@@ -38,6 +39,7 @@ def split_single(reads, pool, output, simultaneous_entries):
                 fname = '{}.fastq'.format(hdr)
                 out_fhndls[hdr] = open(os.path.join(output, fname), 'w')
             out_fhndls[hdr].write(str(entry))
+            sys.exit(1)
     for out_fhndl in out_fhndls.itervalues():
         out_fhndl.close()
 
@@ -50,7 +52,11 @@ def split_paired(forward, reverse, pool, output, simultaneous_entries):
     it = itertools.izip(pool.imap(find_barcodes_paired, pool_iterator, simultaneous_entries),
                         forward_iterator,
                         reverse_iterator)
+    cnt = Counter()
     for hdrs, forward_entry, reverse_entry in it:
+        cnt[len(hdrs)] += 1
+        if len(hdrs) == 0:
+            hdrs = ['None']
         for hdr in hdrs:
             if hdr not in out_fhndls:
                 forward_fname = '{}.1.fastq'.format(hdr)
@@ -60,9 +66,11 @@ def split_paired(forward, reverse, pool, output, simultaneous_entries):
                 out_fhndls[hdr] = (forward_file, reverse_file)
             out_fhndls[hdr][0].write(str(forward_entry))
             out_fhndls[hdr][1].write(str(reverse_entry))
-    for out_fhndls in out_fhndls.itervalues():
-        out_fhndls[0].close()
-        out_fhndls[1].close()
+    for out_fhndl in out_fhndls.itervalues():
+        out_fhndl[0].close()
+        out_fhndl[1].close()
+    for n_barcodes, n_reads in cnt.iteritems():
+        print '{} reads had {} barcodes'.format(n_reads, n_barcodes)
  
 
 def get_seeds(s, k):
@@ -86,14 +94,14 @@ def init_worker(forward_barcodes_, reverse_barcodes_, mismatch_=0):
 def find_barcodes_single(entry):
     forward_hdrs = find_barcodes(entry, forward_barcodes)
     reverse_hdrs = find_barcodes(entry, reverse_barcodes)
-    return forward_hdrs + reverse_hdrs
+    return sorted(set(forward_hdrs + reverse_hdrs))
 
 
 def find_barcodes_paired(entries):
     forward, reverse = entries
     forward_hdrs = find_barcodes(forward, forward_barcodes)
     reverse_hdrs = find_barcodes(reverse, reverse_barcodes)
-    return forward_hdrs + reverse_hdrs
+    return sorted(set(forward_hdrs + reverse_hdrs))
 
 
 def find_barcodes(entry, barcodes):
