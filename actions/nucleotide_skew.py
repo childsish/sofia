@@ -21,7 +21,7 @@ class GetCodingNucleotideSkew(Action):
 class GetUTR5NucleotideSkew(Action):
 
     IN = ['five_prime_utr']
-    OUT = ['coding_nucleotide_skew']
+    OUT = ['utr5_nucleotide_skew']
 
     def init(self, skew='at'):
         self.skew = skew.lower()
@@ -33,7 +33,7 @@ class GetUTR5NucleotideSkew(Action):
 class GetUTR3NucleotideSkew(Action):
 
     IN = ['three_prime_utr']
-    OUT = ['coding_nucleotide_skew']
+    OUT = ['utr3_nucleotide_skew']
 
     def init(self, skew='at'):
         self.skew = skew.lower()
