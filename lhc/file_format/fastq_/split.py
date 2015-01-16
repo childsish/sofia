@@ -1,57 +1,132 @@
 import argparse
+import itertools
 import multiprocessing
 import os
 import sys
 
+from collections import Counter
 from iterator import FastqEntryIterator
 from lhc.argparse import OpenReadableFile
-from lhc.binf.alignment.local_aligner import LocalAligner
 from lhc.binf.sequence import revcmp
 from lhc.file_format.fasta import FastaEntryIterator
+from lhc.string import hamming
 
 
 def split(args):
-    barcodes_ = [(hdr, seq.lower(), args.min_score if args.min_score else len(seq) - 1)
-                 for hdr, seq in FastaEntryIterator(args.barcodes)]
-    barcodes_.extend([(hdr, revcmp(seq), score) for hdr, seq, score in barcodes_])
-    pool = multiprocessing.Pool(args.cpus, initializer=init_worker, initargs=[barcodes_, args.gap_penalty])
+    if args.output is None:
+        args.output = args.input.rsplit('.fastq', 1)[0]
+
+    forward_barcodes_ = [(hdr, seq.lower(), get_seeds(seq.lower(), args.seed_size))
+                         for hdr, seq in FastaEntryIterator(args.barcodes)]
+    reverse_barcodes_ = [(hdr, revcmp(seq.lower()), get_seeds(revcmp(seq.lower()), args.seed_size))
+                         for hdr, seq in FastaEntryIterator(args.barcodes)]
+    initargs = [forward_barcodes_, reverse_barcodes_, args.max_mismatch]
+    pool = multiprocessing.Pool(args.cpus, initializer=init_worker, initargs=initargs)
+
+    if hasattr(args, 'reverse_reads'):
+        split_paired(args.forward_reads, args.reverse_reads, pool, args.output, args.simultaneous_entries)
+    else:
+        split_single(args.forward_reads, pool, args.output, args.simultaneous_entries)
+
+
+def split_single(reads, pool, output, simultaneous_entries):
+    pool_iterator = FastqEntryIterator(reads)
+    iterator = FastqEntryIterator(reads)
     out_fhndls = {}
-    iterator = FastqEntryIterator(args.input)
-    for hdr, entry in pool.imap(find_barcode, iterator, 1000):
-        if hdr not in out_fhndls:
-            fname = '{}.fastq'.format(hdr)
-            out_fhndls[hdr] = open(os.path.join(args.output, fname), 'w')
+    for hdrs, entry in itertools.izip(pool.imap(find_barcodes_single, pool_iterator, simultaneous_entries), iterator):
+        for hdr in hdrs:
+            if hdr not in out_fhndls:
+                fname = '{}.fastq'.format(hdr)
+                out_fhndls[hdr] = open(os.path.join(output, fname), 'w')
+            out_fhndls[hdr].write(str(entry))
+            sys.exit(1)
     for out_fhndl in out_fhndls.itervalues():
         out_fhndl.close()
 
-aligner = None
-barcodes = None
+
+def split_paired(forward, reverse, pool, output, simultaneous_entries):
+    pool_iterator = itertools.izip(FastqEntryIterator(forward), FastqEntryIterator(reverse))
+    forward_iterator = FastqEntryIterator(forward)
+    reverse_iterator = FastqEntryIterator(reverse)
+    out_fhndls = {}
+    it = itertools.izip(pool.imap(find_barcodes_paired, pool_iterator, simultaneous_entries),
+                        forward_iterator,
+                        reverse_iterator)
+    cnt = Counter()
+    for hdrs, forward_entry, reverse_entry in it:
+        cnt[len(hdrs)] += 1
+        if len(hdrs) == 0:
+            hdrs = ['None']
+        for hdr in hdrs:
+            if hdr not in out_fhndls:
+                forward_fname = '{}.1.fastq'.format(hdr)
+                reverse_fname = '{}.2.fastq'.format(hdr)
+                forward_file = open(os.path.join(output, forward_fname), 'w')
+                reverse_file = open(os.path.join(output, reverse_fname), 'w')
+                out_fhndls[hdr] = (forward_file, reverse_file)
+            out_fhndls[hdr][0].write(str(forward_entry))
+            out_fhndls[hdr][1].write(str(reverse_entry))
+    for out_fhndl in out_fhndls.itervalues():
+        out_fhndl[0].close()
+        out_fhndl[1].close()
+    for n_barcodes, n_reads in cnt.iteritems():
+        print '{} reads had {} barcodes'.format(n_reads, n_barcodes)
+ 
+
+def get_seeds(s, k):
+    return [s[i:i + k] for i in xrange(len(s) - k)]
+
+mismatch = 0
+forward_barcodes = None
+reverse_barcodes = None
 
 
-def init_worker(barcodes_, gap_penalty):
-    global aligner
-    global barcodes
+def init_worker(forward_barcodes_, reverse_barcodes_, mismatch_=0):
+    global mismatch
+    global forward_barcodes
+    global reverse_barcodes
+    
+    mismatch = mismatch_
+    forward_barcodes = forward_barcodes_
+    reverse_barcodes = reverse_barcodes_
 
-    aligner = LocalAligner(gap_penalty=gap_penalty)
-    barcodes = barcodes_
+
+def find_barcodes_single(entry):
+    forward_hdrs = find_barcodes(entry, forward_barcodes)
+    reverse_hdrs = find_barcodes(entry, reverse_barcodes)
+    return sorted(set(forward_hdrs + reverse_hdrs))
 
 
-def find_barcode(entry):
-    alignments = [(aligner.align(entry.seq.lower(), seq).score, hdr, min_score)
-                  for hdr, seq, min_score in barcodes]
-    score, hdr, min_score = sorted(alignments)[-1]
-    if score >= min_score:
-        hdr = 'None'
-    return hdr, entry
+def find_barcodes_paired(entries):
+    forward, reverse = entries
+    forward_hdrs = find_barcodes(forward, forward_barcodes)
+    reverse_hdrs = find_barcodes(reverse, reverse_barcodes)
+    return sorted(set(forward_hdrs + reverse_hdrs))
 
+
+def find_barcodes(entry, barcodes):
+    template = entry.seq.lower()
+
+    ## String find
+    if mismatch == 0:
+        return [hdr for hdr, barcode, seeds in barcodes if template.find(barcode) >= 0]
+
+    ## Hamming with seed
+    hdrs = []
+    for hdr, barcode, seeds in barcodes:
+        for i, seed in enumerate(seeds):
+            try:
+                idx = template.index(seed)
+                d = hamming(template[idx - i:idx - i + len(barcode)], barcode)
+                if d <= mismatch:
+                    hdrs.append(hdr) 
+            except ValueError:
+                pass
+    return hdrs
+ 
 
 def main():
-    parser = get_parser()
-    args = parser.parse_args()
-    if args.output is None:
-        if args.input is sys.stdin:
-            parser.error('--output must be defined if --input not given.')
-        args.output = args.input.rsplit(',', 2)[0]
+    args = get_parser().parse_args()
     args.func(args)
 
 
@@ -61,18 +136,22 @@ def get_parser():
 
 def define_parser(parser):
     add_arg = parser.add_argument
+    add_arg('forward_reads',
+            help='Fastq containing forward reads.')
+    add_arg('reverse_reads', nargs='?',
+            help='Fastq containing reverse reads (optional).')
     add_arg('barcodes',
-            help='A fasta file of sequences')
+            help='Fasta file of barcode sequences')
     add_arg('-c', '--cpus',
             help='The number of cpus to use (default: all).')
-    add_arg('-i', '--input', default=sys.stdin, action=OpenReadableFile,
-            help='The input fastq file to split (default: stdin)')
+    add_arg('-k', '--seed-size', default=5,
+            help='The size of the seed (default: 5).')
+    add_arg('-m', '--max-mismatch', type=float, default=0,
+            help='The number of allowed mismatched (default: 1).')
+    add_arg('-s', '--simultaneous-entries', default=1000,
+            help='The number of entries to submit to each worker at a time (default: 1000).')
     add_arg('-O', '--output',
             help='The output directory.')
-    add_arg('-p', '--gap-penalty', type=int,
-            help='The gap penalty (default: -10).')
-    add_arg('-s', '--min-score', type=float,
-            help='The minimum score to allow a match (default: length of the barcode).')
     parser.set_defaults(func=split)
     return parser
 
