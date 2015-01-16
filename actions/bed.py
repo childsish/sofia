@@ -1,5 +1,5 @@
 from sofia_.action import Resource, Target
-from lhc.file_format.bed_.iterator import BedIterator as BedIteratorParser
+from lhc.file_format.bed_.iterator import BedEntryIterator as BedIteratorParser
 from lhc.file_format.bed_.set_ import BedSet as BedSetParser
 try:
     from lhc.file_formats.bed_.index import IndexedBedFile

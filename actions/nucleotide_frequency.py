@@ -1,7 +1,5 @@
 from sofia_.action import Action
-
-from collections import Counter
-from modules.kmer import KmerCounter
+from lhc.binf.kmer import KmerCounter
 
 
 class CodingNucleotideFrequency(Action):
