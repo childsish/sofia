@@ -5,6 +5,10 @@ import os
 import sys
 libpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sofia_')
 sys.path.append(libpath)
+if not any(os.path.basename(path) == 'lhc-python' for path in sys.path):
+    libpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lhc-python')
+    sys.path.append(libpath)
+
 
 from sofia_.subcommands import aggregate, info
 
