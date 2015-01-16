@@ -243,7 +243,7 @@ class Interval(object):
         Get position and interval at the same time
         """
         ivl = self.ivls[self.getAbsIdx(pos)]
-        res = ivl.getAbsPos(pos)
+        res = ivl.get_abs_pos(pos)
         return res, ivl
     
     def getRelIdx(self, pos, value=None):
@@ -278,14 +278,14 @@ class Interval(object):
         i = self.getRelIdx(pos, value)
         ivl = self.ivls[i]
         res = sum(len(ivl) for ivl in islice(self.ivls, i)\
-            if ivl.value == value) + ivl.getRelPos(pos)
+            if ivl.value == value) + ivl.get_rel_pos(pos)
         return res, ivl
 
     def getSubSeq(self, seq, value=None):
         if value is None:
-            res = [ivl.getSubSeq(seq) for ivl in self.ivls]
+            res = [ivl.get_sub_seq(seq) for ivl in self.ivls]
         else:
-            res = [ivl.getSubSeq(seq) for ivl in self.ivls\
+            res = [ivl.get_sub_seq(seq) for ivl in self.ivls\
                 if ivl.value == value]
         return reduce(add, res, type(seq)())
     
@@ -310,7 +310,7 @@ class Interval(object):
     
     def get5pInterval(self, fr, to=0):
         iivl = self.ivls[0]
-        return Interval(iivl.getAbsPos(fr), iivl.getAbsPos(to),
+        return Interval(iivl.get_abs_pos(fr), iivl.get_abs_pos(to),
              value=iivl.value, chm=iivl.chrom, strand=iivl.strand)
     
     def get3pInterval(self, to, fr=None):
@@ -318,7 +318,7 @@ class Interval(object):
         if fr == None:
             fr = len(iivl)
         to += fr
-        return Interval(iivl.getAbsPos(fr), iivl.getAbsPos(to),
+        return Interval(iivl.get_abs_pos(fr), iivl.get_abs_pos(to),
          value=iivl.value, chm=iivl.chrom, strand=iivl.strand)
     
     @classmethod

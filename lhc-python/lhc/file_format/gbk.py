@@ -38,7 +38,7 @@ class GenBankFile:
         self.genes = self.__parseGenes(self.ftrs)
     
     def getGeneSeq(self, gene):
-        return gene['range'].getSubSeq(self.seq)
+        return gene['range'].get_sub_seq(self.seq)
     
     def linear_search(array, fr, x):
         _x = x
@@ -367,7 +367,7 @@ def extractGenes(genes, gbk, options):
         print rng5p
         print ftr['range']
         print rng3p
-        seq = rng.getSubSeq(gbk.seq)
+        seq = rng.get_sub_seq(gbk.seq)
         
         sys.stdout.write('>%s\n%s\n'%(' '.join(hdr), seq))
 
@@ -383,7 +383,7 @@ def extractPaths(gbk, options):
                 print ftr['range']
                 print rng3p
                 print rng
-                seq = rng.getSubSeq(gbk.seq)
+                seq = rng.get_sub_seq(gbk.seq)
                 hdr = ['%s_%s_%s.%s'%(typ, qua, val, cnt)]
                 if options.ext5 != 0:
                     hdr.append('atg:%d'%(options.ext5))
@@ -401,7 +401,7 @@ def extractType(gbk, options):
             rng = ftr['range']
             rng.adj5p(-options.ext5)
             rng.adj3p(options.ext3)
-            seq = rng.getSubSeq(gbk.seq)
+            seq = rng.get_sub_seq(gbk.seq)
             hdr = ['%s.%d'%(typ, cnt)]
             if options.ext5 != 0:
                 hdr.append('atg:%d'%(options.ext5))

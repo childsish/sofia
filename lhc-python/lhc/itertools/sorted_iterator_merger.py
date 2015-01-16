@@ -1,4 +1,4 @@
-from lhc.collection.sorted_dict import SortedDict
+from lhc.collections.sorted_dict import SortedDict
 
 
 class SortedIteratorMerger(object):

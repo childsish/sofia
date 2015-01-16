@@ -135,7 +135,7 @@ class Interval(object):
     
     # Position functions
     
-    def getAbsPos(self, pos):
+    def get_abs_pos(self, pos):
         """Get the absolute position of a position relative to a interval
         
         :param int pos: the position relative to the interval
@@ -146,7 +146,7 @@ class Interval(object):
             raise IndexError(err)
         return self.start + pos
     
-    def getRelPos(self, pos):
+    def get_rel_pos(self, pos):
         """Get the position relative to a interval of a position.
     
         :param int pos: the position to calculate relative to the interval
@@ -159,7 +159,7 @@ class Interval(object):
     
     # Sequence functions
     
-    def getSubSeq(self, seq):
+    def get_sub_seq(self, seq):
         return seq[self.start:self.stop]
     
     INTERVAL_PAIR = namedtuple('IntervalPair', ('left', 'right'))

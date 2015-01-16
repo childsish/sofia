@@ -1,5 +1,12 @@
 import os
-import pysam
+try:
+    from pysam import Fastafile
+except ImportError:
+    import sys
+    from iterator import FastaEntryIterator
+    from set_ import FastaSet
+    sys.stderr.write('Could not find pysam. Reading entire file instead.\n')
+    Fastafile = lambda fname: FastaSet(FastaEntryIterator(fname))
 
 
 class IndexedFastaFile(object):

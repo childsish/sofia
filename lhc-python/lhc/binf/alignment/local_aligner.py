@@ -2,7 +2,7 @@ from local_alignment import LocalAlignment
 from scoring_matrix import ScoringMatrix
 
 class LocalAligner(object):
-    def __init__(self, scoring_matrix=None):
+    def __init__(self, scoring_matrix=None, gap_penalty=-1):
         if scoring_matrix is None:
             import numpy as np
             alphabet = 'acgtn_'
@@ -11,8 +11,8 @@ class LocalAligner(object):
                 mat[i, i] = 1
                 mat[i, 4] = 0
                 mat[4, i] = 0
-                mat[i, 5] = -13
-                mat[5, i] = -13
+                mat[i, 5] = gap_penalty
+                mat[5, i] = gap_penalty
             self.scoring_matrix = ScoringMatrix(alphabet, mat)
 
     def align(self, s1, s2):

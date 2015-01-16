@@ -71,8 +71,8 @@ def main():
     join2 = Join([Range(x2[i], y2[i]) for i in xrange(len(x1))])
     
     print seq
-    print join1.getSubSeq(seq)
-    print join2.getSubSeq(seq)
+    print join1.get_sub_seq(seq)
+    print join2.get_sub_seq(seq)
 
 if __name__ == '__main__':
     import sys

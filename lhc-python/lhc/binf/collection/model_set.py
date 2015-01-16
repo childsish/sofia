@@ -64,7 +64,7 @@ class ModelSet(object):
                 chr = "{chr}"'''
         
         qry = []
-        bins = self.binner.getOverlappingBins(ivl)
+        bins = self.binner.get_overlapping_bins(ivl)
         for bin in bins:
             if bin[0] == bin[1]:
                 qry.append(qry1.format(chr=ivl.chr, bin=bin[0]))
@@ -115,7 +115,7 @@ class ModelSet(object):
                 'parent': None,
                 'left': counter.next(),
                 'right': None,
-                'bin': self.binner.getBin(gene.ivl)})
+                'bin': self.binner.get_bin(gene.ivl)})
             gene_id = cur.lastrowid
             for transcript_idx, transcript_key in enumerate(gene.transcripts):
                 transcript = gene.transcripts[transcript_key]
@@ -130,7 +130,7 @@ class ModelSet(object):
                     'parent': gene_id,
                     'left': counter.next(),
                     'right': None,
-                    'bin': self.binner.getBin(transcript.ivl)})
+                    'bin': self.binner.get_bin(transcript.ivl)})
                 transcript_id = cur.lastrowid
                 for exon_idx, exon in enumerate(transcript.exons):
                     cur.execute(insert_qry, {
@@ -144,7 +144,7 @@ class ModelSet(object):
                         'parent': transcript_id,
                         'left': counter.next(),
                         'right': counter.next(),
-                        'bin': self.binner.getBin(exon.ivl)})
+                        'bin': self.binner.get_bin(exon.ivl)})
                 cur.execute(update_qry, {'right': counter.next(), 'id': transcript_id})
             cur.execute(update_qry, {'right': counter.next(), 'id': gene_id})
     
