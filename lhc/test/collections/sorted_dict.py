@@ -4,6 +4,10 @@ from lhc.collections import SortedDict
 
 
 class TestSortedDict(unittest.TestCase):
+    def test_init(self):
+        sd = SortedDict([(2, 'a'), (3, 'b'), (1, 'c')])
+
+        self.assertEqual(list(sd.iteritems()), [(1, 'c'), (2, 'a'), (3, 'b')])
 
     def test_setGet(self):
         sd = SortedDict()

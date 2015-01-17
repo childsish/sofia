@@ -13,7 +13,7 @@ class SortedDict(object):
             self.keys = []
             self.values = []
         else:
-            self.key, self.values = izip(*sorted(iterable))
+            self.keys, self.values = [list(r) for r in izip(*sorted(iterable))]
     
     def __str__(self):
         return '{%s}' % ', '.join(['%s:%s' % entry for entry in self.iteritems()])
