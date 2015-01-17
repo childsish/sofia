@@ -4,7 +4,7 @@ import pysam
 from collections import defaultdict
 from binf.genomic_coordinate import Interval
 from binf.gene_model import Gene, Transcript, Exon
-from iterator import GtfEntityIterator
+from iterator import GtfLineIterator, GtfEntityIterator
 
 
 class IndexedGtfFile(object):
@@ -45,15 +45,11 @@ class IndexedGtfFile(object):
         return [self._complete_gene(gene) for gene in genes]
 
     def _get_gene_intervals_in_interval(self, chr, start, stop):
-        idx = self.ivl_index
-        lines = [GtfEntityIterator._parse_line(line) for line in idx.fetch(chr, start, stop)]
-        return [(attr['gene_name'], ivl.start, ivl.stop) for type, ivl, attr in lines if type == 'gene']
-        # TODO: Find out why this was removed
-        #genes = [Gene(attr['gene_name'], ivl) for type, ivl, attr in lines if type == 'gene']
-        #return genes
+        lines = [GtfLineIterator.parse(line) for line in self.ivl_index.fetch(chr, start, stop)]
+        return [line for line in lines if line.type == 'gene']
 
     def _complete_gene(self, gene):
-        lines = self.ivl_index.fetch(gene.ivl.chr, gene.ivl.start, gene.ivl.stop)
+        lines = self.ivl_index.fetch(gene.chr, gene.start, gene.stop)
         transcript_exons = defaultdict(list)
         for line in lines:
             type_, ivl, attr = GtfEntityIterator._parse_line(line)

@@ -21,7 +21,11 @@ class GtfLineIterator(object):
         for line in fhndl:
             if line.startswith('#'):
                 continue
-            yield GtfLine(*line.strip().split('\t'))
+            yield self.parse(line)
+    
+    @staticmethod
+    def parse(line):
+        return GtfLine(*line.strip().split('\t'))
 
     def close(self):
         if hasattr(self, 'fhndl'):
@@ -32,17 +36,6 @@ class GtfLineIterator(object):
 
 
 class GtfEntityIterator(object):
-    
-    CHR = 0
-    SRC = 1
-    TYPE = 2
-    START = 3
-    STOP = 4
-    SCORE = 5
-    STRAND = 6
-    PHASE = 7
-    ATTR = 8
-    
     def __init__(self, fname):
         self.fname = fname
         self.it = GtfLineIterator(fname)
