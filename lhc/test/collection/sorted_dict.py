@@ -1,6 +1,7 @@
 import unittest
 
-from lhc.collection.sorted_dict import SortedDict
+from lhc.collections.sorted_dict import SortedDict
+
 
 class TestSortedDict(unittest.TestCase):
 
@@ -20,7 +21,7 @@ class TestSortedDict(unittest.TestCase):
         sd[3] = 'c'
         sd[2] = 'a'
         
-        self.assertEquals(sd.popHighest(), (3, 'c'))
+        self.assertEquals(sd.pop_highest(), (3, 'c'))
     
     def test_popLowest(self):
         sd = SortedDict()
@@ -28,7 +29,7 @@ class TestSortedDict(unittest.TestCase):
         sd[3] = 'c'
         sd[2] = 'a'
         
-        self.assertEquals(sd.popLowest(), (1, 'b'))
+        self.assertEquals(sd.pop_lowest(), (1, 'b'))
     
     def test_iterKeys(self):
         sd = SortedDict()
