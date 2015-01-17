@@ -3,11 +3,9 @@
 import argparse
 import os
 import sys
-libpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sofia_')
-sys.path.append(libpath)
-if not any(os.path.basename(path) == 'lhc-python' for path in sys.path):
-    libpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lhc-python')
-    sys.path.append(libpath)
+program_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(program_dir, 'sofia_'))
+sys.path.insert(0, os.path.join(program_dir, 'lhc-python'))
 
 
 from sofia_.subcommands import aggregate, info
