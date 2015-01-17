@@ -1,6 +1,6 @@
 import unittest
 
-from lhc.collections.sorted_dict import SortedDict
+from lhc.collections import SortedDict
 
 
 class TestSortedDict(unittest.TestCase):
