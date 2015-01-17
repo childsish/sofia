@@ -50,8 +50,7 @@ class SortedDict(object):
     def get(self, key, default):
         idx = bisect_left(self.keys, key)
         if idx >= len(self.keys) or self.keys[idx] != key:
-            self.keys.insert(idx, key)
-            self.values.insert(idx, default)
+            return default
         return self.values[idx]
     
     def iterkeys(self):
