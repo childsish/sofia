@@ -2,7 +2,6 @@ import string
 
 from functools import total_ordering
 from lhc.interval import Interval as BaseInterval
-from lhc.tools import enum
 
 @total_ordering
 class Position(object):
