@@ -9,7 +9,7 @@ from iterator import FastqEntryIterator
 from lhc.argparse import OpenReadableFile
 from lhc.binf.sequence import revcmp
 from lhc.file_format.fasta import FastaEntryIterator
-from lhc.string import hamming
+from lhc.misc.string import hamming
 
 
 def split(args):
