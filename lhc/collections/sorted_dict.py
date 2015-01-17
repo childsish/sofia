@@ -48,10 +48,11 @@ class SortedDict(object):
         del self.values[idx]
     
     def get(self, key, default):
-        idx = bisect_left(self.keys, key)
-        if idx >= len(self.keys) or self.keys[idx] != key:
-            return default
-        return self.values[idx]
+        try:
+            return self[key]
+        except KeyError:
+            pass
+        return default
     
     def iterkeys(self):
         return iter(self.keys)
