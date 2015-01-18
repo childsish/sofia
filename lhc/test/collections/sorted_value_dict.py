@@ -43,5 +43,12 @@ class TestSortedValueDict(unittest.TestCase):
 
         self.assertEqual(svd.pop_highest(), (3, [3, 2]))
 
+    def test_mutate_value_member(self):
+        svd = SortedValueDict([(1, [[2], 3]), (2, [[2], 4]), (3, [[1], 2])])
+
+        svd[3][0][0] = 3
+
+        self.assertEqual(svd.pop_highest(), (3, [[3], 2]))
+
 if __name__ == "__main__":
     unittest.main()

@@ -83,21 +83,26 @@ class SortedValue(object):
         super(SortedValue, self).__setattr__('sorted_dict', sorted_dict)
 
     def __getitem__(self, key):
-        return SortedValue(self.value[key], self.sorted_dict)
+        return SortedValue(self.key, self.value[key], self.sorted_dict)
 
     def __setitem__(self, key, value):
         old_value = self.value[key]
         self.value[key] = value
         if cmp(old_value, value) != 0:
+            old_value = self.sorted_dict[self.key].get_value()
             del self.sorted_dict[self.key]
-            self.sorted_dict[self.key] = self.value
+            self.sorted_dict[self.key] = old_value
 
     def __getattr__(self, key):
-        return SortedValue(getattr(self.value, key), self.sorted_dict)
+        return SortedValue(self.key, getattr(self.value, key), self.sorted_dict)
 
     def __setattr__(self, key, value):
         old_value = getattr(self.value, key)
         setattr(self.value, key, value)
         if cmp(old_value, value) != 0:
+            old_value = self.sorted_dict[self.key].get_value()
             del self.sorted_dict[self.key]
-            self.sorted_dict[self.key] = self.value
+            self.sorted_dict[self.key] = old_value
+
+    def get_value(self):
+        return self.value
