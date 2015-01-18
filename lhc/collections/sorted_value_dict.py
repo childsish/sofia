@@ -3,6 +3,17 @@ import itertools
 
 
 class SortedValueDict(object):
+    """
+    A dictionary sorted on the values
+
+    **Warning!** This container can be dangerous to use. As dictionary values can be mutable, the container wraps all
+    returned values in a ValueWrapper, which in turn will wrap any accessed members. This allows the ValueWrapper to
+    update the parent dict when the value changes, but in turn means that any value you get from the dictionary nor any
+    of the values members, are not exactly what you expect. The ValueWrapper provides a function "get_value" that
+    returns the original value.
+
+    Be absolutely certain that you need this container before using it.
+    """
     def __init__(self, iterator=None, key=None):
         def default_key(k):
             return k
@@ -30,7 +41,7 @@ class SortedValueDict(object):
         return key in self.key_to_index
 
     def __getitem__(self, key):
-        return SortedValue(key, self.values[self.key_to_index[key]], self)
+        return ValueWrapper(key, self.values[self.key_to_index[key]], self)
 
     def __setitem__(self, key, value):
         if key in self.key_to_index:
@@ -55,7 +66,7 @@ class SortedValueDict(object):
 
     def get(self, key, default):
         try:
-            return SortedValue(key, self[key], self)
+            return ValueWrapper(key, self[key], self)
         except KeyError:
             pass
         return default
@@ -81,15 +92,21 @@ class SortedValueDict(object):
         del self.key_to_index[key]
         return key, value
 
+    def peek_highest(self):
+        return self.index_to_key[-1], self.values[-1]
 
-class SortedValue(object):
+    def peek_lowest(self):
+        return self.index_to_key[0], self.values[0]
+
+
+class ValueWrapper(object):
     def __init__(self, key, value, sorted_dict):
-        super(SortedValue, self).__setattr__('key', key)
-        super(SortedValue, self).__setattr__('value', value)
-        super(SortedValue, self).__setattr__('sorted_dict', sorted_dict)
+        super(ValueWrapper, self).__setattr__('key', key)
+        super(ValueWrapper, self).__setattr__('value', value)
+        super(ValueWrapper, self).__setattr__('sorted_dict', sorted_dict)
 
     def __getitem__(self, key):
-        return SortedValue(self.key, self.value[key], self.sorted_dict)
+        return ValueWrapper(self.key, self.value[key], self.sorted_dict)
 
     def __setitem__(self, key, value):
         old_value = self.value[key]
@@ -100,7 +117,7 @@ class SortedValue(object):
             self.sorted_dict[self.key] = old_value
 
     def __getattr__(self, key):
-        return SortedValue(self.key, getattr(self.value, key), self.sorted_dict)
+        return ValueWrapper(self.key, getattr(self.value, key), self.sorted_dict)
 
     def __setattr__(self, key, value):
         old_value = getattr(self.value, key)
