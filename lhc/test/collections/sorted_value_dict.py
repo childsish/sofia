@@ -50,5 +50,17 @@ class TestSortedValueDict(unittest.TestCase):
 
         self.assertEqual(svd.pop_highest(), (3, [[3], 2]))
 
+    def test_key(self):
+        svd = SortedValueDict([(1, [2, 3]), (2, [2, 4]), (3, [1, 2])], key=lambda x: x[1])
+
+        self.assertEqual(svd.pop_highest(), (2, [2, 4]))
+
+    def test_key_with_mutate(self):
+        svd = SortedValueDict([(1, [2, 3]), (2, [2, 4]), (3, [1, 2])], key=lambda x: x[1])
+
+        svd[3][1] = 5
+
+        self.assertEqual(svd.pop_highest(), (3, [1, 5]))
+
 if __name__ == "__main__":
     unittest.main()

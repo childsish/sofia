@@ -3,14 +3,19 @@ import itertools
 
 
 class SortedValueDict(object):
-    def __init__(self, iterator=None):
+    def __init__(self, iterator=None, key=None):
+        def default_key(k):
+            return k
+
+        self.key = default_key if key is None else key
         if iterator is None:
-            self.key_to_index = {}
-            self.index_to_key = []
             self.values = []
+            self.index_to_key = []
         else:
-            self.values, self.index_to_key = [list(r) for r in itertools.izip(*sorted((v, k) for k, v in iterator))]
-            self.key_to_index = dict((k, i) for i, k in enumerate(self.index_to_key))
+            sorted_items = sorted(((v, k) for k, v in iterator), key=lambda item: self.key(item[0]))
+            self.values, self.index_to_key = [list(r) for r in itertools.izip(*sorted_items)]
+        self.keys = [self.key(v) for v in self.values]
+        self.key_to_index = dict((k, i) for i, k in enumerate(self.index_to_key))
 
     def __str__(self):
         return '{%s}' % ', '.join(['%s:%s' % entry for entry in self.iteritems()])
@@ -36,10 +41,11 @@ class SortedValueDict(object):
             del self.key_to_index[key]
             del self.index_to_key[idx]
             del self.values[idx]
-        idx = bisect.bisect_left(self.values, value)
+        idx = bisect.bisect_left(self.keys, self.key(value))
         self.key_to_index[key] = idx
         self.index_to_key.insert(idx, key)
         self.values.insert(idx, value)
+        self.keys.insert(idx, self.key(value))
 
     def __delitem__(self, key):
         idx = self.key_to_index[key]
