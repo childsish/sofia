@@ -71,6 +71,11 @@ class SortedValueDict(object):
             pass
         return default
 
+    def refresh(self, key):
+        value = self[key].get_value()
+        del self[key]
+        self[key] = value
+
     def iterkeys(self):
         return iter(self.index_to_key)
 
@@ -105,6 +110,11 @@ class ValueWrapper(object):
         super(ValueWrapper, self).__setattr__('value', value)
         super(ValueWrapper, self).__setattr__('sorted_dict', sorted_dict)
 
+    def __call__(self, *args, **kwargs):
+        res = self.value(*args, **kwargs)
+        self.sorted_dict.refresh(self.key)
+        return ValueWrapper(self.key, res, self.sorted_dict)
+
     def __getitem__(self, key):
         return ValueWrapper(self.key, self.value[key], self.sorted_dict)
 
@@ -112,9 +122,7 @@ class ValueWrapper(object):
         old_value = self.value[key]
         self.value[key] = value
         if cmp(old_value, value) != 0:
-            old_value = self.sorted_dict[self.key].get_value()
-            del self.sorted_dict[self.key]
-            self.sorted_dict[self.key] = old_value
+            self.sorted_dict.refresh(self.key)
 
     def __getattr__(self, key):
         return ValueWrapper(self.key, getattr(self.value, key), self.sorted_dict)
@@ -123,9 +131,7 @@ class ValueWrapper(object):
         old_value = getattr(self.value, key)
         setattr(self.value, key, value)
         if cmp(old_value, value) != 0:
-            old_value = self.sorted_dict[self.key].get_value()
-            del self.sorted_dict[self.key]
-            self.sorted_dict[self.key] = old_value
+            self.sorted_dict.refresh(self.key)
 
     def get_value(self):
         return self.value
