@@ -6,7 +6,7 @@ from gtf_.set_ import GtfSet
 from gtf_.iterator import GtfEntityIterator
 
 
-def iter_entries(fname):
+def iter_gtf(fname):
     """ Convenience function """
     return GtfEntityIterator(fname)
 
@@ -30,8 +30,7 @@ def index(fname):
 
 
 def main():
-    parser = get_parser()
-    args = parser.parse_args()
+    args = get_parser().parse_args()
     args.func(args)
 
 
@@ -49,4 +48,3 @@ def get_parser():
 if __name__ == '__main__':
     import sys
     sys.exit(main())
-
