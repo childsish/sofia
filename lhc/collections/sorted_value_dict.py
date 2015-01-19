@@ -26,7 +26,7 @@ class SortedValueDict(object):
             sorted_items = sorted(((v, k) for k, v in iterator), key=lambda item: self.key(item[0]))
             self.values, self.index_to_key = [list(r) for r in itertools.izip(*sorted_items)]
         self.keys = [self.key(v) for v in self.values]
-        self.key_to_index = dict((k, i) for i, k in enumerate(self.index_to_key))
+        self.key_to_index = {k: i for i, k in enumerate(self.index_to_key)}
 
     def __str__(self):
         return '{%s}' % ', '.join(['%s:%s' % entry for entry in self.iteritems()])
@@ -95,6 +95,7 @@ class SortedValueDict(object):
         key = self.index_to_key.pop(0)
         value = self.values.pop(0)
         del self.key_to_index[key]
+        self.key_to_index = {k: i for i, k in enumerate(self.index_to_key)}
         return key, value
 
     def peek_highest(self):

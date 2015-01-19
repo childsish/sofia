@@ -28,6 +28,7 @@ class TestSortedValueDict(unittest.TestCase):
         svd = SortedValueDict([(1, 'b'), (2, 'c'), (3, 'a')])
         
         self.assertEquals((3, 'a'), svd.pop_lowest())
+        self.assertEquals('c', svd[2].get_value())
 
     def test_update_value(self):
         svd = SortedValueDict([(1, 'b'), (2, 'c'), (3, 'a')])
