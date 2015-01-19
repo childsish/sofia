@@ -134,5 +134,8 @@ class ValueWrapper(object):
         if cmp(old_value, value) != 0:
             self.sorted_dict.refresh(self.key)
 
+    def __eq__(self, other):
+        return self.value == other
+
     def get_value(self):
         return self.value
