@@ -75,53 +75,48 @@ class GtfEntityIterator(object):
         both original gtf files (ordered by gene) and gtf files ordered by interval for indexing.
         :return: GeneModel
         """
+        passed_lowest = False
         for line in self.it:
-            gene = None
-            lowest_gene_name, (lowest_interval, lowest_lines) = self.genes.peek_lowest()
-            if line.chr != lowest_interval.chr or line.start > lowest_interval.stop:
-                self.genes.pop_lowest()
-                gene = self.parse_gene(lowest_gene_name, lowest_interval, lowest_lines)
+            try:
+                lowest_gene_name, (lowest_interval, lowest_lines) = self.genes.peek_lowest()
+                passed_lowest = line.chr != lowest_interval.chr or line.start > lowest_interval.stop
+            except IndexError:
+                pass
 
             gene_name = line.attr['gene_name']
             if gene_name not in self.genes:
-                interval = Interval(line.chr, line.start, line.stop, line.strand)
-                lines = [line]
+                self.genes[gene_name] = (Interval(line.chr, line.start, line.stop, line.strand), [line])
             else:
                 interval, lines = self.genes[gene_name]
-                interval.union(Interval(line.chr, line.start, line.stop, line.strand))
-                lines.append(line)
-                del self.genes[gene_name]
-            self.genes[gene_name] = (interval, lines)
+                interval.get_value().union(Interval(line.chr, line.start, line.stop, line.strand))
+                lines.get_value().append(line)
 
-            if gene is not None:
-                return gene
-        lowest_gene_name, (lowest_interval, lowest_lines) = self.genes.pop_lowest()
-        return self.parse_gene(lowest_gene_name, lowest_interval, lowest_lines)
+            if passed_lowest:
+                break
+        try:
+            lowest_gene_name, (lowest_interval, lowest_lines) = self.genes.pop_lowest()
+        except IndexError:
+            raise StopIteration
+        return self.parse_gene(lowest_lines)
+
+    def close(self):
+        self.it.close()
 
     @staticmethod
-    def parse_gene(name, interval, lines):
-        gene = Gene(name, interval)
-
-        gene_name = line.attr['gene_name']
-        if gene_name not in self.genes:
-            self.genes[gene_name] = (Interval(line.chr, line.start, line.stop), [])
-
-        if line.type == 'gene':
-            gene = Gene(line.attr['gene_name'])
-            break
-        for line in self.it:
-            ivl = Interval(line.chr, int(line.start) - 1, int(line.stop), line.strand)
-            attr = self._parse_attributes(line.attr)
+    def parse_gene(lines):
+        gene = Gene()
+        for line in lines:
+            interval = Interval(line.chr, line.start, line.stop, line.strand)
             if line.type == 'gene':
-                gene = Gene(attr(['gene_name']))
+                gene.name = line.attr['gene_name']
+                gene.ivl = interval
             elif line.type == 'transcript':
-                transcript_name = attr['transcript_name']
-                gene.transcripts[transcript_name] = Transcript(transcript_name, ivl)
+                transcript_name = line.attr['transcript_name']
+                gene.transcripts[transcript_name] = Transcript(transcript_name, interval)
             elif line.type == 'CDS':
-                transcript_name = attr['transcript_name']
-                gene.transcripts[transcript_name].exons.append(Exon(ivl, 'CDS'))
+                transcript_name = line.attr['transcript_name']
+                gene.transcripts[transcript_name].exons.append(Exon(interval, 'CDS'))
         return gene
 
     def __del__(self):
-        if hasattr(self, 'it'):
-            self.it.close()
+        self.close()
