@@ -103,7 +103,7 @@ class GtfEntityIterator(object):
     @staticmethod
     def parse_gene(lines):
         gene = Gene()
-        for line in lines:
+        for line in sorted(lines, key=lambda line: (line.start, -line.stop)):
             interval = Interval(line.chr, line.start, line.stop, line.strand)
             if line.type == 'gene':
                 gene.name = line.attr['gene_name']
