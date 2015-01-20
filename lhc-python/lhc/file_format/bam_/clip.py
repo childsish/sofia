@@ -1,7 +1,7 @@
 import argparse
 import pysam
 
-from lhc.file_format.bed import BedEntryIterator, BedSet
+from lhc.file_format.bed import BedLineIterator, BedSet
 import sys
 
 IN_READ_OPERATIONS = (1, 0, 1, 0, 0, 0, 0, 0, 0)  # match, delete
@@ -10,7 +10,7 @@ IN_READ_OPERATIONS = (1, 0, 1, 0, 0, 0, 0, 0, 0)  # match, delete
 def clip(args):
     in_fhndl = pysam.AlignmentFile(args.input)
     out_fhndl = pysam.AlignmentFile(args.output, 'wb', template=in_fhndl)
-    intervals = BedSet(BedEntryIterator(args.bed))
+    intervals = BedSet(BedLineIterator(args.bed))
     for read in in_fhndl:
         if read.reference_id == -1:
             continue
