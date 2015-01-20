@@ -1,6 +1,7 @@
 import unittest
 
-from lhc.collection.augmented_tree import AugmentedTree
+from lhc.collections.augmented_tree import AugmentedTree
+
 
 class TestAugmentedTree(unittest.TestCase):
     def test_init(self):
