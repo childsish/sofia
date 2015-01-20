@@ -7,6 +7,7 @@ from subprocess import Popen, PIPE
 from lhc.binf.genomic_coordinate import Interval
 from lhc.file_format.bed_.index import IndexedBedFile
 
+
 class TestBed(unittest.TestCase):
     def setUp(self):
         fhndl, self.fname = tempfile.mkstemp()

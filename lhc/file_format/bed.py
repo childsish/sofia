@@ -1,8 +1,8 @@
 from bed_.iterator import BedEntryIterator
-from bed_.set_ import BedSet
-from bed_.index import IndexedBedFile
 
 
-def iter_entries(fname):
-    """ Convenience function """
-    return BedEntryIterator(fname)
+def iter_bed(fname):
+    it = BedEntryIterator(fname)
+    for entry in it:
+        yield entry
+    it.close()
