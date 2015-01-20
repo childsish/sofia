@@ -10,10 +10,10 @@ from lhc.argparse.open_readable_file import OpenReadableFile
 class TestOpenReadableFile(unittest.TestCase):
     def test_default(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument('-o', '--output', action=OpenReadableFile, default=sys.stdout)
+        parser.add_argument('-i', '--input', action=OpenReadableFile, default=sys.stdin)
         args = parser.parse_args([])
-        self.assertEquals(file, type(args.output))
-        self.assertEquals('<stdin>', args.output.name)
+        self.assertEquals(file, type(args.input))
+        self.assertEquals('<stdin>', args.input.name)
 
     def test_provided(self):
         fhndl, fname = tempfile.mkstemp()

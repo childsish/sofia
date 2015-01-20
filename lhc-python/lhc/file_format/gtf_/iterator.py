@@ -5,6 +5,7 @@ from collections import namedtuple
 from lhc.binf.gene_model import Gene, Transcript, Exon
 from lhc.binf.genomic_coordinate import Interval
 from lhc.collections import SortedValueDict
+from lhc.filetools.flexible_opener import open_flexibly
 
 
 GtfLine = namedtuple('GtfLine', ('chr', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attr'))
@@ -12,10 +13,7 @@ GtfLine = namedtuple('GtfLine', ('chr', 'source', 'type', 'start', 'stop', 'scor
 
 class GtfLineIterator(object):
     def __init__(self, fname):
-        self.fname = fname
-        self.fhndl = bz2.BZ2File(fname) if fname.endswith('.bz2') else\
-            gzip.open(fname) if fname.endswith('.gz') else\
-            open(fname)
+        self.fname, self.fhndl = open_flexibly(fname)
         self.hdr = self.parse_header(self.fhndl)
 
     def __del__(self):
