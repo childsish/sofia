@@ -2,7 +2,7 @@ import cPickle
 import os
 
 from collections import namedtuple
-from lhc.file_format.entry_set import EntrySet
+from lhc.io.entry_set import EntrySet
 from lhc.indices.exact_key import ExactKeyIndex
 
 Association = namedtuple('Association', ('chr', 'pos', 'ref', 'alt', 'n', 'f', 'beta', 'se', 'stat', 'p'))

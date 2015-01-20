@@ -4,7 +4,7 @@ import pysam
 
 from iterator import GtfLineIterator, GtfEntityIterator
 from lhc.argparse import OpenReadableFile, OpenWritableFile
-from lhc.file_format.bed import iter_bed
+from lhc.io.bed import iter_bed
 
 
 class IndexedGtfFile(object):
@@ -16,7 +16,7 @@ class IndexedGtfFile(object):
         self.ivl_index = pysam.Tabixfile(self.fname)
 
         if not os.path.exists('{}.lci'.format(self.fname)):
-            raise ValueError('File missing key index. Try: python -m lhc.file_format.gtf index <FILENAME>')
+            raise ValueError('File missing key index. Try: python -m lhc.io.gtf index <FILENAME>')
         self.key_index = {entry.name: entry.ivl for entry in iter_bed('{}.lci'.format(self.fname))}
 
     def __getitem__(self, key):

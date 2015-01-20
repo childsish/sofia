@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from lhc.tool import combinations_with_replacement
-from lhc.file_format.fasta import iterFasta
+from lhc.io.fasta import iterFasta
 
 class CodonUsageTable(object):
     def __init__(self):

@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from lhc.file_format.gtf_.iterator import GtfLineIterator, GtfEntityIterator
+from lhc.io.gtf_.iterator import GtfLineIterator, GtfEntityIterator
 
 
 class TestGtf(unittest.TestCase):

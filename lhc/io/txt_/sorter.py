@@ -6,7 +6,7 @@ from functools import partial
 from itertools import chain
 from lhc.argparse import OpenWritableFile, OpenReadableFile
 from lhc.itertools import ChunkedIterator, SortedIteratorMerger
-from lhc.file_format.txt import extract_typed_columns
+from lhc.io.txt import extract_typed_columns
 
 
 def default_key(line):

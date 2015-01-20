@@ -5,9 +5,9 @@ import unittest
 from subprocess import Popen
 
 from lhc.binf.genomic_coordinate import Position, Interval
-from lhc.file_format.fasta_.iterator import FastaEntryIterator
-from lhc.file_format.fasta_.set_ import FastaSet
-from lhc.file_format.fasta_.index import IndexedFastaFile
+from lhc.io.fasta_.iterator import FastaEntryIterator
+from lhc.io.fasta_.set_ import FastaSet
+from lhc.io.fasta_.index import IndexedFastaFile
 
 class TestFasta(unittest.TestCase):
     

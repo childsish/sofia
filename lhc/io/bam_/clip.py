@@ -1,7 +1,7 @@
 import argparse
 import pysam
 
-from lhc.file_format.bed import BedLineIterator, BedSet
+from lhc.io.bed import BedLineIterator, BedSet
 import sys
 
 IN_READ_OPERATIONS = (1, 0, 1, 0, 0, 0, 0, 0, 0)  # match, delete

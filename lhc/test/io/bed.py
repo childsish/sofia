@@ -5,7 +5,7 @@ import unittest
 from subprocess import Popen, PIPE
 
 from lhc.binf.genomic_coordinate import Interval
-from lhc.file_format.bed_.index import IndexedBedFile
+from lhc.io.bed_.index import IndexedBedFile
 
 
 class TestBed(unittest.TestCase):

@@ -4,8 +4,8 @@ import unittest
 
 from subprocess import Popen
 from lhc.binf.genomic_coordinate import Position, Interval
-from lhc.file_format.vcf_.iterator import VcfIterator
-from lhc.file_format.vcf_.set_ import VcfSet
+from lhc.io.vcf_.iterator import VcfIterator
+from lhc.io.vcf_.set_ import VcfSet
 
 class TestVcf(unittest.TestCase):
     

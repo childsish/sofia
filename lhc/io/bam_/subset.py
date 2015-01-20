@@ -10,7 +10,7 @@ def subset(args):
 
 
 def subset_bed(input, output, bed):
-    from lhc.file_format.bed import iter_entries as iter_bed
+    from lhc.io.bed import iter_entries as iter_bed
     visited = set()
     in_fhndl = pysam.AlignmentFile(input)
     out_fhndl = pysam.AlignmentFile(output, 'wb', template=in_fhndl)

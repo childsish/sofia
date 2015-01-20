@@ -3,7 +3,7 @@ import tempfile
 import unittest
 
 from lhc.indices.exact_key import ExactKeyIndex
-from lhc.file_format import csv
+from lhc.io import csv
 
 class TestCsv(unittest.TestCase):
     def setUp(self):

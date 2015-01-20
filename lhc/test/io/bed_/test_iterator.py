@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from lhc.file_format.bed_.iterator import BedEntryIterator
+from lhc.io.bed_.iterator import BedEntryIterator
 
 
 class TestBed(unittest.TestCase):

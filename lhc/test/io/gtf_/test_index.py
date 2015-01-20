@@ -4,9 +4,9 @@ import unittest
 
 from subprocess import Popen
 from lhc.binf.genomic_coordinate import Interval
-from lhc.file_format.gtf_.iterator import GtfEntityIterator
-from lhc.file_format.gtf_.set_ import GtfSet
-from lhc.file_format.gtf_.index import IndexedGtfFile
+from lhc.io.gtf_.iterator import GtfEntityIterator
+from lhc.io.gtf_.set_ import GtfSet
+from lhc.io.gtf_.index import IndexedGtfFile
 
 
 class TestGtf(unittest.TestCase):
@@ -38,7 +38,7 @@ class TestGtf(unittest.TestCase):
         prc.wait()
         prc = Popen(['tabix', '-p', 'gff', '{}.gz'.format(self.fname)])
         prc.wait()
-        prc = Popen(['python', '-m', 'lhc.file_format.gtf', 'index',
+        prc = Popen(['python', '-m', 'lhc.io.gtf', 'index',
                      '-i', '{}.gz'.format(self.fname),
                      '-o', '{}.gz.lci'.format(self.fname)])
         prc.wait()
