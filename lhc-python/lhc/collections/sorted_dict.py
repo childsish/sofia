@@ -1,20 +1,22 @@
 from bisect import bisect_left
 from itertools import izip
 
+
 class SortedDict(object):
-    def __init__(self, iterable=[]):
+    def __init__(self, iterable=None):
         """Create a sorted dictionary
         
-        :param enumerable: the initial key:value pairs to put in the dictionary
-        :type enumerable: list of tuple
+        :param iterable: the initial key:value pairs to put in the dictionary
+        :type iterable: list of tuple
         """
-        self.keys = []
-        self.values = []
-        for item in iterable:
-            self[item[0]] = item[1]
+        if iterable is None:
+            self.keys = []
+            self.values = []
+        else:
+            self.keys, self.values = [list(r) for r in izip(*sorted(iterable))]
     
     def __str__(self):
-        return '{%s}'%', '.join(['%s:%s'%entry for entry in self.iteritems()])
+        return '{%s}' % ', '.join(['%s:%s' % entry for entry in self.iteritems()])
     
     def __iter__(self):
         return self.iterkeys()
@@ -39,15 +41,18 @@ class SortedDict(object):
             self.values.insert(idx, value)
         else:
             self.values[idx] = value
+
+    def __delitem__(self, key):
+        idx = bisect_left(self.keys, key)
+        del self.keys[idx]
+        del self.values[idx]
     
     def get(self, key, default):
-        idx = bisect_left(self.keys, key)
-        if idx >= len(self.keys) or self.keys[idx] != key:
-            self.keys.insert(idx, key)
-            self.values.insert(idx, default)
-        return self.values[idx]
-        
-        
+        try:
+            return self[key]
+        except KeyError:
+            pass
+        return default
     
     def iterkeys(self):
         return iter(self.keys)
@@ -61,9 +66,9 @@ class SortedDict(object):
     def pop_highest(self):
         key = self.keys.pop()
         value = self.values.pop()
-        return (key, value)
+        return key, value
 
     def pop_lowest(self):
         key = self.keys.pop(0)
         value = self.values.pop(0)
-        return (key, value)
+        return key, value
