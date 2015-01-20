@@ -38,7 +38,7 @@ class TestGtf(unittest.TestCase):
         prc.wait()
         prc = Popen(['tabix', '-p', 'gff', '{}.gz'.format(self.fname)])
         prc.wait()
-        prc = Popen(['python', '-m', 'lhc.io.gtf', 'index',
+        prc = Popen(['python', '-m', 'lhc.test_io.gtf', 'index',
                      '-i', '{}.gz'.format(self.fname),
                      '-o', '{}.gz.lci'.format(self.fname)])
         prc.wait()
