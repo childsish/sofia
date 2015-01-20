@@ -3,7 +3,8 @@ import unittest
 import numpy as np
 
 from tempfile import mkstemp
-from lhc.collection import nested_containment_list as ncl
+from lhc.collections import nested_containment_list as ncl
+
 
 class Test(unittest.TestCase):
     def setUp(self):

@@ -1,6 +1,7 @@
 import unittest
 
-from lhc.collection.sorted_set import SortedSet
+from lhc.collections.sorted_set import SortedSet
+
 
 class TestSortedSet(unittest.TestCase):
 

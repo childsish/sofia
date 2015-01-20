@@ -2,14 +2,21 @@ import os
 import tempfile
 import unittest
 
-from subprocess import Popen, PIPE
+from subprocess import Popen
 
 from lhc.binf.genomic_coordinate import Interval
-from lhc.io.bed_.index import IndexedBedFile
+try:
+    from lhc.io.bed_.index import IndexedBedFile
+    import_failed = False
+except ImportError:
+    import_failed = True
 
 
 class TestBed(unittest.TestCase):
     def setUp(self):
+        if import_failed:
+            self.skipTest('Could not import IndexedBedFile.')
+
         fhndl, self.fname = tempfile.mkstemp()
         os.write(fhndl, 'chr1\t100\t200\t_00\t0.0\t+\n')
         os.write(fhndl, 'chr1\t150\t250\t_01\t0.0\t+\n')

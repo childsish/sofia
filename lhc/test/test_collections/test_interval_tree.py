@@ -1,6 +1,6 @@
 import unittest
 
-from lhc.collection.interval_tree import IntervalTree
+from lhc.collections.interval_tree import IntervalTree
 
 class TestIntervalTree(unittest.TestCase):
     def test_init(self):

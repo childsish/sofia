@@ -1,6 +1,7 @@
 import unittest
 
-from lhc.accuracy_measures import *
+from lhc.misc.performance_measures import *
+
 
 class TestAccuracyMeasures(unittest.TestCase):
     def test_specificity(self):

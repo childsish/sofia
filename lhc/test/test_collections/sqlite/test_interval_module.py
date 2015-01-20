@@ -1,7 +1,8 @@
 import unittest
 
 from lhc.binf.genomic_coordinate import Interval
-from lhc.collection.sqlite.interval_module import IntervalModule
+from lhc.collections.sqlite.interval_module import IntervalModule
+
 
 class Test(unittest.TestCase):
     def test_getBin(self):

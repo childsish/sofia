@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 
-from lhc.tools import enum, argsort, window
+from lhc.misc.tools import enum, argsort, window
+
 
 class TestTools(TestCase):
     def test_enum(self):

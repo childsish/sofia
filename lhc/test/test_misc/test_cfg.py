@@ -1,9 +1,18 @@
 import unittest
 
 from datetime import datetime
-from lhc import cfgparse
+try:
+    from lhc.misc import cfgparse
+    import_failed = False
+except ImportError:
+    import_failed = True
+
 
 class TestConfigParser(unittest.TestCase):
+    def setUp(self):
+        if import_failed:
+            self.skipTest('Failed to import lhc.cfgparse')
+
     def test_loadBool(self):
         cfg = cfgparse.loads('A: true\nB: True\nC: TRUE')
         self.assertIn('A', cfg)
