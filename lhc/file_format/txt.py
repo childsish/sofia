@@ -1,21 +1,21 @@
-class TypedColumnExtractor(object):
+import argparse
 
-    TYPES = {
-        'i': int,
-        's': str,
-        'f': float
-    }
+from txt_ import sorter
 
-    def __init__(self, iterator, columns=('s1',), sep='\t', types=None):
-        self.iterator = iterator
-        if types is None:
-            types = self.TYPES
-        self.columns = [(types[c[0]], int(c[1]) - 1) for c in columns]
-        self.sep = sep
 
-    def __iter__(self):
-        sep = self.sep
-        columns = self.columns
-        for line in self.iterator:
-            parts = line.split(sep)
-            yield (t(parts[i]) for t, i in columns)
+def extract_typed_columns(line, columns=((1, str),), sep='\t'):
+    parts = line.rstrip('\r\n').split(sep)
+    return (t(parts[i]) for i, t in columns)
+
+
+def get_parser():
+    return define_parser(argparse.ArgumentParser())
+
+
+def define_parser(parser):
+    subparsers = parser.add_subparsers()
+
+    sort_parser = subparsers.add_parser()
+    sorter.define_parser(sort_parser)
+
+    return parser
