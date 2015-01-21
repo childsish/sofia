@@ -1,4 +1,7 @@
+import bisect
+
 from collections import OrderedDict
+from lhc.collections import SortedList
 
 
 class Gene(object):
@@ -18,7 +21,7 @@ class Transcript(object):
     def __init__(self, name, ivl, exons=None):
         self.name = name
         self.ivl = ivl
-        self.exons = [] if exons is None else exons
+        self.exons = SortedList(exons, key=lambda x: x.ivl.start)
 
     def __str__(self):
         return '{}:{}'.format(self.name, str(self.ivl))
@@ -26,16 +29,21 @@ class Transcript(object):
     def __len__(self):
         return sum(map(len, self.exons))
 
+    def add_exon(self, exon):
+        self.exons.add(exon)
+
     def get_rel_pos(self, pos):
         rel_pos = 0
-        for exon in self.exons:
+        it = iter(self.exons) if self.ivl.strand == '+' else reversed(self.exons)
+        for exon in it:
             if exon.ivl.start <= pos < exon.ivl.stop:
                 return rel_pos + exon.get_rel_pos(pos)
             rel_pos += len(exon)
-        return None
+        raise ValueError('Position outside interval bounds.')
     
     def get_sub_seq(self, seq, fr=None, to=None, valid_types={'CDS', 'UTR5', 'UTR3'}):
-        return ''.join([exon.get_sub_seq(seq, fr, to) for exon in self.exons if exon.type in valid_types])
+        it = iter(self.exons) if self.ivl.strand == '+' else reversed(self.exons)
+        return ''.join([exon.get_sub_seq(seq, fr, to) for exon in it if exon.type in valid_types])
 
 
 class Exon(object):
