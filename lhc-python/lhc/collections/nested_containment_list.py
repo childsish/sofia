@@ -3,7 +3,7 @@ import numpy as np
 from bisect import bisect_left
 from collections import Counter
 from netCDF4 import Dataset
-from lhc.tools import argsort
+from lhc.misc.tools import argsort
 
 class NestedContainmentList(object):
     def __init__(self, root, ivls=None):

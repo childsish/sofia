@@ -15,10 +15,7 @@ class SortedValueDict(object):
     Be absolutely certain that you need this container before using it.
     """
     def __init__(self, iterator=None, key=None):
-        def default_key(k):
-            return k
-
-        self.key = default_key if key is None else key
+        self.key = (lambda x: x) if key is None else key
         if iterator is None:
             self.values = []
             self.index_to_key = []
