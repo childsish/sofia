@@ -113,7 +113,7 @@ class GtfEntityIterator(object):
                 gene.transcripts[transcript_name] = Transcript(transcript_name, interval)
             elif line.type == 'CDS':
                 transcript_name = line.attr['transcript_name']
-                gene.transcripts[transcript_name].exons.append(Exon(interval, 'CDS'))
+                gene.transcripts[transcript_name].add_exon(Exon(interval, 'CDS'))
         return gene
 
     def __del__(self):
