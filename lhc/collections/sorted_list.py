@@ -8,8 +8,12 @@ class SortedList(MutableSequence):
     def __init__(self, iterable=None, key=None, reversed=False):
         self.key = (lambda x: x) if key is None else key
         self.reversed = reversed
-        self.keys, self.values =\
-            [list(r) for r in itertools.izip(*sorted((self.key(value), value) for value in iterable))]
+        if iterable is None:
+            self.keys = []
+            self.values = []
+        else:
+            self.keys, self.values =\
+                [list(r) for r in itertools.izip(*sorted((self.key(value), value) for value in iterable))]
 
     def __str__(self):
         return 'SortedList({})'.format(self.values)
