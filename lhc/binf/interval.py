@@ -10,7 +10,7 @@ def seq_revcmp(seq):
 
 def str_revcmp(seq):
     m = string.maketrans('acgtuwrkysmbhdvnACGTUWRKYSMBHDVN',
-        'tgcaawymrskvdhbnTGCAAWYMRSKVDHBN')
+                         'tgcaawymrskvdhbnTGCAAWYMRSKVDHBN')
     return seq.translate(m)[::-1]
 
 @total_ordering
@@ -42,7 +42,7 @@ class Interval(object):
                 raise TypeError('End must not be defined if start is iterable')
             # Reverse order if on complementary strand
             if strand == '-':
-                fr = fr[::-1]
+                fr = reversed(fr)
             for ivl in fr:
                 if type(ivl) in (list, tuple):
                     iivl = InternalInterval(ivl[0], ivl[1], value, chm,
@@ -91,8 +91,7 @@ class Interval(object):
         if strand == '+':
             return 'interval(%s)'%', '.join(str(ivl) for ivl in self.ivls)
         elif strand == '-':
-            return 'complement(%s)'%', '.join(str(ivl) for
-                ivl in self.ivls[::-1])
+            return 'complement(%s)'%', '.join(str(ivl) for ivl in reversed(self.ivls))
         res = []
         for ivl in self.ivls:
             pre = {'+': 'interval', '-': 'complement'}[ivl.strand]
@@ -162,7 +161,7 @@ class Interval(object):
         
         # Correct for strand
         if self.getStrand() == '-':
-            res = res[::-1]
+            res = reversed(res)
         return Interval(res, value=self.value, strand=self.strand)
     
     def __and__(self, other):

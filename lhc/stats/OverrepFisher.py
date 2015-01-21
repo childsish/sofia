@@ -9,7 +9,7 @@ import numpy
 
 from rpy2.robjects import r
 from rpy2.robjects import numpy2ri
-from MultipleTestCorrection import benjaminiHochberg as correction
+from MultipleTestCorrection import benjamini_hochberg as correction
 #from MultipleTestCorrection import bonferroni as correction
 
 def readAcc2Ann(filename):

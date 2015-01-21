@@ -34,7 +34,7 @@ class LocalAlignment(object):
                 i -= 1
                 j -= 1
         return '%s\n%s\n%s' %\
-            (''.join(a1[::-1]), ''.join(a[::-1]), ''.join(a2[::-1]))
+            (''.join(reversed(a1)), ''.join(reversed(a)), ''.join(reversed(a2)))
     
     @property
     def start(self):

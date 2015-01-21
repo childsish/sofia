@@ -106,11 +106,11 @@ def generate(frq):
             fr = numpy.where(imb == -1)[0] * 4
             nxt = [(j, frq, pth) for j in xrange(fr, fr+4) if frq[j] > 0]
         else:
-            fr = (i%4)*4
+            fr = (i % 4) * 4
             nxt = [(j, frq, pth) for j in xrange(fr, fr+4) if frq[j] > 0]
         
         #random.shuffle(nxt)
-        stk.extend(nxt[::-1])
+        stk.extend(reversed(nxt))
     return res
 
 
