@@ -1,10 +1,10 @@
 {
     "genomic_position": {
-    	"children": ["chromosome_id"],
+    	"children": ["chromosome_id", "chromosome_pos"],
     	"description": "A position on a chromosome."
     },
     "genomic_interval": {
-    	"children": ["chromosome_id"],
+    	"children": ["chromosome_id", "start", "stop"],
     	"description": "An interval on a chromosome."
     },
     "gene_model": {

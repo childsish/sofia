@@ -126,6 +126,8 @@ class Interval(BaseInterval):
     # Position functions
 
     def get_rel_pos(self, pos):
+        if pos < self.start or pos >= self.stop:
+            raise ValueError('Position outside interval bounds.')
         return pos - self.start if self.strand == '+'\
             else self.stop - pos - 1
     

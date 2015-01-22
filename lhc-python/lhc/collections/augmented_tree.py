@@ -1,11 +1,10 @@
 import operator
 
-from lhc import intervaltools
 
 class AugmentedTree(object):
-    """An augmented tree designed to hold intervals.
     """
-    __slots__ = ('ivls', 'stops')
+    An augmented tree designed to hold intervals.
+    """
     
     def __init__(self, ivls):
         """ Initialise the tree with a set of intervals
@@ -27,10 +26,9 @@ class AugmentedTree(object):
         for k, v in state.iteritems():
             setattr(self, k, v)
     
-    def getOverlapping(self, qry):
+    def get_overlapping(self, qry):
         """Find all overlapping intervals
-        
-        Keyword arguments:
+
         :param interval qry: find intervals overlapping this interval
         """
         res = []
@@ -40,7 +38,7 @@ class AugmentedTree(object):
             mid = (hi + lo) / 2
             ivl = self.ivls[mid]
             stop = self.stops[mid]
-            if intervaltools.overlaps(qry, ivl):
+            if qry.overlaps(ivl):
                 res.append(ivl)
             if lo != mid and qry.start < stop:
                 stk.append((lo, mid))

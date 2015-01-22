@@ -68,10 +68,11 @@ class CodingVariation(Action):
         if major_transcript is None:
             return None
         ref = variant.ref
-        coding_position = major_transcript.get_rel_pos(variant.pos)\
-            if major_transcript.ivl.strand == '+'\
-            else major_transcript.get_rel_pos(variant.pos + len(ref) - 1)
-        if coding_position is None:
+        try:
+            coding_position = major_transcript.get_rel_pos(variant.pos)\
+                if major_transcript.ivl.strand == '+'\
+                else major_transcript.get_rel_pos(variant.pos + len(ref) - 1)
+        except ValueError:
             return None
         alt = variant.alt.split(',')
         if major_transcript.ivl.strand == '-':
