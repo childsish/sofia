@@ -19,3 +19,15 @@ class GetIntervalByPosition(Action):
     
     def format(self, genomic_interval):
         return genomic_interval['data'].name
+
+
+class GetBoundsProximity(Action):
+
+    IN = ['genomic_position', 'genomic_interval']
+    OUT = ['bounds_proximity']
+
+    def calculate(self, genomic_position, genomic_interval):
+        if None in (genomic_position, genomic_interval):
+            return None
+        return abs(genomic_position['chromosome_pos'] - genomic_interval['start']),\
+            abs(genomic_interval['stop'] - genomic_position['chromosome_pos']) - 1
