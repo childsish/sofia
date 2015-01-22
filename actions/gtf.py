@@ -1,8 +1,8 @@
 from sofia_.action import Resource, Target
-from lhc.file_format.gtf_.iterator import GtfEntityIterator as GtfIteratorParser
-from lhc.file_format.gtf_.set_ import GtfSet as GtfSetParser
+from lhc.io.gtf_.iterator import GtfEntityIterator as GtfIteratorParser
+from lhc.io.gtf_.set_ import GtfSet as GtfSetParser
 try:
-    from lhc.file_format.gtf_.index import IndexedGtfFile
+    from lhc.io.gtf_.index import IndexedGtfFile
 except ImportError:
     import sys
     sys.stderr.write('Pysam not available. Gtf file access will be slower.\n')

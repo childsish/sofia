@@ -1,8 +1,8 @@
 from sofia_.action import Resource, Target
-from lhc.file_format.bed_.iterator import BedEntryIterator as BedIteratorParser
-from lhc.file_format.bed_.set_ import BedSet as BedSetParser
+from lhc.io.bed_.iterator import BedEntryIterator as BedIteratorParser
+from lhc.io.bed_.set_ import BedSet as BedSetParser
 try:
-    from lhc.file_format.bed_.index import IndexedBedFile
+    from lhc.io.bed_.index import IndexedBedFile
 except ImportError:
     import sys
     sys.stderr.write('Pysam not available. Bed file access will be slower.\n')
