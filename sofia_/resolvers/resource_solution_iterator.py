@@ -21,8 +21,8 @@ class ResourceSolutionIterator(object):
 
     def _get_hits(self, resources):
         action = self.action.action_class
-        if issubclass(action, Target) and action.matches(resources['target']):
-            return [resources['target']]
+        if issubclass(action, Target):
+            return [resources['target']] if action.matches(resources['target']) else []
         res = [resource for resource in resources.itervalues()
                if resource.name != 'target' and action.matches(resource)]
         if hasattr(action, 'DEFAULT'):
