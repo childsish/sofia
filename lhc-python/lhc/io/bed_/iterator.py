@@ -19,14 +19,11 @@ class BedLineIterator(object):
         return self
     
     def next(self):
-        line = self.fhndl.next().rstrip('\r\n')
+        line = self.fhndl.next()
+        self.line_no += 1
         if line == '':
             raise StopIteration()
-        parts = line.split('\t')
-        parts[1] = int(parts[1]) - 1
-        parts[2] = int(parts[2])
-        self.line_no += 1
-        return BedLine(*parts)
+        return self.parse_line(line)
 
     def seek(self, fpos):
         self.fhndl.seek(fpos)
@@ -49,8 +46,18 @@ class BedLineIterator(object):
         fhndl.seek(fpos)
         return hdrs, line_no
 
+    @staticmethod
+    def parse_line(line):
+        parts = line.rstrip('\r\n').split('\t')
+        parts[1] = int(parts[1]) - 1
+        parts[2] = int(parts[2])
+        return BedLine(*parts)
+
 
 class BedEntryIterator(BedLineIterator):
     def next(self):
-        line = super(BedEntryIterator, self).next()
+        return self.parse_entry(super(BedEntryIterator, self).next())
+
+    @staticmethod
+    def parse_entry(line):
         return BedEntry(Interval(line.chr, line.start, line.stop, line.strand), line.name, line.score)

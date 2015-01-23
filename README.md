@@ -30,7 +30,7 @@ https://github.com/childsish/sofia/releases/latest
 3. (optional) Add the installation directory to the PATH environment variable.
 4. To update: `git pull`
 
-`sofia D:\data\tmp.vcf Chromosome Position GeneName AminoAcidVariant VariantType -r D:\data\tmp.gtf D:\data\tmp.fasta`
+`sofia /home/user/tmp/tmp.vcf -e chromosome_id position gene_id amino_acid_variant variant_type -r /home/user/tmp/tmp.gtf /home/user/tmp/tmp.fasta`
 
 Creating a new action
 ---------------------

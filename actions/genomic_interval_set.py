@@ -29,5 +29,6 @@ class GetBoundsProximity(Action):
     def calculate(self, genomic_position, genomic_interval):
         if None in (genomic_position, genomic_interval):
             return None
-        return abs(genomic_position['chromosome_pos'] - genomic_interval['start']),\
-            abs(genomic_interval['stop'] - genomic_position['chromosome_pos']) - 1
+        ds = (abs(genomic_position['chromosome_pos'] - genomic_interval['start']),
+              abs(genomic_interval['stop'] - genomic_position['chromosome_pos']) - 1)
+        return min(ds)
