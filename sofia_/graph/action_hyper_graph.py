@@ -1,4 +1,4 @@
-from hyper_graph import HyperGraph
+from lhc.graph import HyperGraph
 
 
 class ActionHyperGraph(HyperGraph):

@@ -1,7 +1,7 @@
 import json
 
 from sofia_.entity import Entity
-from graph import Graph
+from lhc.graph import Graph
 
 
 class EntityGraph(object):

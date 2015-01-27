@@ -1,4 +1,4 @@
-from graph import Graph
+from lhc.graph import Graph
 
 
 class ActionGraph(object):
