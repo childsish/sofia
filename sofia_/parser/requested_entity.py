@@ -8,7 +8,7 @@ class RequestedEntity(object):
     def __str__(self):
         res = [self.name]
         if len(self.attr) > 0:
-            res.append(','.join('{}={}'.format(e, e) for e in sorted(self.param.iteritems())))
+            res.append(','.join('{}={}'.format(k, ','.join(v)) for k, v in sorted(self.attr.iteritems())))
         return ':'.join(res)
 
     def __eq__(self, other):

@@ -23,7 +23,7 @@ class EntityParser(object):
         -e gene_id:resource=gencode.gtf,gene_id=ensemble
     """
 
-    REGX = re.compile(r'(?P<entity>[^:]+)(?P<attributes>.+)?')
+    REGX = re.compile(r'(?P<entity>[^:]+):?(?P<attributes>.+)?')
     
     def __init__(self, provided_resources):
         """ Initialise the ActionParser with a list of resources that the user
@@ -52,8 +52,11 @@ class EntityParser(object):
         attributes = {} if match.group('attributes') is None else\
             {k: sorted(v.split(',')) for k, v in
              (part.split('=', 1) for part in match.group('attributes').split(':'))}
-        resources = self._get_resource(attributes['resources']) if 'resources' in attributes else\
-            frozenset()
+        if 'resource' in attributes:
+            resources = self._get_resources(attributes['resource'], entity)
+            del attributes['resource']
+        else:
+            resources = frozenset()
         return RequestedEntity(entity, attributes, resources)
     
     def _get_resources(self, resources, entity):
@@ -62,4 +65,4 @@ class EntityParser(object):
         try:
             return frozenset(self.provided_resources[r] for r in resources)
         except KeyError, e:
-            raise KeyError('Resource "{}" requested by action "{}" not provided.'.format(e.args[0], entity))
+            raise KeyError('Resource "{}" requested by entity "{}" not provided.'.format(e.args[0], entity))
