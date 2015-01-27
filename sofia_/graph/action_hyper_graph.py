@@ -3,9 +3,10 @@ from hyper_graph import HyperGraph
 
 class ActionHyperGraph(HyperGraph):
     """ A hyper graph of all the possible action calculation pathways. """
-    def __init__(self):
+    def __init__(self, entity_graph):
         super(ActionHyperGraph, self).__init__()
         self.actions = dict()
+        self.entity_graph = entity_graph
 
     @property
     def entities(self):

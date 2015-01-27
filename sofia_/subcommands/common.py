@@ -20,7 +20,7 @@ def load_action_hypergraph():
     program_dir = get_program_directory()
     available_actions = load_plugins(os.path.join(program_dir, 'actions'), Action)
     entity_graph = load_entity_graph()
-    res = ActionHyperGraph()
+    res = ActionHyperGraph(entity_graph)
     for action in available_actions.itervalues():
         res.register_action(ActionWrapper(action))
     for in_ in set(res.entities):
