@@ -4,7 +4,7 @@
     	"description": "A position on a chromosome."
     },
     "genomic_interval": {
-    	"children": ["chromosome_id", "start", "stop"],
+    	"children": ["chromosome_id", "start", "stop", "interval_name"],
     	"description": "An interval on a chromosome."
     },
     "gene_model": {

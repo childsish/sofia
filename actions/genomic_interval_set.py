@@ -14,6 +14,7 @@ class GetIntervalByPosition(Action):
             'chromosome_id': interval[0].chr,
             'start': interval[0].start,
             'stop': interval[0].stop,
+            'interval_name': interval[0].name,
             'data': interval[0]
         }
     
