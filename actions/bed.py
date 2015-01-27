@@ -21,9 +21,9 @@ class BedIterator(Target):
     def calculate(self):
         interval = self.parser.next()
         return {
-            'chromosome_id': interval.chr,
-            'start': interval.start,
-            'stop': interval.stop,
+            'chromosome_id': interval.ivl.chr,
+            'start': interval.ivl.start,
+            'stop': interval.ivl.stop,
             'data': interval
         }
 
