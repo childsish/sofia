@@ -1,4 +1,4 @@
-from sofia_.action import Resource
+from sofia_.action import Resource, Target
 
 from collections import defaultdict
 
@@ -33,7 +33,7 @@ class GeneGotermMap(Resource):
         fhndl.close()
 
 
-class GeneIdIterator(Resource):
+class GeneIdIterator(Target):
 
     EXT = ['.txt']
     OUT = ['gene_id']
