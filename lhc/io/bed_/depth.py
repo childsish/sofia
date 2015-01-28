@@ -24,8 +24,9 @@ def depth(args):
     for read, interval in itertools.izip(read_iterator, it):
         if interval is not None:
             cnt[interval.name] += 1
-    for k, v in sorted(cnt.iteritems(), key=lambda x: x[1]):
-        args.output.write('{}\t{}\n'.format(k, v))
+    args.output.write('amplicon\tdepth\n')
+    for interval in BedLineIterator(args.bed):
+        args.output.write('{}\t{}\n'.format(interval.name, cnt[interval.name]))
 
 interval_set = None
 alignment_file = None
