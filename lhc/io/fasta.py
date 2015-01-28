@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from itertools import izip, product
+from fasta_ import index, wrap
 from fasta_.iterator import FastaEntryIterator
 from fasta_.set_ import FastaSet
 from lhc.binf.sequence import revcmp as rc
@@ -94,6 +95,9 @@ def get_parser():
     extract_parser.add_argument('-o', '--output')
     extract_parser.set_defaults(func=lambda args: extract(args.input, args.header, args.output))
 
+    index_parser = subparsers.add_parser('index')
+    index.define_parser(index_parser)
+
     product_parser = subparsers.add_parser('product')
     product_parser.add_argument('input1', help='Input fasta (default: stdin).')
     product_parser.add_argument('input2', help='Output fasta (default: stdout).')
@@ -104,6 +108,9 @@ def get_parser():
     revcmp_parser.add_argument('-i', '--input', action=OpenReadableFile, default=sys.stdin)
     revcmp_parser.add_argument('-o', '--output', action=OpenWritableFile, default=sys.stdout)
     revcmp_parser.set_defaults(func=lambda args: revcmp(FastaEntryIterator(args.input), args.output, args.both))
+
+    wrap_parser = subparsers.add_parser('wrap')
+    wrap.define_parser(wrap_parser)
 
     return parser
 

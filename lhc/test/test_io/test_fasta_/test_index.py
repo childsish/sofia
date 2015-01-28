@@ -2,54 +2,52 @@ import os
 import tempfile
 import unittest
 
-from subprocess import Popen
-
+from StringIO import StringIO
 from lhc.binf.genomic_coordinate import Position, Interval
-try:
-    from lhc.io.fasta_.index import IndexedFastaFile
-    import_failed = False
-except ImportError:
-    import_failed = True
+from lhc.io.fasta_.index import IndexedFastaSet, FastaIndexer, index
 
 
 class TestFasta(unittest.TestCase):
     
     def setUp(self):
-        if import_failed:
-            self.skipTest('Could not import IndexedFastaFile.')
-
         fhndl, self.fname = tempfile.mkstemp()
         os.write(fhndl, '>a x\naaaaaaaaaa\nbbbbbbbbbb\ncccccccccc\ndddddddddd\neeeeeeeeee\n>b y\nffffffffff\ngggggggggg\nhhhhh')
         os.close(fhndl)
 
-        prc = Popen(['samtools', 'faidx', '%s'%self.fname])
-        prc.wait()
+        index(self.fname)
+
+    def test_indexer(self):
+        in_string = StringIO('>chr1\naaccggtt\naaccggtt\naa\n>chr2\naaacccgggtttt\naaacccgggtttt\na')
+        indexer = FastaIndexer(in_string)
+
+        self.assertEquals(('chr1', 18, 6, 8, 9), indexer.next())
+        self.assertEquals(('chr2', 35, 33, 8, 9), indexer.next())
+        self.assertRaises(StopIteration, indexer.next)
     
     def test_getItemIndexedByKey(self):
-        parser = IndexedFastaFile(self.fname)
+        parser = IndexedFastaSet(self.fname)
         
-        self.assertEquals(str(parser['a']), 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee')
-        self.assertEquals(str(parser['b']), 'ffffffffffgggggggggghhhhh')
+        self.assertEquals('aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee', str(parser['a']))
+        self.assertEquals('ffffffffffgggggggggghhhhh', str(parser['b']))
     
     def test_getItemIndexedSinglePosition(self):
-        parser = IndexedFastaFile(self.fname)
+        parser = IndexedFastaSet(self.fname)
         
-        self.assertEquals(parser[Position('a', 10)], 'b')
-        self.assertEquals(parser[Position('b', 10)], 'g')
+        self.assertEquals('b', parser.get_position('a', 10))
+        self.assertEquals('g', parser.get_position('b', 10))
     
     def test_getItemIndexedInterval(self):
-        parser = IndexedFastaFile(self.fname)
+        parser = IndexedFastaSet(self.fname)
         
-        self.assertEquals(parser[Interval('a', 10, 20)], 'bbbbbbbbbb')
-        self.assertEquals(parser[Interval('b', 10, 20)], 'gggggggggg')
-        self.assertEquals(parser[Interval('a', 5, 15)], 'aaaaabbbbb')
-        self.assertEquals(parser[Interval('b', 5, 15)], 'fffffggggg')
+        self.assertEquals('bbbbbbbbbb', parser.get_interval('a', 10, 20))
+        self.assertEquals('gggggggggg', parser.get_interval('b', 10, 20))
+        self.assertEquals('aaaaabbbbb', parser.get_interval('a', 5, 15))
+        self.assertEquals('fffffggggg', parser.get_interval('b', 5, 15))
 
     def tearDown(self):
         os.remove(self.fname)
-        os.remove('%s.fai'%self.fname)
+        os.remove('{}.fai'.format(self.fname))
 
 if __name__ == '__main__':
     import sys
     sys.exit(unittest.main())
-
