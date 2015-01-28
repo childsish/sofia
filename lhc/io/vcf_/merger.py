@@ -137,7 +137,9 @@ class VcfMerger(object):
     
     def _update_sorting(self, sorted_tops, entry, idx):
         key = (Chromosome.get_identifier(entry.chr), entry.pos)
-        sorted_tops.get(key, []).append(idx)
+        if key not in sorted_tops:
+            sorted_tops[key] = []
+        sorted_tops[key].append(idx)
     
     def _merge_headers(self, hdrs):
         all_keys = defaultdict(list)
@@ -202,13 +204,19 @@ class VcfMerger(object):
         return read_start, read_stop, truncated
 
 
-def merge(glob_fnames, quality, out, bams):
+def merge(glob_fnames, quality, out, glob_bams):
     fnames = []
     for glob_fname in glob_fnames:
         fname = glob.glob(glob_fname)
         if len(fname) == 0:
             raise ValueError('{} does not match any existing files'.format(glob_fname))
         fnames.extend(fname)
+    bams = []
+    for glob_bam in glob_bams:
+        bam = glob.glob(glob_bam)
+        if len(bam) == 0:
+            raise ValueError('{} does not match any existing files'.format(glob_bam))
+        bams.extend(bam)
     merger = VcfMerger(fnames, quality, bams=bams)
     for key, values in merger.hdrs.iteritems():
         for value in values:
