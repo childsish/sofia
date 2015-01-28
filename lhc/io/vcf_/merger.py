@@ -202,14 +202,13 @@ class VcfMerger(object):
         return read_start, read_stop, truncated
 
 
-def merge(glob_fnames, quality=50.0, out=None, bams=[]):
+def merge(glob_fnames, quality, out, bams):
     fnames = []
     for glob_fname in glob_fnames:
         fname = glob.glob(glob_fname)
         if len(fname) == 0:
             raise ValueError('{} does not match any existing files'.format(glob_fname))
         fnames.extend(fname)
-    out = sys.stdout if out is None else open(out, 'w')
     merger = VcfMerger(fnames, quality, bams=bams)
     for key, values in merger.hdrs.iteritems():
         for value in values:
