@@ -4,11 +4,11 @@ from Bio.bgzf import BgzfWriter
 from lhc.filetools.flexible_opener import open_flexibly
 
 
-def compress(args):
-    fname, fhndl = open_flexibly(args.input)
+def compress(input):
+    fname, fhndl = open_flexibly(input)
     if fname == 'stdin':
         raise ValueError('stdin disabled')
-    writer = BgzfWriter('{}.bgz'.format(args.input))
+    writer = BgzfWriter('{}.bgz'.format(input))
     while True:
         data = fhndl.read(65536)
         writer.write(data)
@@ -30,7 +30,7 @@ def get_parser():
 def define_parser(parser):
     add_arg = parser.add_argument
     add_arg('input')
-    parser.set_defaults(func=compress)
+    parser.set_defaults(func=lambda args: compress(args.input))
     return parser
 
 if __name__ == '__main__':
