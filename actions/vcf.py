@@ -20,14 +20,16 @@ class VcfIterator(Target):
     def calculate(self):
         variant = self.parser.next()
         return {
-            'variant': variant,
             'genomic_position': {
                 'chromosome_id': variant.chr,
                 'chromosome_pos': variant.pos
             },
             'reference_allele': variant.ref,
             'alternate_allele': variant.alt,
-            'variant_quality': variant.qual
+            'variant_quality': variant.qual,
+            'info': variant.info,
+            'samples': variant.samples,
+            'variant': variant
         }
 
 

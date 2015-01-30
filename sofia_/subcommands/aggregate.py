@@ -35,10 +35,15 @@ class Aggregator(object):
             sys.stdout.write('\t'.join(map(str, requested_entities)))
             sys.stdout.write('\n')
 
+            if args.template is None:
+                output_format = '\t'.join('{{{}{}}}'.format(i, entity.getter)
+                                          for i, entity in enumerate(requested_entities))
+            else:
+                output_format = args.format
             it = iter_resource(solution.actions['target'])
             pool = multiprocessing.Pool(args.processes, init_annotation, [resolved_actions, solution])
             for row in pool.imap(get_annotation, it, 100):
-                sys.stdout.write('\t'.join(row))
+                sys.stdout.write(output_format.format(*row))
                 sys.stdout.write('\n')
             pool.close()
             pool.join()
@@ -212,7 +217,6 @@ def get_annotation(target):
     for action in requested_actions:
         try:
             item = solution.actions[action].generate(kwargs, solution.actions)
-            item = '' if item is None else solution.actions[action].format(item)
             row.append(item)
         except Exception:
             import sys
@@ -221,11 +225,6 @@ def get_annotation(target):
             sys.stderr.write('Error processing entry on line {}\n'.format(solution.actions['target'].parser.line_no))
             sys.exit(1)
     return row
-    #try:
-    #    sys.stdout.write('\t'.join(row))
-    #except TypeError:
-    #    sys.stderr.write("A action's format function does not return a string")
-    #    sys.exit(1)
 
 if __name__ == '__main__':
     sys.exit(main())

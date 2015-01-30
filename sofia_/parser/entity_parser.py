@@ -23,7 +23,7 @@ class EntityParser(object):
         -e gene_id:resource=gencode.gtf,gene_id=ensemble
     """
 
-    REGX = re.compile(r'(?P<entity>[^:]+):?(?P<attributes>.+)?')
+    REGX = re.compile(r'(?P<entity>[^[.:]+)(?P<getter>[^:]+)?:?(?P<attributes>.+)?')
     
     def __init__(self, provided_resources):
         """ Initialise the ActionParser with a list of resources that the user
@@ -49,6 +49,7 @@ class EntityParser(object):
         if match is None:
             raise ValueError('Unrecognised entity request.')
         entity = match.group('entity')
+        getter = '' if match.group('getter') is None else match.group('getter')
         attributes = {} if match.group('attributes') is None else\
             {k: sorted(v.split(',')) for k, v in
              (part.split('=', 1) for part in match.group('attributes').split(':'))}
@@ -57,7 +58,7 @@ class EntityParser(object):
             del attributes['resource']
         else:
             resources = frozenset()
-        return RequestedEntity(entity, attributes, resources)
+        return RequestedEntity(entity, getter, attributes, resources)
     
     def _get_resources(self, resources, entity):
         """ Parse a resource from the action string and check if any requested

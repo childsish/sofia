@@ -1,7 +1,8 @@
 class RequestedEntity(object):
     """ An entity that the user requests. """
-    def __init__(self, name, attr={}, resources=frozenset()):
+    def __init__(self, name, getter='', attr={}, resources=frozenset()):
         self.name = name
+        self.getter = getter
         self.resources = resources
         self.attr = attr
 
