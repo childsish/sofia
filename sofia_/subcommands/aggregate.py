@@ -33,7 +33,7 @@ class Aggregator(object):
         else:
             sys.stderr.write('\n    Aggregating information...\n\n')
             if args.header is None:
-                sys.stdout.write('\t'.join('{}{}'.format(entity.name, entity.getter[1:-1]) for entity in requested_entities))
+                sys.stdout.write('\t'.join(entity.header for entity in requested_entities))
             else:
                 sys.stdout.write(args.header)
             sys.stdout.write('\n')
@@ -56,8 +56,8 @@ class Aggregator(object):
         action_graphs = []
         for entity in requested_entities:
             ERROR_MANAGER.reset()
-            sys.stderr.write('    {} - '.format(str(entity)))
-            solution_iterator = EntitySolutionIterator(entity,
+            sys.stderr.write('    {} - '.format(entity.name))
+            solution_iterator = EntitySolutionIterator(entity.name,
                                                        self.hyper_graph,
                                                        provided_resources,
                                                        maps,
