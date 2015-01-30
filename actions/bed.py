@@ -20,7 +20,7 @@ class BedIterator(Target):
             'chromosome_id': interval.ivl.chr,
             'start': interval.ivl.start,
             'stop': interval.ivl.stop,
-            'data': interval
+            'interval_name': interval.name
         }
 
     def format(self, genomic_interval):

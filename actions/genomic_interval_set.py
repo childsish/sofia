@@ -15,7 +15,6 @@ class GetIntervalByPosition(Action):
             'start': interval[0].start,
             'stop': interval[0].stop,
             'interval_name': interval[0].name,
-            'data': interval[0]
         }
     
     def format(self, genomic_interval):

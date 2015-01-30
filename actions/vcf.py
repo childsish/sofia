@@ -1,12 +1,6 @@
 from sofia_.action import Resource, Target
-from lhc.io.vcf_.iterator import VcfEntryIterator as VcfIteratorParser
+from lhc.io.vcf_.iterator import VcfEntryIterator, VcfLineIterator as VcfIteratorParser
 from lhc.io.vcf_.set_ import VcfSet as VcfSetParser
-try:
-    from lhc.io.vcf_.index import IndexedVcfFile
-except ImportError:
-    import sys
-    sys.stderr.write('Pysam not available. Vcf file access will be slower.\n')
-    IndexedVcfFile = lambda fname: VcfSetParser(VcfIteratorParser(fname))
 
 
 class VcfIterator(Target):
@@ -15,7 +9,7 @@ class VcfIterator(Target):
     OUT = ['variant']
     
     def init(self):
-        self.parser = iter(VcfIteratorParser(self.get_filename()))
+        self.parser = iter(VcfEntryIterator(self.get_filename()))
 
     def calculate(self):
         variant = self.parser.next()
@@ -24,12 +18,11 @@ class VcfIterator(Target):
                 'chromosome_id': variant.chr,
                 'chromosome_pos': variant.pos
             },
-            'reference_allele': variant.ref,
-            'alternate_allele': variant.alt,
-            'variant_quality': variant.qual,
+            'ref': variant.ref,
+            'alt': variant.alt,
+            'qual': variant.qual,
             'info': variant.info,
-            'samples': variant.samples,
-            'variant': variant
+            'samples': variant.samples
         }
 
 
@@ -41,4 +34,10 @@ class VcfSet(Resource):
     OUT = ['variant_set']
     
     def init(self):
+        try:
+            from lhc.io.vcf_.index import IndexedVcfFile
+        except ImportError:
+            import sys
+            sys.stderr.write('Pysam not available. Vcf file access will be slower.\n')
+            IndexedVcfFile = lambda fname: VcfSetParser(VcfIteratorParser(fname))
         self.parser = IndexedVcfFile(self.get_filename())

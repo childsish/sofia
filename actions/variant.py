@@ -22,13 +22,12 @@ class GetQuality(Action):
         self.sample = sample
 
     def calculate(self, variant):
-        variant = variant['variant']
         if self.sample is None:
-            return variant.qual
-        elif self.sample not in variant.samples or\
-                'Q' not in variant.samples[self.sample]:
+            return variant['qual']
+        elif self.sample not in variant['samples'] or\
+                'Q' not in variant['samples'][self.sample]:
             return None
-        return variant.samples[self.sample]['Q']
+        return variant['samples'][self.sample]['Q']
 
     def format(self, quality):
         if isinstance(quality, basestring):
@@ -47,10 +46,9 @@ class GetVariantInfo(Action):
     def calculate(self, variant):
         if variant is None:
             return None
-        variant = variant['variant']
         if self.key is None:
-            return variant.info
-        return variant.info[self.key]
+            return variant['info']
+        return variant['info'][self.key]
 
 
 class GetVariantFormat(Action):
@@ -63,16 +61,15 @@ class GetVariantFormat(Action):
         self.key = key
 
     def calculate(self, variant):
-        variant = variant['variant']
         if self.sample is None and self.key is None:
-            return variant.samples
+            return variant['samples']
         elif self.sample is not None and self.key is None:
-            return variant.sample[self.sample]
+            return variant['samples'][self.sample]
         elif self.sample is None and self.key is not None:
-            return {sample: format[self.key] for sample, format in variant.samples.iteritems()}
-        if self.key not in variant.samples[self.sample]:
+            return {sample: format[self.key] for sample, format in variant['samples'].iteritems()}
+        if self.key not in variant['samples'][self.sample]:
             return 'NA'
-        return variant.samples[self.sample][self.key]
+        return variant['samples'][self.sample][self.key]
 
 
 class GetReferenceCount(Action):
@@ -84,12 +81,11 @@ class GetReferenceCount(Action):
         self.sample = sample
 
     def calculate(self, variant):
-        variant = variant['variant']
         if self.sample is None:
-            return {name: self._get_count(data) for name, data in variant.samples.iteritems()}
-        elif self.sample not in variant.samples:
+            return {name: self._get_count(data) for name, data in variant['samples'].iteritems()}
+        elif self.sample not in variant['samples']:
             return None
-        return self._get_count(variant.samples[self.sample])
+        return self._get_count(variant['samples'][self.sample])
     
     def _get_count(self, sample):
         return int(sample['RO']) if 'RO' in sample else 0
@@ -104,13 +100,12 @@ class GetAlternativeCount(Action):
         self.sample = sample
 
     def calculate(self, variant):
-        variant = variant['variant']
         # TODO: Find a solution for two alt alleles
         if self.sample is None:
-            return {name: self._get_count(data) for name, data in variant.samples.iteritems()}
-        elif self.sample not in variant.samples:
+            return {name: self._get_count(data) for name, data in variant['samples'].iteritems()}
+        elif self.sample not in variant['samples']:
             return None
-        return self._get_count(variant.samples[self.sample])
+        return self._get_count(variant['samples'][self.sample])
     
     def _get_count(self, data):
         if 'AO' not in data:
@@ -130,12 +125,11 @@ class GetDepth(Action):
     def calculate(self, variant):
         if variant is None:
             return None
-        variant = variant['variant']
         if self.sample is None:
-            return {sample: self._get_depth(data) for sample, data in variant.samples.iteritems()}
-        elif self.sample not in variant.samples:
+            return {sample: self._get_depth(data) for sample, data in variant['samples'].iteritems()}
+        elif self.sample not in variant['samples']:
             return None
-        return self._get_depth(variant.samples[self.sample])
+        return self._get_depth(variant['samples'][self.sample])
     
     def _get_depth(self, sample):
         if 'DP' in sample:
@@ -157,12 +151,12 @@ class GetVariantFrequency(Action):
     def calculate(self, variant):
         if variant is None:
             return None
-        variant = variant['variant']
         if self.sample is None:
-            return {name: self._get_frequency(sample) for name, sample in variant.samples.iteritems()}
-        elif self.sample not in variant.samples:
+            return {name: self._get_frequency(sample) for name, sample in variant['samples'].iteritems()}
+
+        elif self.sample not in variant['samples']:
             return None
-        return self._get_frequency(variant.samples[self.sample])
+        return self._get_frequency(variant['samples'][self.sample])
     
     def format(self, entity):
         if entity is None:
@@ -191,12 +185,11 @@ class GetVariantCall(Action):
         self.sample = sample
     
     def calculate(self, variant):
-        variant = variant['variant']
         if self.sample is None:
-            return {name: self._get_call(sample) for name, sample in variant.samples.iteritems()}
-        elif self.sample not in variant.samples:
+            return {name: self._get_call(sample) for name, sample in variant['samples'].iteritems()}
+        elif self.sample not in variant['samples']:
             return None
-        return self._get_call(variant.samples[self.sample])
+        return self._get_call(variant['samples'][self.sample])
 
     def _get_call(self, sample):
         if 'GT' not in sample:
