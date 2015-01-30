@@ -17,6 +17,10 @@ class RequestedEntity(object):
         return str(self) == str(other)
     
     def format(self, entity):
-        if isinstance(entity, (set, list)):
-            return ','.join(self.getter.format(e) for e in entity)
-        return '' if entity is None else self.getter.format(entity)
+        try:
+            if isinstance(entity, (set, list)):
+                return ','.join(self.getter.format(e) for e in entity)
+            return '' if entity is None else self.getter.format(entity)
+        except KeyError:
+            pass
+        return ''
