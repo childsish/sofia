@@ -1,7 +1,5 @@
-import bisect
-
 from collections import OrderedDict
-from lhc.collections import SortedList
+from lhc.collections.sorted_list import SortedList
 
 
 class Gene(object):

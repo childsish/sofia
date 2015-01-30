@@ -10,15 +10,20 @@ def cross_product(xs, ys):
     for x, y in product(FastaEntryIterator(xs), FastaEntryIterator(ys)):
         sys.stdout.write('>{}_{}\n{}{}\n'.format(x.hdr, y.hdr, x.seq, y.seq))
 
+
 def revcmp(in_fhndl, out_fhndl, both=False):
     for hdr, seq in in_fhndl:
         if both:
             out_fhndl.write('>{}\n{}\n'.format(hdr, seq))
         out_fhndl.write('>{}_revcmp\n{}\n'.format(hdr, rc(seq)))
 
+
 def iter_entries(fname):
     """ Convenience function """
-    return FastaEntryIterator(fname)
+    it = FastaEntryIterator(fname)
+    for entry in it:
+        yield entry
+    it.close()
 
 
 def compare(a_fname, b_fname):
