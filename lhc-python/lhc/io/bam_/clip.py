@@ -1,7 +1,8 @@
 import argparse
 import pysam
 
-from lhc.io.bed import BedLineIterator, BedSet
+from lhc.io.bed_.iterator import BedLineIterator
+from lhc.io.bed_.set_ import BedSet
 import sys
 
 IN_READ_OPERATIONS = (1, 0, 1, 0, 0, 0, 0, 0, 0)  # match, delete
@@ -78,6 +79,7 @@ def get_parser():
 
 
 def define_parser(parser):
+    import sys
     add_arg = parser.add_argument
     add_arg('-i', '--input', default='-',
             help='The input bam file.')

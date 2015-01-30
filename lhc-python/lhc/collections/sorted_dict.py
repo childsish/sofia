@@ -30,7 +30,7 @@ class SortedDict(object):
     
     def __getitem__(self, key):
         idx = bisect_left(self.keys, key)
-        if self.keys[idx] != key:
+        if idx == len(self.keys) or self.keys[idx] != key:
             raise KeyError(key)
         return self.values[idx]
 
