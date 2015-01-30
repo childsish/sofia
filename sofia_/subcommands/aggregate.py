@@ -32,18 +32,19 @@ class Aggregator(object):
             sys.stdout.write('{}\n\n'.format(solution))
         else:
             sys.stderr.write('\n    Aggregating information...\n\n')
-            sys.stdout.write('\t'.join(map(str, requested_entities)))
-            sys.stdout.write('\n')
-
-            if args.template is None:
-                output_format = '\t'.join('{{{}{}}}'.format(i, entity.getter)
-                                          for i, entity in enumerate(requested_entities))
+            if args.header is None:
+                sys.stdout.write('\t'.join('{}{}'.format(entity.name, entity.getter[1:-1]) for entity in requested_entities))
             else:
-                output_format = args.format
+                sys.stdout.write(args.header)
+            sys.stdout.write('\n')
+        
+            template = '\t'.join(['{}'] * len(requested_entities)) if args.template is None else args.template
+
             it = iter_resource(solution.actions['target'])
             pool = multiprocessing.Pool(args.processes, init_annotation, [resolved_actions, solution])
-            for row in pool.imap(get_annotation, it, 100):
-                sys.stdout.write(output_format.format(*row))
+            for row in pool.imap(get_annotation, it, args.chunk_size):
+                row = [requested_entity.format(entity) for requested_entity, entity in zip(requested_entities, row)]
+                sys.stdout.write(template.format(*row))
                 sys.stdout.write('\n')
             pool.close()
             pool.join()
@@ -122,10 +123,18 @@ def define_parser(parser):
     add_arg = parser.add_argument
     add_arg('input', metavar='TARGET',
             help='the file to annotate')
+    add_arg('-1', '--header',
+            help='if specified use this header instead')
+    add_arg('-c', '--chunk-size', default=100, type=int,
+            help='the number of entries submitted to the process pool as seperate tasks')
     add_arg('-e', '--entities', nargs='+', default=[],
             help='request an entity')
     add_arg('-E', '--entity-list',
             help='a text file with a list of requested entities')
+    add_arg('-g', '--graph', action='store_true',
+            help='do not run framework but print the resolved graph')
+    add_arg('-m', '--maps', nargs='+', default=[],
+            help='maps for converting for entity attributes')
     add_arg('-o', '--output',
             help='direct output to named file (default: stdout)')
     add_arg('-p', '--processes', default=None, type=int,
@@ -136,10 +145,6 @@ def define_parser(parser):
             help='a text file with a list of provided resources')
     add_arg('-t', '--template',
             help='specify a template string for the output')
-    add_arg('-g', '--graph', action='store_true',
-            help='do not run framework but print the resolved graph')
-    add_arg('-m', '--maps', nargs='+', default=[],
-            help='maps for converting for entity attributes')
     parser.set_defaults(func=aggregate)
 
 
