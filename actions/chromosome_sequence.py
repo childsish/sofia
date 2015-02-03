@@ -13,14 +13,13 @@ class GetHomopolymerLength(Action):
         self.max_length = max_length
     
     def calculate(self, variant, chromosome_sequence_set):
-        variant = variant['variant']
         res = []
-        for alt in variant.alt.split(','):
-            indel = len(variant.ref) != len(alt)
-            pos = variant.pos + indel
-            seq = chromosome_sequence_set.get_interval(variant.chr, pos, pos + self.max_length)
+        for alt in variant['alt'].split(','):
+            indel = len(variant['ref']) != len(alt)
+            pos = variant['genomic_position']['chromosome_pos'] + indel
+            seq = chromosome_sequence_set.get_interval(variant['genomic_position']['chromosome_id'], pos, pos + self.max_length)
             
-            ref = variant.ref if len(variant.ref) >= len(alt) else alt
+            ref = variant['ref'] if len(variant['ref']) >= len(alt) else alt
             i = 0
             while i < len(seq) and seq[i] == ref[indel]:
                 i += 1

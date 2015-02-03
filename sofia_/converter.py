@@ -10,6 +10,7 @@ class Converter(object):
         return len(self.path)
 
     def convert(self, entity):
+        # TODO: Track number of KeyErrors
         try:
             it = izip(self.path, self.id_map)
             for path, id_map in it:

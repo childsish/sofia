@@ -1,5 +1,7 @@
 from sofia_.action import Action
 
+from collections import namedtuple
+
 
 class GetPosition(Action):
 
@@ -140,40 +142,35 @@ class GetDepth(Action):
         return None
 
 
+class VariantFrequency(namedtuple('VariantFrequency', ('aos'))):
+    def __str__(self):
+        if isinstance(self.aos, list):
+            return ','.join('{:.3f}'.format(ao) for ao in self.aos)
+        return '{:.3f}'.format(self.aos)
+
+
 class GetVariantFrequency(Action):
 
     IN = ['variant']
     OUT = ['variant_frequency']
 
-    def init(self, sample=None):
-        self.sample = sample
-
     def calculate(self, variant):
         if variant is None:
             return None
-        if self.sample is None:
-            return {name: self._get_frequency(sample) for name, sample in variant['samples'].iteritems()}
-
-        elif self.sample not in variant['samples']:
-            return None
-        return self._get_frequency(variant['samples'][self.sample])
+        return {name: self._get_frequency(sample) for name, sample in variant['samples'].iteritems()}
     
-    def format(self, entity):
-        if entity is None:
-            return ''
-        return '{:.4f}'.format(entity)
-
     def _get_frequency(self, sample):
-        if 'AO' in sample and 'DP' in sample:
-            ao = sum(int(ao) for ao in sample['AO'].split(','))
-            return ao / float(sample['DP'])
-        elif 'AO' in sample and 'RO' in sample:
-            ao = sum(int(ao) for ao in sample['AO'].split(','))
-            den = ao + float(sample['RO'])
-            if den == 0:
-                return 0
-            return ao / (ao + float(sample['RO']))
-        return None
+        if 'AO' not in sample or sample['AO'] == '.':
+            return None
+        aos = [float(ao) for ao in sample['AO'].split(',')]
+        dp = float(sample['DP']) if 'DP' in sample else\
+            sum(aos) + float(sample['RO']) if 'RO' in sample else\
+            None
+        if dp == 0:
+            return 0
+        if dp is None:
+            return None
+        return VariantFrequency([ao / dp for ao in aos])
 
 
 class GetVariantCall(Action):
