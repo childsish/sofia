@@ -6,7 +6,7 @@ import unittest
 from lhc.itertools import SortedIteratorMerger
 
 
-class StreamMergerTest(unittest.TestCase):
+class SortedIteratorMergerTest(unittest.TestCase):
     def setUp(self):
         full_stream = list(string.letters)
         random.shuffle(full_stream)
