@@ -41,6 +41,8 @@ def get_virtual_offset(handle, offset, virtual_offset=0):
                 block_size = struct.unpack("<H", subfield_data)[0] + 1  # uint16_t
         assert x_len == extra_len, (x_len, extra_len)
         assert block_size is not None, "Missing BC, this isn't a BGZF file!"
+        deflate_size = block_size - 1 - extra_len - 19
+        handle.seek(deflate_size, 1)
         handle.read(4)  # expected crc
         expected_size = struct.unpack("<I", handle.read(4))[0]
         if offset < expected_size:
