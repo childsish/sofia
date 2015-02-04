@@ -15,7 +15,7 @@ class FastaEntry(namedtuple('FastaEntry', ('hdr', 'seq'))):
 class FastaEntryIterator(object):
     def __init__(self, fname, hdr_parser=None):
         self.fname, self.fhndl = open_flexibly(fname)
-        self.hdr_parser = (lambda x:x) if hdr_parser is None else hdr_parser
+        self.hdr_parser = (lambda x: x) if hdr_parser is None else hdr_parser
         self.line = self.fhndl.next()
     
     def __iter__(self):
@@ -36,6 +36,9 @@ class FastaEntryIterator(object):
         self.line = None
         return FastaEntry(hdr, ''.join(seq))
 
-    def __del__(self):
+    def close(self):
         if hasattr(self.fhndl, 'close'):
             self.fhndl.close()
+
+    def __del__(self):
+        self.close()

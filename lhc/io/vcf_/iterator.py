@@ -36,14 +36,12 @@ class VcfLineIterator(object):
         return self
 
     def next(self):
-        line = self.fhndl.next().rstrip('\r\n')
-        if line == '':
-            raise StopIteration()
-        parts = line.split('\t', 9)
-        parts[1] = int(parts[1]) - 1
+        line = self.fhndl.next()
         self.line_no += 1
-        return VcfLine(*parts)
-
+        if line == '':
+            raise StopIterator()
+        return self.parse_line(line)
+    
     def close(self):
         if hasattr(self, 'fhndl') and not self.fhndl.closed:
             self.fhndl.close()
@@ -68,9 +66,14 @@ class VcfLineIterator(object):
     def __del__(self):
         self.close()
 
+    @staticmethod
+    def parse_line(line):
+        parts = line.rstrip('\r\n').split('\t', 9)
+        parts[1] = int(parts[1]) - 1
+        return VcfLine(*parts)
+
 
 class VcfEntryIterator(VcfLineIterator):
-    
     def __init__(self, fname):
         super(VcfEntryIterator, self).__init__(fname)
 
