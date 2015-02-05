@@ -1,7 +1,7 @@
 import argparse
 
 from txt_ import sorter
-from txt_ import extract_typed_columns
+
 
 def get_parser():
     return define_parser(argparse.ArgumentParser())

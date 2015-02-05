@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from . import extract_typed_columns
+from column_types import convert_args_to_types, extract_typed_columns
 from functools import partial
 from itertools import chain
 from lhc.argparse import OpenWritableFile, OpenReadableFile
@@ -75,13 +75,8 @@ class Sorter(object):
 
 
 def sort(args):
-    types = {
-        's': str,
-        'f': float,
-        'i': int
-    }
-    columns = [(int(c[0]), types[c[1]]) for c in args.columns]
-    typed_column_extractor = partial(extract_typed_columns, columns=columns, sep=args.separator)
+    column_types = convert_args_to_types(args.columns)
+    typed_column_extractor = partial(extract_typed_columns, columns_types=column_types, sep=args.separator)
     sorter = Sorter(args.input, typed_column_extractor)
     for line in sorter:
         args.output.write(line)
