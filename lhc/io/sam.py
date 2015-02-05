@@ -1,6 +1,6 @@
 import argparse
 
-from bam_ import rename, subset
+from sam_ import clip, filter
 
 
 def main():
@@ -15,11 +15,11 @@ def get_parser():
 def define_parser(parser):
     subparsers = parser.add_subparsers()
 
-    rename_parser = subparsers.add_parser('rename')
-    rename.define_parser(rename_parser)
-
-    subset_parser = subparsers.add_parser('subset')
-    subset.define_parser(subset_parser)
+    clip_parser = subparsers.add_parser('clip')
+    clip.define_parser(clip_parser)
+    
+    filter_parser = subparsers.add_parser('filter')
+    filter.define_parser(filter_parser)
 
     return parser
 
