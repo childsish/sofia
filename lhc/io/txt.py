@@ -1,12 +1,7 @@
 import argparse
 
 from txt_ import sorter
-
-
-def extract_typed_columns(line, columns=((1, str),), sep='\t'):
-    parts = line.rstrip('\r\n').split(sep)
-    return (t(parts[i]) for i, t in columns)
-
+from txt_ import extract_typed_columns
 
 def get_parser():
     return define_parser(argparse.ArgumentParser())
