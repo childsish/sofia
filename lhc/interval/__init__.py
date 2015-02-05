@@ -1,2 +1,2 @@
-from lhc.interval.interval_ import Interval
-from lhc.interval.binner import IntervalBinner
+from interval_ import Interval
+from binner import IntervalBinner
