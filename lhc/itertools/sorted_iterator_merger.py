@@ -27,10 +27,7 @@ class SortedIteratorMerger(object):
 
     def next(self):
         if self.c_idx == len(self.idxs):
-            if len(self.sorted_tops) == 0:
-                raise StopIteration
             self._update_sorting()
-
         res = self.tops[self.idxs[self.c_idx]]
         self.c_idx += 1
         return res
@@ -66,5 +63,7 @@ class SortedIteratorMerger(object):
                 sorted_tops[top_key].append(idx)
             except StopIteration:
                 pass
+        if len(sorted_tops) == 0:
+            raise StopIteration
         key, self.idxs = sorted_tops.pop_lowest()
         self.c_idx = 0
