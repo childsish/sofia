@@ -4,53 +4,51 @@ import multiprocessing
 import sys
 
 from collections import Counter
-from pysam import AlignmentFile
 from lhc.argparse import OpenWritableFile
+from lhc.interval import Interval
 from lhc.io.bed_.iterator import BedLineIterator
 from lhc.io.bed_.set_ import BedSet
+from lhc.io.sam_.iterator import SamLineIterator
 
 
 def depth(args):
-    alignment_file = AlignmentFile(args.bam)
-    read_iterator, pool_iterator = itertools.tee(alignment_file)
-    if args.cpus == 1:
-        init_worker(args.bed, args.bam)
-        it = itertools.imap(get_interval, pool_iterator)
+    in_fhndl = SamLineIterator(args.input)
+
+    initargs = [args.bed]
+    if args.processes == 1:
+        init_worker(*initargs)
+        it = itertools.imap(get_interval, in_fhndl)
     else:
-        initargs = [args.bed, args.bam]
-        pool = multiprocessing.Pool(args.cpus, initializer=init_worker, initargs=initargs)
-        it = pool.imap(get_interval, pool_iterator, args.simultaneous_entries)
-    cnt = Counter()
-    for read, interval in itertools.izip(read_iterator, it):
-        if interval is not None:
-            cnt[interval.name] += 1
+        pool = multiprocessing.Pool(args.processes, initializer=init_worker, initargs=initargs)
+        it = pool.imap(get_interval, in_fhndl, args.simultaneous_entries)
+
+    depth = Counter(it)
+    
     args.output.write('amplicon\tdepth\n')
     for interval in BedLineIterator(args.bed):
-        args.output.write('{}\t{}\n'.format(interval.name, cnt[interval.name]))
+        args.output.write('{}\t{}\n'.format(interval.name, depth[interval.name]))
+
+    sys.stderr.write('{} reads have no overlapping intervals'.format(depth[None]))
 
 interval_set = None
-alignment_file = None
 
 
-def init_worker(bed_name, bam_name):
+def init_worker(bed_name):
     global interval_set
-    global alignment_file
     interval_set = BedSet(BedLineIterator(bed_name))
-    alignment_file = AlignmentFile(bam_name)
 
 
 def get_interval(read):
+    read_interval = Interval(read.pos, read.pos + len(read.seq))
     try:
-        intervals = interval_set.get_overlapping_intervals(alignment_file.getrname(read.reference_id),
-                                                           read.reference_start, read.reference_end)
-    except KeyError, e:
-        intervals = []
-        sys.stderr.write(str(e))
-    if len(intervals) == 0:
+        matches = interval_set.get_overlapping_intervals(read.rname, read_interval.start, read_interval.stop)
+        matches.sort(key=lambda x: len(read_interval.intersect(x)))
+        match = matches[-1]
+    except KeyError:
         return None
-    overlaps = [read.get_overlap(interval.start, interval.stop) for interval in intervals]
-    overlap, interval = sorted(itertools.izip(overlaps, intervals))[-1]
-    return interval
+    except IndexError:
+        return None
+    return match
 
 
 def main():
@@ -67,12 +65,13 @@ def define_parser(parser):
 
     add_arg = parser.add_argument
     add_arg('bed')
-    add_arg('bam')
-    add_arg('-c', '--cpus', default=None, type=int)
+    add_arg('-i', '--input', default=sys.stdin)
     add_arg('-o', '--output', action=OpenWritableFile, default=sys.stdout,
-            help='Where to put the output (default: stdout).')
+            help='output destination (default: stdout)')
+    add_arg('-p', '--processes', default=None, type=int,
+            help='number of parallel processes')
     add_arg('-s', '--simultaneous-entries', default=1000000, type=int,
-            help='The number of entries to submit to each worker.')
+            help='number of entries to submit to each worker')
     parser.set_defaults(func=depth)
     return parser
 
