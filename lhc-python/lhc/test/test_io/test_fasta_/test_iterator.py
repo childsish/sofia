@@ -15,8 +15,8 @@ class TestFasta(unittest.TestCase):
     def test_iterEntries(self):
         it = FastaEntryIterator(self.fname)
         
-        self.assertEquals(tuple(it.next()), ('a', 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee'))
-        self.assertEquals(tuple(it.next()), ('b', 'ffffffffffgggggggggghhhhh'))
+        self.assertEquals(tuple(it.next()), ('a x', 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee'))
+        self.assertEquals(tuple(it.next()), ('b y', 'ffffffffffgggggggggghhhhh'))
         self.assertRaises(StopIteration, it.next)
 
     def tearDown(self):

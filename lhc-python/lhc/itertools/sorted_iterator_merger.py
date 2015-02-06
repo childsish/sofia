@@ -12,23 +12,28 @@ class SortedIteratorMerger(object):
         :param key: A function that converts the iterator entries into comparable keys.
         :return: A SortedIteratorMerger
         """
+        n_iterators = len(iterators)
         self.iterators = iterators
+        self.sorted_tops = SortedDict()
+        self.tops = n_iterators * [None]
+        self.idxs = range(n_iterators)
+        self.c_idx = 0
         self.key = (lambda x: x) if key is None else key
 
-    def __iter__(self):
-        """
-        Iterate over the merged iterators.
+        self._update_sorting()
 
-        :return: The entries of the merged iterator
-        """
-        sorted_tops = SortedDict(key=self.key)
-        tops = len(self.iterators) * [None]
-        self._update_sorting(sorted_tops, tops, xrange(len(self.iterators)))
-        while len(sorted_tops) > 0:
-            key, idxs = sorted_tops.pop_lowest()
-            for idx in idxs:
-                yield tops[idx]
-            self._update_sorting(sorted_tops, tops, idxs)
+    def __iter__(self):
+        return self
+
+    def next(self):
+        if self.c_idx == len(self.idxs):
+            if len(self.sorted_tops) == 0:
+                raise StopIteration
+            self._update_sorting()
+
+        res = self.tops[self.idxs[self.c_idx]]
+        self.c_idx += 1
+        return res
 
     def close(self):
         """
@@ -41,16 +46,25 @@ class SortedIteratorMerger(object):
                 if hasattr(it, 'close'):
                     it.close()
 
-    def _update_sorting(self, sorted_tops, tops, idxs):
+    def _update_sorting(self):
         """ Insert new entries into the merged iterator.
 
         :param sorted_tops: A SortedDict.
         :param tops: The most recent entry from each iterator.
         :param idxs: The indices to update.
         """
-        for idx in idxs:
+        key = self.key
+        sorted_tops = self.sorted_tops
+        tops = self.tops
+        iterators = self.iterators
+        for idx in self.idxs:
             try:
-                tops[idx] = self.iterators[idx].next()
-                sorted_tops.get(tops[idx], []).append(idx)
+                tops[idx] = iterators[idx].next()
+                top_key = key(tops[idx])
+                if top_key not in sorted_tops:
+                    sorted_tops[top_key] = []
+                sorted_tops[top_key].append(idx)
             except StopIteration:
                 pass
+        key, self.idxs = sorted_tops.pop_lowest()
+        self.c_idx = 0
