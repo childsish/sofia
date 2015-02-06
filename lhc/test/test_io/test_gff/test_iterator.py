@@ -7,10 +7,11 @@ from lhc.io.gff_.iterator import GffEntryIterator
 class TestGffIterator(unittest.TestCase):
     def test_iterator(self):
         fhndl = StringIO(file_content)
-        it = iter(GffEntryIterator(fhndl))
+        it = GffEntryIterator(fhndl)
 
         self.assertEquals('AT1G01010', it.next().name)
         self.assertEquals('AT1G01020', it.next().name)
+        self.assertRaises(StopIteration, it.next)
 
 file_content = """Chr1	TAIR10	chromosome	1	30427671	.	.	.	ID=Chr1;Name=Chr1
 Chr1	TAIR10	gene	3631	5899	.	+	.	ID=AT1G01010;Note=protein_coding_gene;Name=AT1G01010

@@ -48,10 +48,25 @@ class GffEntryIterator(object):
         self.it = GffLineIterator(fname)
         self.top_features = {}
         self.open_features = {}
+        self.completed_features = []
 
         self.c_id = 0
 
     def __iter__(self):
+        return self
+
+    def next(self):
+        completed_features = self.get_completed_features()
+        if len(completed_features) != 0:
+            feature = completed_features.pop()
+            self.remove_feature(feature)
+            return feature
+        raise StopIteration()
+
+    def get_completed_features(self):
+        if len(self.completed_features) != 0:
+            return self.completed_features
+
         top_features = self.top_features
         open_features = self.open_features
         for i, line in enumerate(self.it):
@@ -68,12 +83,10 @@ class GffEntryIterator(object):
             else:
                 top_features[id] = feature
 
-            completed_features = [feature for feature in top_features.itervalues() if feature.stop <= line.start]
-            for feature in completed_features:
-                self.remove_feature(feature)
-                yield feature
-        for feature in top_features.itervalues():
-            yield feature
+            self.completed_features = [feature for feature in top_features.itervalues() if feature.stop <= line.start]
+            if len(self.completed_features) != 0:
+                return self.completed_features
+        return self.top_features.values()
 
     def add_to_parent(self, feature, parents):
         if isinstance(parents, list):
