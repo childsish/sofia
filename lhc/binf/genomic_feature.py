@@ -3,14 +3,15 @@ from lhc.collections.sorted_list import SortedList
 
 
 class GenomicFeature(Interval):
-    def __init__(self, name, type=None, interval=None):
+    def __init__(self, name, type=None, interval=None, attr={}):
         if interval is None:
             super(GenomicFeature, self).__init__(None, None, None)
         else:
             super(GenomicFeature, self).__init__(interval.chr, interval.start, interval.stop, interval.strand)
+        self.children = SortedList()
         self.name = name
         self.type = type
-        self.children = SortedList()
+        self.attr = attr
 
     def __len__(self):
         if len(self.children) == 0:
