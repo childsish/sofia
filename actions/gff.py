@@ -1,21 +1,33 @@
 from sofia_.action import Resource, Target
-from lhc.io.gff_.iterator import GffEntityIterator as GffIteratorParser
+from lhc.io.gff_.iterator import GffEntryIterator as GffIteratorParser
 from lhc.io.gff_.set_ import GffSet as GffSetParser
 
 
 class GffIterator(Target):
     
     EXT = ['.gff', '.gff.gz']
-    OUT = ['gene_model']
+    OUT = ['genomic_feature']
 
     def init(self):
-        self.parser = GffIteratorParser(self.get_filename())
+        self.parser = iter(GffIteratorParser(self.get_filename()))
+
+    def next(self):
+        entry = self.parser.next()
+        return {
+            'gene_id': entry.name,
+            'genomic_interval': {
+                'chromosome_id': entry.chr,
+                'start': entry.start,
+                'stop': entry.stop
+            },
+            'data': entry
+        }
 
 
 class GffSet(Resource):
     
     EXT = ['.gff', '.gff.gz']
-    OUT = ['gene_model_set']
+    OUT = ['genomic_feature_set']
 
     def init(self):
         try:

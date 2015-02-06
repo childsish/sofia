@@ -7,9 +7,13 @@
     	"children": ["chromosome_id", "start", "stop", "interval_name"],
     	"description": "An interval on a chromosome."
     },
+    "genomic_feature": {
+      "children": ["gene_id", "genomic_interval"],
+      "description": "A model of transcribed DNA. This includes all alternative transcripts."
+    },
     "gene_model": {
     	"children": ["gene_id", "genomic_interval"],
-    	"description": "A model of transcribed DNA. This includes all alternative transcriptions."
+    	"description": "A model of transcribed DNA. This includes all alternative transcripts."
     },
     "variant": {
     	"children": ["genomic_position", "reference_allele", "alternate_allele", "variant_quality"],
