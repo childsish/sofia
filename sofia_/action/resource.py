@@ -33,7 +33,9 @@ class Resource(Action):
     @classmethod
     def matches_type(cls, resource):
         """ Match the entity type of the disk-based source to this resource. """
-        return set(cls.OUT) == set(resource.type)
+        if resource.types is None:
+            return True
+        return set(cls.OUT) == resource.types
 
     @classmethod
     def get_output(cls, ins={}, outs={}, attr={}):
@@ -69,4 +71,6 @@ class Target(Resource):
     @classmethod
     def matches_type(cls, resource):
         """ Match the entity type of the disk-based source to this resource. """
-        return set(t + '_set' for t in cls.OUT) == set(resource.type)
+        if resource.types is None:
+            return True
+        return set(t + '_set' for t in cls.OUT) == resource.types

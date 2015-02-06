@@ -179,12 +179,8 @@ def aggregate(args):
 
 def parse_provided_resources(target, resources):
     program_dir = get_program_directory()
-    fhndl = open(os.path.join(program_dir, 'config.json'))
-    config = json.load(fhndl)
-    fhndl.close()
-    default_types = {type['ext']: type['type'] for type in config['default_types']}
     entity_graph = load_entity_graph()
-    resource_parser = ResourceParser(default_types, entity_graph)
+    resource_parser = ResourceParser(entity_graph)
     provided_resources = resource_parser.parse_resources(resources)
     provided_resources['target'] = resource_parser.parse_resource(target + ' -n target')
     return provided_resources
