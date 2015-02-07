@@ -1,11 +1,11 @@
 import argparse
 import os
 
-from column_types import convert_args_to_types, extract_typed_columns
 from functools import partial
 from itertools import chain
 from lhc.argparse import OpenWritableFile, OpenReadableFile
 from lhc.itertools import ChunkedIterator, SortedIteratorMerger
+from tracker_factory import TrackerFactory
 
 
 def default_key(line):
@@ -75,9 +75,14 @@ class Sorter(object):
 
 
 def sort(args):
-    column_types = convert_args_to_types(args.columns)
-    typed_column_extractor = partial(extract_typed_columns, columns_types=column_types, sep=args.separator)
-    sorter = Sorter(args.input, typed_column_extractor)
+    def parse_line(line, trackers):
+        parts = line.rstrip('\r\n').split(args.separator)
+        return tuple(tracker.convert(parts) for tracker in trackers)
+
+    factory = TrackerFactory()
+    trackers = [factory.make(arg) for arg in args.columns]
+    key = partial(parse_line, trackers=trackers)
+    sorter = Sorter(args.input, key=key)
     for line in sorter:
         args.output.write(line)
 
@@ -92,8 +97,10 @@ def get_parser():
 
 
 def define_parser(parser):
+    import sys
+
     add_arg = parser.add_argument
-    add_arg('-c', '--columns', nargs='+',
+    add_arg('-c', '--columns', nargs='+', default='1s',
             help='Which columns and types to extract (default: 1s).')
     add_arg('-i', '--input', action=OpenReadableFile, default=sys.stdin,
             help='The input file (default: stdin).')
