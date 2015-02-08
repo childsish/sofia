@@ -8,7 +8,7 @@ class TrackerFactory(object):
         's': (KeyColumnTracker, str),
         'f': (KeyColumnTracker, float),
         'i': (KeyColumnTracker, int),
-        'v': (IntervalColumnTracker, lambda x: Interval(*x))
+        'v': (IntervalColumnTracker, lambda start, stop: Interval(int(start), int(stop)))
     }
 
     def make(self, definition='s1'):
