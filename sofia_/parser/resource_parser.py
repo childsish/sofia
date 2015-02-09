@@ -28,9 +28,8 @@ class ResourceParser(object):
         -r "tmp.vcf -n tmp -t vcf -k x=x y=y -a chromosome_id=ucsc"
     """
     
-    def __init__(self, default_types, entity_graph):
+    def __init__(self, entity_graph):
         """ Initialise with default entity types based on file extension. """
-        self.default_types = default_types
         self.entity_graph = entity_graph
         self.parser = self._define_parser()
     
@@ -45,20 +44,13 @@ class ResourceParser(object):
     def parse_resource(self, resource_string):
         """ Parse a resource string. """
         args = self.parser.parse_args(resource_string.split())
-        types = self._get_types(args.resource, args.type)
+        types = None if args.type is None else frozenset(args.type.split(','))
         attr = self._get_attr(types, args.attr)
         return ProvidedResource(args.resource, types, args.name, args.param, attr)
     
-    def _get_types(self, fname, type=None):
-        """ Create a resource. """
-        ext = fname.rsplit('.', 2)[1] if fname.endswith('.gz') else\
-            fname.rsplit('.', 1)[1]
-        if type is None and ext not in self.default_types:
-            raise ValueError('Unable to determine type of biological information stored in {}'.format(fname))
-        res = self.default_types[ext] if type is None else type.split(',')
-        return tuple(res)
-    
     def _get_attr(self, types, attr):
+        if types is None:
+            return {}
         res = {}
         for type in types:
             tmp = {a: None for a in self.entity_graph.attr[type]}\

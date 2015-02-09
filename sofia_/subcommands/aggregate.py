@@ -1,6 +1,5 @@
 import argparse
-import json
-import os
+import itertools
 import sys
 import multiprocessing
 
@@ -32,16 +31,31 @@ class Aggregator(object):
             sys.stdout.write('{}\n\n'.format(solution))
         else:
             sys.stderr.write('\n    Aggregating information...\n\n')
-            sys.stdout.write('\t'.join(map(str, requested_entities)))
+            if args.header is None:
+                sys.stdout.write('\t'.join(entity.header for entity in requested_entities))
+            else:
+                sys.stdout.write(args.header)
             sys.stdout.write('\n')
+        
+            template = '\t'.join(['{}'] * len(requested_entities)) if args.template is None else args.template
 
-            it = iter_resource(solution.actions['target'])
-            pool = multiprocessing.Pool(args.processes, init_annotation, [resolved_actions, solution])
-            for row in pool.imap(get_annotation, it, 100):
-                sys.stdout.write('\t'.join(row))
+            pool_iterator = iter_resource(solution.actions['target'])
+            initargs = [resolved_actions, solution]
+            if args.processes == 1:
+                init_worker(*initargs)
+                it = itertools.imap(get_annotation, pool_iterator)
+            else:
+                pool = multiprocessing.Pool(args.processes, initializer=init_worker, initargs=initargs)
+                it = pool.imap(get_annotation, pool_iterator, args.simultaneous_entries)
+
+            for row in it:
+                row = [requested_entity.format(entity) for requested_entity, entity in zip(requested_entities, row)]
+                sys.stdout.write(template.format(*row))
                 sys.stdout.write('\n')
-            pool.close()
-            pool.join()
+
+            if args.processes > 1:
+                pool.close()
+                pool.join()
 
     def resolve_request(self, requested_entities, provided_resources, maps):
         def satisfies_request(graph, requested_resources):
@@ -50,8 +64,8 @@ class Aggregator(object):
         action_graphs = []
         for entity in requested_entities:
             ERROR_MANAGER.reset()
-            sys.stderr.write('    {} - '.format(str(entity)))
-            solution_iterator = EntitySolutionIterator(entity,
+            sys.stderr.write('    {} - '.format(entity.name))
+            solution_iterator = EntitySolutionIterator(entity.name,
                                                        self.hyper_graph,
                                                        provided_resources,
                                                        maps,
@@ -117,10 +131,16 @@ def define_parser(parser):
     add_arg = parser.add_argument
     add_arg('input', metavar='TARGET',
             help='the file to annotate')
+    add_arg('-1', '--header',
+            help='if specified use this header instead')
     add_arg('-e', '--entities', nargs='+', default=[],
             help='request an entity')
     add_arg('-E', '--entity-list',
             help='a text file with a list of requested entities')
+    add_arg('-g', '--graph', action='store_true',
+            help='do not run framework but print the resolved graph')
+    add_arg('-m', '--maps', nargs='+', default=[],
+            help='maps for converting for entity attributes')
     add_arg('-o', '--output',
             help='direct output to named file (default: stdout)')
     add_arg('-p', '--processes', default=None, type=int,
@@ -129,12 +149,10 @@ def define_parser(parser):
             help='provide a resource')
     add_arg('-R', '--resource-list',
             help='a text file with a list of provided resources')
+    add_arg('-s', '--simultaneous-entries', default=100, type=int,
+            help='number of entries per worker')
     add_arg('-t', '--template',
             help='specify a template string for the output')
-    add_arg('-g', '--graph', action='store_true',
-            help='do not run framework but print the resolved graph')
-    add_arg('-m', '--maps', nargs='+', default=[],
-            help='maps for converting for entity attributes')
     parser.set_defaults(func=aggregate)
 
 
@@ -169,12 +187,8 @@ def aggregate(args):
 
 def parse_provided_resources(target, resources):
     program_dir = get_program_directory()
-    fhndl = open(os.path.join(program_dir, 'config.json'))
-    config = json.load(fhndl)
-    fhndl.close()
-    default_types = {type['ext']: type['type'] for type in config['default_types']}
     entity_graph = load_entity_graph()
-    resource_parser = ResourceParser(default_types, entity_graph)
+    resource_parser = ResourceParser(entity_graph)
     provided_resources = resource_parser.parse_resources(resources)
     provided_resources['target'] = resource_parser.parse_resource(target + ' -n target')
     return provided_resources
@@ -189,7 +203,7 @@ requested_actions = None
 solution = None
 
 
-def init_annotation(req_ftr, sol):
+def init_worker(req_ftr, sol):
     global requested_actions
     global solution
     requested_actions = req_ftr
@@ -212,7 +226,6 @@ def get_annotation(target):
     for action in requested_actions:
         try:
             item = solution.actions[action].generate(kwargs, solution.actions)
-            item = '' if item is None else solution.actions[action].format(item)
             row.append(item)
         except Exception:
             import sys
@@ -221,11 +234,6 @@ def get_annotation(target):
             sys.stderr.write('Error processing entry on line {}\n'.format(solution.actions['target'].parser.line_no))
             sys.exit(1)
     return row
-    #try:
-    #    sys.stdout.write('\t'.join(row))
-    #except TypeError:
-    #    sys.stderr.write("A action's format function does not return a string")
-    #    sys.exit(1)
 
 if __name__ == '__main__':
     sys.exit(main())

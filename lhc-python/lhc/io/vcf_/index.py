@@ -31,12 +31,12 @@ class IndexedVcfFile(object):
             start + len(key.ref) if hasattr(key, 'ref') else \
             start + 1
         lines = self.index.fetch(key.chr, start, stop)
-        return [self.iterator._parse_line(line) for line in lines]
+        return [self.iterator.parse_line(line) for line in lines]
 
     def get_variants_at_position(self, chr, pos):
         lines = self.index.fetch(chr, pos, pos + 1)
-        return [self.iterator._parse_line(line) for line in lines]
+        return [self.iterator.parse_line(line) for line in lines]
 
     def get_variants_in_interval(self, chr, start, stop):
         lines = self.index.fetch(chr, start, stop)
-        return [self.iterator._parse_line(line) for line in lines]
+        return [self.iterator.parse_line(line) for line in lines]

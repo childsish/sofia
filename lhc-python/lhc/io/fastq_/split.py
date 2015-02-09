@@ -6,7 +6,6 @@ import sys
 
 from collections import Counter
 from iterator import FastqEntryIterator
-from lhc.argparse import OpenReadableFile
 from lhc.binf.sequence import revcmp
 from lhc.io.fasta import FastaEntryIterator
 from lhc.misc.string import hamming

@@ -3,7 +3,7 @@ from lhc.binf.genomic_coordinate import Interval
 from lhc.filetools.flexible_opener import open_flexibly
 
 
-BedLine = namedtuple('BedEntry', ('chr', 'start', 'stop', 'name', 'score', 'strand'))
+BedLine = namedtuple('BedLine', ('chr', 'start', 'stop', 'name', 'score', 'strand'))
 BedEntry = namedtuple('BedEntry', ('ivl', 'name', 'score'))
 
 

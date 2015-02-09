@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from itertools import izip, product
+from fasta_ import indexer, wrap
 from fasta_.iterator import FastaEntryIterator
 from fasta_.set_ import FastaSet
 from lhc.binf.sequence import revcmp as rc
@@ -10,15 +11,20 @@ def cross_product(xs, ys):
     for x, y in product(FastaEntryIterator(xs), FastaEntryIterator(ys)):
         sys.stdout.write('>{}_{}\n{}{}\n'.format(x.hdr, y.hdr, x.seq, y.seq))
 
+
 def revcmp(in_fhndl, out_fhndl, both=False):
     for hdr, seq in in_fhndl:
         if both:
             out_fhndl.write('>{}\n{}\n'.format(hdr, seq))
         out_fhndl.write('>{}_revcmp\n{}\n'.format(hdr, rc(seq)))
 
+
 def iter_entries(fname):
     """ Convenience function """
-    return FastaEntryIterator(fname)
+    it = FastaEntryIterator(fname)
+    for entry in it:
+        yield entry
+    it.close()
 
 
 def compare(a_fname, b_fname):
@@ -89,6 +95,9 @@ def get_parser():
     extract_parser.add_argument('-o', '--output')
     extract_parser.set_defaults(func=lambda args: extract(args.input, args.header, args.output))
 
+    index_parser = subparsers.add_parser('index')
+    indexer.define_parser(index_parser)
+
     product_parser = subparsers.add_parser('product')
     product_parser.add_argument('input1', help='Input fasta (default: stdin).')
     product_parser.add_argument('input2', help='Output fasta (default: stdout).')
@@ -99,6 +108,9 @@ def get_parser():
     revcmp_parser.add_argument('-i', '--input', action=OpenReadableFile, default=sys.stdin)
     revcmp_parser.add_argument('-o', '--output', action=OpenWritableFile, default=sys.stdout)
     revcmp_parser.set_defaults(func=lambda args: revcmp(FastaEntryIterator(args.input), args.output, args.both))
+
+    wrap_parser = subparsers.add_parser('wrap')
+    wrap.define_parser(wrap_parser)
 
     return parser
 

@@ -12,7 +12,7 @@ class GetMajorTranscriptCodingSequence(Action):
     def calculate(self, chromosome_sequence_set, major_transcript):
         if major_transcript is None:
             return None
-        return major_transcript.get_sub_seq(chromosome_sequence_set)  # , type='CDS')
+        return major_transcript.get_sub_seq(chromosome_sequence_set[major_transcript.chr], types={'CDS'})
 
 
 class GetFivePrimeUtr(Action):

@@ -12,21 +12,25 @@ class GetVariantByVariant(Action):
             return None
         chr = variant['genomic_position']['chromosome_id']
         pos = variant['genomic_position']['chromosome_pos']
-        overlap = variant_set.get_variants_at_position(chr, pos)
+        try:
+            overlap = variant_set.get_variants_at_position(chr, pos)
+        except ValueError:
+            return None
         hits = [o for o in overlap if o.pos == pos and
-                o.ref == variant['variant'].ref and o.alt == variant['variant'].alt]
+                o.ref == variant['ref'] and o.alt == variant['alt']]
         if len(hits) > 1:
             raise ValueError('Too many hits')
         elif len(hits) == 0:
             return None
-        variant = hits[0]
+        hit = hits[0]
         return {
-            'variant': variant,
             'genomic_position': {
-                'chromosome_id': variant.chr,
-                'chromosome_pos': variant.pos
+                'chromosome_id': hit.chr,
+                'chromosome_pos': hit.pos
             },
-            'reference_allele': variant.ref,
-            'alternate_allele': variant.alt,
-            'variant_quality': variant.qual
+            'reference_allele': hit.ref,
+            'alternate_allele': hit.alt,
+            'variant_quality': hit.qual,
+            'info': {k: v for k, v in (part.split('=') for part in hit.info.split(';'))},
+            'samples': hit.samples
         }

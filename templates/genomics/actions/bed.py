@@ -1,12 +1,8 @@
+import os
+
 from sofia_.action import Resource, Target
-from lhc.io.bed_.iterator import BedEntryIterator as BedIteratorParser
+from lhc.io.bed_.iterator import BedLineIterator as BedIteratorParser
 from lhc.io.bed_.set_ import BedSet as BedSetParser
-try:
-    from lhc.io.bed_.index import IndexedBedFile
-except ImportError:
-    import sys
-    sys.stderr.write('Pysam not available. Bed file access will be slower.\n')
-    IndexedBedFile = lambda fname: BedSetParser(BedIteratorParser(fname))
 
 
 class BedIterator(Target):
@@ -21,10 +17,10 @@ class BedIterator(Target):
     def calculate(self):
         interval = self.parser.next()
         return {
-            'chromosome_id': interval.chr,
-            'start': interval.start,
-            'stop': interval.stop,
-            'data': interval
+            'chromosome_id': interval.ivl.chr,
+            'start': interval.ivl.start,
+            'stop': interval.ivl.stop,
+            'interval_name': interval.name
         }
 
     def format(self, genomic_interval):
@@ -38,4 +34,13 @@ class BedSet(Resource):
     OUT = ['genomic_interval_set']
 
     def init(self):
-        self.parser = IndexedBedFile(self.get_filename())
+        fname = self.get_filename()
+        if os.path.exists('{}.tbi'.format(fname)):
+            try:
+                from lhc.io.bed_.index import IndexedBedFile
+            except ImportError:
+                sys.stderr.write('Pysam not available. Bed file access will be slower.\n')
+                IndexedBedFile = lambda fname: BedSetParser(BedIteratorParser(fname))
+        else:
+            IndexedBedFile = lambda fname: BedSetParser(BedIteratorParser(fname))
+        self.parser = IndexedBedFile(fname)
