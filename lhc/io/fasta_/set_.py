@@ -1,6 +1,6 @@
 class FastaSet(object):
     def __init__(self, iterator):
-        self.data = dict(iterator)
+        self.data = {k.split()[0]: v for k, v in iterator}
 
     def __getitem__(self, key):
         if isinstance(key, basestring):
