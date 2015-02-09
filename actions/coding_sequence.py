@@ -27,7 +27,7 @@ class GetCodonUsage(Action):
     IN = ['coding_sequence']
     OUT = ['codon_usage']
 
-    def init(self, ignore_redundant):
+    def init(self, ignore_redundant=True):
         self.ignore_redundant = ignore_redundant
 
     def calculate(self, coding_sequence):
