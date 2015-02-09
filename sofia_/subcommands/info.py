@@ -4,13 +4,9 @@ import os
 import sys
 
 from common import get_program_directory, load_action_hypergraph, load_plugins
-from sofia_.action import Action
+from sofia_.action import Action, Resource, Target
 from textwrap import wrap
-
-
-class OutputAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, open(values, 'w'))
+from lhc.argparse import OpenWritableFile
 
 
 def generate_graph(args):
@@ -33,21 +29,20 @@ def list_entities(args):
 
 
 def list_actions(args):
-    action_dir = os.path.join(get_program_directory(), 'actions')
-    action_types = load_plugins(action_dir, Action)
+    action_classes = load_plugins(args.template, Action, {Resource, Target})
     
     if args.action is None:
-        args.output.write('\nAvailable steps:\n===================\n')
-        for name, action_type in sorted(action_types.iteritems()):
-            if name in ('resource', 'dynamic_resource', 'static_resource'):
-                continue
-            list_action(action_type, args)
+        args.output.write('\nAvailable actions:\n==================\n')
+        for action_class, template_name in sorted(action_classes, key=lambda x: x[0].__name__):
+            list_action(action_class, template_name, args)
     else:
-        list_action(action_types[args.action], args)
+        for action_class, template_name in action_classes:
+            if action_class.__name__ == args.action:
+                list_action(action_class, template_name, args)
 
 
-def list_action(action, args):
-    args.output.write('{}\n'.format(action.__name__))
+def list_action(action, template_name, args):
+    args.output.write('{}\t({})\n'.format(action.__name__, template_name))
     if args.verbose:
         if len(action.IN) > 0:
             args.output.write(' Input:\n  {}\n'.format(', '.join(action.IN)))
@@ -76,21 +71,25 @@ def define_parser(parser):
     graph_parser = subparsers.add_parser('graph')
     graph_parser.set_defaults(func=generate_graph)
 
-    action_parser = subparsers.add_parser('action')
-    action_parser.add_argument('-v', '--verbose', action='store_true',
-                               help='print out descriptions of each action')
-    action_parser.add_argument('-a', '--action',
-                               help='list a specific action')
-    action_parser.set_defaults(func=list_actions)
+    actions_parser = subparsers.add_parser('actions')
+    actions_parser.add_argument('-a', '--action',
+                                help='list a specific action')
+    actions_parser.add_argument('-t', '--template', default='genomics',
+                                help='list the defined template (default: genomics).')
+    actions_parser.add_argument('-v', '--verbose', action='store_true',
+                                help='print out descriptions of each action')
+    actions_parser.set_defaults(func=list_actions)
 
     entity_parser = subparsers.add_parser('entity')
-    entity_parser.add_argument('-v', '--verbose', action='store_true',
-                               help='print out descriptions of each entity')
     entity_parser.add_argument('-e', '--entity',
                                help='list a specific entity')
+    entity_parser.add_argument('-t', '--template', default='genomics',
+                               help='list a specific entity')
+    entity_parser.add_argument('-v', '--verbose', action='store_true',
+                               help='print out descriptions of each entity')
     entity_parser.set_defaults(func=list_entities)
 
-    parser.add_argument('-o', '--output', action=OutputAction, default=sys.stdout,
+    parser.add_argument('-o', '--output', action=OpenWritableFile, default=sys.stdout,
                         help='specify where to put output')
 
 

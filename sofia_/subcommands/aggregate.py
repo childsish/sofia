@@ -13,8 +13,8 @@ from sofia_.attribute_map_factory import AttributeMapFactory
 
 
 class Aggregator(object):
-    def __init__(self):
-        self.hyper_graph = load_action_hypergraph()
+    def __init__(self, workflow_template):
+        self.hyper_graph = load_action_hypergraph(workflow_template)
 
     def aggregate(self, requested_entities, provided_resources, args, maps={}):
         def iter_resource(resource):
@@ -153,6 +153,8 @@ def define_parser(parser):
             help='number of entries per worker')
     add_arg('-t', '--template',
             help='specify a template string for the output')
+    add_arg('-w', '--workflow-template', default='genomics',
+            help='specify a workflow template (default: genomics).')
     parser.set_defaults(func=aggregate)
 
 
@@ -164,8 +166,8 @@ def aggregate(args):
         fhndl = open(args.resource_list)
         resource_list = fhndl.read().strip().split('\n')
         fhndl.close()
-        provided_resources.update(parse_provided_resources(args.input, resource_list))
-    provided_resources.update(parse_provided_resources(args.input, args.resources))
+        provided_resources.update(parse_provided_resources(args.input, resource_list, args.template))
+    provided_resources.update(parse_provided_resources(args.input, args.resources, args.template))
     
     requested_entities = parse_requested_entities(args.entities, provided_resources)
     if args.entity_list is not None:
@@ -181,11 +183,11 @@ def aggregate(args):
 
     maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
     
-    aggregator = Aggregator()
+    aggregator = Aggregator(args.workflow_template)
     aggregator.aggregate(requested_entities, provided_resources, args, maps)
 
 
-def parse_provided_resources(target, resources):
+def parse_provided_resources(target, resources, template):
     program_dir = get_program_directory()
     entity_graph = load_entity_graph()
     resource_parser = ResourceParser(entity_graph)
@@ -206,6 +208,7 @@ solution = None
 def init_worker(req_ftr, sol):
     global requested_actions
     global solution
+
     requested_actions = req_ftr
     solution = sol
     solution.init()
