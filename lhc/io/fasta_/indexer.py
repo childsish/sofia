@@ -73,7 +73,7 @@ def define_parser(parser):
     add_arg('input', help='The input fasta file.')
     add_arg('-e', '--extension', default='.fai',
             help='The extension of the index file (default: .fai).')
-    parser.set_defaults(func=lambda args: index(args.input, args.extenson))
+    parser.set_defaults(func=lambda args: index(args.input, args.extension))
     return parser
 
 if __name__ == '__main__':
