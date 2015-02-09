@@ -10,8 +10,11 @@ class ColumnTracker(object):
     def get_key(self):
         return self.current_key
 
-    def is_new_entry(self, line):
+    def is_new_entry(self, parts):
         raise NotImplementedError()
+
+    def set_new_entry(self, parts):
+        self.current_key = self.convert(parts)
 
 
 class KeyColumnTracker(ColumnTracker):
@@ -21,7 +24,6 @@ class KeyColumnTracker(ColumnTracker):
             self.current_key = key
             return False
         elif self.current_key != key:
-            self.current_key = key
             return True
         return False
 
@@ -36,7 +38,5 @@ class IntervalColumnTracker(ColumnTracker):
             self.current_key = interval
             return False
         elif self.current_key.stop <= interval.start:
-            self.current_key = interval
             return True
-        self.current_key.start = min(self.current_key.start, interval.start)
         self.current_key.stop = max(self.current_key.stop, interval.stop)
