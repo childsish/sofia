@@ -11,8 +11,10 @@ class GffIterator(Target):
     def init(self):
         self.parser = iter(GffIteratorParser(self.get_filename()))
 
-    def next(self):
+    def calculate(self):
         entry = self.parser.next()
+        while entry.type != 'gene':
+            entry = self.parser.next()
         return {
             'gene_id': entry.name,
             'genomic_interval': {
