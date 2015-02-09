@@ -15,4 +15,4 @@ class KmerCounter(object):
             kmer = self.sequence[i:i + k]
             if kmer not in self.counts:
                 self.counts[kmer] = 0
-            self.count[kmer] += 1
+            self.counts[kmer] += 1
