@@ -49,6 +49,7 @@ class GffEntryIterator(object):
         self.top_features = {}
         self.open_features = {}
         self.completed_features = []
+        self.line_no = 0
 
         self.c_id = 0
 
@@ -57,7 +58,7 @@ class GffEntryIterator(object):
 
     def next(self):
         completed_features = self.get_completed_features()
-        if len(completed_features) != 0:
+        while len(completed_features) > 0:
             feature = completed_features.pop()
             self.remove_feature(feature)
             return feature
@@ -70,6 +71,7 @@ class GffEntryIterator(object):
         top_features = self.top_features
         open_features = self.open_features
         for i, line in enumerate(self.it):
+            self.line_no += 1
             if line.type == 'chromosome':
                 continue
             id = line.attr['ID'] if 'ID' in line.attr else i
@@ -77,9 +79,11 @@ class GffEntryIterator(object):
             feature = GenomicFeature(id, line.type, ivl, line.attr)
 
             open_features[id] = feature
-            if 'Parent' in line.attr or 'Derives_from' in line.attr:
-                self.add_to_parent(feature, line.attr.get('Parent', []))
-                self.add_to_parent(feature, line.attr.get('Derives_from', []))
+            if 'Parent' in line.attr:
+                self.add_to_parent(feature, line.attr['Parent'])
+            #elif 'Derives_from' in line.attr:
+            #    derives_from = line.attr['Derives_from']
+            #    self.open_features[derives_from].add_product(feature)
             else:
                 top_features[id] = feature
 
@@ -93,11 +97,11 @@ class GffEntryIterator(object):
             for parent in parents:
                 if parent not in self.open_features:
                     self.open_features[parent] = GenomicFeature(parent)
-                self.open_features[parent].append(feature)
+                self.open_features[parent].add_child(feature)
         else:
             if parents not in self.open_features:
                 self.open_features[parents] = GenomicFeature(parents)
-            self.open_features[parents].append(feature)
+            self.open_features[parents].add_child(feature)
 
     def remove_feature(self, feature):
         open_features = self.open_features
@@ -107,3 +111,4 @@ class GffEntryIterator(object):
             feature = stk.pop()
             open_features.pop(feature.name, None)
             stk.extend(feature.children)
+            stk.extend(feature.products)
