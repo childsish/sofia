@@ -1,10 +1,10 @@
 from sofia_.action import Action
+from lhc.binf.kmer import KmerCounter
 
-from collections import Counter, defaultdict
+from collections import defaultdict
 from functools import reduce
 from itertools import izip
 from operator import add, mul
-from lhc.binf.genetic_code import RedundantCode
 
 
 class TranslateCodingSequence(Action):
@@ -27,16 +27,8 @@ class GetCodonUsage(Action):
     IN = ['coding_sequence']
     OUT = ['codon_usage']
 
-    def init(self, ignore_redundant=True):
-        self.ignore_redundant = ignore_redundant
-
     def calculate(self, coding_sequence):
-        codon_usage = Counter(coding_sequence[i:i+3] for i in xrange(0, len(coding_sequence), 3))
-        if self.ignore_redundant:
-            for k in codon_usage:
-                if len(set(k) & RedundantCode.REDUNDANT_BASES) > 0:
-                    del codon_usage[k]
-        return codon_usage
+        return KmerCounter(coding_sequence, k=3, step=3)
 
 
 class GetRelativeSynonymousCodonUsage(Action):
