@@ -9,6 +9,7 @@ class GenomicFeature(Interval):
         else:
             super(GenomicFeature, self).__init__(interval.chr, interval.start, interval.stop, interval.strand)
         self.children = SortedList()
+        self.products = []
         self.name = name
         self.type = type
         self.attr = attr
@@ -29,18 +30,21 @@ class GenomicFeature(Interval):
 
     # Creation functions
 
-    def append(self, interval):
+    def add_child(self, feature):
         if self.chr is None:
-            self.chr = interval.chr
-            self.start = interval.start
-            self.stop = interval.stop
-            self.strand = interval.strand
-        elif self.chr != interval.chr or self.strand != interval.strand:
-            raise ValueError('{} does not belong in {}'.format(interval, self))
+            self.chr = feature.chr
+            self.start = feature.start
+            self.stop = feature.stop
+            self.strand = feature.strand
+        elif self.chr != feature.chr or self.strand != feature.strand:
+            raise ValueError('{} does not belong in {}'.format(feature, self))
         else:
-            self.start = min(self.start, interval.start)
-            self.stop = max(self.stop, interval.stop)
-        self.children.add(interval)
+            self.start = min(self.start, feature.start)
+            self.stop = max(self.stop, feature.stop)
+        self.children.add(feature)
+
+    def add_product(self, feature):
+        self.products.append(feature)
     
     # Position functions
     
@@ -69,8 +73,8 @@ class GenomicFeature(Interval):
     
     # Sequence functions
     
-    def get_sub_seq(self, seq, valid_types=None):
-        sub_seq = [child.get_sub_seq(seq, valid_types) for child in self.children]
-        if len(sub_seq) == 0 and (valid_types is None or self.type in valid_types):
+    def get_sub_seq(self, seq, types=None):
+        sub_seq = [child.get_sub_seq(seq, types) for child in self.children]
+        if len(sub_seq) == 0 and (types is None or self.type in types):
             return seq[self.start:self.stop]
         return ''.join(sub_seq)
