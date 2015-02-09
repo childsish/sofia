@@ -1,6 +1,5 @@
 import argparse
-import json
-import os
+import itertools
 import sys
 import multiprocessing
 
@@ -40,14 +39,23 @@ class Aggregator(object):
         
             template = '\t'.join(['{}'] * len(requested_entities)) if args.template is None else args.template
 
-            it = iter_resource(solution.actions['target'])
-            pool = multiprocessing.Pool(args.processes, init_annotation, [resolved_actions, solution])
-            for row in pool.imap(get_annotation, it, args.chunk_size):
+            pool_iterator = iter_resource(solution.actions['target'])
+            initargs = [resolved_actions, solution]
+            if args.processes == 1:
+                init_worker(*initargs)
+                it = itertools.imap(get_annotation, pool_iterator)
+            else:
+                pool = multiprocessing.Pool(args.processes, initializer=init_worker, initargs=initargs)
+                it = pool.imap(get_annotation, pool_iterator, args.simultaneous_entries)
+
+            for row in it:
                 row = [requested_entity.format(entity) for requested_entity, entity in zip(requested_entities, row)]
                 sys.stdout.write(template.format(*row))
                 sys.stdout.write('\n')
-            pool.close()
-            pool.join()
+
+            if args.processes > 1:
+                pool.close()
+                pool.join()
 
     def resolve_request(self, requested_entities, provided_resources, maps):
         def satisfies_request(graph, requested_resources):
@@ -125,8 +133,6 @@ def define_parser(parser):
             help='the file to annotate')
     add_arg('-1', '--header',
             help='if specified use this header instead')
-    add_arg('-c', '--chunk-size', default=100, type=int,
-            help='the number of entries submitted to the process pool as seperate tasks')
     add_arg('-e', '--entities', nargs='+', default=[],
             help='request an entity')
     add_arg('-E', '--entity-list',
@@ -143,6 +149,8 @@ def define_parser(parser):
             help='provide a resource')
     add_arg('-R', '--resource-list',
             help='a text file with a list of provided resources')
+    add_arg('-s', '--simultaneous-entries', default=100, type=int,
+            help='number of entries per worker')
     add_arg('-t', '--template',
             help='specify a template string for the output')
     parser.set_defaults(func=aggregate)
@@ -195,7 +203,7 @@ requested_actions = None
 solution = None
 
 
-def init_annotation(req_ftr, sol):
+def init_worker(req_ftr, sol):
     global requested_actions
     global solution
     requested_actions = req_ftr
