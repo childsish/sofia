@@ -3,13 +3,15 @@ from lhc.collections.sorted_list import SortedList
 
 
 class GenomicFeature(Interval):
+
+    __slots__ = ('chr', 'start', 'stop', 'strand', 'children', 'name', 'type', 'attr')
+
     def __init__(self, name, type=None, interval=None, attr={}):
         if interval is None:
             super(GenomicFeature, self).__init__(None, None, None)
         else:
             super(GenomicFeature, self).__init__(interval.chr, interval.start, interval.stop, interval.strand)
         self.children = SortedList()
-        self.products = []
         self.name = name
         self.type = type
         self.attr = attr
@@ -76,5 +78,21 @@ class GenomicFeature(Interval):
     def get_sub_seq(self, seq, types=None):
         sub_seq = [child.get_sub_seq(seq, types) for child in self.children]
         if len(sub_seq) == 0 and (types is None or self.type in types):
-            return seq[self.start:self.stop]
+            return seq[self.chr][self.start:self.stop]
         return ''.join(sub_seq)
+
+    def __getstate__(self):
+        return {
+            'chr': self.chr,
+            'start': self.start,
+            'stop': self.stop,
+            'strand': self.strand,
+            'children': self.children,
+            'name': self.name,
+            'type': self.type,
+            'attr': self.attr
+        }
+
+    def __setstate__(self, state):
+        for attribute, value in state.iteritems():
+            setattr(self, attribute, value)
