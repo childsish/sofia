@@ -1,4 +1,5 @@
 from sofia_.action import Action
+from warnings import warn
 
 
 class GetMajorTranscriptCodingSequence(Action):
@@ -12,7 +13,11 @@ class GetMajorTranscriptCodingSequence(Action):
     def calculate(self, chromosome_sequence_set, major_transcript):
         if major_transcript is None:
             return None
-        return major_transcript.get_sub_seq(chromosome_sequence_set[major_transcript.chr], types={'CDS'})
+        res = major_transcript.get_sub_seq(chromosome_sequence_set[major_transcript.chr], types={'CDS'})
+        if len(res) % 3 != 0:
+            warn('{} coding sequence length not a multiple of 3, possible mis-annotation'.format(major_transcript.name))
+            return None
+        return res
 
 
 class GetFivePrimeUtr(Action):
