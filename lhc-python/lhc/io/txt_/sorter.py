@@ -1,12 +1,11 @@
 import argparse
-import bz2
 import os
 
 from functools import partial
 from itertools import chain
 from lhc.argparse import OpenWritableFile, OpenReadableFile
 from lhc.itertools import ChunkedIterator, SortedIteratorMerger
-from lhc.io.txt import extract_typed_columns
+from tracker_factory import TrackerFactory
 
 
 def default_key(line):
@@ -38,11 +37,11 @@ class Sorter(object):
         lines = self.iterator.next()
         if lines[-1] is None:
             return iter(sorted((line for line in lines if line is not None), key=self.key))
-        else:
-            import tempfile
-            tmp_dir = tempfile.mkdtemp()
-            fnames = self._split(tmp_dir, lines)
-            return SortedIteratorMerger([open(fname) for fname in fnames], self.key)
+
+        import tempfile
+        tmp_dir = tempfile.mkdtemp()
+        fnames = self._split(tmp_dir, lines)
+        return SortedIteratorMerger([open(fname) for fname in fnames], self.key)
 
     def _split(self, tmp_dir, orig_lines=[]):
         """
@@ -76,21 +75,16 @@ class Sorter(object):
 
 
 def sort(args):
-    types = {
-        's': str,
-        'f': float,
-        'i': int
-    }
-    columns = [(int(c[0]), types[c[1]]) for c in args.columns]
-    typed_column_extractor = partial(extract_typed_columns, columns=columns, sep=args.separator)
-    sorter = Sorter(args.input, typed_column_extractor)
-    if args.level == 0:
-        for line in sorter:
-            args.output.write(line)
-    else:
-        compressor = bz2.BZ2Compressor(args.level)
-        for line in sorter:
-            args.output.write(compressor.compress(line))
+    def parse_line(line, trackers):
+        parts = line.rstrip('\r\n').split(args.separator)
+        return tuple(tracker.convert(parts) for tracker in trackers)
+
+    factory = TrackerFactory()
+    trackers = [factory.make(arg) for arg in args.columns]
+    key = partial(parse_line, trackers=trackers)
+    sorter = Sorter(args.input, key=key)
+    for line in sorter:
+        args.output.write(line)
 
 
 def main():
@@ -103,13 +97,13 @@ def get_parser():
 
 
 def define_parser(parser):
+    import sys
+
     add_arg = parser.add_argument
-    add_arg('-c', '--columns', nargs='+',
+    add_arg('-c', '--columns', nargs='+', default='1s',
             help='Which columns and types to extract (default: 1s).')
     add_arg('-i', '--input', action=OpenReadableFile, default=sys.stdin,
             help='The input file (default: stdin).')
-    add_arg('-l', '--compresson-level', default=0,
-            help='The level of compression from 1-9 (default: 0 - no compression)')
     add_arg('-o', '--output', action=OpenWritableFile, default=sys.stdout,
             help='The output file (default: stdout')
     add_arg('-s', '--separator', default='\t',
