@@ -16,6 +16,8 @@ class TranslateCodingSequence(Action):
     OUT = ['protein_sequence']
 
     def calculate(self, coding_sequence, genetic_code):
+        if coding_sequence is None:
+            return None
         return genetic_code.translate(coding_sequence)
 
 
@@ -28,6 +30,8 @@ class GetCodonUsage(Action):
     OUT = ['codon_usage']
 
     def calculate(self, coding_sequence):
+        if coding_sequence is None:
+            return None
         return KmerCounter(coding_sequence, k=3, step=3)
 
 
@@ -41,6 +45,8 @@ class GetRelativeSynonymousCodonUsage(Action):
     OUT = ['relative_synonymous_codon_usage', 'relative_codon_adaptiveness']
 
     def calculate(self, codon_usage, genetic_code):
+        if codon_usage is None:
+            return None, None
         rscu = {}
         w = {}
         for aa in genetic_code.AMINO_ACIDS:
@@ -68,7 +74,7 @@ class GetCodonAdaptationIndex(Action):
     OUT = ['codon_adaptation_index']
 
     def calculate(self, coding_sequence, relative_codon_adaptiveness):
-        if len(coding_sequence) == 0:
+        if coding_sequence is None or len(coding_sequence) == 0:
             return None
         cai = []
         for i in xrange(0, len(coding_sequence), 3):
@@ -77,7 +83,7 @@ class GetCodonAdaptationIndex(Action):
             #if len(red) > 0:
             #    warnings.warn('Redundant bases "%s" encountered in codon. Codon "%s" has been ignored.'%(','.join(sorted(red)), cdn))
             #    continue
-            if cdn not in ['atg', 'tgg', 'taa', 'tga', 'tag']:
+            if cdn not in ['atg', 'tgg', 'taa', 'tga', 'tag'] and cdn in relative_codon_adaptiveness:
                 cai.append(relative_codon_adaptiveness[cdn])
         return geometric_mean(cai)
 
@@ -91,6 +97,8 @@ class GetEffectiveNumberOfCodons(Action):
     OUT = ['effective_number_of_codons']
 
     def calculate(self, codon_usage, genetic_code):
+        if codon_usage is None:
+            return None
         fs = {aa: self.calculate_f(codon_usage, genetic_code[aa])
               for aa in genetic_code.AMINO_ACIDS}
         fams = defaultdict(list)
