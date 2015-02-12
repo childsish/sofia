@@ -60,9 +60,10 @@ class Action(object):
         :param actions: available steps
         :type actions: dict of actions
         """
+        # TODO: implement proper multiple output support
         name = self.name
         if self.calculated:
-            return entities[name]
+            return  # entities[name]
         
         dependencies_changed = False
         for action in self.dependencies.itervalues():
@@ -72,18 +73,23 @@ class Action(object):
         if not dependencies_changed and name in entities:
             self.calculated = True
             self.changed = False
-            return entities[name]
+            return  # entities[name]
         
         local_entities = {}
         for dependency_name, action in self.dependencies.iteritems():
-            local_entities[dependency_name] = entities[action]
+            outs = actions[action].outs.keys()
+            if len(outs) == 1:
+                local_entities[dependency_name] = entities[action]
+            else:
+                local_entities[dependency_name] = dict(zip(outs, entities[action]))[dependency_name]
         for edge, converter in self.converters.iteritems():
             converter.convert(local_entities)
+
         res = self.calculate(**local_entities)
         self.calculated = True
         self.changed = not (name in entities and entities[name] is res)
         entities[name] = res
-        return res
+        return  # res
     
     def reset(self, actions):
         """ Resets the calculation status of this action and all dependencies 
