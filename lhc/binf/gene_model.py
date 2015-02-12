@@ -18,6 +18,7 @@ class Gene(object):
 class Transcript(object):
     def __init__(self, name, ivl, exons=None):
         self.name = name
+        self.chr = ivl.chr
         self.ivl = ivl
         self.exons = SortedList(exons, key=lambda x: x.ivl.start)
 
@@ -39,9 +40,9 @@ class Transcript(object):
             rel_pos += len(exon)
         raise ValueError('Position outside interval bounds.')
     
-    def get_sub_seq(self, seq, fr=None, to=None, valid_types={'CDS', 'UTR5', 'UTR3'}):
+    def get_sub_seq(self, seq, fr=None, to=None, types={'CDS', 'UTR5', 'UTR3'}):
         it = iter(self.exons) if self.ivl.strand == '+' else reversed(self.exons)
-        return ''.join([exon.get_sub_seq(seq, fr, to) for exon in it if exon.type in valid_types])
+        return ''.join([exon.get_sub_seq(seq, fr, to) for exon in it if exon.type in types])
 
 
 class Exon(object):
