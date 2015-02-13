@@ -48,44 +48,45 @@ class TestGtf(unittest.TestCase):
     def test_parse_gene(self):
         lines = [GtfLineIterator.parse_line(line) for line in self.lines[:8]]
 
-        gene = GtfEntityIterator.parse_gene(lines)
+        gene = GtfEntityIterator.parse_gene(lines)[0]
 
         self.assertEquals('a', gene.name)
-        self.assertEquals({'a.0', 'a.1'}, set(gene.transcripts))
-        exon = gene.transcripts['a.1'].exons[-1]
-        self.assertEquals((1659, 1900), (exon.ivl.start, exon.ivl.stop))
+        self.assertEquals('a.1', gene.children[0].name)
+        self.assertEquals('a.0', gene.children[1].name)
+        exon = gene.children[1].children[-1]
+        self.assertEquals((1659, 1900), (exon.start, exon.stop))
 
     def test_parse_gene_reverse_strand(self):
         lines = [GtfLineIterator.parse_line(line) for line in self.lines[-5:]]
 
-        gene = GtfEntityIterator.parse_gene(lines)
+        gene = GtfEntityIterator.parse_gene(lines)[0]
 
         self.assertEquals('c', gene.name)
-        self.assertEquals(0, gene.transcripts['c.0'].get_rel_pos(1899))
-        self.assertEquals(711, gene.transcripts['c.0'].get_rel_pos(1100))
+        self.assertEquals(0, gene.children[0].get_rel_pos(1899))
+        self.assertEquals(711, gene.children[0].get_rel_pos(1100))
 
     def test_iter_gtf(self):
         it = GtfEntityIterator(self.fname)
         
         gene = it.next()
         self.assertEquals('a', gene.name)
-        self.assertEquals(2, len(gene.transcripts))
-        self.assertEquals('a.0', gene.transcripts.values()[0].name)
-        self.assertEquals('a.1', gene.transcripts.values()[1].name)
-        self.assertEquals(3, len(gene.transcripts.values()[0].exons))
-        self.assertEquals(2, len(gene.transcripts.values()[1].exons))
+        self.assertEquals(2, len(gene.children))
+        self.assertEquals('a.1', gene.children[0].name)
+        self.assertEquals('a.0', gene.children[1].name)
+        self.assertEquals(2, len(gene.children[0].children))
+        self.assertEquals(3, len(gene.children[1].children))
         
         gene = it.next()
         self.assertEquals('b', gene.name)
-        self.assertEquals(1, len(gene.transcripts))
-        self.assertEquals('b.0', gene.transcripts.values()[0].name)
-        self.assertEquals(1, len(gene.transcripts.values()[0].exons))
+        self.assertEquals(1, len(gene.children))
+        self.assertEquals('b.0', gene.children[0].name)
+        self.assertEquals(1, len(gene.children[0].children))
 
         gene = it.next()
         self.assertEquals('c', gene.name)
-        self.assertEquals(1, len(gene.transcripts))
-        self.assertEquals('c.0', gene.transcripts.values()[0].name)
-        self.assertEquals(3, len(gene.transcripts.values()[0].exons))
+        self.assertEquals(1, len(gene.children))
+        self.assertEquals('c.0', gene.children[0].name)
+        self.assertEquals(3, len(gene.children[0].children))
         
         self.assertRaises(StopIteration, it.next)
     

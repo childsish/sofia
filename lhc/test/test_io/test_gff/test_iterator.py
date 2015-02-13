@@ -9,7 +9,10 @@ class TestGffIterator(unittest.TestCase):
         fhndl = StringIO(file_content)
         it = GffEntryIterator(fhndl)
 
+        self.assertEquals('AT1G01010.1-Protein', it.next().name)
         self.assertEquals('AT1G01010', it.next().name)
+        self.assertEquals('AT1G01020.1-Protein', it.next().name)
+        self.assertEquals('AT1G01020.2-Protein', it.next().name)
         self.assertEquals('AT1G01020', it.next().name)
         self.assertRaises(StopIteration, it.next)
 
