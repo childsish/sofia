@@ -38,10 +38,10 @@ class FileIndex(object):
         self.depth = state['depth']
         self.keys = state['keys']
         self.values = state['values'] if self.depth == 1 else\
-            [self.init_with_state(self.depth - 1, state) for state in state['values']]
+            [self.init_from_state(state, self.depth - 1) for state in state['values']]
 
     @staticmethod
-    def init_with_state(depth, state):
+    def init_from_state(state, depth=0):
         index = FileIndex(depth)
         index.__setstate__(state)
         return index

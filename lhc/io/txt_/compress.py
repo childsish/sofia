@@ -73,8 +73,8 @@ def define_parser(parser):
     add_arg = parser.add_argument
     add_arg('input',
             help='input file name')
-    add_arg('-c', '--column-types', nargs='+',
-            help='types for converting columns ')
+    add_arg('-c', '--column-types', nargs='+', default='1s',
+            help='types for converting columns (default: 1s)')
     add_arg('-e', '--extension', default='.bgz',
             help='compressed file extension')
     parser.set_defaults(func=compress)
