@@ -6,6 +6,9 @@ from lhc.interval import Interval as BaseInterval
 
 @total_ordering
 class Position(object):
+
+    __slots__ = ('chr', 'pos', 'strand')
+
     def __init__(self, chromosome, position, strand='+'):
         self.chr = chromosome
         self.pos = position
@@ -22,9 +25,19 @@ class Position(object):
         return (self.chm < other.chm) or\
             (self.chm == other.chm) and (self.pos < other.pos)
 
+    def __getstate__(self):
+        return {'chr': self.chr, 'pos': self.pos, 'strand': self.strand}
 
-@total_ordering 
+    def __setstate__(self, state):
+        for attribute, value in state.iteritems():
+            setattr(self, attribute, value)
+
+
+
+@total_ordering
 class Interval(BaseInterval):
+
+    __slots__ = ('chr', 'start', 'stop', 'strand')
     
     REVCMP = string.maketrans('acgtuwrkysmbhdvnACGTUWRKYSMBHDVN',
                               'tgcaawymrskvdhbnTGCAAWYMRSKVDHBN')
@@ -138,3 +151,10 @@ class Interval(BaseInterval):
         if self.strand == '-':
             res = res.translate(Interval.REVCMP)[::-1]
         return res
+
+    def __getstate__(self):
+        return {'chr': self.chr, 'start': self.start, 'stop': self.stop, 'strand': self.strand}
+
+    def __setstate__(self, state):
+        for attribute, value in state.iteritems():
+            setattr(self, attribute, value)

@@ -101,7 +101,6 @@ class GffEntryIterator(object):
             feature = stk.pop()
             open_features.pop(feature.name, None)
             stk.extend(feature.children)
-            stk.extend(feature.products)
 
     @staticmethod
     def get_features(lines):
