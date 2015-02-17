@@ -2,7 +2,7 @@ from sofia_.action import Action
 
 from collections import Counter
 from itertools import islice, izip
-
+from warnings import warn
 
 class GetPest(Action):
     """
@@ -22,6 +22,10 @@ class GetPest(Action):
         self.mono = 'mono' if mono else 'avg'
 
     def calculate(self, protein_sequence, molecular_weight_set):
+        protein_sequence = protein_sequence.rstrip('*')
+        if '*' in protein_sequence:
+            warn('protein sequence terminates early')
+            return None
         return list(self.iter_pest(protein_sequence, molecular_weight_set))
 
     def iter_pest(self, seq, molwts):
@@ -64,6 +68,8 @@ class GetNumberOfPestSequences(Action):
     OUT = ['number_of_pest_sequences']
 
     def calculate(self, pest_sequences):
+        if pest_sequences is None:
+            return None
         return len(pest_sequences)
 
 
@@ -73,13 +79,17 @@ class GetAveragePestSequenceLength(Action):
     OUT = ['average_pest_sequence_length']
 
     def calculate(self, pest_sequences):
+        if pest_sequences is None or len(pest_sequences) == 0:
+            return None
         return sum(len(seq) for seq in pest_sequences) / float(len(pest_sequences))
 
 
 class GetAminoAcidFrequency(Action):
 
     IN = ['protein_sequence']
-    OUt = ['amino_acid_frequency']
+    OUT = ['amino_acid_frequency']
 
     def calculate(self, protein_sequence):
+        if protein_sequence is None:
+            return None
         return Counter(protein_sequence)

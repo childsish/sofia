@@ -16,7 +16,7 @@ class GetMajorTranscriptCodingSequence(Action):
         res = major_transcript.get_sub_seq(chromosome_sequence_set, types={'CDS'})
         if len(res) % 3 != 0:
             warn('{} coding sequence length not a multiple of 3, possible mis-annotation'.format(major_transcript.name))
-            return None
+            #return None
         return res
 
 

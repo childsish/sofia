@@ -19,5 +19,5 @@ class GetDownstream1000(Action):
         strand = major_transcript.ivl.strand
         start = pos if strand == '+' else pos - 1000
         stop = pos if strand == '-' else pos + 1000
-        seq = chromosome_sequence_set.get_interval(chr, start, stop)
+        seq = chromosome_sequence_set.fetch(chr, start, stop)
         return seq if strand == '+' else revcmp(seq)

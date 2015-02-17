@@ -111,7 +111,7 @@ class GetCodonVariant(Action):
     BUFFER = 1000
     
     def calculate(self, coding_variant, coding_sequence, downstream_1000):
-        if coding_variant is None:
+        if coding_variant is None or coding_sequence is None:
             return None
         pos = coding_variant.pos
         ref = coding_variant.ref
