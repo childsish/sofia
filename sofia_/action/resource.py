@@ -64,7 +64,7 @@ class Target(Resource):
         """ Get the next entity in the resource. """
         return self.parser.next()
 
-    def _get_name(self):
+    def _get_name(self, name=None):
         """ Overridden to return unique name. """
         return 'target'
 

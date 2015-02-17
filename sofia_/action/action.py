@@ -8,7 +8,7 @@ class Action(object):
     IN = []
     OUT = []
     
-    def __init__(self, resources=None, dependencies=None, param={}, ins=None, outs=None, converters={}):
+    def __init__(self, resources=None, dependencies=None, param={}, ins=None, outs=None, converters={}, name=None):
         self.changed = True
         self.calculated = False
         self.resources = set() if resources is None else resources
@@ -16,7 +16,7 @@ class Action(object):
         self.param = param
         self.ins = {in_: in_ for in_ in self.IN} if ins is None else ins
         self.outs = {out: Entity(out) for out in self.OUT} if outs is None else outs
-        self.name = self._get_name()
+        self.name = self._get_name(name)
         self.converters = converters
     
     def __str__(self):
@@ -105,10 +105,10 @@ class Action(object):
             res.update(out.attr)
         return res
     
-    def _get_name(self):
+    def _get_name(self, name=None):
         """ Return the name of the action based on it's resources and
         arguments. """
-        name = [type(self).__name__]
+        name = [type(self).__name__ if name is None else name]
         if len(self.resources) != 0:
             tmp = ','.join(resource.name for resource in self.resources if resource.name != 'target')
             if len(tmp) > 0:
