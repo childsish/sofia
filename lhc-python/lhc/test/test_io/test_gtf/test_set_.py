@@ -30,17 +30,17 @@ class TestGtf(unittest.TestCase):
 
         gene = parser['a']
         self.assertEquals(gene.name, 'a')
-        self.assertEquals(len(gene.transcripts), 2)
-        self.assertEquals(gene.transcripts.values()[0].name, 'a.0')
-        self.assertEquals(gene.transcripts.values()[1].name, 'a.1')
-        self.assertEquals(len(gene.transcripts.values()[0].exons), 3)
-        self.assertEquals(len(gene.transcripts.values()[1].exons), 2)
+        self.assertEquals(len(gene.children), 2)
+        self.assertEquals(gene.children[0].name, 'a.1')
+        self.assertEquals(gene.children[1].name, 'a.0')
+        self.assertEquals(len(gene.children[0].children), 2)
+        self.assertEquals(len(gene.children[1].children), 3)
 
         gene = parser['b']
         self.assertEquals(gene.name, 'b')
-        self.assertEquals(len(gene.transcripts), 1)
-        self.assertEquals(gene.transcripts.values()[0].name, 'b.0')
-        self.assertEquals(len(gene.transcripts.values()[0].exons), 1)
+        self.assertEquals(len(gene.children), 1)
+        self.assertEquals(gene.children[0].name, 'b.0')
+        self.assertEquals(len(gene.children[0].children), 1)
 
     def test_getItemInterval(self):
         parser = GtfSet(GtfEntityIterator(self.fname))

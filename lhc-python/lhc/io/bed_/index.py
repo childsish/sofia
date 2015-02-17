@@ -1,28 +1,24 @@
+import json
 import os
-import pysam
 
+from Bio import bgzf
 from iterator import BedLineIterator
+from lhc.io.txt_.index import FileIndex
 
 
 class IndexedBedFile(object):
     def __init__(self, fname):
-        self.fname = os.path.abspath(fname)
-        iname = '{}.tbi'.format(self.fname)
-        if not os.path.exists(iname):
-            raise ValueError('File missing interval index. Try: tabix -p bed <FILENAME>.')
-        self.index = pysam.Tabixfile(self.fname)
-
-    def __getitem__(self, key):
-        if hasattr(key, 'chr') and hasattr(key, 'pos') and hasattr(key, 'ref'):
-            lines = self.index.fetch(key.chr, key.pos, key.pos + len(key.ref))
-        elif hasattr(key, 'chr') and hasattr(key, 'pos'):
-            lines = self.index.fetch(key.chr, key.pos, key.pos + 1)
-        elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            lines = self.index.fetch(key.chr, key.start, key.stop)
-        else:
-            raise NotImplementedError('Random access not implemented for {}'.format(type(key)))
-        
-        return [BedLineIterator.parse_line(line) for line in lines]
+        self.fhndl = bgzf.open(fname)
+        if not os.path.exists('{}.lci'.format(fname)):
+            msg = 'Interval index missing. Try: "python -m lhc.io.bed index {}".'.format(fname)
+            raise OSError(msg)
+        fhndl = open('{}.lci'.format(fname))
+        self.index = FileIndex.init_from_state(json.load(fhndl))
+        fhndl.close()
     
-    def get_intervals_at_position(self, chr, pos):
-        return [BedLineIterator.parse_line(line) for line in self.index.fetch(chr, pos, pos + 1)]
+    def fetch(self, chr, start, stop):
+        fpos, length = self.index[(chr, start)]
+        self.fhndl.seek(fpos)
+        data = self.fhndl.read(length)
+        intervals = [BedLineIterator.parse_line(line) for line in data.split('\n') if line != '']
+        return [interval for interval in intervals if interval.start < stop and interval.stop >= start]

@@ -4,19 +4,12 @@ import unittest
 
 from subprocess import Popen
 
-from lhc.binf.genomic_coordinate import Interval
-try:
-    from lhc.io.bed_.index import IndexedBedFile
-    import_failed = False
-except ImportError:
-    import_failed = True
+from lhc.io.txt_.compress import compress
+from lhc.io.bed_.index import IndexedBedFile
 
 
 class TestBed(unittest.TestCase):
     def setUp(self):
-        if import_failed:
-            self.skipTest('Could not import IndexedBedFile.')
-
         fhndl, self.fname = tempfile.mkstemp()
         os.write(fhndl, 'chr1\t100\t200\t_00\t0.0\t+\n')
         os.write(fhndl, 'chr1\t150\t250\t_01\t0.0\t+\n')
@@ -26,16 +19,13 @@ class TestBed(unittest.TestCase):
         os.write(fhndl, 'chr2\t200\t300\t_05\t0.0\t+\n')
         os.close(fhndl)
 
-        prc = Popen(['bgzip', self.fname])
-        prc.wait()
-        prc = Popen(['tabix', '-p', 'bed', '%s.gz'%self.fname])
-        prc.wait()
+        compress(self.fname, ['1s', '2,3v'])
 
     def test_indexedBed(self):
-        bed = IndexedBedFile('%s.gz'%self.fname)
+        bed = IndexedBedFile('%s.bgz' % self.fname)
 
-        res = bed[Interval('chr1', 100, 200)]
-        self.assertEquals(len(res), 2)
+        res = bed.fetch('chr1', 100, 199)
+        self.assertEquals(2, len(res))
         self.assertEquals(res[0].chr, 'chr1')
         self.assertEquals(res[0].start, 99)
         self.assertEquals(res[0].stop, 200)
@@ -44,8 +34,8 @@ class TestBed(unittest.TestCase):
         self.assertEquals(res[1].stop, 250)
     
     def tearDown(self):
-        os.remove('%s.gz'%self.fname)
-        os.remove('%s.gz.tbi'%self.fname)
+        os.remove('%s.bgz' % self.fname)
+        os.remove('%s.bgz.lci' % self.fname)
         
 if __name__ == '__main__':
     import sys

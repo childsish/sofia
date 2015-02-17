@@ -1,8 +1,5 @@
-import bz2
-import gzip
-
 from collections import namedtuple
-from lhc.binf.gene_model import Gene, Transcript, Exon
+from lhc.binf.genomic_feature import GenomicFeature
 from lhc.binf.genomic_coordinate import Interval
 from lhc.collections import SortedValueDict
 from lhc.filetools.flexible_opener import open_flexibly
@@ -95,26 +92,32 @@ class GtfEntityIterator(object):
             lowest_gene_name, (lowest_interval, lowest_lines) = self.genes.pop_lowest()
         except IndexError:
             raise StopIteration
-        return self.parse_gene(lowest_lines)
+        return self.parse_gene(lowest_lines)[0]
 
     def close(self):
         self.it.close()
 
     @staticmethod
     def parse_gene(lines):
-        gene = Gene()
+        top_features = {}
+        open_features = {}
         for line in sorted(lines, key=lambda line: (line.start, -line.stop)):
             interval = Interval(line.chr, line.start, line.stop, line.strand)
             if line.type == 'gene':
-                gene.name = line.attr['gene_name']
-                gene.ivl = interval
+                gene_name = line.attr['gene_name']
+                feature = GenomicFeature(gene_name, 'gene', interval, line.attr)
+                top_features[gene_name] = feature
             elif line.type == 'transcript':
+                gene_name = line.attr['gene_name']
                 transcript_name = line.attr['transcript_name']
-                gene.transcripts[transcript_name] = Transcript(transcript_name, interval)
+                feature = GenomicFeature(transcript_name, 'transcript', interval, line.attr)
+                top_features[gene_name].add_child(feature)
+                open_features[transcript_name] = feature
             elif line.type == 'CDS':
                 transcript_name = line.attr['transcript_name']
-                gene.transcripts[transcript_name].add_exon(Exon(interval, 'CDS'))
-        return gene
+                feature = GenomicFeature(interval, 'CDS', interval, line.attr)
+                open_features[transcript_name].add_child(feature)
+        return top_features.values()
 
     def __del__(self):
         self.close()

@@ -40,3 +40,4 @@ class IntervalColumnTracker(ColumnTracker):
         elif self.current_key.stop <= interval.start:
             return True
         self.current_key.stop = max(self.current_key.stop, interval.stop)
+        return False

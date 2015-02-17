@@ -35,27 +35,33 @@ class Partitioner(object):
         return tuple(tracker.get_key() for tracker in self.column_trackers), buffer, False
 
 
-def compress(args):
-    if not args.extension.startswith('.'):
-        args.extension = '.' + args.extension
+def compress(input, column_types='1s', extension='.bgz'):
+    if not extension.startswith('.'):
+        extension = '.' + extension
 
     factory = TrackerFactory()
-    column_trackers = [factory.make(column_type) for column_type in args.column_types]
-    partitioner = Partitioner(args.input, column_trackers)
-    index = FileIndex(len(args.column_types))
-    out_fhndl = BgzfWriter(args.input + args.extension)
+    column_trackers = [factory.make(column_type) for column_type in column_types]
+    partitioner = Partitioner(input, column_trackers)
+    index = FileIndex(len(column_types))
+    out_fhndl = BgzfWriter(input + extension)
+    fpos = out_fhndl.tell()
     key, buffer, break_block = partitioner.next()
-    index[key] = out_fhndl.tell()
-    for key, data, break_block in partitioner:
-        if len(buffer) + len(data) > 65536 or break_block:
+    for c_key, c_buffer, c_break_block in partitioner:
+        if len(buffer) + len(c_buffer) >= 65536 or break_block:
+            index[key] = (fpos, len(buffer))
             out_fhndl.write(buffer)
             out_fhndl.flush()
-            index[key] = out_fhndl.tell()
-            buffer = ''
-        buffer += data
+            fpos = out_fhndl.tell()
+            key = c_key
+            buffer = c_buffer
+            break_block = c_break_block
+        else:
+            buffer += c_buffer
+    index[key] = (fpos, len(buffer))
+    out_fhndl.write(buffer)
     out_fhndl.close()
 
-    out_fhndl = open(args.input + args.extension + '.lci', 'w')
+    out_fhndl = open(input + extension + '.lci', 'w')
     json.dump(index.__getstate__(), out_fhndl, indent=4, separators=(',', ': '))
     out_fhndl.close()
 
@@ -73,11 +79,11 @@ def define_parser(parser):
     add_arg = parser.add_argument
     add_arg('input',
             help='input file name')
-    add_arg('-c', '--column-types', nargs='+',
-            help='types for converting columns ')
+    add_arg('-c', '--column-types', nargs='+', default='1s',
+            help='types for converting columns (default: 1s)')
     add_arg('-e', '--extension', default='.bgz',
             help='compressed file extension')
-    parser.set_defaults(func=compress)
+    parser.set_defaults(func=lambda args: compress(args.input, args.column_types, args.extension))
     return parser
 
 
