@@ -31,4 +31,4 @@ class Partitioner(object):
             self.buffer += line
         buffer = self.buffer
         self.buffer = None
-        return buffer, tuple(tracker.get_key() for tracker in self.column_trackers), False
+        return buffer, tuple(tracker.get_key() for tracker in self.column_trackers), self.break_block
