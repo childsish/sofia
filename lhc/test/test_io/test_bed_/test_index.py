@@ -2,8 +2,6 @@ import os
 import tempfile
 import unittest
 
-from subprocess import Popen
-
 from lhc.io.txt_.compress import compress
 from lhc.io.bed_.index import IndexedBedFile
 
@@ -40,4 +38,3 @@ class TestBed(unittest.TestCase):
 if __name__ == '__main__':
     import sys
     sys.exit(unittest.main())
-
