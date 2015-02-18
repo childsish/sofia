@@ -3,36 +3,8 @@ import json
 
 from tracker_factory import TrackerFactory
 from index import FileIndex
+from partitioner import Partitioner
 from Bio.bgzf import BgzfWriter
-
-
-class Partitioner(object):
-    def __init__(self, fname, column_trackers):
-        self.buffer = ''
-        self.fhndl = open(fname)
-        self.column_trackers = column_trackers
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        if self.buffer is None:
-            raise StopIteration
-        for line in self.fhndl:
-            parts = line.rstrip('\r\n').split('\t')
-            is_new_entry = [tracker.is_new_entry(parts) for tracker in self.column_trackers]
-            if any(is_new_entry):
-                key = tuple(tracker.get_key() for tracker in self.column_trackers)
-                buffer = self.buffer
-
-                self.buffer = line
-                for tracker in self.column_trackers:
-                    tracker.set_new_entry(parts)
-                return key, buffer, any(is_new_entry[:-1])
-            self.buffer += line
-        buffer = self.buffer
-        self.buffer = None
-        return tuple(tracker.get_key() for tracker in self.column_trackers), buffer, False
 
 
 def compress(input, column_types='1s', extension='.bgz'):
