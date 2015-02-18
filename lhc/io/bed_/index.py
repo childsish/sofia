@@ -18,7 +18,6 @@ class IndexedBedFile(object):
     
     def fetch(self, chr, start, stop):
         fr_fpos, fr_length = self.index[(chr, start)]
-        to_fpos, to_length = self.index[(chr, stop)]
         self.fhndl.seek(fr_fpos)
         data = self.fhndl.read(fr_length)
         intervals = [BedLineIterator.parse_line(line) for line in data.split('\n') if line != '']
