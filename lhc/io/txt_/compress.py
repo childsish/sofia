@@ -17,8 +17,8 @@ def compress(input, column_types='1s', extension='.bgz'):
     index = FileIndex(len(column_types))
     out_fhndl = BgzfWriter(input + extension)
     fpos = out_fhndl.tell()
-    key, buffer, break_block = partitioner.next()
-    for c_key, c_buffer, c_break_block in partitioner:
+    buffer, key, break_block = partitioner.next()
+    for c_buffer, c_key, break_block in partitioner:
         if len(buffer) + len(c_buffer) >= 65536 or break_block:
             index[key] = (fpos, len(buffer))
             out_fhndl.write(buffer)
@@ -26,7 +26,6 @@ def compress(input, column_types='1s', extension='.bgz'):
             fpos = out_fhndl.tell()
             key = c_key
             buffer = c_buffer
-            break_block = c_break_block
         else:
             buffer += c_buffer
     index[key] = (fpos, len(buffer))
