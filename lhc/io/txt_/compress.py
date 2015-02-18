@@ -33,7 +33,7 @@ def compress(input, column_types='1s', extension='.bgz'):
     out_fhndl.close()
 
     out_fhndl = open(input + extension + '.lci', 'w')
-    json.dump(index.__getstate__(), out_fhndl, indent=4, separators=(',', ': '))
+    json.dump(index.__getstate__(), out_fhndl)
     out_fhndl.close()
 
 
