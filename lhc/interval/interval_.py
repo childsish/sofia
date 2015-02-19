@@ -68,6 +68,12 @@ class Interval(object):
         return Interval(min(self.start, other.start),
                         max(self.stop, other.stop))\
             if self.overlaps(other) or self.touches(other) else None
+
+    def union_update(self, other):
+        if not self.overlaps(other):
+            raise ValueError('can not union non-overlapping intervals')
+        self.start = min(self.start, other.start)
+        self.stop = max(self.stop, other.stop)
     
     def intersect(self, other):
         """Return an interval where self and other intersect
@@ -78,6 +84,12 @@ class Interval(object):
         return Interval(max(self.start, other.start),
                         min(self.stop, other.stop))\
             if self.overlaps(other) else None
+
+    def intersect_update(self, other):
+        if not self.overlaps(other):
+            raise ValueError('can not intersect non-overlapping intervals')
+        self.start = max(self.start, other.start)
+        self.stop = min(self.stop, other.stop)
     
     def difference(self, other):
         """Return an interval that covers self but not other
