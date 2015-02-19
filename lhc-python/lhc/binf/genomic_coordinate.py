@@ -103,11 +103,21 @@ class Interval(BaseInterval):
         ivl = super(Interval, self).union(other)\
             if self.chr == other.chr and self.strand == other.strand else None
         return Interval(self.chr, ivl.start, ivl.stop, self.strand)
+
+    def union_update(self, other):
+        if self.chr != other.chr or self.strand != other.strand:
+            raise ValueError('can not union intervals on different chromosomes/strands')
+        super(Interval, self).union_update(other)
     
     def intersect(self, other):
         ivl = super(Interval, self).intersect(other)\
             if self.chr == other.chr and self.strand == other.strand else None
         return Interval(self.chr, ivl.start, ivl.stop, self.strand)
+
+    def intersect_update(self, other):
+        if self.chr != other.chr or self.strand != other.strand:
+            raise ValueError('can not intersect intervals on different chromosomes/strands')
+        ivl = super(Interval, self).intersect_update(other)
     
     def difference(self, other):
         ivl = super(Interval, self).difference(other)\
