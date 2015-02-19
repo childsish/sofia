@@ -46,9 +46,7 @@ class SortedValueDict(object):
             if cmp(self.values[idx], value) == 0:
                 self.values[idx] = value
                 return
-            del self.key_to_index[key]
-            del self.index_to_key[idx]
-            del self.values[idx]
+            del self[key]
         idx = bisect.bisect_left(self.keys, self.key(value))
         self.key_to_index[key] = idx
         self.index_to_key.insert(idx, key)
@@ -60,6 +58,7 @@ class SortedValueDict(object):
         del self.key_to_index[key]
         del self.index_to_key[idx]
         del self.values[idx]
+        del self.keys[idx]
 
     def get(self, key, default):
         try:
