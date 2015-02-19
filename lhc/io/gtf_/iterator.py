@@ -83,8 +83,8 @@ class GtfEntityIterator(object):
                 self.genes[gene_name] = (Interval(line.chr, line.start, line.stop, line.strand), [line])
             else:
                 interval, lines = self.genes[gene_name]
-                interval.get_value().union(Interval(line.chr, line.start, line.stop, line.strand))
-                lines.get_value().append(line)
+                interval.union_update(line)
+                lines.append(line)
 
             if passed_lowest:
                 break
