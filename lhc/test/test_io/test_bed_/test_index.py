@@ -2,8 +2,6 @@ import os
 import tempfile
 import unittest
 
-from subprocess import Popen
-
 from lhc.io.txt_.compress import compress
 from lhc.io.bed_.index import IndexedBedFile
 
@@ -21,23 +19,23 @@ class TestBed(unittest.TestCase):
 
         compress(self.fname, ['1s', '2,3v'])
 
-    def test_indexedBed(self):
-        bed = IndexedBedFile('%s.bgz' % self.fname)
+    def test_indexed_bed(self):
+        bed = IndexedBedFile('{}.bgz'.format(self.fname))
 
         res = bed.fetch('chr1', 100, 199)
         self.assertEquals(2, len(res))
-        self.assertEquals(res[0].chr, 'chr1')
-        self.assertEquals(res[0].start, 99)
-        self.assertEquals(res[0].stop, 200)
-        self.assertEquals(res[1].chr, 'chr1')
-        self.assertEquals(res[1].start, 149)
-        self.assertEquals(res[1].stop, 250)
+        self.assertEquals('chr1', res[0].chr)
+        self.assertEquals(99, res[0].start)
+        self.assertEquals(200, res[0].stop)
+        self.assertEquals('chr1', res[1].chr)
+        self.assertEquals(149, res[1].start)
+        self.assertEquals(250, res[1].stop)
     
     def tearDown(self):
-        os.remove('%s.bgz' % self.fname)
-        os.remove('%s.bgz.lci' % self.fname)
+        os.remove(self.fname)
+        os.remove('{}.bgz'.format(self.fname))
+        os.remove('{}.bgz.lci'.format(self.fname))
         
 if __name__ == '__main__':
     import sys
     sys.exit(unittest.main())
-
