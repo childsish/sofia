@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from itertools import izip, product
-from fasta_ import indexer, wrap
+from fasta_ import indexer, wrap, compress
 from fasta_.iterator import FastaEntryIterator
 from fasta_.set_ import FastaSet
 from lhc.binf.sequence import revcmp as rc
@@ -88,6 +88,9 @@ def get_parser():
     compare_parser.add_argument('input_a')
     compare_parser.add_argument('input_b')
     compare_parser.set_defaults(func=lambda args: compare(args.input_a, args.input_b))
+
+    compress_parser = subparsers.add_parser('compress')
+    compress.define_parser(compress_parser)
 
     extract_parser = subparsers.add_parser('extract')
     extract_parser.add_argument('input')

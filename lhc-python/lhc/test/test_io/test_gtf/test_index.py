@@ -3,12 +3,8 @@ import tempfile
 import unittest
 
 from subprocess import Popen
-from lhc.binf.genomic_coordinate import Interval
-try:
-    from lhc.io.gtf_.index import IndexedGtfFile
-    import_failed = False
-except ImportError:
-    import_failed = True
+from lhc.io.txt_.compress import compress
+from lhc.io.gtf_.index import IndexedGtfFile
 
 
 class TestGtf(unittest.TestCase):
