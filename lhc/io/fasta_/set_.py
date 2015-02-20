@@ -11,5 +11,5 @@ class FastaSet(object):
             return self.data[key.chr][key.start:key.stop]
         raise NotImplementedError('Fasta set random access not implemented for {}'.format(type(key)))
 
-    def get_interval(self, chr, start, stop):
+    def fetch(self, chr, start, stop):
         return self.data[chr][start:stop]
