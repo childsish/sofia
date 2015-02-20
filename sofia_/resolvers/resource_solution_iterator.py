@@ -5,10 +5,11 @@ from sofia_.error_manager import ERROR_MANAGER
 
 
 class ResourceSolutionIterator(object):
-    def __init__(self, action, resources):
+    def __init__(self, action, resources, workflow_template):
         self.action = action
         self.c_hit = 0
         self.hits = self._get_hits(resources)
+        self.workflow_template = workflow_template
 
     def __str__(self):
         return self.action.name
@@ -30,7 +31,7 @@ class ResourceSolutionIterator(object):
             import sys
 
             fname = action.DEFAULT
-            full_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), 'data', fname)
+            full_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), 'templates', self.workflow_template, 'data', fname)
             res.append(ProvidedResource(full_path, action.OUT[0]))
         return res
 
