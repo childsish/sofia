@@ -12,7 +12,7 @@ class GetMajorTranscriptFromGenomicFeature(Action):
     def calculate(self, genomic_feature):
         if genomic_feature is None:
             return None
-        genomic_feature = genomic_feature['data']
+        genomic_feature = genomic_feature['genomic_feature']
         mx_exon = 0
         mx_transcript = None
         for transcript in genomic_feature.children:

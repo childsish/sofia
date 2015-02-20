@@ -90,12 +90,12 @@ class GetCodingVariant(Action):
         pos = variant['genomic_position']['chromosome_pos']
         try:
             coding_position = major_transcript.get_rel_pos(pos)\
-                if major_transcript.ivl.strand == '+'\
+                if major_transcript.strand == '+'\
                 else major_transcript.get_rel_pos(pos + len(ref) - 1)
-        except ValueError:
+        except IndexError:
             return None
         alt = variant['alt'].split(',')
-        if major_transcript.ivl.strand == '-':
+        if major_transcript.strand == '-':
             ref = revcmp(ref)
             alt = map(revcmp, alt)
         return CodingVariant(coding_position, ref, alt)

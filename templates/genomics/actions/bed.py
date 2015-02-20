@@ -1,8 +1,10 @@
 import os
 
 from sofia_.action import Resource, Target
-from lhc.io.bed_.iterator import BedLineIterator as BedIteratorParser
-from lhc.io.bed_.set_ import BedSet as BedSetParser
+from lhc.io.bed_.index import IndexedBedFile
+from lhc.io.bed_.iterator import BedLineIterator
+from lhc.io.bed_.set_ import BedSet as BedSetBase
+from warnings import warn
 
 
 class BedIterator(Target):
@@ -12,7 +14,7 @@ class BedIterator(Target):
     OUT = ['genomic_interval']
     
     def init(self):
-        self.parser = BedIteratorParser(self.get_filename())
+        self.parser = BedLineIterator(self.get_filename())
 
     def calculate(self):
         interval = self.parser.next()
@@ -29,7 +31,7 @@ class BedIterator(Target):
 
 class BedSet(Resource):
     
-    EXT = ['.bed', '.bed.gz']
+    EXT = ['.bed', '.bed.gz', '.bed.bgz']
     TYPE = 'genomic_interval'
     OUT = ['genomic_interval_set']
 
@@ -37,10 +39,14 @@ class BedSet(Resource):
         fname = self.get_filename()
         if os.path.exists('{}.tbi'.format(fname)):
             try:
-                from lhc.io.bed_.index import IndexedBedFile
+                import pysam
+                self.parser = IndexedBedFile(pysam.TabixFile(fname))
+                return
             except ImportError:
-                sys.stderr.write('Pysam not available. Bed file access will be slower.\n')
-                IndexedBedFile = lambda fname: BedSetParser(BedIteratorParser(fname))
-        else:
-            IndexedBedFile = lambda fname: BedSetParser(BedIteratorParser(fname))
-        self.parser = IndexedBedFile(fname)
+                pass
+        if os.path.exists('{}.lci'.format(fname)):
+            from lhc.io.txt_ import index
+            self.parser = IndexedBedFile(index.IndexedFile(fname))
+            return
+        warn('no index available for {}, loading whole file...'.format(fname))
+        self.parser = BedSetBase(BedLineIterator(fname))
