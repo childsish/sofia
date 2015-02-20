@@ -96,20 +96,21 @@ class GtfEntryIterator(object):
             if not self.c_interval.overlaps(line):
                 self.c_line = [line]
                 self.c_interval = Interval(line.chr, line.start, line.stop)
-                self.completed_features = self.get_features(lines)
+                self.completed_features = self.get_features_raw(lines)
                 return self.completed_features
             lines.append(line)
             self.c_interval.union_update(line, compare_strand=False)
         self.c_line = []
         self.c_interval = None
-        self.completed_features = self.get_features(lines)
+        self.completed_features = self.get_features_raw(lines)
         return self.completed_features
 
     @staticmethod
     def get_features(lines):
-        if len(lines) == 0:
-            return []
+        return GtfEntryIterator.get_features_raw(GtfLineIterator.parse_line(line) for line in lines)
 
+    @staticmethod
+    def get_features_raw(lines):
         top_features = {}
         open_features = {}
         for i, line in enumerate(lines):
@@ -127,4 +128,6 @@ class GtfEntryIterator(object):
                 open_features[parent].add_child(feature)
             else:
                 top_features[id] = feature
+        if len(top_features) == 0:
+            return []
         return zip(*sorted(top_features.iteritems()))[1]
