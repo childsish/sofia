@@ -14,6 +14,8 @@ class TestGffIterator(unittest.TestCase):
         self.assertEquals('AT1G01020', it.next().name)
         self.assertEquals('AT1G01020.1-Protein', it.next().name)
         self.assertEquals('AT1G01020.2-Protein', it.next().name)
+        self.assertEquals('AT2G01010', it.next().name)
+        self.assertEquals('AT2G01020', it.next().name)
         self.assertRaises(StopIteration, it.next)
 
     def test_children(self):
@@ -88,7 +90,13 @@ Chr1	TAIR10	CDS	7315	7450	.	-	1	Parent=AT1G01020.2,AT1G01020.2-Protein;
 Chr1	TAIR10	three_prime_UTR	7157	7314	.	-	.	Parent=AT1G01020.2
 Chr1	TAIR10	exon	7157	7450	.	-	.	Parent=AT1G01020.2
 Chr1	TAIR10	three_prime_UTR	6790	7069	.	-	.	Parent=AT1G01020.2
-Chr1	TAIR10	exon	6790	7069	.	-	.	Parent=AT1G01020.2"""
+Chr1	TAIR10	exon	6790	7069	.	-	.	Parent=AT1G01020.2
+Chr2	TAIR10	gene	3706	5513	.	+	.	ID=AT2G01010;Note=rRNA;Name=AT2G01010
+Chr2	TAIR10	rRNA	3706	5513	.	+	.	ID=AT2G01010.1;Parent=AT2G01010;Name=AT2G01010.1;Index=1
+Chr2	TAIR10	exon	3706	5513	.	+	.	Parent=AT2G01010.1
+Chr2	TAIR10	gene	5782	5945	.	+	.	ID=AT2G01020;Note=rRNA;Name=AT2G01020
+Chr2	TAIR10	rRNA	5782	5945	.	+	.	ID=AT2G01020.1;Parent=AT2G01020;Name=AT2G01020.1;Index=1
+Chr2	TAIR10	exon	5782	5945	.	+	.	Parent=AT2G01020.1"""
 
 if __name__ == '__main__':
     import sys
