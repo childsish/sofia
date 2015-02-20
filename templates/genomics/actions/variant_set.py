@@ -13,7 +13,7 @@ class GetVariantByVariant(Action):
         chr = variant['genomic_position']['chromosome_id']
         pos = variant['genomic_position']['chromosome_pos']
         try:
-            overlap = variant_set.get_variants_at_position(chr, pos)
+            overlap = variant_set.fetch(chr, pos, pos + 1)
         except ValueError:
             return None
         hits = [o for o in overlap if o.pos == pos and
