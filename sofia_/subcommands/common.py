@@ -19,7 +19,7 @@ def load_resource(fname, parsers, format=None):
 def load_action_hypergraph(template):
     available_actions = load_plugins(template, Action, {Resource, Target})
     entity_graph = load_entity_graph(template)
-    res = ActionHyperGraph()
+    res = ActionHyperGraph(entity_graph)
     for action, root in available_actions:
         res.register_action(ActionWrapper(action))
     for in_ in set(res.entities):

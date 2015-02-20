@@ -166,8 +166,8 @@ def aggregate(args):
         fhndl = open(args.resource_list)
         resource_list = fhndl.read().strip().split('\n')
         fhndl.close()
-        provided_resources.update(parse_provided_resources(args.input, resource_list, args.template))
-    provided_resources.update(parse_provided_resources(args.input, args.resources, args.template))
+        provided_resources.update(parse_provided_resources(args.input, resource_list, args.workflow_template))
+    provided_resources.update(parse_provided_resources(args.input, args.resources, args.workflow_template))
     
     requested_entities = parse_requested_entities(args.entities, provided_resources)
     if args.entity_list is not None:
@@ -188,8 +188,7 @@ def aggregate(args):
 
 
 def parse_provided_resources(target, resources, template):
-    program_dir = get_program_directory()
-    entity_graph = load_entity_graph()
+    entity_graph = load_entity_graph(template)
     resource_parser = ResourceParser(entity_graph)
     provided_resources = resource_parser.parse_resources(resources)
     provided_resources['target'] = resource_parser.parse_resource(target + ' -n target')
