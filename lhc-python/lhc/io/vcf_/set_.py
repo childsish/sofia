@@ -10,13 +10,6 @@ class VcfSet(object):
             ivl = Interval(variant.pos, variant.pos + len(variant.ref))
             self.ivl_index[(variant.chr, ivl)] = i
 
-    def __getitem__(self, key):
-        if hasattr(key, 'chr') and hasattr(key, 'pos'):
-            length = len(key.ref) if hasattr(key, 'ref') else 1
-            ivl = Interval(key.pos, key.pos + length)
-            idxs = self.ivl_index[(key.chr, ivl)]
-        elif hasattr(key, 'chr') and hasattr(key, 'start') and hasattr(key, 'stop'):
-            idxs = self.ivl_index[(key.chr, key)]
-        else:
-            raise NotImplementedError('Variant set random access not implemented for type: {}'.format(type(key)))
+    def fetch(self, chr, start, stop):
+        idxs = self.ivl_index[(chr, Interval(start, stop))]
         return [self.data[v] for v in idxs.itervalues()]
