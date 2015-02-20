@@ -71,6 +71,9 @@ class GtfEntryIterator(object):
         self.c_line = [line]
         self.c_interval = Interval(line.chr, line.start, line.stop)
 
+    def __iter__(self):
+        return self
+
     @property
     def line_no(self):
         return self.it.line_no
