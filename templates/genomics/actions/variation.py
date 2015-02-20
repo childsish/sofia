@@ -89,9 +89,9 @@ class GetCodingVariant(Action):
         ref = variant['ref']
         pos = variant['genomic_position']['chromosome_pos']
         try:
-            coding_position = major_transcript.get_rel_pos(pos)\
+            coding_position = major_transcript.get_rel_pos(pos, {'CDS'})\
                 if major_transcript.strand == '+'\
-                else major_transcript.get_rel_pos(pos + len(ref) - 1)
+                else major_transcript.get_rel_pos(pos + len(ref) - 1, {'CDS'})
         except IndexError:
             return None
         alt = variant['alt'].split(',')
@@ -101,7 +101,9 @@ class GetCodingVariant(Action):
         return CodingVariant(coding_position, ref, alt)
 
 
-CodonVariant = namedtuple('CodonVariant', ('pos', 'ref', 'alt', 'fs'))
+class CodonVariant(namedtuple('CodonVariant', ('pos', 'ref', 'alt', 'fs'))):
+    def __str__(self):
+        return ','.join('c.{}{}>{}'.format(self.pos, self.ref, alt) for alt in self.alt)
 
 
 class GetCodonVariant(Action):
