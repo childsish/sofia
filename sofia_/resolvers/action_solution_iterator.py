@@ -9,7 +9,7 @@ from entity_solution_iterator import EntitySolutionIterator
 
 
 class ActionSolutionIterator(object):
-    def __init__(self, action, graph, provided_resources, maps={}, requested_resources=set(), visited=None, workflow_template=None):
+    def __init__(self, action, graph, provided_resources, workflow_template, maps={}, requested_resources=set(), visited=None):
         self.action = action
         self.graph = graph
         self.provided_resources = provided_resources
@@ -28,10 +28,10 @@ class ActionSolutionIterator(object):
         resolvers = [EntitySolutionIterator(entity,
                                             self.graph,
                                             self.provided_resources,
+                                            self.workflow_template,
                                             self.maps,
                                             self.requested_resources,
-                                            self.visited,
-                                            self.workflow_template)
+                                            self.visited)
                      for entity in entities]
         disjoint_solutions = [list(resolver) for resolver in resolvers]
 

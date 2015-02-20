@@ -15,6 +15,7 @@ from sofia_.attribute_map_factory import AttributeMapFactory
 class Aggregator(object):
     def __init__(self, workflow_template):
         self.hyper_graph = load_action_hypergraph(workflow_template)
+        self.workflow_template = workflow_template
 
     def aggregate(self, requested_entities, provided_resources, args, maps={}):
         def iter_resource(resource):
@@ -68,8 +69,9 @@ class Aggregator(object):
             solution_iterator = EntitySolutionIterator(entity.name,
                                                        self.hyper_graph,
                                                        provided_resources,
+                                                       self.workflow_template,
                                                        maps,
-                                                       entity.resources)
+                                                       entity.resources,)
             possible_graphs = [graph for graph in solution_iterator
                                if satisfies_request(graph, entity.resources)]
             if len(possible_graphs) == 0:

@@ -3,7 +3,7 @@ from sofia_.error_manager import ERROR_MANAGER
 
 
 class EntitySolutionIterator(object):
-    def __init__(self, entity, graph, provided_resources, maps={}, requested_resources=set(), visited=None, workflow_template=None):
+    def __init__(self, entity, graph, provided_resources, workflow_template, maps={}, requested_resources=set(), visited=None):
         self.entity = entity
         self.graph = graph
         self.provided_resources = provided_resources
@@ -32,9 +32,9 @@ class EntitySolutionIterator(object):
                 it = ActionSolutionIterator(action,
                                             self.graph,
                                             self.provided_resources,
+                                            self.workflow_template,
                                             self.maps,
                                             self.requested_resources,
-                                            set(self.visited),
-                                            self.workflow_template)
+                                            set(self.visited))
             for solution in it:
                 yield solution
