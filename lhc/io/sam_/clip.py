@@ -56,7 +56,7 @@ def init_worker(bed_fname, offset_5p_, offset_3p_):
 def clip_read(read):
     read_interval = Interval(read.pos, read.pos + len(read.seq))
     try:
-        matches = intervals.get_overlapping_intervals(read.rname, read_interval.start, read_interval.stop)
+        matches = intervals.fetch(read.rname, read_interval.start, read_interval.stop)
         matches.sort(key=lambda x: len(read_interval.intersect(x)))
         match = matches[-1]
     except KeyError, e:
@@ -66,28 +66,44 @@ def clip_read(read):
     match = Interval(match.start + offset_5p + 1, match.stop + offset_3p)
     
     cigar = expand_cigar(read.cigar)
-    cnt_b4 = Counter(cigar)
-    cigar_b4 = cigar[:]
+    
+    new_cigar = []
+    cigar_pos = 0
+    while cigar_pos < len(cigar) and cigar[cigar_pos] != 'M':
+        if cigar[cigar_pos] in 'MIS=X':
+            new_cigar.append('S')
+        cigar_pos += 1
     
     ref_pos = read.pos
-    read_pos = cigar.index('M')
-    while read_pos < len(cigar) and ref_pos < match.start:
-        if cigar[read_pos] in 'MIS=X':
-            cigar[read_pos] = 'S'
-        ref_pos += cigar[read_pos] in 'MIS=X'
-        read_pos += 1
+    while cigar_pos < len(cigar) and ref_pos < match.start:
+        ref_pos += cigar[cigar_pos] in 'MDNS=X'
+        if cigar[cigar_pos] in 'MIS=X':
+            new_cigar.append('S')
+        elif cigar[cigar_pos] in 'D':
+            pass
+        else:
+            new_cigar.append(cigar[cigar_pos])
+        cigar_pos += 1
+
+    while cigar_pos < len(cigar) and cigar[cigar_pos] != 'M':
+        ref_pos += cigar[cigar_pos] in 'MDNS=X'
+        new_cigar.append(cigar[cigar_pos])
+        cigar_pos += 1
+
     pos = ref_pos
-    while read_pos < len(cigar) and ref_pos < match.stop:
-        ref_pos += cigar[read_pos] in 'MIS=X'
-        read_pos += 1
-    while read_pos < len(cigar):
-        if cigar[read_pos] in 'MIS=X':
-            cigar[read_pos] = 'S'
-        read_pos += 1
+    while cigar_pos < len(cigar) and ref_pos < match.stop:
+        ref_pos += cigar[cigar_pos] in 'MDNS=X'
+        new_cigar.append(cigar[cigar_pos])
+        cigar_pos += 1
+
+    while cigar_pos < len(cigar):
+        if cigar[cigar_pos] in 'MIS=X':
+            new_cigar.append('S')
+        cigar_pos += 1
     
     parts = list(read)
     parts[3] = pos
-    parts[5] = contract_cigar(cigar)
+    parts[5] = contract_cigar(new_cigar)
     return SamLine(*parts), 'clipped'
 
 

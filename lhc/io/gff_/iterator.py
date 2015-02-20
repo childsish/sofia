@@ -6,10 +6,13 @@ from lhc.filetools.flexible_opener import open_flexibly
 
 GffLine = namedtuple('GffLine', ('chr', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attr'))
 
+GenomicFeatureTracker = namedtuple('GenomicFeatureTracker', ('interval', 'lines'))
+
 
 class GffLineIterator(object):
     def __init__(self, fname):
         self.fname, self.fhndl = open_flexibly(fname)
+        self.line_no = 0
 
     def __del__(self):
         self.close()
@@ -18,7 +21,12 @@ class GffLineIterator(object):
         return self
 
     def next(self):
-        return self.parse_line(self.fhndl.next())
+        while True:
+            line = self.parse_line(self.fhndl.next())
+            self.line_no += 1
+            if line.type != 'chromosome':
+                break
+        return line
 
     def close(self):
         if hasattr(self.fhndl, 'close'):
@@ -46,69 +54,64 @@ class GffLineIterator(object):
 class GffEntryIterator(object):
     def __init__(self, fname):
         self.it = GffLineIterator(fname)
-        self.top_features = {}
-        self.open_features = {}
         self.completed_features = []
-        self.line_no = 0
-
-        self.c_id = 0
+        self.c_feature = 0
+        line = self.it.next()
+        self.c_line = [line]
+        self.c_interval = Interval(line.chr, line.start, line.stop)
 
     def __iter__(self):
         return self
 
+    @property
+    def line_no(self):
+        return self.it.line_no
+
     def next(self):
         completed_features = self.get_completed_features()
-        while len(completed_features) > 0:
-            feature = completed_features.pop()
-            self.remove_feature(feature)
-            return feature
-        raise StopIteration()
+        if self.c_feature >= len(completed_features):
+            raise StopIteration
+        feature = completed_features[self.c_feature]
+        self.c_feature += 1
+        return feature
 
     def get_completed_features(self):
-        if len(self.completed_features) != 0:
+        if self.c_feature < len(self.completed_features):
             return self.completed_features
 
-        top_features = self.top_features
-        open_features = self.open_features
-        for i, line in enumerate(self.it):
-            self.line_no += 1
-            if line.type == 'chromosome':
-                continue
+        self.c_feature = 0
+        lines = self.c_line
+        for line in self.it:
+            if not self.c_interval.overlaps(line):
+                self.c_line = [line]
+                self.c_interval = Interval(line.chr, line.start, line.stop)
+                self.completed_features = self.get_features(lines)
+                return self.completed_features
+            lines.append(line)
+            self.c_interval.union_update(line, compare_strand=False)
+        self.c_line = []
+        self.c_interval = None
+        self.completed_features = self.get_features(lines)
+        return self.completed_features
+
+    @staticmethod
+    def get_features(lines):
+        if len(lines) == 0:
+            return []
+
+        top_features = {}
+        open_features = {}
+        for i, line in enumerate(lines):
             id = line.attr['ID'] if 'ID' in line.attr else i
             ivl = Interval(line.chr, line.start, line.stop, line.strand)
             feature = GenomicFeature(id, line.type, ivl, line.attr)
-
             open_features[id] = feature
             if 'Parent' in line.attr:
-                self.add_to_parent(feature, line.attr['Parent'])
-            #elif 'Derives_from' in line.attr:
-            #    derives_from = line.attr['Derives_from']
-            #    self.open_features[derives_from].add_product(feature)
+                parents = line.attr['Parent'] if isinstance(line.attr['Parent'], list) else [line.attr['Parent']]
+                for parent in parents:
+                    if parent not in open_features:
+                        open_features[parent] = GenomicFeature(parent)
+                    open_features[parent].add_child(feature)
             else:
                 top_features[id] = feature
-
-            self.completed_features = [feature for feature in top_features.itervalues() if feature.stop <= line.start]
-            if len(self.completed_features) != 0:
-                return self.completed_features
-        return self.top_features.values()
-
-    def add_to_parent(self, feature, parents):
-        if isinstance(parents, list):
-            for parent in parents:
-                if parent not in self.open_features:
-                    self.open_features[parent] = GenomicFeature(parent)
-                self.open_features[parent].add_child(feature)
-        else:
-            if parents not in self.open_features:
-                self.open_features[parents] = GenomicFeature(parents)
-            self.open_features[parents].add_child(feature)
-
-    def remove_feature(self, feature):
-        open_features = self.open_features
-        del self.top_features[feature.name]
-        stk = [feature]
-        while len(stk) > 0:
-            feature = stk.pop()
-            open_features.pop(feature.name, None)
-            stk.extend(feature.children)
-            stk.extend(feature.products)
+        return zip(*sorted(top_features.iteritems()))[1]
