@@ -18,7 +18,7 @@ class ActionWrapper(object):
     def __call__(self, resources=None, dependencies=None, ins=None, outs=None, converters={}):
         ins = self.ins if ins is None else ins
         outs = self.outs if outs is None else outs
-        return self.action_class(resources, dependencies, self.param, ins, outs, converters)
+        return self.action_class(resources, dependencies, self.param, ins, outs, converters, self.name)
 
     def get_output(self, ins, requested_attr={}):
         return self.action_class.get_output(ins, self.outs, requested_attr)

@@ -1,53 +1,40 @@
 from sofia_.action import Action
 
 from collections import Counter
+from lhc.binf.skew import Skew
 
 
-class GetCodingNucleotideSkew(Action):
+class GetCodingSkew(Action):
     """
     Get the nucleotide skews of the given coding sequence. AT skew is (|A| - |T|) / (|A| + |T|). GC skew is similar.
     """
 
     IN = ['coding_sequence']
-    OUT = ['coding_nucleotide_skew']
-
-    def init(self, skew='at'):
-        self.skew = skew.lower()
+    OUT = ['coding_skew']
 
     def calculate(self, coding_sequence):
-        return get_skew(coding_sequence, self.skew)
+        if coding_sequence is None:
+            return None
+        return Skew(coding_sequence)
 
 
-class GetUTR5NucleotideSkew(Action):
+class GetUTR5Skew(Action):
 
     IN = ['five_prime_utr']
-    OUT = ['utr5_nucleotide_skew']
-
-    def init(self, skew='at'):
-        self.skew = skew.lower()
+    OUT = ['utr5_skew']
 
     def calculate(self, five_prime_utr):
-        return get_skew(five_prime_utr, self.skew)
+        if five_prime_utr is None:
+            return None
+        return Skew(five_prime_utr)
 
 
-class GetUTR3NucleotideSkew(Action):
+class GetUTR3Skew(Action):
 
     IN = ['three_prime_utr']
-    OUT = ['utr3_nucleotide_skew']
-
-    def init(self, skew='at'):
-        self.skew = skew.lower()
+    OUT = ['utr3_skew']
 
     def calculate(self, three_prime_utr):
-        return get_skew(three_prime_utr, self.skew)
-
-
-def get_skew(seq, skew):
-    cnt = Counter(seq.lower())
-    at = cnt['a'] - cnt['t'] / float(cnt['a'] + cnt['t'])
-    gc = cnt['g'] - cnt['c'] / float(cnt['g'] + cnt['c'])
-    if skew == 'at':
-        return at
-    elif skew == 'gc':
-        return gc
-    return {'at': at, 'gc': gc}
+        if three_prime_utr is None:
+            return None
+        return Skew(three_prime_utr)

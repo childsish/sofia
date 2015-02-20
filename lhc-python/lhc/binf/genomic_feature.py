@@ -85,7 +85,7 @@ class GenomicFeature(Interval):
         if len(self.children) == 0:
             if isinstance(seq, dict):
                 seq = seq[self.chr]
-            res = seq[self.start:self.stop]
+            res = seq[self]
         else:
             res = ''.join(child.get_sub_seq(seq, types, depth + 1) for child in self.children
                           if types is None or child.type in types)

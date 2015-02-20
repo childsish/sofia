@@ -103,7 +103,7 @@ class GetCodingVariant(Action):
 
 class CodonVariant(namedtuple('CodonVariant', ('pos', 'ref', 'alt', 'fs'))):
     def __str__(self):
-        return ','.join('c.{}{}>{}'.format(self.pos, self.ref, alt) for alt in self.alt)
+        return ','.join('c.{}{}>{}'.format(self.pos + 1, self.ref, alt) for alt in self.alt)
 
 
 class GetCodonVariant(Action):
@@ -113,7 +113,7 @@ class GetCodonVariant(Action):
     BUFFER = 1000
     
     def calculate(self, coding_variant, coding_sequence, downstream_1000):
-        if coding_variant is None:
+        if coding_variant is None or coding_sequence is None:
             return None
         pos = coding_variant.pos
         ref = coding_variant.ref

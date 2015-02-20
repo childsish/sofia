@@ -229,8 +229,8 @@ def get_annotation(target):
     row = []
     for action in requested_actions:
         try:
-            item = solution.actions[action].generate(kwargs, solution.actions)
-            row.append(item)
+            solution.actions[action].generate(kwargs, solution.actions)
+            row.append(kwargs[action])
         except Exception:
             import sys
             import traceback
