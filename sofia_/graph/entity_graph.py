@@ -11,8 +11,10 @@ class EntityGraph(object):
         fhndl.close()
 
         self.graph = Graph()
+        self.entities = {}
         self.attr = {}
         for entity, settings in json_obj.iteritems():
+            self.entities[entity] = settings
             self.graph.add_vertex(entity)
             if 'children' in settings:
                 for child in settings['children']:

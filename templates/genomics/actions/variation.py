@@ -89,19 +89,21 @@ class GetCodingVariant(Action):
         ref = variant['ref']
         pos = variant['genomic_position']['chromosome_pos']
         try:
-            coding_position = major_transcript.get_rel_pos(pos)\
-                if major_transcript.ivl.strand == '+'\
-                else major_transcript.get_rel_pos(pos + len(ref) - 1)
-        except ValueError:
+            coding_position = major_transcript.get_rel_pos(pos, {'CDS'})\
+                if major_transcript.strand == '+'\
+                else major_transcript.get_rel_pos(pos + len(ref) - 1, {'CDS'})
+        except IndexError:
             return None
         alt = variant['alt'].split(',')
-        if major_transcript.ivl.strand == '-':
+        if major_transcript.strand == '-':
             ref = revcmp(ref)
             alt = map(revcmp, alt)
         return CodingVariant(coding_position, ref, alt)
 
 
-CodonVariant = namedtuple('CodonVariant', ('pos', 'ref', 'alt', 'fs'))
+class CodonVariant(namedtuple('CodonVariant', ('pos', 'ref', 'alt', 'fs'))):
+    def __str__(self):
+        return ','.join('c.{}{}>{}'.format(self.pos + 1, self.ref, alt) for alt in self.alt)
 
 
 class GetCodonVariant(Action):
@@ -200,4 +202,3 @@ class GetAminoAcidVariant(Action):
         alts = [None if alt is None else genetic_code.translate(alt) for alt in codon_variant.alt]
         fs = [None if fs_ is None else fs_ / 3 for fs_ in codon_variant.fs]
         return AminoAcidVariant(codon_variant.pos / 3, genetic_code.translate(codon_variant.ref), alts, fs)
-    

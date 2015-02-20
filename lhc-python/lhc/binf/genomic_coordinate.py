@@ -104,8 +104,8 @@ class Interval(BaseInterval):
             if self.chr == other.chr and self.strand == other.strand else None
         return Interval(self.chr, ivl.start, ivl.stop, self.strand)
 
-    def union_update(self, other):
-        if self.chr != other.chr or self.strand != other.strand:
+    def union_update(self, other, compare_strand=True):
+        if self.chr != other.chr or (compare_strand and self.strand != other.strand):
             raise ValueError('can not union intervals on different chromosomes/strands')
         super(Interval, self).union_update(other)
     
@@ -114,8 +114,8 @@ class Interval(BaseInterval):
             if self.chr == other.chr and self.strand == other.strand else None
         return Interval(self.chr, ivl.start, ivl.stop, self.strand)
 
-    def intersect_update(self, other):
-        if self.chr != other.chr or self.strand != other.strand:
+    def intersect_update(self, other, compare_strand=True):
+        if self.chr != other.chr or (compare_strand and self.strand != other.strand):
             raise ValueError('can not intersect intervals on different chromosomes/strands')
         ivl = super(Interval, self).intersect_update(other)
     

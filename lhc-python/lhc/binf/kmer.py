@@ -25,3 +25,4 @@ class KmerCounter(object):
             if kmer not in self.counts:
                 self.counts[kmer] = 0
             self.counts[kmer] += 1
+        self.ks.add(k)

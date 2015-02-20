@@ -13,8 +13,9 @@ from sofia_.attribute_map_factory import AttributeMapFactory
 
 
 class Aggregator(object):
-    def __init__(self):
-        self.hyper_graph = load_action_hypergraph()
+    def __init__(self, workflow_template):
+        self.hyper_graph = load_action_hypergraph(workflow_template)
+        self.workflow_template = workflow_template
 
     def aggregate(self, requested_entities, provided_resources, args, maps={}):
         def iter_resource(resource):
@@ -68,8 +69,9 @@ class Aggregator(object):
             solution_iterator = EntitySolutionIterator(entity.name,
                                                        self.hyper_graph,
                                                        provided_resources,
+                                                       self.workflow_template,
                                                        maps,
-                                                       entity.resources)
+                                                       entity.resources,)
             possible_graphs = [graph for graph in solution_iterator
                                if satisfies_request(graph, entity.resources)]
             if len(possible_graphs) == 0:
@@ -153,6 +155,8 @@ def define_parser(parser):
             help='number of entries per worker')
     add_arg('-t', '--template',
             help='specify a template string for the output')
+    add_arg('-w', '--workflow-template', default='genomics',
+            help='specify a workflow template (default: genomics).')
     parser.set_defaults(func=aggregate)
 
 
@@ -164,8 +168,8 @@ def aggregate(args):
         fhndl = open(args.resource_list)
         resource_list = fhndl.read().strip().split('\n')
         fhndl.close()
-        provided_resources.update(parse_provided_resources(args.input, resource_list))
-    provided_resources.update(parse_provided_resources(args.input, args.resources))
+        provided_resources.update(parse_provided_resources(args.input, resource_list, args.workflow_template))
+    provided_resources.update(parse_provided_resources(args.input, args.resources, args.workflow_template))
     
     requested_entities = parse_requested_entities(args.entities, provided_resources)
     if args.entity_list is not None:
@@ -181,13 +185,12 @@ def aggregate(args):
 
     maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
     
-    aggregator = Aggregator()
+    aggregator = Aggregator(args.workflow_template)
     aggregator.aggregate(requested_entities, provided_resources, args, maps)
 
 
-def parse_provided_resources(target, resources):
-    program_dir = get_program_directory()
-    entity_graph = load_entity_graph()
+def parse_provided_resources(target, resources, template):
+    entity_graph = load_entity_graph(template)
     resource_parser = ResourceParser(entity_graph)
     provided_resources = resource_parser.parse_resources(resources)
     provided_resources['target'] = resource_parser.parse_resource(target + ' -n target')
@@ -206,6 +209,7 @@ solution = None
 def init_worker(req_ftr, sol):
     global requested_actions
     global solution
+
     requested_actions = req_ftr
     solution = sol
     solution.init()

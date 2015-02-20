@@ -16,7 +16,7 @@ class GetDownstream1000(Action):
             return None
         chr = genomic_position['chromosome_id']
         pos = genomic_position['chromosome_pos']
-        strand = major_transcript.ivl.strand
+        strand = major_transcript.strand
         start = pos if strand == '+' else pos - 1000
         stop = pos if strand == '-' else pos + 1000
         seq = chromosome_sequence_set.fetch(chr, start, stop)

@@ -1,6 +1,9 @@
-import itertools
+import json
 
+from Bio import bgzf
 from bisect import bisect_left
+from lhc.io.txt_.tracker_factory import TrackerFactory
+from lhc.interval import Interval
 
 
 class FileIndex(object):
@@ -59,3 +62,50 @@ class FileIndex(object):
         index = FileIndex(depth)
         index.__setstate__(state)
         return index
+
+
+class IndexedFile(object):
+    def __init__(self, fname):
+        self.fhndl = bgzf.open(fname)
+        fhndl = open('{}.lci'.format(fname))
+        index_context = json.load(fhndl)
+        fhndl.close()
+        factory = TrackerFactory()
+        self.trackers = [factory.make(definition) for definition in index_context['column_types']]
+        self.index = FileIndex.init_from_state(index_context['index'])
+
+    def fetch(self, *args):
+        """ Fetch the lines matching the given arguments
+        Supports an interval as the last two parameters instead of a single value.
+        eg. fetch('chr1', 100) returns the lines overlapping a single point
+            fetch('chr1', 100, 200) returns the lines overlapping an interval
+            fetch('chr1') is currently invalid
+            fetch('chr1', 'chr2', 100) is invalid
+            fetch('chr1', 'chr2', 100, 200) is invalid
+
+        :param args: keys that the fetched lines must match
+        :return: list of matched lines
+        """
+        nargs = len(args)
+        depth = self.index.depth
+        if nargs < depth or nargs > depth + 1:
+            raise KeyError('number of given keys and required keys in index do not match')
+        elif nargs == depth:
+            fpos, length = self.index[args]
+            ivl = Interval(args[-1], args[-1])
+            args = args[:-1]
+        else:
+            fpos, length = self.index[args[:-1]]
+            ivl = Interval(args[-2], args[-1])
+            args = args[:-2]
+
+        self.fhndl.seek(fpos)
+        lines = []
+        for line in self.fhndl:
+            parts = line.rstrip('\r\n').split('\t')
+            keys = [tracker.convert(parts) for tracker in self.trackers]
+            if all(arg == key for arg, key in zip(args, keys[:-1])) and self.trackers[-1].overlaps(ivl, keys[-1]):
+                lines.append(line)
+            elif any(arg < key for arg, key in zip(args, keys[:-1])) and self.trackers[-1].passed(ivl, keys[-1]):
+                break
+        return lines

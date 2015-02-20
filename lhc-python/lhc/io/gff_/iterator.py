@@ -12,6 +12,7 @@ GenomicFeatureTracker = namedtuple('GenomicFeatureTracker', ('interval', 'lines'
 class GffLineIterator(object):
     def __init__(self, fname):
         self.fname, self.fhndl = open_flexibly(fname)
+        self.line_no = 0
 
     def __del__(self):
         self.close()
@@ -20,7 +21,12 @@ class GffLineIterator(object):
         return self
 
     def next(self):
-        return self.parse_line(self.fhndl.next())
+        while True:
+            line = self.parse_line(self.fhndl.next())
+            self.line_no += 1
+            if line.type != 'chromosome':
+                break
+        return line
 
     def close(self):
         if hasattr(self.fhndl, 'close'):
@@ -48,62 +54,51 @@ class GffLineIterator(object):
 class GffEntryIterator(object):
     def __init__(self, fname):
         self.it = GffLineIterator(fname)
-        self.top_features = {}
-        self.open_features = {}
         self.completed_features = []
-        self.line_no = 0
+        self.c_feature = 0
+        line = self.it.next()
+        self.c_line = [line]
+        self.c_interval = Interval(line.chr, line.start, line.stop)
 
     def __iter__(self):
         return self
 
+    @property
+    def line_no(self):
+        return self.it.line_no
+
     def next(self):
         completed_features = self.get_completed_features()
-        while len(completed_features) > 0:
-            feature = completed_features.pop()
-            self.remove_feature(feature)
-            return feature
-        raise StopIteration()
+        if self.c_feature >= len(completed_features):
+            raise StopIteration
+        feature = completed_features[self.c_feature]
+        self.c_feature += 1
+        return feature
 
     def get_completed_features(self):
-        if len(self.completed_features) != 0:
+        if self.c_feature < len(self.completed_features):
             return self.completed_features
 
-        top_features = self.top_features
-        open_features = self.open_features
+        self.c_feature = 0
+        lines = self.c_line
         for line in self.it:
-            self.line_no += 1
-            if line.type == 'chromosome':
-                continue
-            id = line.attr['ID'] if 'ID' in line.attr else self.line_no
-            ivl = Interval(line.chr, line.start, line.stop, line.strand)
-            tracker = GenomicFeatureTracker(ivl, [line])
-            open_features[id] = tracker
-            if 'Parent' in line.attr:
-                parents = line.attr['Parent'] if isinstance(line.attr['Parent'], list) else [line.attr['Parent']]
-                for parent in parents:
-                    if parent not in open_features:
-                        self.open_features[parent] = GenomicFeatureTracker(ivl, [])
-                    self.open_features[parent].lines.append(line)
-            else:
-                top_features[id] = tracker
-            self.completed_features = [self.get_features(tracker.lines)[0] for tracker in top_features.itervalues()
-                                       if tracker.interval.stop <= line.start]
-            if len(self.completed_features) > 0:
+            if not self.c_interval.overlaps(line):
+                self.c_line = [line]
+                self.c_interval = Interval(line.chr, line.start, line.stop)
+                self.completed_features = self.get_features(lines)
                 return self.completed_features
-        self.completed_features = [self.get_features(tracker.lines)[0] for tracker in top_features.itervalues()]
+            lines.append(line)
+            self.c_interval.union_update(line, compare_strand=False)
+        self.c_line = []
+        self.c_interval = None
+        self.completed_features = self.get_features(lines)
         return self.completed_features
-
-    def remove_feature(self, feature):
-        self.top_features.pop(feature.name, None)
-        open_features = self.open_features
-        stk = [feature]
-        while len(stk) > 0:
-            feature = stk.pop()
-            open_features.pop(feature.name, None)
-            stk.extend(feature.children)
 
     @staticmethod
     def get_features(lines):
+        if len(lines) == 0:
+            return []
+
         top_features = {}
         open_features = {}
         for i, line in enumerate(lines):
@@ -119,4 +114,4 @@ class GffEntryIterator(object):
                     open_features[parent].add_child(feature)
             else:
                 top_features[id] = feature
-        return top_features.values()
+        return zip(*sorted(top_features.iteritems()))[1]

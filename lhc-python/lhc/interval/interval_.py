@@ -30,6 +30,14 @@ class Interval(object):
     
     def __hash__(self):
         return hash((self.start, self.stop))
+
+    def __contains__(self, item):
+        """ Used for testing points
+
+        :param item: point for testing
+        :return: if the point is within the interval bounds
+        """
+        return self.start == item if self.start == self.stop else self.start <= item < self.stop
         
     # Relative location functions
     
@@ -102,7 +110,7 @@ class Interval(object):
         If self is cut on the upper side, the result is at .left.
         If self is cut in the middle, the result in in both .left and .right
         """
-        if not self.overlaps(self, other):
+        if not self.overlaps(other):
             return Interval.INTERVAL_PAIR(self, None)
         
         left, right = None
@@ -169,8 +177,8 @@ class Interval(object):
     
         """
         if pos < self.start or pos >= self.stop:
-            err = 'Absolute position %d is not contained within %s'
-            raise IndexError(err%(pos, self))
+            err = 'Absolute position {} is not contained within {}'
+            raise IndexError(err.format(pos, self))
         return pos - self.start
     
     # Sequence functions
