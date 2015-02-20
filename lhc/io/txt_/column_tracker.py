@@ -16,6 +16,12 @@ class ColumnTracker(object):
     def set_new_entry(self, parts):
         self.current_key = self.convert(parts)
 
+    def overlaps(self, ivl, key):
+        return key in ivl
+
+    def passed(self, ivl, key):
+        return key >= ivl.stop
+
 
 class KeyColumnTracker(ColumnTracker):
     def is_new_entry(self, parts):
@@ -32,3 +38,9 @@ class IntervalColumnTracker(ColumnTracker):
             return True
         self.current_key.stop = max(self.current_key.stop, interval.stop)
         return False
+
+    def overlaps(self, ivl, key):
+        return ivl.overlaps(key)
+
+    def passed(self, ivl, key):
+        return ivl.stop <= key.start
