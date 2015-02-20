@@ -13,11 +13,5 @@ class GetMajorTranscriptFromGenomicFeature(Action):
         if genomic_feature is None:
             return None
         genomic_feature = genomic_feature['genomic_feature']
-        mx_exon = 0
-        mx_transcript = None
-        for transcript in genomic_feature.children:
-            n_exon = sum(child.type == 'exon' for child in transcript.children)
-            if n_exon > mx_exon:
-                mx_exon = n_exon
-                mx_transcript = transcript
-        return mx_transcript
+        transcripts = sorted(genomic_feature.children, key=lambda transcript: len(transcript.children))
+        return transcripts[-1]
