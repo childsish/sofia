@@ -1,4 +1,5 @@
 from genomic_coordinate import Interval
+from lhc.binf.sequence import revcmp
 from lhc.collections.sorted_list import SortedList
 
 
@@ -64,13 +65,15 @@ class GenomicFeature(Interval):
         #     raise IndexError('relative position {} not contained within {}'.format(pos, self))
         # return self.start + pos - partial_rel_pos
     
-    def get_rel_pos(self, pos):
+    def get_rel_pos(self, pos, types=None):
         if len(self.children) == 0:
             return super(GenomicFeature, self).get_rel_pos(pos)
 
         rel_pos = 0
         children = iter(self.children) if self.strand == '+' else reversed(self.children)
         for child in children:
+            if types is not None and child.type not in types:
+                continue
             if child.start <= pos < child.stop:
                 return rel_pos + child.get_rel_pos(pos)
             rel_pos += len(child)
@@ -78,13 +81,17 @@ class GenomicFeature(Interval):
     
     # Sequence functions
     
-    def get_sub_seq(self, seq, types=None):
-        sub_seq = [child.get_sub_seq(seq, types) for child in self.children]
-        if len(sub_seq) == 0 and (types is None or self.type in types):
+    def get_sub_seq(self, seq, types=None, depth=0):
+        if len(self.children) == 0:
             if isinstance(seq, dict):
-                return seq[self.chr][self.start:self.stop]
-            return seq[self.start:self.stop]
-        return ''.join(sub_seq)
+                seq = seq[self.chr]
+            res = seq[self.start:self.stop]
+        else:
+            res = ''.join(child.get_sub_seq(seq, types, depth + 1) for child in self.children
+                          if types is None or child.type in types)
+        if depth == 0:
+            return res if self.strand == '+' else revcmp(res)
+        return res
 
     def __getstate__(self):
         return {
