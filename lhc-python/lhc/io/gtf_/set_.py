@@ -9,7 +9,7 @@ class GtfSet(object):
         self.data = list(iterator)
         for i, entry in enumerate(self.data):
             self.key_index[entry.name] = i
-            self.ivl_index[(entry.ivl.chr, entry.ivl)] = i
+            self.ivl_index[(entry.chr, Interval(entry.start, entry.stop))] = i
 
     def __getitem__(self, key):
         if isinstance(key, basestring):

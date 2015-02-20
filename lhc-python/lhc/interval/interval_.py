@@ -1,9 +1,13 @@
 from functools import total_ordering
 from collections import namedtuple
 
+
 @total_ordering
 class Interval(object):
+
     __slots__ = ('start', 'stop')
+
+    INTERVAL_PAIR = namedtuple('IntervalPair', ('left', 'right'))
 
     def __init__(self, start, stop):
         self.start, self.stop = sorted((start, stop))
@@ -26,6 +30,14 @@ class Interval(object):
     
     def __hash__(self):
         return hash((self.start, self.stop))
+
+    def __contains__(self, item):
+        """ Used for testing points
+
+        :param item: point for testing
+        :return: if the point is within the interval bounds
+        """
+        return self.start == item if self.start == self.stop else self.start <= item < self.stop
         
     # Relative location functions
     
@@ -64,6 +76,12 @@ class Interval(object):
         return Interval(min(self.start, other.start),
                         max(self.stop, other.stop))\
             if self.overlaps(other) or self.touches(other) else None
+
+    def union_update(self, other):
+        if not self.overlaps(other):
+            raise ValueError('can not union non-overlapping intervals')
+        self.start = min(self.start, other.start)
+        self.stop = max(self.stop, other.stop)
     
     def intersect(self, other):
         """Return an interval where self and other intersect
@@ -74,6 +92,12 @@ class Interval(object):
         return Interval(max(self.start, other.start),
                         min(self.stop, other.stop))\
             if self.overlaps(other) else None
+
+    def intersect_update(self, other):
+        if not self.overlaps(other):
+            raise ValueError('can not intersect non-overlapping intervals')
+        self.start = max(self.start, other.start)
+        self.stop = min(self.stop, other.stop)
     
     def difference(self, other):
         """Return an interval that covers self but not other
@@ -86,7 +110,7 @@ class Interval(object):
         If self is cut on the upper side, the result is at .left.
         If self is cut in the middle, the result in in both .left and .right
         """
-        if not self.overlaps(self, other):
+        if not self.overlaps(other):
             return Interval.INTERVAL_PAIR(self, None)
         
         left, right = None
@@ -153,20 +177,18 @@ class Interval(object):
     
         """
         if pos < self.start or pos >= self.stop:
-            err = 'Absolute position %d is not contained within %s'
-            raise IndexError(err%(pos, self))
+            err = 'Absolute position {} is not contained within {}'
+            raise IndexError(err.format(pos, self))
         return pos - self.start
     
     # Sequence functions
     
     def get_sub_seq(self, seq):
         return seq[self.start:self.stop]
-    
-    INTERVAL_PAIR = namedtuple('IntervalPair', ('left', 'right'))
-    
+
     def __getstate__(self):
         return {'start': self.start, 'stop': self.stop}
-    
+
     def __setstate__(self, state):
-        for key, value in state.iteritems():
-            setattr(self, key, value)
+        for attribute, value in state.iteritems():
+            setattr(self, attribute, value)
