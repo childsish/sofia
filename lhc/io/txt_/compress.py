@@ -32,8 +32,9 @@ def compress(input, column_types='1s', extension='.bgz'):
     out_fhndl.write(buffer)
     out_fhndl.close()
 
+    index_context = {'column_types': column_types, 'index': index.__getstate__()}
     out_fhndl = open(input + extension + '.lci', 'w')
-    json.dump(index.__getstate__(), out_fhndl)
+    json.dump(index_context, out_fhndl)
     out_fhndl.close()
 
 
