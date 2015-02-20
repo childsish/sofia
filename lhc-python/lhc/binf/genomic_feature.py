@@ -12,7 +12,6 @@ class GenomicFeature(Interval):
         else:
             super(GenomicFeature, self).__init__(interval.chr, interval.start, interval.stop, interval.strand)
         self.children = SortedList()
-        self.products = []
         self.name = name
         self.type = type
         self.attr = attr
