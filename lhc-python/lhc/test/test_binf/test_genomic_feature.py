@@ -1,3 +1,4 @@
+import cPickle
 import unittest
 
 from lhc.binf.genomic_coordinate import Interval
@@ -29,8 +30,8 @@ class TestGenomicFeature(unittest.TestCase):
         feature = GenomicFeature('l2a', 'gene', l2a)
         self.assertEquals(1000, len(feature))
 
-        feature.append(GenomicFeature('l3a', 'transcript', l3a))
-        feature.append(GenomicFeature('l3b', 'transcript', l3b))
+        feature.add_child(GenomicFeature('l3a', 'transcript', l3a))
+        feature.add_child(GenomicFeature('l3b', 'transcript', l3b))
         self.assertEquals(600, len(feature))
 
     def test_getitem(self):
@@ -44,17 +45,17 @@ class TestGenomicFeature(unittest.TestCase):
         l3e = Interval('1', 700, 1000)
 
         feature = GenomicFeature('l1', 'gene', l1)
-        feature.append(GenomicFeature('l2a', 'transcript', l2a))
-        feature.append(GenomicFeature('l2b', 'transcript', l2b))
+        feature.add_child(GenomicFeature('l2a', 'transcript', l2a))
+        feature.add_child(GenomicFeature('l2b', 'transcript', l2b))
         self.assertEquals(0, feature['l1'].start)
         self.assertEquals(0, feature['l2a'].start)
         self.assertEquals(0, feature['l2b'].start)
 
-        feature['l2a'].append(GenomicFeature('l3a', 'CDS', l3a))
-        feature['l2a'].append(GenomicFeature('l3b', 'CDS', l3b))
-        feature['l2b'].append(GenomicFeature('l3c', 'CDS', l3c))
-        feature['l2b'].append(GenomicFeature('l3d', 'CDS', l3d))
-        feature['l2b'].append(GenomicFeature('l3e', 'CDS', l3e))
+        feature['l2a'].add_child(GenomicFeature('l3a', 'CDS', l3a))
+        feature['l2a'].add_child(GenomicFeature('l3b', 'CDS', l3b))
+        feature['l2b'].add_child(GenomicFeature('l3c', 'CDS', l3c))
+        feature['l2b'].add_child(GenomicFeature('l3d', 'CDS', l3d))
+        feature['l2b'].add_child(GenomicFeature('l3e', 'CDS', l3e))
         self.assertEquals(300, feature['l3a'].stop)
         self.assertEquals(700, feature['l3b'].start)
         self.assertEquals(300, feature['l3c'].stop)
@@ -64,6 +65,7 @@ class TestGenomicFeature(unittest.TestCase):
         self.assertIsNone(feature['a'])
 
     def test_get_abs_pos(self):
+        self.skipTest('not implemented')
         l2b = Interval('1', 0, 1000)
         l3c = Interval('1', 0, 300)
         l3d = Interval('1', 400, 600)
@@ -72,11 +74,11 @@ class TestGenomicFeature(unittest.TestCase):
         l4b = Interval('1', 950, 1000)
 
         feature = GenomicFeature('l2b', 'transcript', l2b)
-        feature.append(GenomicFeature('l3c', 'CDS', l3c))
-        feature.append(GenomicFeature('l3d', 'CDS', l3d))
-        feature.append(GenomicFeature('l3e', 'CDS', l3e))
-        feature['l3e'].append(GenomicFeature('l4a', 'CDS', l4a))
-        feature['l3e'].append(GenomicFeature('l4b', 'CDS', l4b))
+        feature.add_child(GenomicFeature('l3c', 'CDS', l3c))
+        feature.add_child(GenomicFeature('l3d', 'CDS', l3d))
+        feature.add_child(GenomicFeature('l3e', 'CDS', l3e))
+        feature['l3e'].add_child(GenomicFeature('l4a', 'CDS', l4a))
+        feature['l3e'].add_child(GenomicFeature('l4b', 'CDS', l4b))
 
         self.assertEquals(0, feature.get_abs_pos(0))
         self.assertEquals(299, feature.get_abs_pos(299))
@@ -97,11 +99,11 @@ class TestGenomicFeature(unittest.TestCase):
         l4b = Interval('1', 950, 1000)
 
         feature = GenomicFeature('l2b', 'transcript', l2b)
-        feature.append(GenomicFeature('l3c', 'CDS', l3c))
-        feature.append(GenomicFeature('l3d', 'CDS', l3d))
-        feature.append(GenomicFeature('l3e', 'CDS', l3e))
-        feature['l3e'].append(GenomicFeature('l4a', 'CDS', l4a))
-        feature['l3e'].append(GenomicFeature('l4b', 'CDS', l4b))
+        feature.add_child(GenomicFeature('l3c', 'CDS', l3c))
+        feature.add_child(GenomicFeature('l3d', 'CDS', l3d))
+        feature.add_child(GenomicFeature('l3e', 'CDS', l3e))
+        feature['l3e'].add_child(GenomicFeature('l4a', 'CDS', l4a))
+        feature['l3e'].add_child(GenomicFeature('l4b', 'CDS', l4b))
 
         self.assertEquals(0, feature.get_rel_pos(0))
         self.assertEquals(299, feature.get_rel_pos(299))
@@ -126,14 +128,32 @@ class TestGenomicFeature(unittest.TestCase):
         l4b = Interval('1', 25, 30)
 
         feature = GenomicFeature('l2b', 'transcript', l2b)
-        feature.append(GenomicFeature('l3c', 'CDS', l3c))
-        feature.append(GenomicFeature('l3d', 'CDS', l3d))
-        feature['l3c'].append(GenomicFeature('l4a', 'CDS', l4a))
-        feature['l3c'].append(GenomicFeature('l4b', 'CDS', l4b))
+        feature.add_child(GenomicFeature('l3c', 'CDS', l3c))
+        feature.add_child(GenomicFeature('l3d', 'CDS', l3d))
+        feature['l3c'].add_child(GenomicFeature('l4a', 'CDS', l4a))
+        feature['l3c'].add_child(GenomicFeature('l4b', 'CDS', l4b))
 
         self.assertEquals(seq[:5] + seq[25:30] + seq[40:60], feature.get_sub_seq(seq))
         self.assertEquals(seq[:5] + seq[25:30], feature['l3c'].get_sub_seq(seq))
         self.assertEquals(seq[40:60], feature['l3d'].get_sub_seq(seq))
+
+    def test_pickling(self):
+        l2b = Interval('1', 0, 100)
+        l3c = Interval('1', 0, 30)
+        l3d = Interval('1', 40, 60)
+        l4a = Interval('1', 0, 5)
+        l4b = Interval('1', 25, 30)
+        feature = GenomicFeature('l2b', 'transcript', l2b)
+        feature.add_child(GenomicFeature('l3c', 'CDS', l3c))
+        feature.add_child(GenomicFeature('l3d', 'CDS', l3d))
+        feature['l3c'].add_child(GenomicFeature('l4a', 'CDS', l4a))
+        feature['l3c'].add_child(GenomicFeature('l4b', 'CDS', l4b))
+
+        unpickled_feature = cPickle.loads(cPickle.dumps(feature))
+
+        self.assertEquals('l2b', unpickled_feature.name)
+        self.assertEquals({'l3c', 'l3d'}, set(child.name for child in unpickled_feature.children))
+
 
 if __name__ == '__main__':
     import sys
