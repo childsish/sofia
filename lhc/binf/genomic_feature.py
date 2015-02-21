@@ -99,12 +99,22 @@ class GenomicFeature(Interval):
             'start': self.start,
             'stop': self.stop,
             'strand': self.strand,
-            'children': self.children,
+            'children': [child.__getstate__() for child in self.children],
             'name': self.name,
             'type': self.type,
             'attr': self.attr
         }
 
     def __setstate__(self, state):
-        for attribute, value in state.iteritems():
-            setattr(self, attribute, value)
+        setattr(self, 'chr', state['chr'])
+        setattr(self, 'start', state['start'])
+        setattr(self, 'stop', state['stop'])
+        setattr(self, 'strand', state['strand'])
+        setattr(self, 'name', state['name'])
+        setattr(self, 'type', state['type'])
+        setattr(self, 'attr', state['attr'])
+        setattr(self, 'children', SortedList())
+        for child_state in state['children']:
+            child = GenomicFeature(child_state['name'])
+            child.__setstate__(child_state)
+            self.children.add(child)
