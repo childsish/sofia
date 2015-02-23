@@ -46,9 +46,6 @@ class GenomicFeature(Interval):
             self.stop = max(self.stop, feature.stop)
         self.children.add(feature)
 
-    def add_product(self, feature):
-        self.products.append(feature)
-    
     # Position functions
     
     def get_abs_pos(self, pos, partial_rel_pos=0):
@@ -81,11 +78,11 @@ class GenomicFeature(Interval):
     
     # Sequence functions
     
-    def get_sub_seq(self, seq, types=None, depth=0):
+    def get_sub_seq(self, sequence_set, types=None, depth=0):
         if len(self.children) == 0:
-            res = seq[self.start:self.stop]
+            res = sequence_set.fetch(self.chr, self.start, self.stop)
         else:
-            res = ''.join(child.get_sub_seq(seq, types, depth + 1) for child in self.children
+            res = ''.join(child.get_sub_seq(sequence_set, types, depth + 1) for child in self.children
                           if types is None or child.type in types)
         if depth == 0:
             return res if self.strand == '+' else revcmp(res)
