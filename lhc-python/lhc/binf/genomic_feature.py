@@ -83,8 +83,6 @@ class GenomicFeature(Interval):
     
     def get_sub_seq(self, seq, types=None, depth=0):
         if len(self.children) == 0:
-            if isinstance(seq, dict):
-                seq = seq[self.chr]
             res = seq[self.start:self.stop]
         else:
             res = ''.join(child.get_sub_seq(seq, types, depth + 1) for child in self.children
