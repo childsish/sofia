@@ -14,7 +14,8 @@ class Action(object):
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
         self.param = param
-        self.ins = {in_: in_ for in_ in self.IN} if ins is None else ins
+        #self.ins = {in_: in_ for in_ in self.IN} if ins is None else ins
+        self.ins = ins
         self.outs = {out: Entity(out) for out in self.OUT} if outs is None else outs
         self.name = self._get_name(name)
         self.converters = converters

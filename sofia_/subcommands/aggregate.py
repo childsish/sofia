@@ -4,7 +4,7 @@ import sys
 import multiprocessing
 
 from collections import defaultdict
-from common import get_program_directory, load_action_hypergraph, load_entity_graph
+from common import load_action_hypergraph, load_entity_graph, add_maps
 from sofia_.error_manager import ERROR_MANAGER
 from sofia_.parser import EntityParser, ResourceParser
 from sofia_.graph.action_graph import ActionGraph
@@ -26,7 +26,8 @@ class Aggregator(object):
                 line_no += 1
 
         sys.stderr.write('    Resolving entities...\n')
-        
+
+        add_maps(provided_resources, self.hyper_graph)
         solution, resolved_actions = self.resolve_request(requested_entities, provided_resources, maps)
         if args.graph:
             sys.stdout.write('{}\n\n'.format(solution))
