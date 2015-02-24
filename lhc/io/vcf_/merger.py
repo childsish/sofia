@@ -14,7 +14,7 @@ class VcfMerger(object):
     
     CHR_REGX = re.compile('\d+$|X$|Y$|M$')
     
-    def __init__(self, fnames, quality=0, depth=0, bams=[]):
+    def __init__(self, fnames, quality=0, depth=0, bams=[], filters=[]):
         self.fnames = fnames
         self.quality = quality
         self.depth = depth
@@ -37,6 +37,7 @@ class VcfMerger(object):
                     self.sample_to_bam[sample] = bam
                 else:
                     bam.close()
+        self.filters = filters
 
     def __iter__(self):
         """ Iterate through merged vcf lines.
@@ -124,7 +125,7 @@ class VcfMerger(object):
     
     def _next_line(self, idx):
         entry = self.iterators[idx].next()
-        while entry.filter not in ['.', 'PASS'] or entry.qual < self.quality:
+        while any(eval(filter, entry._asdict()) for filter in self.filters):
             entry = self.iterators[idx].next()
         return entry
     
@@ -203,8 +204,8 @@ class VcfMerger(object):
         return read_start, read_stop, truncated
 
 
-def merge(fnames, quality, out, bams):
-    merger = VcfMerger(fnames, quality, bams=bams)
+def merge(fnames, quality, out, bams, filters):
+    merger = VcfMerger(fnames, quality, bams=bams, filters=filters)
     for key, values in merger.hdrs.iteritems():
         for value in values:
             out.write('{}={}\n'.format(key, value))
@@ -247,7 +248,9 @@ def define_parser(parser):
             help='Variants below the given quality are filtered.')
     add_arg('-o', '--output', default=sys.stdout, action=OpenWritableFile,
             help='The name of the merged vcf (default: stdout).')
-    parser.set_defaults(func=lambda args: merge(args.inputs, args.quality, args.output, args.bams))
+    add_arg('-f', '--filter', nargs='+', default=[],
+            help='Filters to apply')
+    parser.set_defaults(func=lambda args: merge(args.inputs, args.quality, args.output, args.bams, args.filter))
     return parser
 
 
