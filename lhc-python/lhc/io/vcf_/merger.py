@@ -87,8 +87,16 @@ class VcfMerger(object):
                             format_['RO'] = '0'
                         if 'AO' not in format_:
                             format_['AO'] = ','.join('0' * len(alt))
+                        if 'AF' not in format_:
+                            format_['AF'] = '0'
                         samples[sample_name]['RO'] = sample_data['RO']
                         samples[sample_name]['AO'] = self._get_ao(sample_data['AO'], top.alt, alt)
+                        if samples[sample_name]['AO'] is None or samples[sample_name]['RO'] is None:
+                            continue
+                        ro = float(samples[sample_name]['RO'])
+                        aos = [float(ao) for ao in samples[sample_name]['AO'].split(',')]
+                        afs = [ao / (ro + ao) if ro + ao > 0 else 0 for ao in aos]
+                        samples[sample_name]['AF'] = ','.join('{:.3f}'.format(af) for af in afs)
                 elif sample_name in self.sample_to_bam:
                     if 'GT' not in format_:
                         format_['GT'] = '0/0'
@@ -96,8 +104,19 @@ class VcfMerger(object):
                         format_['RO'] = '0'
                     if 'AO' not in format_:
                         format_['AO'] = ','.join('0' * len(alt))
-                    ro, ao = self._get_depth(sample_name, tops[idxs[0]].chr, tops[idxs[0]].pos, ref, alt)
-                    samples[sample_name] = {'.': '.'} if ro is None else {'RO': ro, 'AO': ao}
+                    if 'AF' not in format_:
+                        format_['AF'] = '0'
+                    ro, aos = self._get_depth(sample_name, tops[idxs[0]].chr, tops[idxs[0]].pos, ref, alt)
+                    samples[sample_name] = {'.': '.'} if ro is None else {
+                        'RO': ro,
+                        'AO': aos,
+                    }
+                    if ro is None or aos is None:
+                        continue
+                    ro = float(ro)
+                    aos = [float(ao) for ao in aos.split(',')]
+                    afs = [ao / (ro + ao) if ro + ao > 0 else 0 for ao in aos]
+                    samples[sample_name]['AF'] = ','.join('{:.3f}'.format(af) for af in afs)
                 else:
                     samples[sample_name] = {'.': '.'}
             
@@ -125,8 +144,18 @@ class VcfMerger(object):
     
     def _next_line(self, idx):
         entry = self.iterators[idx].next()
-        while any(eval(filter, entry._asdict()) for filter in self.filters):
-            entry = self.iterators[idx].next()
+        try:
+            while any(eval(filter, entry._asdict()) for filter in self.filters):
+                entry = self.iterators[idx].next()
+        except StopIteration:
+            pass
+        except Exception, e:
+            import sys
+            it = self.iterators[idx]
+            sys.stderr.write('error occured on line {} of {}\n'.format(it.line_no, it.fname))
+            raise e
+        if any(eval(filter, entry._asdict()) for filter in self.filters):
+            raise StopIteration
         return entry
     
     def _init_sorting(self, tops):
