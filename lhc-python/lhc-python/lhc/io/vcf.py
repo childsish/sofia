@@ -4,7 +4,7 @@ from vcf_.iterator import VcfEntryIterator, VcfLineIterator
 from vcf_ import merger, sample, filter, compare
 
 
-def iter_vcf(fname):
+def iter_entries(fname):
     return VcfEntryIterator(fname)
 
 
