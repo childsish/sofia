@@ -108,5 +108,8 @@ class VcfEntryIterator(VcfLineIterator):
     def _parse_samples(self, format, sample_data):
         res = {}
         for sample, data in zip(self.samples, sample_data):
-            res[sample] = dict(zip(format, data.split(':')))
+            if data == '.':
+                res[sample] = {}
+            else:
+                res[sample] = dict(zip(format, data.split(':')))
         return res
