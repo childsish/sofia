@@ -1,6 +1,7 @@
-from sofia_.action import Action
-
 from collections import namedtuple
+from itertools import izip
+from lhc.binf.sequence import revcmp
+from sofia_.action import Action
 
 
 class GetPosition(Action):
@@ -9,189 +10,204 @@ class GetPosition(Action):
     OUT = ['position']
 
     def calculate(self, genomic_position):
-        return genomic_position['chromosome_pos']
-
-    def format(self, position):
-        return str(position + 1)
+        return genomic_position['chromosome_pos'] + 1
 
 
-class GetQuality(Action):
-
-    IN = ['variant']
-    OUT = ['quality']
+class VariantType(Action):
+    """
+    Determines the variant type according to the sequence ontology
+    (http://www.sequenceontology.org)
+    """
     
-    def init(self, sample=None):
-        self.sample = sample
-
-    def calculate(self, variant):
-        if self.sample is None:
-            return variant['qual']
-        elif self.sample not in variant['samples'] or\
-                'Q' not in variant['samples'][self.sample]:
-            return None
-        return variant['samples'][self.sample]['Q']
-
-    def format(self, quality):
-        if isinstance(quality, basestring):
-            return quality
-        return '{:.2f}'.format(quality)
-
-
-class GetVariantInfo(Action):
+    IN = ['major_transcript', 'variant', 'coding_variant', 'amino_acid_variant']
+    OUT = ['variant_type']
     
-    IN = ['variant']
-    OUT = ['variant_info']
+    def calculate(self, major_transcript, variant, coding_variant, amino_acid_variant):
+        #TODO: Improve intron detection
+        if major_transcript is None:
+            return ['intergenic_variant']
+        elif coding_variant is None:
+            return ['intron_variant']
+        res = []
+        for na_alt, aa_alt, fs in izip(variant['alt'].split(','), amino_acid_variant.alt, amino_acid_variant.fs):
+            if fs is None:
+                res.append(self._get_amino_acid_type(amino_acid_variant.pos, amino_acid_variant.ref, aa_alt))
+            elif len(na_alt) > len(variant['ref']):
+                if (len(na_alt) - len(variant['ref'])) % 3 == 0:
+                    res.append('inframe_insertion')
+                else:
+                    res.append('frameshift_elongation')
+            else:
+                if (len(variant['ref']) - len(na_alt)) % 3 == 0:
+                    res.append('inframe_deletion')
+                else:
+                    res.append('frameshift_truncation')
+        return res
     
-    def init(self, key=None):
-        self.key = key
-    
-    def calculate(self, variant):
-        if variant is None:
-            return None
-        if self.key is None:
-            return variant['info']
-        return variant['info'][self.key]
+    def format(self, variant_type):
+        return ','.join(variant_type)
+
+    def _get_amino_acid_type(self, pos, ref, alt):
+        if ref == alt:
+            if pos == 0:
+                return 'start_retained_variant'
+            elif ref == '*':
+                return 'stop_retained_variant'
+            return 'synonymous_variant'
+        if pos == 0:
+            return 'start_lost'
+        elif ref == '*':
+            return 'stop_lost'
+        elif alt == '*':
+            return 'stop_gained'
+        #TODO: split into conservative or non-conservative
+        return 'missense_variant'
 
 
-class GetVariantFormat(Action):
-    
-    IN = ['variant']
-    OUT = ['variant_format']
-
-    def init(self, sample=None, key=None):
-        self.sample = sample
-        self.key = key
-
-    def calculate(self, variant):
-        if self.sample is None and self.key is None:
-            return variant['samples']
-        elif self.sample is not None and self.key is None:
-            return variant['samples'][self.sample]
-        elif self.sample is None and self.key is not None:
-            return {sample: format[self.key] for sample, format in variant['samples'].iteritems()}
-        if self.key not in variant['samples'][self.sample]:
-            return 'NA'
-        return variant['samples'][self.sample][self.key]
-
-
-class GetReferenceCount(Action):
-
-    IN = ['variant']
-    OUT = ['reference_count']
-    
-    def init(self, sample=None):
-        self.sample = sample
-
-    def calculate(self, variant):
-        if self.sample is None:
-            return {name: self._get_count(data) for name, data in variant['samples'].iteritems()}
-        elif self.sample not in variant['samples']:
-            return None
-        return self._get_count(variant['samples'][self.sample])
-    
-    def _get_count(self, sample):
-        return int(sample['RO']) if 'RO' in sample else 0
-
-
-class GetAlternativeCount(Action):
-
-    IN = ['variant']
-    OUT = ['alternative_count']
-
-    def init(self, sample=None):
-        self.sample = sample
-
-    def calculate(self, variant):
-        # TODO: Find a solution for two alt alleles
-        if self.sample is None:
-            return {name: self._get_count(data) for name, data in variant['samples'].iteritems()}
-        elif self.sample not in variant['samples']:
-            return None
-        return self._get_count(variant['samples'][self.sample])
-    
-    def _get_count(self, data):
-        if 'AO' not in data:
-            return 0
-        ao = [int(count) for count in data['AO'].split(',')]
-        return sum(ao)
-
-
-class GetDepth(Action):
-
-    IN = ['variant']
-    OUT = ['depth']
-    
-    def init(self, sample=None):
-        self.sample = sample
-
-    def calculate(self, variant):
-        if variant is None:
-            return None
-        if self.sample is None:
-            return {sample: self._get_depth(data) for sample, data in variant['samples'].iteritems()}
-        elif self.sample not in variant['samples']:
-            return None
-        return self._get_depth(variant['samples'][self.sample])
-    
-    def _get_depth(self, sample):
-        if 'DP' in sample:
-            return sample['DP']
-        elif 'RO' in sample and 'AO' in sample:
-            ao = sum(int(ao) for ao in sample['AO'].split(','))
-            return ao + int(sample['RO'])
-        return None
-
-
-class VariantFrequency(namedtuple('VariantFrequency', ('aos'))):
+class CodingVariant(namedtuple('CodingVariant', ['pos', 'ref', 'alt'])):
     def __str__(self):
-        if isinstance(self.aos, list):
-            return ','.join('{:.3f}'.format(ao) for ao in self.aos)
-        return '{:.3f}'.format(self.aos)
+        res = []
+        pos = self.pos
+        ref = self.ref
+        for alt in self.alt:
+            if len(self.ref) > len(alt):
+                d = len(self.ref) - len(alt)
+                rng = str(pos + len(ref) - 1,) if d == 1 else '{}_{}'.format(pos + len(ref) - d, pos + len(ref) - 1)
+                res.append('c.{}del{}'.format(rng, ref[-d - 1:-1]))
+            elif len(alt) > len(self.ref):
+                d = len(alt) - len(self.ref)
+                typ = 'dup' if alt[-d - 1:-1] == ref[-d - 1:-1] else 'ins'
+                rng = str(pos + len(alt) - 1,) if d == 1 else '{}_{}'.format(pos + len(alt) - d, pos + len(alt) - 1)
+                res.append('c.{}{}{}'.format(rng, typ, alt[-d - 1:-1]))
+            else:
+                if len(ref) > 1 and ref == alt[::-1]:
+                    res.append('c.{}_{}inv'.format(pos + 1, pos + len(ref)))
+                else:
+                    res.append('c.{}{}>{}'.format(pos + 1, ref, alt))
+        return ','.join(res)
 
 
-class GetVariantFrequency(Action):
-
-    IN = ['variant']
-    OUT = ['variant_frequency']
-
-    def calculate(self, variant):
-        if variant is None:
-            return None
-        return {name: self._get_frequency(sample) for name, sample in variant['samples'].iteritems()}
+class GetCodingVariant(Action):
     
-    def _get_frequency(self, sample):
-        if 'AO' not in sample or sample['AO'] == '.':
-            return None
-        aos = [float(ao) for ao in sample['AO'].split(',')]
-        dp = float(sample['DP']) if 'DP' in sample else\
-            sum(aos) + float(sample['RO']) if 'RO' in sample else\
-            None
-        if dp == 0:
-            return 0
-        if dp is None:
-            return None
-        return VariantFrequency([ao / dp for ao in aos])
-
-
-class GetVariantCall(Action):
-
-    IN = ['variant']
-    OUT = ['variant_call']
-
-    def init(self, sample=None):
-        self.sample = sample
+    IN = ['major_transcript', 'variant']
+    OUT = ['coding_variant']
     
-    def calculate(self, variant):
-        if self.sample is None:
-            return {name: self._get_call(sample) for name, sample in variant['samples'].iteritems()}
-        elif self.sample not in variant['samples']:
+    def calculate(self, major_transcript, variant):
+        if major_transcript is None:
             return None
-        return self._get_call(variant['samples'][self.sample])
+        ref = variant['ref']
+        pos = variant['genomic_position']['chromosome_pos']
+        try:
+            coding_position = major_transcript.get_rel_pos(pos, {'CDS'})\
+                if major_transcript.strand == '+'\
+                else major_transcript.get_rel_pos(pos + len(ref) - 1, {'CDS'})
+        except IndexError:
+            return None
+        alt = variant['alt'].split(',')
+        if major_transcript.strand == '-':
+            ref = revcmp(ref)
+            alt = map(revcmp, alt)
+        return CodingVariant(coding_position, ref, alt)
 
-    def _get_call(self, sample):
-        if 'GT' not in sample:
+
+class CodonVariant(namedtuple('CodonVariant', ('pos', 'ref', 'alt', 'fs'))):
+    def __str__(self):
+        return ','.join('c.{}{}>{}'.format(self.pos + 1, self.ref, alt) for alt in self.alt)
+
+
+class GetCodonVariant(Action):
+    
+    IN = ['coding_variant', 'coding_sequence', 'downstream_1000']
+    OUT = ['codon_variant']
+    BUFFER = 1000
+    
+    def calculate(self, coding_variant, coding_sequence, downstream_1000):
+        if coding_variant is None or coding_sequence is None:
             return None
-        a1, a2 = sample['GT'].split('/')
-        if a1 == a2:
-            return 'homozygous_reference' if a1 == '0' else 'homozygous_variant'
-        return 'heterozygous_variant'
+        pos = coding_variant.pos
+        ref = coding_variant.ref
+        if len(ref) == 1:
+            fr = pos % 3
+            to = 2 - (pos % 3)
+        else:
+            fr = [3, 4, 2][pos % 3]
+            to = [2, 4, 3][(pos + len(ref)) % 3]
+        alts = []
+        fs = []
+        for alt in coding_variant.alt:
+            seq = list(coding_sequence)
+            seq[pos:pos + len(ref)] = list(alt)
+            alts.append(''.join(seq[pos - fr:pos + len(alt) + to]))
+            
+            d = len(ref) - len(alt)
+            if d == 0:
+                fs_pos = None
+            else:
+                fs_pos = 0
+                seq = downstream_1000
+                while fs_pos < len(seq) and seq[fs_pos:fs_pos + 3] not in ['TAA', 'TAG', 'TGA']:
+                    fs_pos += 3
+            fs.append(fs_pos)
+        ref_codon = coding_sequence[pos - fr:pos + len(ref) + to]
+        return CodonVariant(pos - fr, ref_codon, alts, fs)
+
+
+class AminoAcidVariant(namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'))):
+    def __str__(self):
+        res = []
+        pos = self.pos
+        ref = self.ref
+        for alt, fs in izip(self.alt, self.fs):
+            if len(self.ref) > len(alt):
+                d = len(self.ref) - len(alt)
+                rng = str(pos + len(ref) - 1,) if d == 1 else '{}_{}'.format(pos + len(ref) - d, pos + len(ref) - 1)
+                r = 'p.{}del{}'.format(rng, ref[-d - 1:-1])
+            elif len(alt) > len(self.ref):
+                d = len(alt) - len(self.ref)
+                typ = 'dup' if alt[-d - 1:-1] == ref[-d - 1:-1] else 'ins'
+                rng = str(pos + len(alt) - 1,) if d == 1 else '{}_{}'.format(pos + len(alt) - d, pos + len(alt) - 1)
+                r = 'p.{}{}{}'.format(rng, typ, alt[-d - 1:-1])
+            else:
+                i = 0
+                j = len(ref) - 1
+                if ref != alt:
+                    while ref[i] == alt[i]:
+                        i += 1
+                    while ref[j] == alt[j]:
+                        j -= 1
+                    j += 1
+                r = 'p.{}{}{}'.format(ref[i:j + 1], pos + i + 1, alt[i:j + 1])
+                if fs is not None:
+                    r += 'fs*{}'.format(fs)
+            res.append(r)
+        return ','.join(res)
+
+
+class GetAminoAcidVariant(Action):
+    """
+    Get the amino acid variant. The nomenclature defined by the Human Genome Variation Society has been largely
+    adopted (www.hgvs.org/mutnomen/).
+    """
+    
+    IN = ['codon_variant', 'genetic_code']
+    OUT = ['amino_acid_variant']
+    
+    BUFFER = 50
+
+    ABBREVIATIONS = {
+        'A': 'Ala', 'B': 'Asx', 'C': 'Cys', 'D': 'Asp', 'E': 'Glu', 'F': 'Phe',
+        'G': 'Gly', 'H': 'His', 'I': 'Ile', 'K': 'Lys', 'L': 'Leu', 'M': 'Met',
+        'N': 'Asn', 'P': 'Pro', 'Q': 'Gln', 'R': 'Arg', 'S': 'Ser', 'T': 'Thr',
+        'V': 'Val', 'W': 'Trp', 'X':   'X', 'Y': 'Tyr', 'Z': 'Glx', '*': '*'
+    }
+    
+    def init(self, use_3code='f'):
+        self.abbreviations = self.ABBREVIATIONS if use_3code[0].lower() == 't'\
+            else {name: name for name in self.ABBREVIATIONS}
+
+    def calculate(self, codon_variant, genetic_code):
+        if codon_variant is None:
+            return None
+        alts = [None if alt is None else genetic_code.translate(alt) for alt in codon_variant.alt]
+        fs = [None if fs_ is None else fs_ / 3 for fs_ in codon_variant.fs]
+        return AminoAcidVariant(codon_variant.pos / 3, genetic_code.translate(codon_variant.ref), alts, fs)
