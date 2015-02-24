@@ -50,14 +50,12 @@ class ResourceParser(object):
     
     def _get_attr(self, types, attr):
         if types is None:
-            return {}
-        res = {}
+            return attr
         for type in types:
             tmp = {a: None for a in self.entity_graph.attr[type]}\
                 if type in self.entity_graph.attr else {}
-            res.update(tmp)
-        res.update(attr)
-        return res
+            attr.update(tmp)
+        return attr
     
     def _define_parser(self):
         parser = argparse.ArgumentParser()

@@ -15,7 +15,7 @@ class GetGenomicFeatureByPosition(Action):
         if results is None or len(results) == 0:
             return None
         genomic_feature = results[0]
-        return {'gene_id': genomic_feature.name,
+        return {'gene_id': genomic_feature.name[:genomic_feature.name.rfind('.')],
                 'chromosome_id': genomic_feature.chr,
                 'genomic_feature': genomic_feature}
 
