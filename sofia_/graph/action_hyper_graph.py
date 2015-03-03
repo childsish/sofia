@@ -10,7 +10,7 @@ class ActionHyperGraph(HyperGraph):
 
     @property
     def entities(self):
-        return self.es
+        return self.vs
 
     def register_action(self, action):
         """ Add an action to the hyper graph.
@@ -20,7 +20,7 @@ class ActionHyperGraph(HyperGraph):
         self.actions[action.name] = action
 
         for in_ in action.ins:
-            self.add_inward_edge(action.name, in_)
+            self.add_outward_edge(in_, action.name)
 
         for out in action.outs:
-            self.add_outward_edge(action.name, out)
+            self.add_inward_edge(out, action.name)
