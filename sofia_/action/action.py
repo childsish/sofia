@@ -84,8 +84,8 @@ class Action(object):
                 local_entities[dependency_name] = entities[action]
             else:
                 local_entities[dependency_name] = dict(zip(outs, entities[action]))[dependency_name]
-        for edge, converter in self.converters.iteritems():
-            converter.convert(local_entities)
+        for entity, converter in self.converters.iteritems():
+            local_entities[entity] = converter.convert(local_entities[entity])
 
         res = self.calculate(**local_entities)
         self.calculated = True
@@ -138,9 +138,7 @@ class Action(object):
         # Check that input entity attributes match
         common_attr_names = set.intersection(*[set(entity.attr) for entity in ins.itervalues()])
         for name in common_attr_names:
-            common_attr = set()
-            for entity in ins.itervalues():
-                common_attr.add(entity.attr[name])
+            common_attr = {entity.attr[name] for entity in ins.itervalues()}
             if len(common_attr) > 1:
                 attributes = ', '.join('({}: {})'.format(k, v.attr[name]) for k, v in ins.iteritems())
                 ERROR_MANAGER.add_error('{} could not match {} attributes: {}'.format(cls.__name__, name, attributes))

@@ -41,12 +41,12 @@ class ActionSolutionIterator(object):
             disjoint_solutions = [resolvers[entity] for entity in entities]
             for disjoint_solution in product(*disjoint_solutions):
                 ins = {o: s.action.outs[e] for o, e, s in izip(original_entities, entities, disjoint_solution)}
-                outs = self.action.get_output(ins)
 
                 converters = self.get_converters(ins)
                 if converters is None:
                     continue
 
+                outs = self.action.get_output(ins)
                 resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
                 dependencies = {e: s.action.name for e, s in izip(original_entities, disjoint_solution)}
                 action_instance = self.action(resources, dependencies, ins=ins, outs=outs, converters=converters)
@@ -91,18 +91,20 @@ class ActionSolutionIterator(object):
             converters = self.convert_edge_to(entity, entity_values, to_value, errors)
             if converters is not None:
                 return converters
-        ERROR_MANAGER.add_error(str(errors))
+        for error in errors:
+            ERROR_MANAGER.add_error(error)
 
     def convert_edge_to(self, entity, entity_values, to_value, errors):
         converters = defaultdict(Converter)
-        for fr_value, edges in entity_values.iteritems():
+        for fr_value, parent_entities in entity_values.iteritems():
             if fr_value == to_value:
                 continue
-            for edge in edges:
-                path = self.graph.entity_graph.get_descendent_path_to(edge, entity)
+            for parent_entity in parent_entities:
+                path = [] if parent_entity == entity else\
+                    self.graph.entity_graph.get_descendent_path_to(parent_entity, entity)
                 if path is None:
-                    errors.add((edge, entity))
+                    errors.add('Could not get {} from {}'.format(entity, parent_entity))
                     return None
-                converters[edge].path.append(path)
-                converters[edge].id_map.append(self.maps[entity].make(fr_value, to_value))
+                converters[parent_entity].paths.append(path)
+                converters[parent_entity].id_maps.append(self.maps[entity].make(fr_value, to_value))
         return converters
