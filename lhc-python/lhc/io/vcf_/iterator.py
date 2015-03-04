@@ -81,7 +81,9 @@ class VcfEntryIterator(VcfLineIterator):
         return self
     
     def next(self):
-        line = super(VcfEntryIterator, self).next()
+        return self.parse_entry(super(VcfEntryIterator, self).next())
+
+    def parse_entry(self, line):
         samples = self._parse_samples(line.format.split(':'), line.samples.split('\t'))
         return Variant(line.chr,
                        line.pos,
@@ -92,6 +94,15 @@ class VcfEntryIterator(VcfLineIterator):
                        line.filter,
                        self._parse_info(line.info),
                        samples)
+
+    def _parse_samples(self, format, sample_data):
+        res = {}
+        for sample, data in zip(self.samples, sample_data):
+            if data == '.':
+                res[sample] = {}
+            else:
+                res[sample] = dict(zip(format, data.split(':')))
+        return res
 
     @staticmethod
     def _parse_quality(qual):
@@ -106,12 +117,3 @@ class VcfEntryIterator(VcfLineIterator):
     @staticmethod
     def _parse_info(info):
         return dict(i.split('=', 1) if '=' in i else (i, i) for i in info.strip().split(';'))
-    
-    def _parse_samples(self, format, sample_data):
-        res = {}
-        for sample, data in zip(self.samples, sample_data):
-            if data == '.':
-                res[sample] = {}
-            else:
-                res[sample] = dict(zip(format, data.split(':')))
-        return res
