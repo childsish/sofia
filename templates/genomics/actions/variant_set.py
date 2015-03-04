@@ -10,14 +10,12 @@ class GetVariantByVariant(Action):
         #TODO: check matched variants
         if variant is None:
             return None
-        chr = variant['genomic_position']['chromosome_id']
-        pos = variant['genomic_position']['chromosome_pos']
         try:
-            overlap = variant_set.fetch(chr, pos, pos + 1)
+            overlap = variant_set.fetch(variant.chr, variant.pos, variant.pos + 1)
         except ValueError:
             return None
-        hits = [o for o in overlap if o.pos == pos and
-                o.ref == variant['ref'] and o.alt == variant['alt']]
+        hits = [o for o in overlap if o.pos == variant.pos and
+                o.ref == variant.ref and o.alt == variant.alt]
         if len(hits) > 1:
             raise ValueError('Too many hits')
         elif len(hits) == 0:

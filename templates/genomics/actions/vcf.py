@@ -31,13 +31,13 @@ class VcfSet(Resource):
         if os.path.exists('{}.tbi'.format(fname)):
             try:
                 import pysam
-                self.parser = IndexedVcfFile(pysam.TabixFile(fname))
+                self.parser = IndexedVcfFile(fname, pysam.TabixFile(fname))
                 return
             except ImportError:
                 pass
         if os.path.exists('{}.lci'.format(fname)):
             from lhc.io.txt_ import index
-            self.parser = IndexedVcfFile(index.IndexedFile(fname))
+            self.parser = IndexedVcfFile(fname, index.IndexedFile(fname))
             return
         warn('no index available for {}, loading whole file...'.format(fname))
         self.parser = VcfSetBase(VcfEntryIterator(fname))

@@ -11,15 +11,13 @@ class GetHomopolymer(Action):
 
     def calculate(self, variant, chromosome_sequence_set):
         res = []
-        for alt in variant['alt'].split(','):
-            ref = variant['ref']
+        for alt in variant.alt.split(','):
+            ref = variant.ref
             i = 0
             while i < len(ref) and i < len(alt) and ref[i] == alt[i]:
                 i += 1
-            ref = ref[i:]
-            alt = alt[i:]
-            pos = variant['genomic_position']['chromosome_pos'] + i
-            seq = chromosome_sequence_set.fetch(variant['genomic_position']['chromosome_id'], pos, pos + 100)
+            pos = variant.pos + i
+            seq = chromosome_sequence_set.fetch(variant.chr, pos, pos + 100)
             
             i = 0
             while seq[i] == seq[0]:
