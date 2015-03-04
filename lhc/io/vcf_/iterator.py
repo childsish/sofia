@@ -39,7 +39,7 @@ class VcfLineIterator(object):
         line = self.fhndl.next()
         self.line_no += 1
         if line == '':
-            raise StopIterator()
+            raise StopIteration()
         return self.parse_line(line)
     
     def close(self):
@@ -81,7 +81,9 @@ class VcfEntryIterator(VcfLineIterator):
         return self
     
     def next(self):
-        line = super(VcfEntryIterator, self).next()
+        return self.parse_entry(super(VcfEntryIterator, self).next())
+
+    def parse_entry(self, line):
         samples = self._parse_samples(line.format.split(':'), line.samples.split('\t'))
         return Variant(line.chr,
                        line.pos,
@@ -93,18 +95,6 @@ class VcfEntryIterator(VcfLineIterator):
                        self._parse_info(line.info),
                        samples)
 
-    @staticmethod
-    def _parse_quality(qual):
-        try:
-            res = float(qual)
-        except TypeError:
-            return '.'
-        return res
-
-    @staticmethod
-    def _parse_info(info):
-        return dict(i.split('=', 1) if '=' in i else (i, i) for i in info.strip().split(';'))
-    
     def _parse_samples(self, format, sample_data):
         res = {}
         for sample, data in zip(self.samples, sample_data):
@@ -113,3 +103,17 @@ class VcfEntryIterator(VcfLineIterator):
             else:
                 res[sample] = dict(zip(format, data.split(':')))
         return res
+
+    @staticmethod
+    def _parse_quality(qual):
+        try:
+            res = float(qual)
+        except TypeError:
+            return '.'
+        except ValueError:
+            return '.'
+        return res
+
+    @staticmethod
+    def _parse_info(info):
+        return dict(i.split('=', 1) if '=' in i else (i, i) for i in info.strip().split(';'))
