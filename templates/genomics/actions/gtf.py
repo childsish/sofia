@@ -19,6 +19,7 @@ class GtfIterator(Target):
         entry = self.parser.next()
         while entry.type != 'gene':
             entry = self.parser.next()
+        entry.name = entry.name.rsplit('.')[0]
         return entry
 
 

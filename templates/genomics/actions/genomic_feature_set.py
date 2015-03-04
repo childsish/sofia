@@ -8,13 +8,15 @@ class GetGenomicFeatureByPosition(Action):
 
     def calculate(self, genomic_feature_set, genomic_position):
         #TODO: select correct gene
-        results = genomic_feature_set.fetch(
+        features = genomic_feature_set.fetch(
             genomic_position.chr,
             genomic_position.pos,
             genomic_position.pos + 1)
-        if results is None or len(results) == 0:
+        if features is None or len(features) == 0:
             return None
-        return results[0]
+        res = features[0]
+        res.name = res.name.rsplit('.')[0]
+        return res
 
 
 class GetGenomicFeatureByInterval(Action):
@@ -24,11 +26,12 @@ class GetGenomicFeatureByInterval(Action):
 
     def calculate(self, genomic_feature_set, genomic_interval):
         #TODO: select correct gene
-        gene_model = genomic_feature_set.fetch(
+        features = genomic_feature_set.fetch(
             genomic_interval.chr,
             genomic_interval.start,
             genomic_interval.stop)
-        if gene_model is None or len(gene_model) == 0:
+        if features is None or len(features) == 0:
             return None
-        gene = gene_model[0]
-        return {'gene_id': gene.name, 'chromosome_id': gene.chr, 'genomic_feature': gene}
+        res = features[0]
+        res.name = res.name.rsplit('.')[0]
+        return res
