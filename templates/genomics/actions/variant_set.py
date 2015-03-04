@@ -22,15 +22,4 @@ class GetVariantByVariant(Action):
             raise ValueError('Too many hits')
         elif len(hits) == 0:
             return None
-        hit = hits[0]
-        return {
-            'genomic_position': {
-                'chromosome_id': hit.chr,
-                'chromosome_pos': hit.pos
-            },
-            'reference_allele': hit.ref,
-            'alternate_allele': hit.alt,
-            'variant_quality': hit.qual,
-            'info': {k: v for k, v in (part.split('=') for part in hit.info.split(';'))},
-            'samples': hit.samples
-        }
+        return hits[0]

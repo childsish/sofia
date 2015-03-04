@@ -6,11 +6,11 @@ from sofia_.action import Action
 
 class GetPosition(Action):
 
-    IN = ['genomic_position']
+    IN = ['chromosome_pos']
     OUT = ['position']
 
-    def calculate(self, genomic_position):
-        return genomic_position['chromosome_pos'] + 1
+    def calculate(self, chromosome_pos):
+        return chromosome_pos + 1
 
 
 class VariantType(Action):
@@ -29,16 +29,16 @@ class VariantType(Action):
         elif coding_variant is None:
             return ['intron_variant']
         res = []
-        for na_alt, aa_alt, fs in izip(variant['alt'].split(','), amino_acid_variant.alt, amino_acid_variant.fs):
+        for na_alt, aa_alt, fs in izip(variant.alt.split(','), amino_acid_variant.alt, amino_acid_variant.fs):
             if fs is None:
                 res.append(self._get_amino_acid_type(amino_acid_variant.pos, amino_acid_variant.ref, aa_alt))
-            elif len(na_alt) > len(variant['ref']):
-                if (len(na_alt) - len(variant['ref'])) % 3 == 0:
+            elif len(na_alt) > len(variant.ref):
+                if (len(na_alt) - len(variant.ref)) % 3 == 0:
                     res.append('inframe_insertion')
                 else:
                     res.append('frameshift_elongation')
             else:
-                if (len(variant['ref']) - len(na_alt)) % 3 == 0:
+                if (len(variant.ref) - len(na_alt)) % 3 == 0:
                     res.append('inframe_deletion')
                 else:
                     res.append('frameshift_truncation')
@@ -95,15 +95,15 @@ class GetCodingVariant(Action):
     def calculate(self, major_transcript, variant):
         if major_transcript is None:
             return None
-        ref = variant['ref']
-        pos = variant['genomic_position']['chromosome_pos']
+        ref = variant.ref
+        pos = variant.pos
         try:
             coding_position = major_transcript.get_rel_pos(pos, {'CDS'})\
                 if major_transcript.strand == '+'\
                 else major_transcript.get_rel_pos(pos + len(ref) - 1, {'CDS'})
         except IndexError:
             return None
-        alt = variant['alt'].split(',')
+        alt = variant.alt.split(',')
         if major_transcript.strand == '-':
             ref = revcmp(ref)
             alt = map(revcmp, alt)

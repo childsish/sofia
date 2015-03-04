@@ -19,15 +19,7 @@ class GffIterator(Target):
         entry = self.parser.next()
         while entry.type != 'gene':
             entry = self.parser.next()
-        return {
-            'gene_id': entry.name,
-            'genomic_interval': {
-                'chromosome_id': entry.chr,
-                'start': entry.start,
-                'stop': entry.stop
-            },
-            'data': entry
-        }
+        return entry
 
 
 class GffSet(Resource):

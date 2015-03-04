@@ -15,6 +15,12 @@ class GtfIterator(Target):
     def init(self):
         self.parser = GtfIterator(self.get_filename())
 
+    def calculate(self):
+        entry = self.parser.next()
+        while entry.type != 'gene':
+            entry = self.parser.next()
+        return entry
+
 
 class GtfSet(Resource):
     
