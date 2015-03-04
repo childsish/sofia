@@ -12,6 +12,9 @@ class ActionHyperGraph(HyperGraph):
     def entities(self):
         return self.vs
 
+    def registed_entity(self, entity):
+        self.add_vertex(entity)
+
     def register_action(self, action):
         """ Add an action to the hyper graph.
 

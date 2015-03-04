@@ -1,4 +1,5 @@
 from action import Action
+from sofia_.graph.entity_graph import EntityGraph
 
 
 class Extractor(Action):
@@ -6,11 +7,7 @@ class Extractor(Action):
         self.path = path
 
     def calculate(self, **kwargs):
-        try:
-            entity = kwargs[self.path[0]]
-            for step in self.path[1:]:
-                entity = entity[step]
-            return entity
-        except TypeError:
-            pass
-        return None
+        entity = kwargs[list(self.ins)[0]]
+        if entity is None:
+            return None
+        return EntityGraph.get_descendent(entity, self.path)

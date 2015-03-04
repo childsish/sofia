@@ -7,59 +7,89 @@ from lhc.graph import Graph
 class EntityGraph(object):
     def __init__(self, fname):
         fhndl = open(fname)
-        json_obj = json.load(fhndl)
+        entities = json.load(fhndl)
         fhndl.close()
 
-        self.graph = Graph()
-        self.entities = {}
+        self.entities = {entity['name']: entity for entity in entities}
+        for entity in self.entities.itervalues():
+            entity['has_a'] = {child['name']: child for child in entity.get('has_a', [])}
+
+        self.has_a = Graph()
+        self.is_a = Graph()
         self.attr = {}
-        for entity, settings in json_obj.iteritems():
-            self.entities[entity] = settings
-            self.graph.add_vertex(entity)
-            if 'children' in settings:
-                for child in settings['children']:
-                    self.graph.add_edge(entity, child, '{}_{}'.format(entity, child))
-            if 'attributes' in settings:
-                self.attr[entity] = settings['attributes']
+        for entity in self.entities.itervalues():
+            self.has_a.add_vertex(entity['name'])
+            for child in entity.get('has_a', []):
+                self.has_a.add_edge(entity['name'], child)
+            if 'is_a' in entity:
+                self.is_a.add_edge(entity['is_a'], entity['name'])
+            if 'attributes' in entity:
+                self.attr[entity['name']] = entity['attributes']
+
+    def __contains__(self, item):
+        return item in self.entities
 
     def get_ancestor_paths(self, entity):
-        res = []
+        paths = []
         stk = [[entity]]
         while len(stk) > 0:
-            path = stk.pop()
-            for parent in self.graph.get_parents(path[-1]):
-                stk.append(path + [parent])
-                res.append([parent] + path[::-1])
-        return res
+            c_path = stk.pop()
+            for parent in self.has_a.get_parents(c_path[-1]):
+                tmp = c_path + [parent]
+                stk.append(tmp)
+                paths.append([self.entities[parent_name]['has_a'][child_name]
+                              for parent_name, child_name in zip(tmp[:0:-1], tmp[-2::-1])])
+        return paths
 
     def get_descendent_paths(self, entity):
-        res = [[entity]]
+        paths = []
         stk = [[entity]]
         while len(stk) > 0:
-            path = stk.pop()
-            if path[-1] in self.graph.vs:
-                for child in self.graph.get_children(path[-1]):
-                    stk.append(path + [child])
-                    res.append(path + [child])
-        return res
+            c_path = stk.pop()
+            if c_path[-1] not in self.has_a.vs:
+                continue
+            for child in self.has_a.get_children(c_path[-1]):
+                tmp = c_path + [child]
+                stk.append(tmp)
+                paths.append([self.entities[parent_name]['has_a'][child_name]
+                              for parent_name, child_name in zip(tmp[:-1], tmp[1:])])
+        return paths
 
     def get_descendent_path_to(self, ancestor, descendent):
         paths = self.get_descendent_paths(ancestor)
         for path in paths:
-            if path[-1] == descendent:
+            if path[-1]['name'] == descendent:
                 return path
         return None
 
+    def get_equivalents(self, child):
+        equivalents = {child}
+        children = self.is_a.get_children(child)
+        while len(children) > 0:
+            child = list(children)[0]
+            equivalents.add(child)
+            children = self.is_a.get_children(child)
+        return equivalents
+
     def create_entity(self, name):
-        attr = {}
-        for path in [[name]] + self.get_descendent_paths(name):
+        attr = {attr: None for attr in self.attr.get(name, [])}
+        for path in self.get_descendent_paths(name):
             for step in path:
-                if step not in self.attr:
+                if step['name'] not in self.attr:
                     continue
-                for name in self.attr[step]:
+                for name in self.attr[step['name']]:
                     attr[name] = None
         return Entity(name, attr)
 
     @classmethod
     def get_entity_name(cls, entity):
         return ''.join(part.capitalize() for part in entity.split('_')).replace('*', '')
+
+    @staticmethod
+    def get_descendent(entity, path):
+        for step in path:
+            if step['type'] == 'attr':
+                entity = getattr(entity, step['key'])
+            elif step['type'] == 'item':
+                entity = entity[step['key']]
+        return entity

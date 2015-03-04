@@ -12,8 +12,7 @@ class Converter(object):
     def convert(self, entity):
         # TODO: Track number of KeyErrors
         try:
-            it = izip(self.path, self.id_map)
-            for path, id_map in it:
+            for path, id_map in izip(self.path, self.id_map):
                 tmp = entity
                 for step in path[:-1]:
                     tmp = tmp[step]
