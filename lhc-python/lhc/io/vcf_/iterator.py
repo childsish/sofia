@@ -99,6 +99,8 @@ class VcfEntryIterator(VcfLineIterator):
             res = float(qual)
         except TypeError:
             return '.'
+        except ValueError:
+            return '.'
         return res
 
     @staticmethod
