@@ -24,34 +24,37 @@ class ActionSolutionIterator(object):
         return self.action.name
     
     def __iter__(self):
-        entities = sorted(self.graph.get_children(self.action.name))
-        resolvers = [EntitySolutionIterator(entity,
-                                            self.graph,
-                                            self.provided_resources,
-                                            self.workflow_template,
-                                            self.maps,
-                                            self.requested_resources,
-                                            self.visited)
-                     for entity in entities]
-        disjoint_solutions = [list(resolver) for resolver in resolvers]
+        original_entities = sorted(self.graph.get_children(self.action.name))
+        equivalents = [self.graph.entity_graph.get_equivalents(entity) for entity in original_entities]
+        resolvers = {entity: EntitySolutionIterator(entity,
+                                                    self.graph,
+                                                    self.provided_resources,
+                                                    self.workflow_template,
+                                                    self.maps,
+                                                    self.requested_resources,
+                                                    self.visited)
+                     for entity in reduce(or_, equivalents)}
+        resolvers = {entity: list(resolver) for entity, resolver in resolvers.iteritems()}
 
         res = defaultdict(list)
-        for disjoint_solution in product(*disjoint_solutions):
-            ins = {e: s.action.outs[e] for e, s in izip(entities, disjoint_solution)}
-            outs = self.action.get_output(ins)
+        for entities in product(*equivalents):
+            disjoint_solutions = [resolvers[entity] for entity in entities]
+            for disjoint_solution in product(*disjoint_solutions):
+                ins = {o: s.action.outs[e] for o, e, s in izip(original_entities, entities, disjoint_solution)}
+                outs = self.action.get_output(ins)
 
-            converters = self.get_converters(ins)
-            if converters is None:
-                continue
+                converters = self.get_converters(ins)
+                if converters is None:
+                    continue
 
-            resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
-            dependencies = {e: s.action.name for e, s in izip(entities, disjoint_solution)}
-            action_instance = self.action(resources, dependencies, ins=ins, outs=outs, converters=converters)
-            solution = ActionGraph(action_instance)
-            for e, s in izip(entities, disjoint_solution):
-                solution.add_edge(e, action_instance.name, s.action.name)
-                solution.update(s)
-            res[len(resources - self.requested_resources)].append(solution)
+                resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
+                dependencies = {e: s.action.name for e, s in izip(original_entities, disjoint_solution)}
+                action_instance = self.action(resources, dependencies, ins=ins, outs=outs, converters=converters)
+                solution = ActionGraph(action_instance)
+                for e, s in izip(original_entities, disjoint_solution):
+                    solution.add_edge(e, action_instance.name, s.action.name)
+                    solution.update(s)
+                res[len(resources - self.requested_resources)].append(solution)
         if len(res) > 0:
             for solution in res[min(res)]:
                 yield solution

@@ -16,18 +16,7 @@ class VcfIterator(Target):
         self.parser = iter(VcfEntryIterator(self.get_filename()))
 
     def calculate(self):
-        variant = self.parser.next()
-        return {
-            'genomic_position': {
-                'chromosome_id': variant.chr,
-                'chromosome_pos': variant.pos
-            },
-            'ref': variant.ref,
-            'alt': variant.alt,
-            'qual': variant.qual,
-            'info': variant.info,
-            'samples': variant.samples
-        }
+        return self.parser.next()
 
 
 class VcfSet(Resource):

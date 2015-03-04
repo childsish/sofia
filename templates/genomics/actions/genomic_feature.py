@@ -12,6 +12,5 @@ class GetMajorTranscriptFromGenomicFeature(Action):
     def calculate(self, genomic_feature):
         if genomic_feature is None:
             return None
-        genomic_feature = genomic_feature['genomic_feature']
         transcripts = sorted(genomic_feature.children, key=lambda transcript: len(transcript.children))
         return transcripts[-1]

@@ -1,6 +1,0 @@
-lib*.so*
-*.pyc
-*.swp
-.*project
-.settings
-.idea

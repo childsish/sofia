@@ -17,13 +17,7 @@ class BedIterator(Target):
         self.parser = BedLineIterator(self.get_filename())
 
     def calculate(self):
-        interval = self.parser.next()
-        return {
-            'chromosome_id': interval.ivl.chr,
-            'start': interval.ivl.start,
-            'stop': interval.ivl.stop,
-            'interval_name': interval.name
-        }
+        return self.parser.next()
 
     def format(self, genomic_interval):
         return genomic_interval['data'].name

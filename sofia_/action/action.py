@@ -9,6 +9,7 @@ class Action(object):
     OUT = []
     
     def __init__(self, resources=None, dependencies=None, param={}, ins=None, outs=None, converters={}, name=None):
+        # TODO: Consider equivalence of dependencies and ins
         self.changed = True
         self.calculated = False
         self.resources = set() if resources is None else resources

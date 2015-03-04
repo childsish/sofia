@@ -10,13 +10,13 @@ from lhc.argparse import OpenWritableFile
 
 
 def generate_graph(args):
-    graph = load_action_hypergraph()
+    graph = load_action_hypergraph(args.workflow_template)
     args.output.write(str(graph))
 
 
 def list_entities(args):
     program_dir = get_program_directory()
-    fhndl = open(os.path.join(program_dir, 'entities.json'))
+    fhndl = open(os.path.join(program_dir, 'templates', args.workflow_template, 'entities.json'))
     json_obj = json.load(fhndl)
     fhndl.close()
 
@@ -29,7 +29,7 @@ def list_entities(args):
 
 
 def list_actions(args):
-    action_classes = load_plugins(args.template, Action, {Resource, Target})
+    action_classes = load_plugins(args.workflow_template, Action, {Resource, Target})
     
     if args.action is None:
         args.output.write('\nAvailable actions:\n==================\n')
@@ -69,6 +69,8 @@ def define_parser(parser):
     subparsers = parser.add_subparsers()
 
     graph_parser = subparsers.add_parser('graph')
+    graph_parser.add_argument('-w', '--workflow-template', default='genomics',
+                              help='specify a workflow template (default: genomics).')
     graph_parser.set_defaults(func=generate_graph)
 
     actions_parser = subparsers.add_parser('actions')
@@ -78,6 +80,8 @@ def define_parser(parser):
                                 help='list the defined template (default: genomics).')
     actions_parser.add_argument('-v', '--verbose', action='store_true',
                                 help='print out descriptions of each action')
+    actions_parser.add_argument('-w', '--workflow-template', default='genomics',
+                                help='specify a workflow template (default: genomics).')
     actions_parser.set_defaults(func=list_actions)
 
     entity_parser = subparsers.add_parser('entity')
@@ -87,6 +91,8 @@ def define_parser(parser):
                                help='list a specific entity')
     entity_parser.add_argument('-v', '--verbose', action='store_true',
                                help='print out descriptions of each entity')
+    entity_parser.add_argument('-w', '--workflow-template', default='genomics',
+                               help='specify a workflow template (default: genomics).')
     entity_parser.set_defaults(func=list_entities)
 
     parser.add_argument('-o', '--output', action=OpenWritableFile, default=sys.stdout,

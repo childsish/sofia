@@ -13,8 +13,8 @@ from sofia_.attribute_map_factory import AttributeMapFactory
 
 
 class Aggregator(object):
-    def __init__(self, workflow_template):
-        self.hyper_graph = load_action_hypergraph(workflow_template)
+    def __init__(self, workflow_template, requested_entities=[]):
+        self.hyper_graph = load_action_hypergraph(workflow_template, requested_entities)
         self.workflow_template = workflow_template
 
     def aggregate(self, requested_entities, provided_resources, args, maps={}):
@@ -186,7 +186,7 @@ def aggregate(args):
 
     maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
     
-    aggregator = Aggregator(args.workflow_template)
+    aggregator = Aggregator(args.workflow_template, [str(entity) for entity in requested_entities])
     aggregator.aggregate(requested_entities, provided_resources, args, maps)
 
 

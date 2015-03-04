@@ -14,8 +14,8 @@ class GetDownstream1000(Action):
     def calculate(self, chromosome_sequence_set, genomic_position, major_transcript):
         if major_transcript is None:
             return None
-        chr = genomic_position['chromosome_id']
-        pos = genomic_position['chromosome_pos']
+        chr = genomic_position.chr
+        pos = genomic_position.pos
         strand = major_transcript.strand
         start = pos if strand == '+' else pos - 1000
         stop = pos if strand == '-' else pos + 1000

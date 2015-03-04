@@ -7,15 +7,9 @@ class GetIntervalByPosition(Action):
     OUT = ['genomic_interval']
 
     def calculate(self, genomic_interval_set, genomic_position):
-        intervals = genomic_interval_set.fetch(
+        return genomic_interval_set.fetch(
             genomic_position['chromosome_id'],
             genomic_position['chromosome_pos'])
-        return [{
-            'chromosome_id': interval.chr,
-            'start': interval.start,
-            'stop': interval.stop,
-            'interval_name': interval.name,
-        } for interval in intervals]
     
     def format(self, genomic_interval):
         return genomic_interval['data'].name

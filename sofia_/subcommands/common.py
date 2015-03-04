@@ -16,24 +16,49 @@ def load_resource(fname, parsers, format=None):
     raise TypeError('Unrecognised file format: {}'.format(os.path.basename(fname)))
 
 
-def load_action_hypergraph(template):
+def load_action_hypergraph(template, requested_entities=[], provided_entities=[]):
     available_actions = load_plugins(template, Action, {Resource, Target})
     entity_graph = load_entity_graph(template)
-    res = ActionHyperGraph(entity_graph)
+    action_graph = ActionHyperGraph(entity_graph)
     for action, root in available_actions:
-        res.register_action(ActionWrapper(action))
-    for in_ in set(res.entities):
-        if in_ not in entity_graph.graph.vs:
+        action_graph.register_action(ActionWrapper(action))
+
+    for entity in requested_entities:
+        action_graph.add_vertex(entity)
+
+    for entity in provided_entities:
+        action_graph.add_vertex(entity)
+
+    entities = set(action_graph.entities)
+    extractors = {}
+    for in_ in entities:
+        if in_ not in entity_graph:
             continue
-        for out in entity_graph.graph.get_children(in_):
-            extractor_name = 'Get{}From{}'.format(entity_graph.get_entity_name(out), entity_graph.get_entity_name(in_))
-            extractor = ActionWrapper(Extractor,
-                                      extractor_name,
-                                      ins={in_: entity_graph.create_entity(in_)},
-                                      outs={out: entity_graph.create_entity(out)},
-                                      param={'path': [in_, out]})
-            res.register_action(extractor)
-    return res
+        for path in entity_graph.get_descendent_paths(in_):
+            out = path[-1]['name']
+            if out not in entities:
+                continue
+            extractors[(in_, out)] = path
+
+    redundant = set()
+    for in_, out in extractors:
+        for equivalent in entity_graph.get_equivalents(in_) - {in_}:
+            key = (equivalent, out)
+            if key in extractors:
+                redundant.add(key)
+                break
+    for key in redundant:
+        del extractors[key]
+
+    for (in_, out), path in extractors.iteritems():
+        extractor = ActionWrapper(Extractor,
+                                  'Get{}From{}'.format(entity_graph.get_entity_name(out),
+                                                       entity_graph.get_entity_name(in_)),
+                                  ins={in_: entity_graph.create_entity(in_)},
+                                  outs={out: entity_graph.create_entity(out)},
+                                  param={'path': path})
+        action_graph.register_action(extractor)
+    return action_graph
 
 
 def add_maps(provided_resources, action_hyper_graph):
