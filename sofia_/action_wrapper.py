@@ -21,4 +21,6 @@ class ActionWrapper(object):
         return self.action_class(resources, dependencies, self.param, ins, outs, converters, self.name)
 
     def get_output(self, ins, requested_attr={}):
-        return self.action_class.get_output(ins, self.outs, requested_attr)
+        attr = self.attr.copy()
+        attr.update(requested_attr)
+        return self.action_class.get_output(ins, self.outs, attr)

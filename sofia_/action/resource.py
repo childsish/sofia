@@ -20,21 +20,16 @@ class Resource(Action):
         """ Check if a disk-based source matches this resource. """
         match_ext = cls.matches_extension(resource)
         match_type = cls.matches_type(resource)
-        return match_ext and match_type
+        return match_ext or match_type
     
     @classmethod
     def matches_extension(cls, resource):
         """ Match the extension of the disk-based source to this resource. """
-        for ext in cls.EXT:
-            if resource.fname.endswith(ext):
-                return True
-        return False
+        return any(resource.fname.endswith(ext) for ext in cls.EXT)
     
     @classmethod
     def matches_type(cls, resource):
         """ Match the entity type of the disk-based source to this resource. """
-        if resource.types is None:
-            return True
         return set(cls.OUT) == resource.types
 
     @classmethod
@@ -71,6 +66,4 @@ class Target(Resource):
     @classmethod
     def matches_type(cls, resource):
         """ Match the entity type of the disk-based source to this resource. """
-        if resource.types is None:
-            return True
         return set(t + '_set' for t in cls.OUT) == resource.types

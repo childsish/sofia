@@ -1,7 +1,7 @@
 import imp
 import os
 
-from sofia_.action import Action, Extractor, Resource, Target, Map
+from sofia_.action import Action, Extractor, Resource, Target, Map, GetIdById
 from sofia_.action_wrapper import ActionWrapper
 from sofia_.graph.action_hyper_graph import ActionHyperGraph
 from sofia_.graph.entity_graph import EntityGraph
@@ -22,6 +22,8 @@ def load_action_hypergraph(template, requested_entities=[], provided_entities=[]
     action_graph = ActionHyperGraph(entity_graph)
     for action, root in available_actions:
         action_graph.register_action(ActionWrapper(action))
+    action_graph.register_action(ActionWrapper(GetIdById))
+    action_graph.register_action(ActionWrapper(Map))
 
     for entity in requested_entities:
         action_graph.add_vertex(entity)
@@ -59,27 +61,6 @@ def load_action_hypergraph(template, requested_entities=[], provided_entities=[]
                                   param={'path': path})
         action_graph.register_action(extractor)
     return action_graph
-
-
-def add_maps(provided_resources, action_hyper_graph):
-    def get_action_name(entity_name):
-        return ''.join(part.capitalize() for part in entity_name.split('_'))
-
-    for name, resource in provided_resources.iteritems():
-        if resource.types is None or 'map' not in resource.types:
-            continue
-        attr = resource.attr
-        attr['filename'] = resource.fname
-        ins = set(attr['in'].split(','))
-        outs = set(attr['out'].split(','))
-        map_name = '{}{}Map'.format(','.join(get_action_name(in_) for in_ in sorted(ins)),
-                                    ','.join(get_action_name(out) for out in sorted(outs)))
-        params = {'in_cols': [int(col) - 1 for col in attr['in_cols'].split(',')],
-                  'out_cols': [int(col) - 1 for col in attr['out_cols'].split(',')],
-                  'filename': attr['filename']}
-        map = ActionWrapper(Map, map_name, ins=ins, outs=outs, param=params)
-        action_hyper_graph.register_action(map)
-    return action_hyper_graph
 
 
 def load_entity_graph(template):

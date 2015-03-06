@@ -100,7 +100,7 @@ class ActionSolutionIterator(object):
             if fr_value == to_value:
                 continue
             for parent_entity in parent_entities:
-                path = [] if parent_entity == entity else\
+                path = [] if entity in self.graph.entity_graph.get_equivalents(parent_entity) else\
                     self.graph.entity_graph.get_descendent_path_to(parent_entity, entity)
                 if path is None:
                     errors.add('Could not get {} from {}'.format(entity, parent_entity))

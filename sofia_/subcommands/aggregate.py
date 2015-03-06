@@ -4,7 +4,7 @@ import sys
 import multiprocessing
 
 from collections import defaultdict
-from common import load_action_hypergraph, load_entity_graph, add_maps
+from common import load_action_hypergraph, load_entity_graph
 from sofia_.error_manager import ERROR_MANAGER
 from sofia_.parser import EntityParser, ResourceParser
 from sofia_.graph.action_graph import ActionGraph
@@ -27,7 +27,6 @@ class Aggregator(object):
 
         sys.stderr.write('    Resolving entities...\n')
 
-        add_maps(provided_resources, self.hyper_graph)
         solution, resolved_actions = self.resolve_request(requested_entities, provided_resources, maps)
         if args.graph:
             sys.stdout.write('{}\n\n'.format(solution))
@@ -73,7 +72,8 @@ class Aggregator(object):
                                                        self.workflow_template,
                                                        maps,
                                                        entity.resources,)
-            possible_graphs = [graph for graph in solution_iterator
+            possible_graphs = list(solution_iterator)
+            possible_graphs = [graph for graph in possible_graphs
                                if satisfies_request(graph, entity.resources)]
             if len(possible_graphs) == 0:
                 sys.stderr.write('unable to resolve entity.\n')
