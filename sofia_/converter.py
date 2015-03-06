@@ -32,7 +32,7 @@ class Converter(object):
         value = self._convert(child, path[1:], id_map)
         if hasattr(entity, '__setitem__'):
             entity = entity.copy()
-            entity[path[0]] = value
+            entity[path[0]['key']] = value
         elif hasattr(entity, '_replace'):
             entity = entity._replace(**{path[0]['key']: value})
         else:
