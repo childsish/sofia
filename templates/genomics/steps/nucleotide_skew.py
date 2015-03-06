@@ -1,4 +1,4 @@
-from sofia_.action import Step
+from sofia_.step import Step
 
 from collections import Counter
 from lhc.binf.skew import Skew

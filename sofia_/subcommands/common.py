@@ -1,7 +1,7 @@
 import imp
 import os
 
-from sofia_.action import Step, Extractor, Resource, Target, Map, GetIdById
+from sofia_.step import Step, Extractor, Resource, Target, Map, GetIdById
 from sofia_.action_wrapper import ActionWrapper
 from sofia_.graph.action_hyper_graph import ActionHyperGraph
 from sofia_.graph.entity_graph import EntityGraph

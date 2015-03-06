@@ -4,7 +4,7 @@ import os
 import sys
 
 from common import get_program_directory, load_action_hypergraph, load_plugins
-from sofia_.action import Step, Resource, Target
+from sofia_.step import Step, Resource, Target
 from textwrap import wrap
 from lhc.argparse import OpenWritableFile
 
@@ -74,12 +74,12 @@ def define_parser(parser):
     graph_parser.set_defaults(func=generate_graph)
 
     actions_parser = subparsers.add_parser('steps')
-    actions_parser.add_argument('-a', '--action',
-                                help='list a specific action')
+    actions_parser.add_argument('-a', '--step',
+                                help='list a specific step')
     actions_parser.add_argument('-t', '--template', default='genomics',
                                 help='list the defined template (default: genomics).')
     actions_parser.add_argument('-v', '--verbose', action='store_true',
-                                help='print out descriptions of each action')
+                                help='print out descriptions of each step')
     actions_parser.add_argument('-w', '--workflow-template', default='genomics',
                                 help='specify a workflow template (default: genomics).')
     actions_parser.set_defaults(func=list_actions)

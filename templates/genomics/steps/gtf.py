@@ -1,6 +1,6 @@
 import os
 
-from sofia_.action import Resource, Target
+from sofia_.step import Resource, Target
 from lhc.io.gtf_.index import IndexedGtfFile
 from lhc.io.gtf_.iterator import GtfEntryIterator
 from lhc.io.gtf_.set_ import GtfSet as GtfSetBase

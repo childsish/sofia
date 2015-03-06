@@ -1,4 +1,4 @@
-from sofia_.action import Resource
+from sofia_.step import Resource
 from sofia_.error_manager import ERROR_MANAGER
 
 

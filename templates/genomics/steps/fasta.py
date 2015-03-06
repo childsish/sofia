@@ -1,6 +1,6 @@
 import os
 
-from sofia_.action import Resource
+from sofia_.step import Resource
 from lhc.io.fasta_.index import IndexedFastaSet
 from lhc.io.fasta_.iterator import FastaEntryIterator
 from lhc.io.fasta_.set_ import FastaSet

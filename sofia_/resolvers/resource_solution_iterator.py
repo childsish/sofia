@@ -1,4 +1,4 @@
-from sofia_.action import Target
+from sofia_.step import Target
 from sofia_.graph.action_graph import ActionGraph
 from sofia_.parser.provided_resource import ProvidedResource
 from sofia_.error_manager import ERROR_MANAGER

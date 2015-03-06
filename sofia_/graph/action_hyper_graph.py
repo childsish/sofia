@@ -2,7 +2,7 @@ from lhc.graph import HyperGraph
 
 
 class ActionHyperGraph(HyperGraph):
-    """ A hyper graph of all the possible action calculation pathways. """
+    """ A hyper graph of all the possible step calculation pathways. """
     def __init__(self, entity_graph):
         super(ActionHyperGraph, self).__init__()
         self.actions = dict()
@@ -16,9 +16,9 @@ class ActionHyperGraph(HyperGraph):
         self.add_vertex(entity)
 
     def register_action(self, action):
-        """ Add an action to the hyper graph.
+        """ Add an step to the hyper graph.
 
-        :param action: The action to add to the graph.
+        :param action: The step to add to the graph.
         """
         self.actions[action.name] = action
 

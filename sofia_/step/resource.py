@@ -3,7 +3,7 @@ from sofia_.entity import Entity
 
 
 class Resource(Step):
-    """ A action that provides access to a disk based resource. """
+    """ A step that provides access to a disk based resource. """
     
     EXT = []
     
@@ -42,7 +42,7 @@ class Resource(Step):
 class Target(Resource):
     """ The target resource that is to be annotated.
     
-    This particular action should be used to provide iterative access to the
+    This particular step should be used to provide iterative access to the
     entities stored in the resource.
     """
     def generate(self, entities, actions):

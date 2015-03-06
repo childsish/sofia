@@ -1,7 +1,7 @@
 from collections import namedtuple
 from itertools import izip
 from lhc.binf.sequence import revcmp
-from sofia_.action import Step
+from sofia_.step import Step
 
 
 class GetPosition(Step):

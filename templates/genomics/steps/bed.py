@@ -1,6 +1,6 @@
 import os
 
-from sofia_.action import Resource, Target
+from sofia_.step import Resource, Target
 from lhc.io.bed_.index import IndexedBedFile
 from lhc.io.bed_.iterator import BedLineIterator
 from lhc.io.bed_.set_ import BedSet as BedSetBase

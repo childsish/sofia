@@ -2,7 +2,7 @@ from lhc.graph import Graph
 
 
 class ActionGraph(object):
-    """ A resolved graph that calculates a action. """
+    """ A resolved graph that calculates a step. """
     def __init__(self, action=None):
         self.action = action
         self.actions = {}

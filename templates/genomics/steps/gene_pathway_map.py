@@ -1,4 +1,4 @@
-from sofia_.action import Step
+from sofia_.step import Step
 
 
 class GetPathwayByGene(Step):

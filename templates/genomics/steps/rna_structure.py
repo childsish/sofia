@@ -1,4 +1,4 @@
-from sofia_.action import Step
+from sofia_.step import Step
 
 
 class DummyRNAModule(object):
@@ -23,7 +23,7 @@ class GetTranslationStartMinimumFreeEnergy(Step):
     OUT = ['translation_start_mfe']
 
     def init(self, offset=50, type='mfe'):
-        """ Initialise the action
+        """ Initialise the step
 
         :param offset: the range upstream and downstream to fold
         :param type: (mfe, efe)

@@ -2,8 +2,8 @@ from sofia_.entity import Entity
 from sofia_.error_manager import ERROR_MANAGER
 
 
-class Action(object):
-    """ A action that can be calculated from resources and other steps. """
+class Step(object):
+    """ A step that can be calculated from resources and other steps. """
     
     IN = []
     OUT = []
@@ -22,12 +22,12 @@ class Action(object):
         self.converters = converters
     
     def __str__(self):
-        """ Return the name of the action based on it's resources and
+        """ Return the name of the step based on it's resources and
         arguments. """
         return self.name
     
     def init(self):
-        """ Initialise the action.
+        """ Initialise the step.
 
         When overridden, this function can be passed arguments that are parsed
         from the command line.
@@ -35,7 +35,7 @@ class Action(object):
         pass
     
     def calculate(self, **kwargs):
-        """Calculate this action
+        """Calculate this step
         
         Assumes dependencies are already resolved. This function must be
         overridden when implementing new steps.
@@ -46,21 +46,21 @@ class Action(object):
         raise NotImplementedError('You must override this function')
 
     def format(self, entity):
-        """Convert entity produced by this action to a string
+        """Convert entity produced by this step to a string
         
         :param object entity: convert this entity
         """
         return str(entity)
     
     def generate(self, entities, actions):
-        """Generate a action
+        """Generate a step
         
         This function resolves all dependencies and then calculates the
-        action.
+        step.
         
         :param dict entities: currently calculated entities
         :param actions: available steps
-        :type actions: dict of actions
+        :type actions: dict of steps
         """
         # TODO: implement proper multiple output support
         name = self.name
@@ -94,7 +94,7 @@ class Action(object):
         return  # res
     
     def reset(self, actions):
-        """ Resets the calculation status of this action and all dependencies 
+        """ Resets the calculation status of this step and all dependencies
         to False.
         """
         self.calculated = False
@@ -108,7 +108,7 @@ class Action(object):
         return res
     
     def _get_name(self, name=None):
-        """ Return the name of the action based on it's resources and
+        """ Return the name of the step based on it's resources and
         arguments. """
         name = [type(self).__name__ if name is None else name]
         if len(self.resources) != 0:

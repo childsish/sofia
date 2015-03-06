@@ -64,7 +64,7 @@ class EntityParser(object):
         return RequestedEntity(entity, getter, header, attributes, resources)
     
     def _get_resources(self, resources, entity):
-        """ Parse a resource from the action string and check if any requested
+        """ Parse a resource from the step string and check if any requested
         resources have been provided by the user. """
         try:
             return frozenset(self.provided_resources[r] for r in resources)

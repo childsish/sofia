@@ -1,6 +1,6 @@
 import os
 
-from sofia_.action import Resource, Target
+from sofia_.step import Resource, Target
 from lhc.io.vcf_.index import IndexedVcfFile
 from lhc.io.vcf_.iterator import VcfEntryIterator
 from lhc.io.vcf_.set_ import VcfSet as VcfSetBase
