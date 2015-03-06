@@ -19,7 +19,7 @@ class EntitySolutionIterator(object):
     def __iter__(self):
         action_names = self.graph.get_children(self.entity)
         if len(action_names) == 0:
-            ERROR_MANAGER.add_error('No actions produce {}'.format(self.entity))
+            ERROR_MANAGER.add_error('No steps produce {}'.format(self.entity))
         for action_name in action_names:
             if action_name in self.visited:
                 continue

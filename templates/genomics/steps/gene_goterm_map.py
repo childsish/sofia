@@ -1,7 +1,7 @@
-from sofia_.action import Action
+from sofia_.action import Step
 
 
-class GetGotermByGene(Action):
+class GetGotermByGene(Step):
     
     IN = ['gene_id', 'gene_goterm_map']
     OUT = ['goterm']

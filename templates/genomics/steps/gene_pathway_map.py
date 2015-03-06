@@ -1,7 +1,7 @@
-from sofia_.action import Action
+from sofia_.action import Step
 
 
-class GetPathwayByGene(Action):
+class GetPathwayByGene(Step):
     
     IN = ['gene_id', 'gene_pathway_map']
     OUT = ['pathway_id']

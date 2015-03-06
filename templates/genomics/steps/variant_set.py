@@ -1,7 +1,7 @@
-from sofia_.action import Action
+from sofia_.action import Step
 
 
-class GetVariantByVariant(Action):
+class GetVariantByVariant(Step):
     
     IN = ['variant_set', 'variant']
     OUT = ['variant']

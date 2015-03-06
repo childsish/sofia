@@ -1,10 +1,10 @@
 from collections import namedtuple
 from itertools import izip
 from lhc.binf.sequence import revcmp
-from sofia_.action import Action
+from sofia_.action import Step
 
 
-class GetPosition(Action):
+class GetPosition(Step):
 
     IN = ['chromosome_pos']
     OUT = ['position']
@@ -13,7 +13,7 @@ class GetPosition(Action):
         return chromosome_pos + 1
 
 
-class VariantType(Action):
+class VariantType(Step):
     """
     Determines the variant type according to the sequence ontology
     (http://www.sequenceontology.org)
@@ -87,7 +87,7 @@ class CodingVariant(namedtuple('CodingVariant', ['pos', 'ref', 'alt'])):
         return ','.join(res)
 
 
-class GetCodingVariant(Action):
+class GetCodingVariant(Step):
     
     IN = ['major_transcript', 'variant']
     OUT = ['coding_variant']
@@ -115,7 +115,7 @@ class CodonVariant(namedtuple('CodonVariant', ('pos', 'ref', 'alt', 'fs'))):
         return ','.join('c.{}{}>{}'.format(self.pos + 1, self.ref, alt) for alt in self.alt)
 
 
-class GetCodonVariant(Action):
+class GetCodonVariant(Step):
     
     IN = ['coding_variant', 'coding_sequence', 'downstream_1000']
     OUT = ['codon_variant']
@@ -183,7 +183,7 @@ class AminoAcidVariant(namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'
         return ','.join(res)
 
 
-class GetAminoAcidVariant(Action):
+class GetAminoAcidVariant(Step):
     """
     Get the amino acid variant. The nomenclature defined by the Human Genome Variation Society has been largely
     adopted (www.hgvs.org/mutnomen/).

@@ -1,4 +1,4 @@
-from sofia_.action import Action
+from sofia_.action import Step
 from lhc.binf.kmer import KmerCounter
 
 from collections import defaultdict
@@ -7,7 +7,7 @@ from itertools import izip
 from operator import add, mul
 
 
-class TranslateCodingSequence(Action):
+class TranslateCodingSequence(Step):
     """
     Translates a coding sequence into an amino acid sequence using the standard genetic code.
     """
@@ -21,7 +21,7 @@ class TranslateCodingSequence(Action):
         return genetic_code.translate(coding_sequence)
 
 
-class GetCodonUsage(Action):
+class GetCodonUsage(Step):
     """
     Calculate the codon usage of a coding sequence.
     """
@@ -35,7 +35,7 @@ class GetCodonUsage(Action):
         return KmerCounter(coding_sequence, k=3, step=3)
 
 
-class GetRelativeSynonymousCodonUsage(Action):
+class GetRelativeSynonymousCodonUsage(Step):
     """
     Calculates and return the relative synonymous codon usage (rscu) and relative codon adaptiveness (w)
     as defined by Sharp et. al. 1987
@@ -65,7 +65,7 @@ class GetRelativeSynonymousCodonUsage(Action):
         return rscu, w
 
 
-class GetCodonAdaptationIndex(Action):
+class GetCodonAdaptationIndex(Step):
     """
     Calculate the Codon Adaptation Index as defined by Sharp et. al. 1987.
     """
@@ -88,7 +88,7 @@ class GetCodonAdaptationIndex(Action):
         return geometric_mean(cai)
 
 
-class GetEffectiveNumberOfCodons(Action):
+class GetEffectiveNumberOfCodons(Step):
     """
     Calculated the number of effective codons (Nc) as defined by Sun et. al. 2013
     """

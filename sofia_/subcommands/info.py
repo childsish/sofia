@@ -4,7 +4,7 @@ import os
 import sys
 
 from common import get_program_directory, load_action_hypergraph, load_plugins
-from sofia_.action import Action, Resource, Target
+from sofia_.action import Step, Resource, Target
 from textwrap import wrap
 from lhc.argparse import OpenWritableFile
 
@@ -29,10 +29,10 @@ def list_entities(args):
 
 
 def list_actions(args):
-    action_classes = load_plugins(args.workflow_template, Action, {Resource, Target})
+    action_classes = load_plugins(args.workflow_template, Step, {Resource, Target})
     
     if args.action is None:
-        args.output.write('\nAvailable actions:\n==================\n')
+        args.output.write('\nAvailable steps:\n==================\n')
         for action_class, template_name in sorted(action_classes, key=lambda x: x[0].__name__):
             list_action(action_class, template_name, args)
     else:
@@ -73,7 +73,7 @@ def define_parser(parser):
                               help='specify a workflow template (default: genomics).')
     graph_parser.set_defaults(func=generate_graph)
 
-    actions_parser = subparsers.add_parser('actions')
+    actions_parser = subparsers.add_parser('steps')
     actions_parser.add_argument('-a', '--action',
                                 help='list a specific action')
     actions_parser.add_argument('-t', '--template', default='genomics',

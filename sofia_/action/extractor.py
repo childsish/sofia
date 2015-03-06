@@ -1,8 +1,8 @@
-from action import Action
+from step import Step
 from sofia_.graph.entity_graph import EntityGraph
 
 
-class Extractor(Action):
+class Extractor(Step):
     def init(self, path):
         self.path = path
 

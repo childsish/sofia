@@ -1,7 +1,7 @@
-from sofia_.action import Action
+from sofia_.action import Step
 
 
-class GetGenomicFeatureByPosition(Action):
+class GetGenomicFeatureByPosition(Step):
     
     IN = ['genomic_feature_set', 'genomic_position']
     OUT = ['genomic_feature']
@@ -19,7 +19,7 @@ class GetGenomicFeatureByPosition(Action):
         return res
 
 
-class GetGenomicFeatureByInterval(Action):
+class GetGenomicFeatureByInterval(Step):
         
     IN = ['genomic_feature_set', 'genomic_interval']
     OUT = ['genomic_feature']

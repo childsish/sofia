@@ -1,8 +1,8 @@
-from sofia_.action import Action
+from sofia_.action import Step
 from warnings import warn
 
 
-class GetMajorTranscriptCodingSequence(Action):
+class GetMajorTranscriptCodingSequence(Step):
     """
     Get the coding sequence of the major transcript.
     """
@@ -20,7 +20,7 @@ class GetMajorTranscriptCodingSequence(Action):
         return res
 
 
-class GetFivePrimeUtr(Action):
+class GetFivePrimeUtr(Step):
     """
     Get the 5' untranslated region of the major transcript.
     """
@@ -34,7 +34,7 @@ class GetFivePrimeUtr(Action):
         return major_transcript.get_sub_seq(chromosome_sequence_set, type="5'UTR5")
 
 
-class GetThreePrimeUtr(Action):
+class GetThreePrimeUtr(Step):
     """
     Get the 3' untranslated region of the major transcript.
     """

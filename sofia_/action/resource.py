@@ -1,8 +1,8 @@
-from action import Action
+from step import Step
 from sofia_.entity import Entity
 
 
-class Resource(Action):
+class Resource(Step):
     """ A action that provides access to a disk based resource. """
     
     EXT = []

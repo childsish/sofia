@@ -1,10 +1,10 @@
-from sofia_.action import Action
+from sofia_.action import Step
 
 from collections import Counter
 from lhc.binf.skew import Skew
 
 
-class GetCodingSkew(Action):
+class GetCodingSkew(Step):
     """
     Get the nucleotide skews of the given coding sequence. AT skew is (|A| - |T|) / (|A| + |T|). GC skew is similar.
     """
@@ -18,7 +18,7 @@ class GetCodingSkew(Action):
         return Skew(coding_sequence)
 
 
-class GetUTR5Skew(Action):
+class GetUTR5Skew(Step):
 
     IN = ['five_prime_utr']
     OUT = ['utr5_skew']
@@ -29,7 +29,7 @@ class GetUTR5Skew(Action):
         return Skew(five_prime_utr)
 
 
-class GetUTR3Skew(Action):
+class GetUTR3Skew(Step):
 
     IN = ['three_prime_utr']
     OUT = ['utr3_skew']

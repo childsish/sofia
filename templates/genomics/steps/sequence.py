@@ -1,8 +1,8 @@
-from sofia_.action import Action
+from sofia_.action import Step
 from lhc.binf.kmer import KmerCounter
 
 
-class GetCodingKmer(Action):
+class GetCodingKmer(Step):
 
     IN = ['coding_sequence']
     OUT = ['coding_kmer']
@@ -13,7 +13,7 @@ class GetCodingKmer(Action):
         return KmerCounter(coding_sequence)
 
 
-class GetUTR5Kmer(Action):
+class GetUTR5Kmer(Step):
 
     IN = ['five_prime_utr']
     OUT = ['utr5_kmer']
@@ -24,7 +24,7 @@ class GetUTR5Kmer(Action):
         return KmerCounter(five_prime_utr)
 
 
-class GetUTR3Kmer(Action):
+class GetUTR3Kmer(Step):
 
     IN = ['three_prime_utr']
     OUT = ['utr3_kmer']
@@ -35,7 +35,7 @@ class GetUTR3Kmer(Action):
         return KmerCounter(three_prime_utr)
 
 
-class GetProteinKmer(Action):
+class GetProteinKmer(Step):
 
     IN = ['protein_sequence']
     OUT = ['protein_kmer']

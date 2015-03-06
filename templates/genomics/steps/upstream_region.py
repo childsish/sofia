@@ -1,7 +1,7 @@
-from sofia_.action import Action
+from sofia_.action import Step
 
 
-class GetUpstreamSequence(Action):
+class GetUpstreamSequence(Step):
     """
     Get the region 1000 nucleotides upstream of the major transcript transcriptional start site.
     """
@@ -18,7 +18,7 @@ class GetUpstreamSequence(Action):
         return start_pos.get_interval(upstream_pos)
 
 
-class GetUpstreamORFs(Action):
+class GetUpstreamORFs(Step):
     """
     Get the ORFs in the upstream region.
     """
@@ -38,7 +38,7 @@ class GetUpstreamORFs(Action):
         return res
 
 
-class GetNumberOfUpstreamORFs(Action):
+class GetNumberOfUpstreamORFs(Step):
 
     IN = ['upstream_orfs']
     OUT = ['number_of_upstream_orfs']

@@ -1,9 +1,9 @@
-from sofia_.action import Action
+from sofia_.action import Step
 
 from lhc.binf.sequence import revcmp
 
 
-class GetDownstream1000(Action):
+class GetDownstream1000(Step):
     """
     Get the sequence from the given genomic position to 1000 nucleotides downstream.
     """

@@ -1,7 +1,7 @@
 import imp
 import os
 
-from sofia_.action import Action, Extractor, Resource, Target, Map, GetIdById
+from sofia_.action import Step, Extractor, Resource, Target, Map, GetIdById
 from sofia_.action_wrapper import ActionWrapper
 from sofia_.graph.action_hyper_graph import ActionHyperGraph
 from sofia_.graph.entity_graph import EntityGraph
@@ -17,7 +17,7 @@ def load_resource(fname, parsers, format=None):
 
 
 def load_action_hypergraph(template, requested_entities=[], provided_entities=[]):
-    available_actions = load_plugins(template, Action, {Resource, Target})
+    available_actions = load_plugins(template, Step, {Resource, Target})
     entity_graph = load_entity_graph(template)
     action_graph = ActionHyperGraph(entity_graph)
     for action, root in available_actions:
@@ -76,7 +76,7 @@ def load_plugins(template, parent_class, excluded=set()):
     import sys
 
     plugins = []
-    action_dir = os.path.join(get_program_directory(), 'templates', template, 'actions')
+    action_dir = os.path.join(get_program_directory(), 'templates', template, 'steps')
     sys.path.append(action_dir)
     for fname in os.listdir(action_dir):
         if fname.startswith('.') or not fname.endswith('.py'):

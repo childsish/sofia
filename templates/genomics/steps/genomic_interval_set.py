@@ -1,7 +1,7 @@
-from sofia_.action import Action
+from sofia_.action import Step
 
 
-class GetIntervalByPosition(Action):
+class GetIntervalByPosition(Step):
     
     IN = ['genomic_interval_set', 'genomic_position']
     OUT = ['genomic_interval']
@@ -15,7 +15,7 @@ class GetIntervalByPosition(Action):
         return genomic_interval.name
 
 
-class GetBoundsProximity(Action):
+class GetBoundsProximity(Step):
 
     IN = ['genomic_position', 'genomic_interval']
     OUT = ['bounds_proximity']

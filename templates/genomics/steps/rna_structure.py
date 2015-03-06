@@ -1,4 +1,4 @@
-from sofia_.action import Action
+from sofia_.action import Step
 
 
 class DummyRNAModule(object):
@@ -14,7 +14,7 @@ except ImportError:
     RNA = DummyRNAModule()
 
 
-class GetTranslationStartMinimumFreeEnergy(Action):
+class GetTranslationStartMinimumFreeEnergy(Step):
     """
     Get the minimum free energy around the start codon of the major transcript.
     """
@@ -40,7 +40,7 @@ class GetTranslationStartMinimumFreeEnergy(Action):
         return self.fold(start_codon_region)[1]
 
 
-class GetStructuralFeatures(Action):
+class GetStructuralFeatures(Step):
     """
     Incomplete. Get the RNA secondary structural features of the given sequence.
     """

@@ -1,7 +1,7 @@
-from sofia_.action import Action
+from sofia_.action import Step
 
 
-class GetHomopolymer(Action):
+class GetHomopolymer(Step):
     """
     Get the stretch of identical nucleotides at the variant
     """

@@ -1,4 +1,4 @@
-from action import Action
+from step import Step
 from resource import Resource
 
 
@@ -20,7 +20,7 @@ class Map(Resource):
         fhndl.close()
 
 
-class GetIdById(Action):
+class GetIdById(Step):
 
     IN = ['id', 'map']
     OUT = ['id']
