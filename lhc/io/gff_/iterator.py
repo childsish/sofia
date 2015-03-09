@@ -96,13 +96,10 @@ class GffEntryIterator(object):
 
     @staticmethod
     def get_features(lines):
-        if len(lines) == 0:
-            return []
-
         top_features = {}
         open_features = {}
         for i, line in enumerate(lines):
-            id = line.attr['ID'] if 'ID' in line.attr else i
+            id = line.attr.get('Name', i)
             ivl = Interval(line.chr, line.start, line.stop, line.strand)
             feature = GenomicFeature(id, line.type, ivl, line.attr)
             open_features[id] = feature
@@ -114,4 +111,6 @@ class GffEntryIterator(object):
                     open_features[parent].add_child(feature)
             else:
                 top_features[id] = feature
+        if len(top_features) == 0:
+            return []
         return zip(*sorted(top_features.iteritems()))[1]

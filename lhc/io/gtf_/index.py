@@ -12,6 +12,6 @@ class IndexedGtfFile(object):
     def get_features(self, gene_line):
         genes = GtfEntryIterator.get_features(self.index.fetch(gene_line.chr, gene_line.start, gene_line.stop))
         for gene in genes:
-            if gene.name == gene_line.attr['gene_id']:
+            if gene.name == gene_line.attr['gene_name']:
                 return gene
-        raise KeyError('{}'.format(gene_line.attr['gene_id']))
+        raise KeyError('{}'.format(gene_line.attr['gene_name']))
