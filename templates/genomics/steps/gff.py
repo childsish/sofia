@@ -25,7 +25,7 @@ class GffIterator(Target):
 
 class GffSet(Resource):
     
-    EXT = ['.gff', '.gff.gz']
+    EXT = ['.gff', '.gff.gz', '.gff3.gz']
     OUT = ['genomic_feature_set']
 
     def init(self):

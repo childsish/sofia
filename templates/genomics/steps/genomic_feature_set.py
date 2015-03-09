@@ -25,13 +25,13 @@ class GetGenomicFeatureByInterval(Step):
     OUT = ['genomic_feature']
 
     def calculate(self, genomic_feature_set, genomic_interval):
-        #TODO: select correct gene
+        #TODO: select correct gene (currently selecting largest)
         features = genomic_feature_set.fetch(
             genomic_interval.chr,
             genomic_interval.start,
             genomic_interval.stop)
         if features is None or len(features) == 0:
             return None
-        res = features[0]
+        res = sorted(features, key=len)[-1]
         res.name = res.name.rsplit('.')[0]
         return res

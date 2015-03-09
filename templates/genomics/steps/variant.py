@@ -103,6 +103,8 @@ class GetCodingVariant(Step):
                 else major_transcript.get_rel_pos(pos + len(ref) - 1, {'CDS'})
         except IndexError:
             return None
+        except ValueError:
+            return None
         alt = variant.alt.split(',')
         if major_transcript.strand == '-':
             ref = revcmp(ref)
