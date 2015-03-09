@@ -13,4 +13,4 @@ class ProvidedResource(object):
         self.attr = {} if attr is None else attr
 
     def __str__(self):
-        return '{}:{}:{}'.format(self.fname, self.type, self.name)
+        return '{}:{}:{}'.format(self.fname, ','.join(self.types), self.name)
