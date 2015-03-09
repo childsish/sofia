@@ -114,14 +114,14 @@ class GtfEntryIterator(object):
         top_features = {}
         open_features = {}
         for i, line in enumerate(lines):
-            id = line.attr['gene_id'] if line.type == 'gene' else\
+            id = line.attr['gene_name'] if line.type == 'gene' else\
                 line.attr['transcript_id'] if line.type == 'transcript' else\
                 i
             ivl = Interval(line.chr, line.start, line.stop, line.strand)
             feature = GenomicFeature(id, line.type, ivl, line.attr)
             open_features[id] = feature
             if line.type != 'gene':
-                parent = line.attr['gene_id'] if line.type == 'transcript' else\
+                parent = line.attr['gene_name'] if line.type == 'transcript' else\
                     line.attr['transcript_id']
                 if parent not in open_features:
                     open_features[parent] = GenomicFeature(parent)
