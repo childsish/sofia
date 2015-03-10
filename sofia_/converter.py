@@ -1,3 +1,4 @@
+from copy import copy
 from itertools import izip
 from sofia_.entity_wrapper import EntityWrapper
 
@@ -41,5 +42,6 @@ class Converter(object):
         elif hasattr(entity, '_replace'):
             entity = entity._replace(**{path[0]['key']: value})
         else:
-            entity = EntityWrapper(entity, path, id_map)
+            entity = copy(entity)
+            setattr(entity, path[0]['key'], value)
         return entity

@@ -5,17 +5,29 @@ from lhc.collections.sorted_list import SortedList
 
 class GenomicFeature(Interval):
 
-    __slots__ = ('chr', 'start', 'stop', 'strand', 'children', 'name', 'type', 'attr')
+    __slots__ = ('_chr', 'start', 'stop', 'strand', 'children', 'name', 'type', 'attr')
 
     def __init__(self, name, type=None, interval=None, attr={}):
+        self._chr = None
+        self.children = SortedList()
         if interval is None:
             super(GenomicFeature, self).__init__(None, None, None)
         else:
             super(GenomicFeature, self).__init__(interval.chr, interval.start, interval.stop, interval.strand)
-        self.children = SortedList()
         self.name = name
         self.type = type
         self.attr = attr
+
+    @property
+    def chr(self):
+        return self._chr
+
+    @chr.setter
+    def chr(self, value):
+        self._chr = value
+        if hasattr(self, 'children'):  # Check needed due to depickling.
+            for child in self.children:
+                child.chr = value
 
     def __len__(self):
         if len(self.children) == 0:
