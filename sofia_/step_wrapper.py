@@ -1,13 +1,13 @@
 from sofia_.entity import Entity
 
 
-class ActionWrapper(object):
-    def __init__(self, action_class, name=None, ins=None, outs=None, param={}, attr={}):
-        self.action_class = action_class
-        self.name = action_class.__name__ if name is None else name
-        self.ins = {in_: Entity(in_) for in_ in action_class.IN}\
+class StepWrapper(object):
+    def __init__(self, step_class, name=None, ins=None, outs=None, param={}, attr={}):
+        self.action_class = step_class
+        self.name = step_class.__name__ if name is None else name
+        self.ins = {in_: Entity(in_) for in_ in step_class.IN}\
             if ins is None else ins
-        self.outs = {out: Entity(out) for out in action_class.OUT}\
+        self.outs = {out: Entity(out) for out in step_class.OUT}\
             if outs is None else outs
         self.param = param
         self.attr = attr
@@ -20,7 +20,7 @@ class ActionWrapper(object):
         outs = self.outs if outs is None else outs
         return self.action_class(resources, dependencies, self.param, ins, outs, converters, self.name)
 
-    def get_output(self, ins, requested_attr={}):
+    def get_output(self, ins, requested_attr={}, entity_graph=None):
         attr = self.attr.copy()
         attr.update(requested_attr)
-        return self.action_class.get_output(ins, self.outs, attr)
+        return self.action_class.get_output(ins, self.outs, attr, entity_graph)

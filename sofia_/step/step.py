@@ -1,5 +1,6 @@
 from sofia_.entity import Entity
 from sofia_.error_manager import ERROR_MANAGER
+from operator import or_
 
 
 class Step(object):
@@ -128,7 +129,7 @@ class Step(object):
         return '\\n'.join(name)
     
     @classmethod
-    def get_output(cls, ins={}, outs={}, requested_attr={}):
+    def get_output(cls, ins={}, outs={}, requested_attr={}, entity_graph=None):
         """ Determine the attributes of the outputs
 
         Given the provided and requested attributes, determine the output
@@ -143,11 +144,34 @@ class Step(object):
                 attributes = ', '.join('({}: {})'.format(k, v.attr[name]) for k, v in ins.iteritems())
                 ERROR_MANAGER.add_error('{} could not match {} attributes: {}'.format(cls.__name__, name, attributes))
                 return None
+
+        # Determine attributes to remove
+        # FIXME: Make this per output entity rather than for all.
+        in_descendents = set(ins)
+        in_equivalents = reduce(or_, (entity_graph.get_equivalent_ancestors(entity) for entity in ins))
+        for entity in in_equivalents:
+            paths = entity_graph.get_descendent_paths(entity)
+            for path in paths:
+                for step in path:
+                    in_descendents.update(entity_graph.get_equivalent_ancestors(step['name']))
+        out_descendents = set(outs)
+        out_equivalents = reduce(or_, (entity_graph.get_equivalent_ancestors(entity) for entity in outs))
+        for entity in out_equivalents:
+            paths = entity_graph.get_descendent_paths(entity)
+            for path in paths:
+                for step in path:
+                    out_descendents.update(entity_graph.get_equivalent_ancestors(step['name']))
         
         # Yield the output entities
         out_attr = {}
         for entity in ins.itervalues():
             out_attr.update(entity.attr)
+        remove = set()
+        for attr in out_attr:
+            if attr in in_descendents and attr not in out_descendents:
+                remove.add(attr)
+        for attr in remove:
+            del out_attr[attr]
         outs = {out: Entity(out, out_attr) for out in outs}
         return outs
         #return {out: ENTITY_FACTORY.makeEntity(out, attr) for out in outs}

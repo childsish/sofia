@@ -1,11 +1,14 @@
 from itertools import izip
-from sofia_.graph.entity_graph import EntityGraph
 
 
 class Converter(object):
-    def __init__(self, path=None, id_map=None):
+    def __init__(self, entity=None, fr=None, to=None, path=None, id_map=None):
+        self.entities = {} if entity is None else {entity: (fr, to)}
         self.paths = [] if path is None else [path]
         self.id_maps = [] if id_map is None else [id_map]
+
+    def __str__(self):
+        return ','.join('{}:{}->{}'.format(e, f, t) for e, (f, t) in self.entities.iteritems())
 
     def __len__(self):
         return len(self.paths)
@@ -20,6 +23,7 @@ class Converter(object):
         return entity
 
     def update(self, other):
+        self.entities.update(other.entities)
         self.paths.extend(other.paths)
         self.id_maps.extend(other.id_maps)
 

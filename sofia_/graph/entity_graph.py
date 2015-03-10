@@ -62,13 +62,22 @@ class EntityGraph(object):
                 return path
         return None
 
-    def get_equivalents(self, child):
-        equivalents = {child}
-        children = self.is_a.get_children(child)
+    def get_equivalent_descendents(self, entity):
+        equivalents = {entity}
+        children = self.is_a.get_children(entity)
         while len(children) > 0:
-            child = list(children)[0]
-            equivalents.add(child)
-            children = self.is_a.get_children(child)
+            entity = list(children)[0]
+            equivalents.add(entity)
+            children = self.is_a.get_children(entity)
+        return equivalents
+
+    def get_equivalent_ancestors(self, entity):
+        equivalents = {entity}
+        children = self.is_a.get_parents(entity)
+        while len(children) > 0:
+            entity = list(children)[0]
+            equivalents.add(entity)
+            children = self.is_a.get_parents(entity)
         return equivalents
 
     def create_entity(self, name):

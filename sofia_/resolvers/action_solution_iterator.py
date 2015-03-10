@@ -25,7 +25,7 @@ class ActionSolutionIterator(object):
     
     def __iter__(self):
         original_entities = sorted(self.graph.get_children(self.action.name))
-        equivalents = [self.graph.entity_graph.get_equivalents(entity) for entity in original_entities]
+        equivalents = [self.graph.entity_graph.get_equivalent_descendents(entity) for entity in original_entities]
         resolvers = {entity: EntitySolutionIterator(entity,
                                                     self.graph,
                                                     self.provided_resources,
@@ -46,7 +46,12 @@ class ActionSolutionIterator(object):
                 if converters is None:
                     continue
 
-                outs = self.action.get_output(ins)
+                for parent_entity, converter in converters.iteritems():
+                    for entity, (fr, to) in converter.entities.iteritems():
+                        ins[parent_entity].attr[entity] = to
+                outs = self.action.get_output(ins, entity_graph=self.graph.entity_graph)
+                if outs is None:
+                    continue
                 resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
                 dependencies = {e: s.action.name for e, s in izip(original_entities, disjoint_solution)}
                 action_instance = self.action(resources, dependencies, ins=ins, outs=outs, converters=converters)
@@ -95,16 +100,18 @@ class ActionSolutionIterator(object):
             ERROR_MANAGER.add_error(error)
 
     def convert_edge_to(self, entity, entity_values, to_value, errors):
-        converters = defaultdict(Converter)
+        converters = {}
         for fr_value, parent_entities in entity_values.iteritems():
             if fr_value == to_value:
                 continue
             for parent_entity in parent_entities:
-                path = [] if entity in self.graph.entity_graph.get_equivalents(parent_entity) else\
+                path = [] if entity in self.graph.entity_graph.get_equivalent_descendents(parent_entity) else\
                     self.graph.entity_graph.get_descendent_path_to(parent_entity, entity)
                 if path is None:
-                    errors.add('Could not get {} from {}'.format(entity, parent_entity))
+                    errors.add('Could not get {} from {} ({})'.format(entity, parent_entity, self.action.name))
                     return None
+                if parent_entity not in converters:
+                    converters[parent_entity] = Converter(entity, fr_value, to_value)
                 converters[parent_entity].paths.append(path)
                 converters[parent_entity].id_maps.append(self.maps[entity].make(fr_value, to_value))
         return converters

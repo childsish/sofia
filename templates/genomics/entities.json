@@ -9,13 +9,17 @@
   },
   {
     "name": "genomic_interval",
-    "has_a": [ { "name": "chromosome_id", "key": "chr", "type": "attr" } ],
+    "has_a": [
+      { "name": "chromosome_id", "key": "chr", "type": "attr" }
+    ],
     "description": "An interval on a chromosome."
   },
   {
     "name": "genomic_feature",
     "is_a": "genomic_interval",
-    "has_a": [ { "name": "gene_id", "key": "name", "type": "attr" } ],
+    "has_a": [
+      { "name": "gene_id", "key": "name", "type": "attr" }
+    ],
     "description": "A model of transcribed DNA. This includes all alternative transcripts."
   },
   {
@@ -29,6 +33,14 @@
       {"name": "variant_quality", "key": "qual", "type": "attr"}
     ],
     "description": "A sequence variant. Similar to an entry in a VCF file."
+  },
+  {
+    "name": "major_transcript",
+    "is_a": "genomic_interval",
+    "has_a": [
+      { "name": "chromosome_id", "key": "chr", "type": "attr" }
+    ],
+    "description": "The major transcript of a gene model. Currently defined as the transcript with the longest coding sequence."
   },
   {
     "name": "chromosome_id",

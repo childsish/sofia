@@ -2,7 +2,7 @@ import imp
 import os
 
 from sofia_.step import Step, Extractor, Resource, Target, Map, GetIdById
-from sofia_.action_wrapper import ActionWrapper
+from sofia_.step_wrapper import StepWrapper
 from sofia_.graph.action_hyper_graph import ActionHyperGraph
 from sofia_.graph.entity_graph import EntityGraph
 
@@ -21,9 +21,9 @@ def load_action_hypergraph(template, requested_entities=[], provided_entities=[]
     entity_graph = load_entity_graph(template)
     action_graph = ActionHyperGraph(entity_graph)
     for action, root in available_actions:
-        action_graph.register_action(ActionWrapper(action))
-    action_graph.register_action(ActionWrapper(GetIdById))
-    action_graph.register_action(ActionWrapper(Map))
+        action_graph.register_action(StepWrapper(action))
+    action_graph.register_action(StepWrapper(GetIdById))
+    action_graph.register_action(StepWrapper(Map))
 
     for entity in requested_entities:
         action_graph.add_vertex(entity)
@@ -44,7 +44,7 @@ def load_action_hypergraph(template, requested_entities=[], provided_entities=[]
 
     redundant = set()
     for in_, out in extractors:
-        for equivalent in entity_graph.get_equivalents(in_) - {in_}:
+        for equivalent in entity_graph.get_equivalent_descendents(in_) - {in_}:
             key = (equivalent, out)
             if key in extractors:
                 redundant.add(key)
@@ -53,7 +53,7 @@ def load_action_hypergraph(template, requested_entities=[], provided_entities=[]
         del extractors[key]
 
     for (in_, out), path in extractors.iteritems():
-        extractor = ActionWrapper(Extractor,
+        extractor = StepWrapper(Extractor,
                                   'Get{}From{}'.format(entity_graph.get_entity_name(out),
                                                        entity_graph.get_entity_name(in_)),
                                   ins={in_: entity_graph.create_entity(in_)},
