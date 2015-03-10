@@ -1,4 +1,5 @@
 from itertools import izip
+from sofia_.entity_wrapper import EntityWrapper
 
 
 class Converter(object):
@@ -40,5 +41,5 @@ class Converter(object):
         elif hasattr(entity, '_replace'):
             entity = entity._replace(**{path[0]['key']: value})
         else:
-            raise NotImplementedError('Unsupported type for conversion: {}'.format(type(entity)))
+            entity = EntityWrapper(entity, path, id_map)
         return entity

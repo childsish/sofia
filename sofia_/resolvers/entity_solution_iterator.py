@@ -28,8 +28,8 @@ class EntitySolutionIterator(object):
                 from resource_solution_iterator import ResourceSolutionIterator
                 it = ResourceSolutionIterator(action, self.provided_resources, self.workflow_template)
             else:
-                from action_solution_iterator import ActionSolutionIterator
-                it = ActionSolutionIterator(action,
+                from step_solution_iterator import StepSolutionIterator
+                it = StepSolutionIterator(action,
                                             self.graph,
                                             self.provided_resources,
                                             self.workflow_template,

@@ -53,15 +53,15 @@ class Step(object):
         """
         return str(entity)
     
-    def generate(self, entities, actions):
+    def generate(self, entities, steps):
         """Generate a step
         
         This function resolves all dependencies and then calculates the
         step.
         
         :param dict entities: currently calculated entities
-        :param actions: available steps
-        :type actions: dict of steps
+        :param steps: available steps
+        :type steps: dict of steps
         """
         # TODO: implement proper multiple output support
         name = self.name
@@ -69,9 +69,9 @@ class Step(object):
             return  # entities[name]
         
         dependencies_changed = False
-        for action in self.dependencies.itervalues():
-            actions[action].generate(entities, actions)
-            if actions[action].changed:
+        for step in self.dependencies.itervalues():
+            steps[step].generate(entities, steps)
+            if steps[step].changed:
                 dependencies_changed = True
         if not dependencies_changed and name in entities:
             self.calculated = True
@@ -79,14 +79,14 @@ class Step(object):
             return  # entities[name]
         
         local_entities = {}
-        for dependency_name, action in self.dependencies.iteritems():
-            outs = actions[action].outs.keys()
+        for dependency_name, step in self.dependencies.iteritems():
+            outs = steps[step].outs.keys()
             if len(outs) == 1:
-                local_entities[dependency_name] = entities[action]
+                local_entities[dependency_name] = entities[step]
             else:
-                local_entities[dependency_name] = dict(zip(outs, entities[action]))[dependency_name]
+                local_entities[dependency_name] = dict(zip(outs, entities[step]))[dependency_name]
         for entity, converter in self.converters.iteritems():
-            local_entities[entity] = converter.convert(local_entities[entity])
+            local_entities[entity] = None if local_entities[entity] is None else converter.convert(local_entities[entity])
 
         res = self.calculate(**local_entities)
         self.calculated = True

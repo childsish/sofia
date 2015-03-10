@@ -34,7 +34,7 @@ class Resource(Step):
 
     @classmethod
     def get_output(cls, ins={}, outs={}, attr={}, entity_graph=None):
-        attr = ins['resource'].attr if len(ins) > 0 else {}
+        attr = ins['resource'].attr.copy() if len(ins) > 0 else {}
         return {out: Entity(out, attr) for out in outs}
         #return {out: ENTITY_FACTORY.makeEntity(out, provided_resource.attr) for out in cls.OUT}
 
@@ -45,7 +45,7 @@ class Target(Resource):
     This particular step should be used to provide iterative access to the
     entities stored in the resource.
     """
-    def generate(self, entities, actions):
+    def generate(self, entities, steps):
         """ Overridden from Action.generate to enforce use of reset to get the
         next entity. """
         if self.calculated:

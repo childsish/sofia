@@ -8,9 +8,9 @@ from sofia_.error_manager import ERROR_MANAGER
 from entity_solution_iterator import EntitySolutionIterator
 
 
-class ActionSolutionIterator(object):
-    def __init__(self, action, graph, provided_resources, workflow_template, maps={}, requested_resources=set(), visited=None):
-        self.action = action
+class StepSolutionIterator(object):
+    def __init__(self, step, graph, provided_resources, workflow_template, maps={}, requested_resources=set(), visited=None):
+        self.step = step
         self.graph = graph
         self.provided_resources = provided_resources
         self.maps = maps
@@ -18,13 +18,13 @@ class ActionSolutionIterator(object):
         self.workflow_template = workflow_template
 
         self.visited = set() if visited is None else visited
-        self.visited.add(self.action.name)
+        self.visited.add(self.step.name)
 
     def __str__(self):
-        return self.action.name
+        return self.step.name
     
     def __iter__(self):
-        original_entities = sorted(self.graph.get_children(self.action.name))
+        original_entities = sorted(self.graph.get_children(self.step.name))
         equivalents = [self.graph.entity_graph.get_equivalent_descendents(entity) for entity in original_entities]
         resolvers = {entity: EntitySolutionIterator(entity,
                                                     self.graph,
@@ -49,12 +49,12 @@ class ActionSolutionIterator(object):
                 for parent_entity, converter in converters.iteritems():
                     for entity, (fr, to) in converter.entities.iteritems():
                         ins[parent_entity].attr[entity] = to
-                outs = self.action.get_output(ins, entity_graph=self.graph.entity_graph)
+                outs = self.step.get_output(ins, entity_graph=self.graph.entity_graph)
                 if outs is None:
                     continue
                 resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
                 dependencies = {e: s.action.name for e, s in izip(original_entities, disjoint_solution)}
-                action_instance = self.action(resources, dependencies, ins=ins, outs=outs, converters=converters)
+                action_instance = self.step(resources, dependencies, ins=ins, outs=outs, converters=converters)
                 solution = ActionGraph(action_instance)
                 for e, s in izip(original_entities, disjoint_solution):
                     solution.add_edge(e, action_instance.name, s.action.name)
@@ -108,7 +108,7 @@ class ActionSolutionIterator(object):
                 path = [] if entity in self.graph.entity_graph.get_equivalent_descendents(parent_entity) else\
                     self.graph.entity_graph.get_descendent_path_to(parent_entity, entity)
                 if path is None:
-                    errors.add('Could not get {} from {} ({})'.format(entity, parent_entity, self.action.name))
+                    errors.add('Could not get {} from {} ({})'.format(entity, parent_entity, self.step.name))
                     return None
                 if parent_entity not in converters:
                     converters[parent_entity] = Converter(entity, fr_value, to_value)
