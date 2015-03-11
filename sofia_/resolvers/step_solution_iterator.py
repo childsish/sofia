@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 from itertools import izip, product
 from operator import or_
 
@@ -40,7 +41,7 @@ class StepSolutionIterator(object):
         for entities in product(*equivalents):
             disjoint_solutions = [resolvers[entity] for entity in entities]
             for disjoint_solution in product(*disjoint_solutions):
-                ins = {o: s.step.outs[e] for o, e, s in izip(original_entities, entities, disjoint_solution)}
+                ins = {o: deepcopy(s.step.outs[e]) for o, e, s in izip(original_entities, entities, disjoint_solution)}
 
                 converters = self.get_converters(ins)
                 if converters is None:
