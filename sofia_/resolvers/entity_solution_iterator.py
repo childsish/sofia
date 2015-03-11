@@ -30,11 +30,11 @@ class EntitySolutionIterator(object):
             else:
                 from step_solution_iterator import StepSolutionIterator
                 it = StepSolutionIterator(step,
-                                            self.graph,
-                                            self.provided_resources,
-                                            self.workflow_template,
-                                            self.maps,
-                                            self.requested_resources,
-                                            set(self.visited))
+                                          self.graph,
+                                          self.provided_resources,
+                                          self.workflow_template,
+                                          self.maps,
+                                          self.requested_resources,
+                                          set(self.visited))
             for solution in it:
                 yield solution
