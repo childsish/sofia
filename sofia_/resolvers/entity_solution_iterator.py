@@ -17,19 +17,19 @@ class EntitySolutionIterator(object):
         return self.entity
     
     def __iter__(self):
-        action_names = self.graph.get_children(self.entity)
-        if len(action_names) == 0:
+        step_names = self.graph.get_children(self.entity)
+        if len(step_names) == 0:
             ERROR_MANAGER.add_error('No steps produce {}'.format(self.entity))
-        for action_name in action_names:
-            if action_name in self.visited:
+        for step_name in step_names:
+            if step_name in self.visited:
                 continue
-            action = self.graph.actions[action_name]
-            if issubclass(action.action_class, Resource):
+            step = self.graph.steps[step_name]
+            if issubclass(step.step_class, Resource):
                 from resource_solution_iterator import ResourceSolutionIterator
-                it = ResourceSolutionIterator(action, self.provided_resources, self.workflow_template)
+                it = ResourceSolutionIterator(step, self.provided_resources, self.workflow_template)
             else:
                 from step_solution_iterator import StepSolutionIterator
-                it = StepSolutionIterator(action,
+                it = StepSolutionIterator(step,
                                             self.graph,
                                             self.provided_resources,
                                             self.workflow_template,

@@ -3,14 +3,14 @@ import json
 import os
 import sys
 
-from common import get_program_directory, load_action_hypergraph, load_plugins
+from common import get_program_directory, load_step_hypergraph, load_plugins
 from sofia_.step import Step, Resource, Target
 from textwrap import wrap
 from lhc.argparse import OpenWritableFile
 
 
 def generate_graph(args):
-    graph = load_action_hypergraph(args.workflow_template)
+    graph = load_step_hypergraph(args.workflow_template)
     args.output.write(str(graph))
 
 
@@ -28,28 +28,28 @@ def list_entities(args):
     args.output.write('\n'.join(res))
 
 
-def list_actions(args):
-    action_classes = load_plugins(args.workflow_template, Step, {Resource, Target})
+def list_steps(args):
+    step_classes = load_plugins(args.workflow_template, Step, {Resource, Target})
     
-    if args.action is None:
+    if args.step is None:
         args.output.write('\nAvailable steps:\n==================\n')
-        for action_class, template_name in sorted(action_classes, key=lambda x: x[0].__name__):
-            list_action(action_class, template_name, args)
+        for step_class, template_name in sorted(step_classes, key=lambda x: x[0].__name__):
+            list_step(step_class, template_name, args)
     else:
-        for action_class, template_name in action_classes:
-            if action_class.__name__ == args.action:
-                list_action(action_class, template_name, args)
+        for step_class, template_name in step_classes:
+            if step_class.__name__ == args.step:
+                list_step(step_class, template_name, args)
 
 
-def list_action(action, template_name, args):
-    args.output.write('{}\t({})\n'.format(action.__name__, template_name))
+def list_step(step, template_name, args):
+    args.output.write('{}\t({})\n'.format(step.__name__, template_name))
     if args.verbose:
-        if len(action.IN) > 0:
-            args.output.write(' Input:\n  {}\n'.format(', '.join(action.IN)))
-        if len(action.OUT) > 0:
-            args.output.write(' Output:\n  {}\n'.format(', '.join(action.OUT)))
-        if action.__doc__ is not None:
-            args.output.write(' Description:\n  {}\n'.format(action.__doc__.strip()))
+        if len(step.IN) > 0:
+            args.output.write(' Input:\n  {}\n'.format(', '.join(step.IN)))
+        if len(step.OUT) > 0:
+            args.output.write(' Output:\n  {}\n'.format(', '.join(step.OUT)))
+        if step.__doc__ is not None:
+            args.output.write(' Description:\n  {}\n'.format(step.__doc__.strip()))
         args.output.write('\n')
 
 
@@ -73,16 +73,16 @@ def define_parser(parser):
                               help='specify a workflow template (default: genomics).')
     graph_parser.set_defaults(func=generate_graph)
 
-    actions_parser = subparsers.add_parser('steps')
-    actions_parser.add_argument('-a', '--step',
+    steps_parser = subparsers.add_parser('steps')
+    steps_parser.add_argument('-s', '--step',
                                 help='list a specific step')
-    actions_parser.add_argument('-t', '--template', default='genomics',
+    steps_parser.add_argument('-t', '--template', default='genomics',
                                 help='list the defined template (default: genomics).')
-    actions_parser.add_argument('-v', '--verbose', action='store_true',
+    steps_parser.add_argument('-v', '--verbose', action='store_true',
                                 help='print out descriptions of each step')
-    actions_parser.add_argument('-w', '--workflow-template', default='genomics',
+    steps_parser.add_argument('-w', '--workflow-template', default='genomics',
                                 help='specify a workflow template (default: genomics).')
-    actions_parser.set_defaults(func=list_actions)
+    steps_parser.set_defaults(func=list_steps)
 
     entity_parser = subparsers.add_parser('entity')
     entity_parser.add_argument('-e', '--entity',

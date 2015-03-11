@@ -1,45 +1,45 @@
 from sofia_.step import Target
-from sofia_.graph.action_graph import ActionGraph
+from sofia_.graph.step_graph import StepGraph
 from sofia_.parser.provided_resource import ProvidedResource
 from sofia_.error_manager import ERROR_MANAGER
 
 
 class ResourceSolutionIterator(object):
-    def __init__(self, action, resources, workflow_template):
-        self.action = action
+    def __init__(self, step, resources, workflow_template):
+        self.step = step
         self.c_hit = 0
         self.workflow_template = workflow_template
         self.hits = self._get_hits(resources)
 
     def __str__(self):
-        return self.action.name
+        return self.step.name
 
     def __iter__(self):
         if len(self.hits) == 0:
-            ERROR_MANAGER.add_error('{} does not match any provided resource'.format(self.action.name))
+            ERROR_MANAGER.add_error('{} does not match any provided resource'.format(self.step.name))
         for hit in self.hits:
-            yield self._init_action_graph(hit)
+            yield self._init_step_graph(hit)
 
     def _get_hits(self, resources):
-        action = self.action.action_class
-        if issubclass(action, Target):
-            return [resources['target']] if action.matches(resources['target']) else []
+        step = self.step.step_class
+        if issubclass(step, Target):
+            return [resources['target']] if step.matches(resources['target']) else []
         res = [resource for resource in resources.itervalues()
-               if resource.name != 'target' and action.matches(resource)]
-        if hasattr(action, 'DEFAULT'):
+               if resource.name != 'target' and step.matches(resource)]
+        if hasattr(step, 'DEFAULT'):
             import os
             import sys
 
-            fname = action.DEFAULT
+            fname = step.DEFAULT
             full_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), 'templates',
                                      self.workflow_template, 'data', fname)
-            res.append(ProvidedResource(full_path, action.OUT[0]))
+            res.append(ProvidedResource(full_path, step.OUT[0]))
         return res
 
-    def _init_action_graph(self, resource):
+    def _init_step_graph(self, resource):
         """ Create a single node ActionGraph. """
-        outs = self.action.get_output({'resource': resource})
-        action_instance = self.action({resource}, {}, {}, outs)
-        res = ActionGraph(action_instance)
+        outs = self.step.get_output({'resource': resource})
+        step_instance = self.step({resource}, {}, {}, outs)
+        res = StepGraph(step_instance)
         res.add_resource(resource)
         return res

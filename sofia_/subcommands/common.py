@@ -3,7 +3,7 @@ import os
 
 from sofia_.step import Step, Extractor, Resource, Target, Map, GetIdById
 from sofia_.step_wrapper import StepWrapper
-from sofia_.graph.action_hyper_graph import ActionHyperGraph
+from sofia_.graph.step_hyper_graph import StepHyperGraph
 from sofia_.graph.entity_graph import EntityGraph
 
 
@@ -16,22 +16,22 @@ def load_resource(fname, parsers, format=None):
     raise TypeError('Unrecognised file format: {}'.format(os.path.basename(fname)))
 
 
-def load_action_hypergraph(template, requested_entities=[], provided_entities=[]):
-    available_actions = load_plugins(template, Step, {Resource, Target})
+def load_step_hypergraph(template, requested_entities=[], provided_entities=[]):
+    available_steps = load_plugins(template, Step, {Resource, Target})
     entity_graph = load_entity_graph(template)
-    action_graph = ActionHyperGraph(entity_graph)
-    for action, root in available_actions:
-        action_graph.register_action(StepWrapper(action))
-    action_graph.register_action(StepWrapper(GetIdById))
-    action_graph.register_action(StepWrapper(Map))
+    step_graph = StepHyperGraph(entity_graph)
+    for step, root in available_steps:
+        step_graph.register_step(StepWrapper(step))
+    step_graph.register_step(StepWrapper(GetIdById))
+    step_graph.register_step(StepWrapper(Map))
 
     for entity in requested_entities:
-        action_graph.add_vertex(entity)
+        step_graph.add_vertex(entity)
 
     for entity in provided_entities:
-        action_graph.add_vertex(entity)
+        step_graph.add_vertex(entity)
 
-    entities = set(action_graph.entities)
+    entities = set(step_graph.entities)
     extractors = {}
     for in_ in entities:
         if in_ not in entity_graph:
@@ -59,8 +59,8 @@ def load_action_hypergraph(template, requested_entities=[], provided_entities=[]
                                   ins={in_: entity_graph.create_entity(in_)},
                                   outs={out: entity_graph.create_entity(out)},
                                   param={'path': path})
-        action_graph.register_action(extractor)
-    return action_graph
+        step_graph.register_step(extractor)
+    return step_graph
 
 
 def load_entity_graph(template):
@@ -76,13 +76,13 @@ def load_plugins(template, parent_class, excluded=set()):
     import sys
 
     plugins = []
-    action_dir = os.path.join(get_program_directory(), 'templates', template, 'steps')
-    sys.path.append(action_dir)
-    for fname in os.listdir(action_dir):
+    step_dir = os.path.join(get_program_directory(), 'templates', template, 'steps')
+    sys.path.append(step_dir)
+    for fname in os.listdir(step_dir):
         if fname.startswith('.') or not fname.endswith('.py'):
             continue
         module_name, ext = os.path.splitext(fname)
-        module = imp.load_source(module_name, os.path.join(action_dir, fname))
+        module = imp.load_source(module_name, os.path.join(step_dir, fname))
         child_classes = [child_class for child_class in module.__dict__.itervalues()
                          if type(child_class) == type and child_class.__name__ != parent_class.__name__]
         for child_class in child_classes:

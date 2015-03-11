@@ -2,7 +2,7 @@ from collections import defaultdict
 from itertools import izip, product
 from operator import or_
 
-from sofia_.graph.action_graph import ActionGraph
+from sofia_.graph.step_graph import StepGraph
 from sofia_.converter import Converter
 from sofia_.error_manager import ERROR_MANAGER
 from entity_solution_iterator import EntitySolutionIterator
@@ -40,7 +40,7 @@ class StepSolutionIterator(object):
         for entities in product(*equivalents):
             disjoint_solutions = [resolvers[entity] for entity in entities]
             for disjoint_solution in product(*disjoint_solutions):
-                ins = {o: s.action.outs[e] for o, e, s in izip(original_entities, entities, disjoint_solution)}
+                ins = {o: s.step.outs[e] for o, e, s in izip(original_entities, entities, disjoint_solution)}
 
                 converters = self.get_converters(ins)
                 if converters is None:
@@ -53,11 +53,11 @@ class StepSolutionIterator(object):
                 if outs is None:
                     continue
                 resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
-                dependencies = {e: s.action.name for e, s in izip(original_entities, disjoint_solution)}
-                action_instance = self.step(resources, dependencies, ins=ins, outs=outs, converters=converters)
-                solution = ActionGraph(action_instance)
+                dependencies = {e: s.step.name for e, s in izip(original_entities, disjoint_solution)}
+                step_instance = self.step(resources, dependencies, ins=ins, outs=outs, converters=converters)
+                solution = StepGraph(step_instance)
                 for e, s in izip(original_entities, disjoint_solution):
-                    solution.add_edge(e, action_instance.name, s.action.name)
+                    solution.add_edge(e, step_instance.name, s.step.name)
                     solution.update(s)
                 res[len(resources - self.requested_resources)].append(solution)
         if len(res) > 0:

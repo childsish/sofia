@@ -94,13 +94,13 @@ class Step(object):
         entities[name] = res
         return  # res
     
-    def reset(self, actions):
+    def reset(self, steps):
         """ Resets the calculation status of this step and all dependencies
         to False.
         """
         self.calculated = False
-        for action in self.dependencies.itervalues():
-            actions[action].reset(actions)
+        for step in self.dependencies.itervalues():
+            steps[step].reset(steps)
     
     def get_attributes(self):
         res = {}

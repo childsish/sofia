@@ -32,15 +32,15 @@ https://github.com/childsish/sofia/releases/latest
 
 `sofia /home/user/tmp/tmp.vcf -e chromosome_id position gene_id amino_acid_variant variant_type -r /home/user/tmp/tmp.gtf /home/user/tmp/tmp.fasta`
 
-Creating a new action
+Creating a new step
 ---------------------
 
-New actions are implemented by creating a new Python class that inherits from the action class found in modules.action. A action consists of several concepts.
+New steps are implemented by creating a new Python class that inherits from the step class found in modules.step. A step consists of several concepts.
 
-1. **The name of the action.** This is the name that is referred to from the command line and other actions. It is defined by the name of the class.
-2. **Required entities.** A list of entities that the action will use. Required entities are defined by the class variable "IN".
-3. **Provided entities.** A list of entities that the action will provide. Provided entities are defined by the class variable "OUT".
-4. **Calculating the action.** The function to actually calculate the desired action also needs to be defined. The arguments that are passed to it are determined by the names of the given dependencies. The function is defined by the class member "calculate".
+1. **The name of the step.** This is the name that is referred to from the command line and other steps. It is defined by the name of the class.
+2. **Required entities.** A list of entities that the step will use. Required entities are defined by the class variable "IN".
+3. **Provided entities.** A list of entities that the step will provide. Provided entities are defined by the class variable "OUT".
+4. **Calculating the step.** The function to actually calculate the desired step also needs to be defined. The arguments that are passed to it are determined by the names of the given dependencies. The function is defined by the class member "calculate".
 5. **Formatting the results (optional).** The output of "calculate" can be formatted before the final output by the "format" function.
 
 Design Philosophy
@@ -56,7 +56,7 @@ The user has to change the resource data as little as possible.
 
 The tool should be easily extended.
 
- * The default state is not a one-size-fits-all solution. Different groups have different needs. However, it should be easily extended to accomodate new types of resources and actions.
+ * The default state is not a one-size-fits-all solution. Different groups have different needs. However, it should be easily extended to accomodate new types of resources and steps.
 
 
 Standardisation (Variant annotation)
