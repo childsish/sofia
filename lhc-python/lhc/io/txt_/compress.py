@@ -7,7 +7,7 @@ from partitioner import Partitioner
 from Bio.bgzf import BgzfWriter
 
 
-def compress(input, column_types='1s', extension='.bgz'):
+def compress(input, column_types=('1s',), extension='.bgz'):
     if not extension.startswith('.'):
         extension = '.' + extension
 
@@ -51,7 +51,7 @@ def define_parser(parser):
     add_arg = parser.add_argument
     add_arg('input',
             help='input file name')
-    add_arg('-c', '--column-types', nargs='+', default='1s',
+    add_arg('-c', '--column-types', nargs='+', default=('1s',),
             help='types for converting columns (default: 1s)')
     add_arg('-e', '--extension', default='.bgz',
             help='compressed file extension')
