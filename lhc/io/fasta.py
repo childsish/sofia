@@ -81,6 +81,8 @@ def main():
 
 
 def get_parser():
+    import sys
+
     parser = ArgumentParser()
     subparsers = parser.add_subparsers()
 
@@ -120,5 +122,4 @@ def get_parser():
 
 if __name__ == '__main__':
     import sys
-
     sys.exit(main())
