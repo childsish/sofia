@@ -52,7 +52,7 @@ class GenomicFeature(Interval):
             self.stop = feature.stop
             self.strand = feature.strand
         elif self.chr != feature.chr or self.strand != feature.strand:
-            raise ValueError('{} does not belong in {}'.format(feature, self))
+            raise ValueError('{}({}) does not belong in {}({})'.format(feature, feature.strand, self, self.strand))
         else:
             self.start = min(self.start, feature.start)
             self.stop = max(self.stop, feature.stop)
