@@ -10,13 +10,26 @@ class GetMajorTranscriptCodingSequence(Step):
     IN = ['chromosome_sequence_set', 'major_transcript']
     OUT = ['coding_sequence']
 
+    def init(self):
+        self.buffer = {}
+        self.max_buffer = 10
+
     def calculate(self, chromosome_sequence_set, major_transcript):
         if major_transcript is None:
             return None
+
+        buffer_key = (chromosome_sequence_set.filename, major_transcript.name)
+        if buffer_key in self.buffer:
+            return self.buffer[buffer_key]
+
         res = major_transcript.get_sub_seq(chromosome_sequence_set, types={'CDS'})
         if len(res) % 3 != 0:
             warn('{} coding sequence length not a multiple of 3, possible mis-annotation'.format(major_transcript.name))
             #return None
+
+        if len(self.buffer) > self.max_buffer:
+            self.buffer.popitem()
+        self.buffer[buffer_key] = res
         return res
 
 
