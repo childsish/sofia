@@ -13,7 +13,7 @@ class GffIterator(Target):
     OUT = ['genomic_feature']
 
     def init(self):
-        self.parser = iter(GffIterator(self.get_filename()))
+        self.parser = iter(GffEntryIterator(self.get_filename()))
 
     def calculate(self):
         entry = self.parser.next()
