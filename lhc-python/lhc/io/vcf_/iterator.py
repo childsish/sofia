@@ -1,7 +1,7 @@
 import bz2
 import gzip
 
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict, namedtuple, defaultdict
 
 
 Variant = namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'samples'))
@@ -98,10 +98,8 @@ class VcfEntryIterator(VcfLineIterator):
     def _parse_samples(self, format, sample_data):
         res = {}
         for sample, data in zip(self.samples, sample_data):
-            if data == '.':
-                res[sample] = {}
-            else:
-                res[sample] = dict(zip(format, data.split(':')))
+            res[sample] = defaultdict() if data == '.' else\
+                    defaultdict(zip(format, data.split(':')))
         return res
 
     @staticmethod
