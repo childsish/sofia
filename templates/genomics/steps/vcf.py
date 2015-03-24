@@ -14,9 +14,26 @@ class VcfIterator(Target):
     
     def init(self):
         self.parser = iter(VcfEntryIterator(self.get_filename()))
+        self.variant = None
+        self.c_alt = 0
+        self.alts = []
+        self.arrays = []
 
     def calculate(self):
-        return self.parser.next()
+        if self.c_alt == len(self.alts):
+            self.variant = self.parser.next()
+            self.c_alt = 0
+            self.alts = self.variant.alt.split(',')
+            self.arrays = []
+            for sample in self.variant.samples:
+                for k, v in self.variant.samples[sample].iteritems():
+                    if ',' in v:
+                        self.arrays.append((sample, k, v.split(',')))
+        res = self.variant._replace(alt=self.alts[self.c_alt])
+        for sample, k, vs in self.arrays:
+            res.samples[sample][k] = vs[self.c_alt]
+        self.c_alt += 1
+        return res
 
 
 class VcfSet(Resource):
