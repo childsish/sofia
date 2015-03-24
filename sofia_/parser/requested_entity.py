@@ -21,6 +21,10 @@ class RequestedEntity(object):
             if isinstance(entity, (set, list)):
                 return ','.join(self.getter.format(e) for e in entity)
             return '' if entity is None else self.getter.format(entity)
-        except KeyError:
-            pass
+        except Exception, e:
+            import sys
+            sys.stderr.write('Error formatting entity {}.\n'.format(self.name))
+            sys.stderr.write('Format string: {}.\n'.format(self.getter))
+            sys.stderr.write('Entity: {}.\n'.format(entity))
+            raise e
         return ''
