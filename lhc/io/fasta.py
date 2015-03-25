@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 from itertools import izip, product
 from fasta_ import indexer, wrap, compress
 from fasta_.iterator import FastaEntryIterator
-from fasta_.set_ import FastaSet
 from lhc.binf.sequence import revcmp as rc
 from lhc.argparse import OpenReadableFile, OpenWritableFile
 
