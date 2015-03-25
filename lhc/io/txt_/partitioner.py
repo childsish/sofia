@@ -1,8 +1,11 @@
 class Partitioner(object):
-    def __init__(self, fname, column_trackers):
+    def __init__(self, fname, column_trackers, comment_chars={'#'}):
         self.fhndl = open(fname)
         self.column_trackers = column_trackers
+        self.comment_chars = comment_chars
         self.buffer = self.fhndl.next()
+        while any(self.buffer.startswith(char) for char in self.comment_chars):
+            self.buffer = self.fhndl.next()
         parts = self.buffer.rstrip('\r\n').split('\t')
         for tracker in column_trackers:
             tracker.set_new_entry(parts)
