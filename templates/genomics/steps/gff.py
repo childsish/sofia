@@ -9,7 +9,7 @@ from warnings import warn
 
 class GffIterator(Target):
     
-    EXT = ['.gff', '.gff.gz']
+    EXT = ['.gff', '.gff.gz', '.gff.bgz', '.gff3', '.gff3.gz', '.gff3.bgz']
     OUT = ['genomic_feature']
 
     def init(self):
@@ -25,7 +25,7 @@ class GffIterator(Target):
 
 class GffSet(Resource):
     
-    EXT = ['.gff', '.gff.gz', '.gff3.gz']
+    EXT = ['.gff', '.gff.gz', '.gff.bgz', '.gff3', '.gff3.gz', '.gff3.bgz']
     OUT = ['genomic_feature_set']
 
     def init(self):

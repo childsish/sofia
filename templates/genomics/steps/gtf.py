@@ -9,7 +9,7 @@ from warnings import warn
 
 class GtfIterator(Target):
     
-    EXT = ['.gtf', '.gtf.gz']
+    EXT = ['.gtf', '.gtf.gz', '.gtf.bgz']
     OUT = ['genomic_feature']
 
     def init(self):
@@ -25,7 +25,7 @@ class GtfIterator(Target):
 
 class GtfSet(Resource):
     
-    EXT = ['.gtf', '.gtf.gz']
+    EXT = ['.gtf', '.gtf.gz', '.gtf.bgz']
     OUT = ['genomic_feature_set']
 
     def init(self):
