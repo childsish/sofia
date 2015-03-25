@@ -60,7 +60,7 @@ def define_parser(parser):
     add_arg('-b', '--buffer-size', default=2 ** 16, type=int,
             help='The number of bytes to read at a time.')
     add_arg('-w', '--width', default=80, type=int,
-            help='The maximum length of a sequence line.')
+            help='The maximum length of a sequence line (default: 80).')
     parser.set_defaults(func=wrap)
     return parser
 
