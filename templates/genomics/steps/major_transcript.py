@@ -18,7 +18,7 @@ class GetMajorTranscriptCodingSequence(Step):
         if major_transcript is None:
             return None
 
-        buffer_key = (chromosome_sequence_set.filename, major_transcript.name)
+        buffer_key = (chromosome_sequence_set.fname, major_transcript.name)
         if buffer_key in self.buffer:
             return self.buffer[buffer_key]
 

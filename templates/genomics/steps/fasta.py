@@ -9,7 +9,7 @@ from warnings import warn
 
 class FastaChromosomeSequenceSet(Resource):
     
-    EXT = ['.fasta', '.fasta.gz']
+    EXT = ['.fasta', '.fasta.gz', '.fasta.bgz']
     OUT = ['chromosome_sequence_set']
     
     def init(self):
