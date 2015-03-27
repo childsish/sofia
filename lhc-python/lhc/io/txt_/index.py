@@ -13,11 +13,7 @@ class FileIndex(object):
         self.values = []
 
     def __getitem__(self, item):
-        idx = bisect_left(self.keys, item[0])
-        if self.depth > 1 and idx >= len(self.keys):
-            raise KeyError(str(item[0]))
-        elif self.depth == 1 and idx >= len(self.keys):
-            idx -= 1
+        idx = self.get_index_below(item)
         value = self.values[idx]
         if self.depth == 1:
             return value
@@ -32,15 +28,21 @@ class FileIndex(object):
             self.values[idx][key[1:]] = value
 
     def get_key_below(self, item):
-        idx = bisect_left(self.keys, item[0])
-        if self.depth > 1 and idx >= len(self.keys):
-            raise KeyError(str(item[0]))
-        elif self.depth == 1 and idx >= len(self.keys):
-            idx -= 1
+        idx = self.get_index_below(item)
         key = (self.keys[idx],)
         if self.depth == 1:
             return key
         return key + self.values[idx].get_key_below(item[1:])
+
+    def get_index_below(self, item):
+        idx = bisect_left(self.keys, item[0])
+        if self.depth > 1 and idx >= len(self.keys):
+            raise KeyError(str(item[0]))
+        elif self.keys[idx] != item[0]:
+            idx -= 1
+        elif self.depth == 1 and idx >= len(self.keys):
+            idx -= 1
+        return idx
 
 
     def __getstate__(self):

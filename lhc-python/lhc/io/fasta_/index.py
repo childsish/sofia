@@ -8,6 +8,7 @@ from lhc.io.txt_.index import FileIndex
 
 class IndexedFastaSet(object):
     def __init__(self, fname):
+        self.fname = fname
         if not os.path.exists('{}.lci'.format(fname)):
             msg = 'Interval index missing. Try: "python -m lhc.io.fasta index {}".'.format(fname)
             raise OSError(msg)
