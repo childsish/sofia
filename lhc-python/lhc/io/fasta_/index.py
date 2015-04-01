@@ -2,7 +2,6 @@ import json
 import os
 
 from Bio import bgzf
-from Bio.bgzf import make_virtual_offset, _load_bgzf_block
 from lhc.io.txt_.index import FileIndex
 
 
@@ -17,6 +16,7 @@ class IndexedFastaSet(object):
         self.index = FileIndex.init_from_state(json.load(fhndl))
         fhndl.close()
 
+        line = ''
         for line in self.fhndl:
             if not line.startswith('>'):
                 break

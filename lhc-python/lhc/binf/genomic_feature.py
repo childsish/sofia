@@ -92,7 +92,7 @@ class GenomicFeature(Interval):
     
     def get_sub_seq(self, sequence_set, types=None, depth=0):
         if len(self.children) == 0:
-            res = sequence_set.fetch(self.chr, self.start, self.stop)
+            res = sequence_set[self.chr][self.start:self.stop]
         else:
             res = ''.join(child.get_sub_seq(sequence_set, types, depth + 1) for child in self.children
                           if types is None or child.type in types)
