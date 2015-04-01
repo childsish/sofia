@@ -55,6 +55,8 @@ def compress(input, extension='.bgz'):
     json.dump(index.__getstate__(), out_fhndl, indent=4, separators=(',', ': '))
     out_fhndl.close()
 
+    return input + extension
+
 
 def main():
     args = get_parser().parse_args()
