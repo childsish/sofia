@@ -73,3 +73,9 @@ def load(infile):
     data = json.load(infile, object_pairs_hook=JsonDict)
     data.set_as_root()
     return data
+
+
+def loads(string):
+    data = json.loads(string, object_pairs_hook=JsonDict)
+    data.set_as_root()
+    return data
