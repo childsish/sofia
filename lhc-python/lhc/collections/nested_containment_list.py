@@ -4,6 +4,8 @@ from bisect import bisect_left
 from collections import Counter
 from netCDF4 import Dataset
 from lhc.misc.tools import argsort
+from lhc.interval import Interval
+
 
 class NestedContainmentList(object):
     def __init__(self, root, ivls=None):
@@ -18,10 +20,10 @@ class NestedContainmentList(object):
         self.root = Dataset(root, mode) if isinstance(root, basestring) else root
         self.closed = False
         if mode == 'w':
-            ivl_table, grp_table, ordering = getTables(ivls)
-            self._populateRoot(ivl_table, grp_table)
+            ivl_table, grp_table, ordering = get_tables(ivls)
+            self._populate_root(ivl_table, grp_table)
     
-    def getOverlapping(self, ivl, grp_id=0):
+    def intersect(self, ivl, grp_id=0):
         """Find all overlapping intervals
         
         :param interval ivl: find intervals intersecting this interval
@@ -39,7 +41,7 @@ class NestedContainmentList(object):
             while grp_fr < grp_to:
                 start, stop, grp_idx = ivl_var[grp_fr]
                 if ivl.start < stop:
-                    res.append(slice(start, stop))
+                    res.append(Interval(start, stop))
                 if grp_idx != -1:
                     stk.append(grp_idx)
                 grp_fr += 1
@@ -49,7 +51,7 @@ class NestedContainmentList(object):
         if hasattr(self, 'closed') and not self.closed and hasattr(self.root, 'closed'):
             self.root.close()
     
-    def _populateRoot(self, ivl_table, grp_table):
+    def _populate_root(self, ivl_table, grp_table):
         self.root.createDimension('ivls', len(ivl_table))
         self.root.createDimension('ivl_col', 3)
         self.root.createDimension('grps', len(grp_table))
@@ -57,21 +59,23 @@ class NestedContainmentList(object):
         self.root.createVariable('ivls', 'i4', ('ivls', 'ivl_col'))[:] = ivl_table
         self.root.createVariable('grps', 'i4', ('grps', 'grp_col'))[:] = grp_table
 
-def getTables(ivls):
+
+def get_tables(ivls):
     """Compute the interval and group tables of a nested containment list.
     
     :param ivls: the intervals to be stored in the table. Intervals are any object with .start and .stop members
     :type ivls: iterable of intervals
     """
-    ivls, idx0 = _reduceIntervals(ivls)
-    ivls, idx1 = _sortIntervals(ivls)
-    parent_ids = _getParentIdxs(ivls)
-    grp_table, pnt2grp = _getGroupTable(parent_ids)
-    ivl_table, idx2 = _getIntervalTable(ivls, pnt2grp, parent_ids)
+    ivls, idx0 = _reduce_intervals(ivls)
+    ivls, idx1 = _sort_intervals(ivls)
+    parent_ids = _get_parent_indices(ivls)
+    grp_table, pnt2grp = _get_group_table(parent_ids)
+    ivl_table, idx2 = _get_interval_table(ivls, pnt2grp, parent_ids)
     
     return ivl_table, grp_table, np.argsort(idx2)[np.argsort(idx1)[idx0]]
 
-def _reduceIntervals(ivls):
+
+def _reduce_intervals(ivls):
     visited = {}
     reduced_ivls = []
     reduced_idxs = np.empty(len(ivls), dtype='i4')
@@ -83,7 +87,8 @@ def _reduceIntervals(ivls):
         reduced_idxs[i] = visited[key]
     return reduced_ivls, reduced_idxs 
 
-def _sortIntervals(ivls):
+
+def _sort_intervals(ivls):
     def cmp(x, y):
         if x.start < y.start:
             return -1
@@ -97,7 +102,8 @@ def _sortIntervals(ivls):
     sorted_ivls = [ivls[idx] for idx in sorted_idxs]
     return sorted_ivls, sorted_idxs
 
-def _getParentIdxs(ivls):
+
+def _get_parent_indices(ivls):
     """Get the parent ids of the given intervals
     """
     parent_idxs = -1 * np.ones(len(ivls), dtype='i4')
@@ -113,8 +119,9 @@ def _getParentIdxs(ivls):
                 parent = i
                 i += 1
     return parent_idxs
-    
-def _getGroupTable(parent_ids):
+
+
+def _get_group_table(parent_ids):
     pnt2grp = {}
     cnts = Counter(parent_ids)
     grp_table = np.empty((len(cnts), 2), dtype='i4')
@@ -127,7 +134,8 @@ def _getGroupTable(parent_ids):
         cpos += group_size
     return grp_table, pnt2grp
 
-def _getIntervalTable(ivls, pnt2grp, parent_ids):
+
+def _get_interval_table(ivls, pnt2grp, parent_ids):
     ivl_table = np.array([[ivl.start, ivl.stop, -1] for ivl in ivls], dtype='i4')
     for pnt_id, grp_id in pnt2grp.iteritems():
         if pnt_id >= 0:
