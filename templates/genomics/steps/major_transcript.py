@@ -2,6 +2,15 @@ from sofia_.step import Step
 from warnings import warn
 
 
+class GetCodonSequenceLength(Step):
+
+    IN = ['major_transcript']
+    OUT = ['major_transcript_length']
+
+    def calculate(self, major_transcript):
+        return len(major_transcript)
+
+
 class GetMajorTranscriptCodingSequence(Step):
     """
     Get the coding sequence of the major transcript.
@@ -18,7 +27,7 @@ class GetMajorTranscriptCodingSequence(Step):
         if major_transcript is None:
             return None
 
-        buffer_key = (chromosome_sequence_set.fname, major_transcript.name)
+        buffer_key = (id(chromosome_sequence_set), major_transcript.name)
         if buffer_key in self.buffer:
             return self.buffer[buffer_key]
 

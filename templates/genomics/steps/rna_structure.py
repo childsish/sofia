@@ -1,4 +1,6 @@
+from lhc.binf.genomic_coordinate import Position
 from sofia_.step import Step
+from warnings import warn
 
 
 class DummyRNAModule(object):
@@ -7,11 +9,6 @@ class DummyRNAModule(object):
 
     def pf_fold(self, seq):
         return None
-
-try:
-    import RNA
-except ImportError:
-    RNA = DummyRNAModule()
 
 
 class GetTranslationStartMinimumFreeEnergy(Step):
@@ -22,22 +19,22 @@ class GetTranslationStartMinimumFreeEnergy(Step):
     IN = ['major_transcript', 'chromosome_sequence_set']
     OUT = ['translation_start_mfe']
 
-    def init(self, offset=50, type='mfe'):
-        """ Initialise the step
-
-        :param offset: the range upstream and downstream to fold
-        :param type: (mfe, efe)
-        :return:
-        """
-        self.offset = offset
-        self.fold = RNA.fold if type == 'mfe' else RNA.pf_fold
+    def init(self):
+        try:
+            import RNA
+            self.fold = RNA.fold
+        except ImportError:
+            warn('RNAfold library not installed.')
+            self.fold = lambda seq: (None, None)
 
     def calculate(self, major_transcript, chromosome_sequence_set):
-        start_codon = major_transcript.ivl.get_5p()
-        upstream = start_codon.get_upstream(self.offset)
-        downstream = start_codon.get_downstream(self.offset)
-        start_codon_region = upstream.get_interval(downstream)
-        return self.fold(start_codon_region)[1]
+        offset = 50
+        start_position = Position(major_transcript.chr,
+                                  major_transcript.get_5p(),
+                                  major_transcript.strand)
+        interval = start_position.get_offset(-offset).get_interval(start_position.get_offset(50))
+        seq = interval.get_sub_seq(chromosome_sequence_set)
+        return self.fold(seq)[1]
 
 
 class GetStructuralFeatures(Step):
