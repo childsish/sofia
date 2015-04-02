@@ -1,15 +1,18 @@
 import re
 
-from lhc.binf.cut import CodonUsageTable
+from collections import Counter
 
-def readCodonUsageTable(fname):
+
+class CodonUsageTable(Counter):
+
     REGX = re.compile(r'(?P<codon>[ACGU]{3})\s+(?P<frq>\d+\.\d+)\((\s*\d+)\)')
-    cut = CodonUsageTable()
-    infile = open(fname)
-    for line in infile:
-        matches = REGX.findall(line)
-        for match in matches:
-            cut[match[0].lower().replace('u', 't')] =\
-                float(match[2])
-    infile.close()
-    return cut
+
+    def __init__(self, fname):
+        super(CodonUsageTable, self).__init__()
+        infile = open(fname)
+        for line in infile:
+            matches = self.REGX.findall(line)
+            for match in matches:
+                self[match[0].lower().replace('u', 't')] =\
+                    float(match[2])
+        infile.close()
