@@ -119,4 +119,4 @@ def arithmetic_mean(iterable):
 
 
 def geometric_mean(iterable):
-    return reduce(mul, iterable) ** (1 / len(iterable))
+    return reduce(mul, iterable) ** (1 / float(len(iterable)))
