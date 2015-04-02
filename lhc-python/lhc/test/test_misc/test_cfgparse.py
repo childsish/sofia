@@ -1,6 +1,6 @@
 import unittest
 
-from lhc.misc import cfgparse
+from lhc import cfgparse
 
 
 class TestConfigParser(unittest.TestCase):

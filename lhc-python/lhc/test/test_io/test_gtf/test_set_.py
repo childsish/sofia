@@ -6,21 +6,21 @@ from lhc.io.gtf_.iterator import GtfEntryIterator
 from lhc.io.gtf_.set_ import GtfSet
 
 
-class TestGtf(unittest.TestCase):
+class TestGtfSet(unittest.TestCase):
     def setUp(self):
         fhndl, self.fname = tempfile.mkstemp()
         self.lines = [
-            'chr1\t.\tgene\t1000\t2000\t0\t+\t0\tgene_id "a"',
-            'chr1\t.\ttranscript\t1000\t2000\t0\t+\t0\tgene_id "a";transcript_id "a.0"',
-            'chr1\t.\tCDS\t1100\t1300\t0\t+\t0\tgene_id "a";transcript_id "a.0"',
-            'chr1\t.\tCDS\t1330\t1600\t0\t+\t0\tgene_id "a";transcript_id "a.0"',
-            'chr1\t.\tCDS\t1660\t1900\t0\t+\t0\tgene_id "a";transcript_id "a.0"',
-            'chr1\t.\ttranscript\t1000\t2000\t0\t+\t0\tgene_id "a";transcript_id "a.1"',
-            'chr1\t.\tCDS\t1100\t1300\t0\t+\t0\tgene_id "a";transcript_id "a.1"',
-            'chr1\t.\tCDS\t1660\t1900\t0\t+\t0\tgene_id "a";transcript_id "a.1"',
-            'chr1\t.\tgene\t5000\t6000\t0\t+\t0\tgene_id "b"',
-            'chr1\t.\ttranscript\t5000\t6000\t0\t+\t0\tgene_id "b";transcript_id "b.0"',
-            'chr1\t.\tCDS\t5100\t5900\t0\t+\t0\tgene_id "b";transcript_id "b.0"'
+            'chr1\t.\tgene\t1000\t2000\t0\t+\t0\tgene_name "a"',
+            'chr1\t.\ttranscript\t1000\t2000\t0\t+\t0\tgene_name "a";transcript_id "a.0"',
+            'chr1\t.\tCDS\t1100\t1300\t0\t+\t0\tgene_name "a";transcript_id "a.0"',
+            'chr1\t.\tCDS\t1330\t1600\t0\t+\t0\tgene_name "a";transcript_id "a.0"',
+            'chr1\t.\tCDS\t1660\t1900\t0\t+\t0\tgene_name "a";transcript_id "a.0"',
+            'chr1\t.\ttranscript\t1000\t2000\t0\t+\t0\tgene_name "a";transcript_id "a.1"',
+            'chr1\t.\tCDS\t1100\t1300\t0\t+\t0\tgene_name "a";transcript_id "a.1"',
+            'chr1\t.\tCDS\t1660\t1900\t0\t+\t0\tgene_name "a";transcript_id "a.1"',
+            'chr1\t.\tgene\t5000\t6000\t0\t+\t0\tgene_name "b"',
+            'chr1\t.\ttranscript\t5000\t6000\t0\t+\t0\tgene_name "b";transcript_id "b.0"',
+            'chr1\t.\tCDS\t5100\t5900\t0\t+\t0\tgene_name "b";transcript_id "b.0"'
         ]
         os.write(fhndl, '\n'.join(self.lines))
         os.close(fhndl)

@@ -38,7 +38,7 @@ class FileIndex(object):
         idx = bisect_left(self.keys, item[0])
         if self.depth > 1 and idx >= len(self.keys):
             raise KeyError(str(item[0]))
-        elif self.keys[idx] != item[0]:
+        elif idx < len(self.keys) and self.keys[idx] != item[0]:
             idx -= 1
         elif self.depth == 1 and idx >= len(self.keys):
             idx -= 1

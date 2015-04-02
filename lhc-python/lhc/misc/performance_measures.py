@@ -1,5 +1,5 @@
-import numpy
 import math
+import numpy
 
 from collections import Counter
 from itertools import izip
@@ -9,12 +9,13 @@ TN = (0, 0)
 FP = (0, 1)
 FN = (1, 0)
 
-X = 0 # True positives
-Y = 1 # False positives
-A = 2 # Area under curve
-T = 3 # Threshold
-M = 4 # Matthews correlation coefficient
-B = 5 # Balanced error rate
+X = 0  # True positives
+Y = 1  # False positives
+A = 2  # Area under curve
+T = 3  # Threshold
+M = 4  # Matthews correlation coefficient
+B = 5  # Balanced error rate
+
 
 def specificity(tp=None, tn=None, fp=None, fn=None):
     """Specificity [0, 1]
@@ -31,6 +32,7 @@ def specificity(tp=None, tn=None, fp=None, fn=None):
     """
     return tp / float(tp + fn)
 
+
 def sensitivity(tp=None, tn=None, fp=None, fn=None):
     """Sensitivity [0, 1]
     
@@ -46,6 +48,7 @@ def sensitivity(tp=None, tn=None, fp=None, fn=None):
     """
     return tn / float(tn + fp)
 
+
 def ber(tp, tn, fp, fn):
     """Balanced Error Rate [0, 1]
     
@@ -56,6 +59,7 @@ def ber(tp, tn, fp, fn):
     :rtype: float 
     """
     return (fp / float(tn + fp) + fn / float(fn + tp)) / 2
+
 
 def mcc(tp, tn, fp, fn):
     """ Matthew's Correlation Coefficient [-1, 1]
@@ -74,6 +78,7 @@ def mcc(tp, tn, fp, fn):
         den = math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
     return (tp * tn - fp * fn) / den
 
+
 def mse(exp, obs):
     """Mean Squared Error
     
@@ -85,18 +90,20 @@ def mse(exp, obs):
     assert len(exp) == len(obs)
     return numpy.mean((numpy.array(exp) - numpy.array(obs)) ** 2)
 
-def mui(X, Y):
+
+def mui(x, y):
     """MUtial Information"""
-    assert len(X) == len(Y)
-    l = len(X)
-    pX = Counter(X)
-    pY = Counter(Y)
-    pXY = Counter(izip(X, Y))
-    return sum(pXY[(x, y)] * math.log((pXY[(x, y)] * l) / float(pX[x] * pY[y]), 2) / l\
-        for x, y in pXY)
+    assert len(x) == len(y)
+    l = len(x)
+    p_x = Counter(x)
+    p_y = Counter(y)
+    p_xy = Counter(izip(x, y))
+    return sum(p_xy[(x, y)] * math.log((p_xy[(x, y)] * l) / float(p_x[x] * p_y[y]), 2) / l
+               for x, y in p_xy)
+
 
 def roc(clss, vals, reverse=False):
-    """
+    """ Reciever Operator Characteristic
     :param clss: known classes. 1 if positive case, -1 if the negative case
     :type class: list of boolean
     :param vals: classification probabilites etc...
@@ -113,8 +120,8 @@ def roc(clss, vals, reverse=False):
     vals = numpy.array(vals)[order]
     
     length = len(clss) + 1
-    data = numpy.empty( (length, 6) , dtype=numpy.float32)
-    data[0, X] = 0; data[0, Y] = 0; data[0, A] = 0
+    data = numpy.empty((length, 6), dtype=numpy.float32)
+    data[0, X], data[0, Y], data[0, A] = 0
     data[0, T] = vals[0]
     
     for i in xrange(length-1):
@@ -132,14 +139,15 @@ def roc(clss, vals, reverse=False):
     # Incorporate accuracy scores
     data[0, M] = 0
     for i in xrange(1, length-1):
-        fp = data[i,X]
-        tp = data[i,Y]
-        tn = data[-1,X] - fp
-        fn = data[-1,Y] - tp
-        data[i,M] = mcc(tp, tn, fp, fn)
-        data[i,B] = ber(tp, tn, fp, fn)
+        fp = data[i, X]
+        tp = data[i, Y]
+        tn = data[-1, X] - fp
+        fn = data[-1, Y] - tp
+        data[i, M] = mcc(tp, tn, fp, fn)
+        data[i, B] = ber(tp, tn, fp, fn)
     data[-1, M] = 0
     return data
+
 
 def confusion_matrix(exp, obs):
     """Create a confusion matrix
@@ -161,8 +169,9 @@ def confusion_matrix(exp, obs):
     lbls = sorted(set(exp))
     res = numpy.zeros(shape=(len(lbls), len(lbls)))
     for i in xrange(len(exp)):
-        res[lbls.index(exp[i]),lbls.index(obs[i])] += 1
+        res[lbls.index(exp[i]), lbls.index(obs[i])] += 1
     return res, lbls
+
 
 def confusion_performance(mat, fn):
     """Apply a performance function to a confusion matrix
@@ -171,15 +180,14 @@ def confusion_performance(mat, fn):
     :type mat: square matrix
     :param function fn: performance function
     """
-    assert mat.shape[0] == mat.shape[1]
-    if mat.shape < (2, 2):
-        raise TypeError('Not a confusion matrix')
+    if mat.shape[0] != mat.shape[1] or mat.shape < (2, 2):
+        raise TypeError('{} is not a confusion matrix'.format(mat))
     elif mat.shape == (2, 2):
         return fn(mat[TP], mat[TN], mat[FP], mat[FN])
     res = numpy.empty(mat.shape[0])
     for i in xrange(len(res)):
-        res[i] = fn(mat[i,i],                         #TP
-            sum(mat) - sum(mat[:,i]) - sum(mat[i,:]), #TN
-            sum(mat[:,i]) - mat[i,i],                 #FP
-            sum(mat[i,:]) - mat[i,i])                 #FN
+        res[i] = fn(mat[i, i],                                   # TP
+                    sum(mat) - sum(mat[:, i]) - sum(mat[i, :]),  # TN
+                    sum(mat[:, i]) - mat[i, i],                  # FP
+                    sum(mat[i, :]) - mat[i, i])                  # FN
     return res
