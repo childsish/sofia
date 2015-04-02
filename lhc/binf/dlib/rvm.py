@@ -260,7 +260,9 @@ def Sample(x):
 		res[i] = x[i]
 	return res
 
-import math
+
+from lhc import math
+
 
 def sinc(x):
 	if x == 0:

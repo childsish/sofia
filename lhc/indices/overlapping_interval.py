@@ -24,14 +24,12 @@ class OverlappingIntervalIndex(Accessor):
             if bin_fr == bin_to:
                 if bin_fr not in self.bins:
                     continue
-                res.extend(v for k, v in self.bins[bin_fr].iteritems()\
-                    if k.overlaps(key))
+                res.extend(v for k, v in self.bins[bin_fr].iteritems() if k.overlaps(key))
             else:
                 for bin in xrange(bin_fr, bin_to):
                     if bin not in self.bins:
                         continue
-                    res.extend(v for k, v in self.bins[bin_fr].iteritems()\
-                        if k.overlaps(key))
+                    res.extend(v for k, v in self.bins[bin_fr].iteritems() if k.overlaps(key))
         return res
     
     def __setitem__(self, key, value):
@@ -45,4 +43,3 @@ class OverlappingIntervalIndex(Accessor):
         self.binner = IntervalBinner()
         for attr in self.__slots__:
             setattr(self, attr, state[attr])
-
