@@ -65,7 +65,6 @@ class TestGenomicFeature(unittest.TestCase):
         self.assertIsNone(feature['a'])
 
     def test_get_abs_pos(self):
-        self.skipTest('not implemented')
         l2b = Interval('1', 0, 1000)
         l3c = Interval('1', 0, 300)
         l3d = Interval('1', 400, 600)

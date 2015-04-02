@@ -19,14 +19,16 @@ class AugmentedTree(object):
         return iter(self.ivls)
     
     def __getstate__(self):
-        return {'ivls': self.ivls,
-            'stops': self.stops}
+        return {
+            'ivls': self.ivls,
+            'stops': self.stops
+        }
     
     def __setstate__(self, state):
         for k, v in state.iteritems():
             setattr(self, k, v)
     
-    def get_overlapping(self, qry):
+    def intersect(self, qry):
         """Find all overlapping intervals
 
         :param interval qry: find intervals overlapping this interval

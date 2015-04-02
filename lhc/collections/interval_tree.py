@@ -1,6 +1,8 @@
+import collections
 import operator
 
-class IntervalTree(object):
+
+class IntervalTree(collections.Iterable):
     __slots__ = ('ivls', 'left', 'right', 'mid')
 
     def __init__(self, ivls, depth=16, minbucket=64, maxbucket=512, _extent=None):
@@ -29,8 +31,20 @@ class IntervalTree(object):
         self.left = IntervalTree(lefts, depth, _extent=(ivls[0].start, mid)) if len(lefts) > 0 else None
         self.right = IntervalTree(rights, depth, _extent=(mid, right)) if len(rights) > 0 else None
         self.mid = mid
+
+    def __iter__(self):
+        if self.left:
+            for l in self.left:
+                yield l
+
+        for i in self.ivls:
+            yield i
+
+        if self.right:
+            for r in self.right:
+                yield r
  
-    def getOverlapping(self, qry):
+    def intersect(self, qry):
         """Find all overlapping intervals
         
         :param interval ivl: find intervals overlapping this interval
@@ -45,21 +59,14 @@ class IntervalTree(object):
             overlapping.extend(self.right.intersect(qry))
 
         return overlapping
-
-    def __iter__(self):
-        if self.left:
-            for l in self.left: yield l
-
-        for i in self.ivls: yield i
-
-        if self.right:
-            for r in self.right: yield r
     
     def __getstate__(self):
-        return {'ivls': self.ivls,
+        return {
+            'ivls': self.ivls,
             'left': self.left,
             'right': self.right,
-            'mid': self.mid }
+            'mid': self.mid
+        }
 
     def __setstate__(self, state):
         for k, v in state.iteritems():
