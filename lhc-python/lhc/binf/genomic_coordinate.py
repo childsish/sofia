@@ -15,7 +15,7 @@ class Position(object):
         self.strand = strand
     
     def __str__(self):
-        return '{}:{}'.format(self.chr, self.pos)
+        return '{}:{}'.format(self.chr, self.pos + 1)
     
     def __eq__(self, other):
         return self.chr == other.chr and self.pos == other.pos and\
@@ -24,6 +24,18 @@ class Position(object):
     def __lt__(self, other):
         return (self.chm < other.chm) or\
             (self.chm == other.chm) and (self.pos < other.pos)
+
+    def get_offset(self, pos):
+        return Position(self.chr,
+                        self.pos + pos if self.strand == '+' else self.pos - pos,
+                        self.strand)
+    
+    def get_interval(self, pos):
+        if isinstance(pos, Position):
+            if pos.chr != self.chr or pos.strand != self.strand:
+                raise ValueError('Positions not on same strand or chromosome: {} vs. {}'.format(self, pos))
+            pos = pos.pos
+        return Interval(self.chr, self.pos, pos, self.strand)
 
     def __getstate__(self):
         return {'chr': self.chr, 'pos': self.pos, 'strand': self.strand}
@@ -161,6 +173,14 @@ class Interval(BaseInterval):
         if self.strand == '-':
             res = res.translate(Interval.REVCMP)[::-1]
         return res
+    
+    def get_5p(self):
+        return self.start if self.strand == '+' else\
+            self.stop
+    
+    def get_3p(self):
+        return self.stop if self.strand == '+' else\
+            self.start
 
     def __getstate__(self):
         return {'chr': self.chr, 'start': self.start, 'stop': self.stop, 'strand': self.strand}
