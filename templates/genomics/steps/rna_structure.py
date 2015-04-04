@@ -1,3 +1,4 @@
+from lhc.binf.genomic_coordinate import Position
 from sofia_.step import Step
 
 
@@ -21,11 +22,13 @@ class GetTranslationStartMinimumFreeEnergy(Step):
         self.fold = RNA.fold if type == 'mfe' else RNA.pf_fold
 
     def calculate(self, major_transcript, chromosome_sequence_set):
-        start_codon = major_transcript.ivl.get_5p()
-        upstream = start_codon.get_upstream(self.offset)
-        downstream = start_codon.get_downstream(self.offset)
-        start_codon_region = upstream.get_interval(downstream)
-        return self.fold(start_codon_region)[1]
+        offset = 50
+        start_position = Position(major_transcript.chr,
+                                  major_transcript.get_5p(),
+                                  major_transcript.strand)
+        interval = start_position.get_offset(-offset).get_interval(start_position.get_offset(50))
+        seq = interval.get_sub_seq(chromosome_sequence_set)
+        return self.fold(seq)[1]
 
 
 class GetStructuralFeatures(Step):

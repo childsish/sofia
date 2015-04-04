@@ -19,18 +19,17 @@ def filter(args):
         filters.append(partial(filter_regions, regions=BedSet(BedLineIterator(args.regions))))
 
     in_fhndl = SamLineIterator(args.input)
-    entry_iterator, pool_iterator = itertools.tee(in_fhndl)
     if args.processes == 1:
         init_worker(filters)
-        it = itertools.imap(apply_filters, pool_iterator)
+        it = itertools.imap(apply_filters, in_fhndl)
     else:
         pool = multiprocessing.Pool(args.processes, initializer=init_worker, initargs=[filters])
-        it = pool.imap(apply_filters, pool_iterator, args.simultaneous_entries)
+        it = pool.imap(apply_filters, in_fhndl, args.simultaneous_entries)
     
     cnt = {'dropped': 0, 'total': 0}
     out_fhndl = args.output
     out_fhndl.write('\n'.join(in_fhndl.hdrs))
-    for read, keep in itertools.izip(entry_iterator, it):
+    for read, keep in it:
         if keep:
             out_fhndl.write(str(read))
             out_fhndl.write('\n')
@@ -52,7 +51,7 @@ def init_worker(filters_):
 
 
 def apply_filters(read):
-    return all(f(read) for f in filters)
+    return read, all(f(read) for f in filters)
 
 
 def filter_length(read, length):
@@ -83,20 +82,26 @@ def get_parser():
 def define_parser(parser):
     import sys
     add_arg = parser.add_argument
-    add_arg('-i', '--input', default=sys.stdin, action=OpenReadableFile,
-            help='input bam file (default: stdin).')
+
     add_arg('-l', '--length', type=int,
-            help='remove reads longer than length')
-    add_arg('-o', '--output', default=sys.stdout, action=OpenWritableFile,
-            help='output bam file (default: stdout).')
-    add_arg('-p', '--processes', type=int,
-            help='number of processes to use')
+            help='remove reads longer than LENGTH')
     add_arg('-q', '--quality', type=float,
-            help='remove reads with mapping quality less than quality')
-    add_arg('-s', '--simultaneous-entries', default=100000, type=int,
-            help='the number of entries to process in each worker')
+            help='remove reads with mapping quality less than QUALITY')
     add_arg('-r', '--regions',
-            help='bed file of regions the reads must overlap')
+            help='remove reads completely outside of REGIONS (as file in .bed format)')
+
+    io_group = parser.add_argument_group('Input/Output')
+    io_group.add_argument('-i', '--input', default=sys.stdin, action=OpenReadableFile,
+                          help='input sam file (default: stdin).')
+    io_group.add_argument('-o', '--output', default=sys.stdout, action=OpenWritableFile,
+                          help='output sam file (default: stdout).')
+
+    parallel_group = parser.add_argument_group('Parallel processing', 'Arguments to specify parallel processing options. Unless filtering by region is involved, it\'s probably better to use only one processor')
+    parallel_group.add_argument('-p', '--processes', type=int, default=1,
+                                help='number of processes to use (default: 1)')
+    parallel_group.add_argument('-s', '--simultaneous-entries', default=1000, type=int,
+                                help='the number of entries to submit simultaneously to each process (default: 1000)')
+
     parser.set_defaults(func=filter)
     return parser
 
