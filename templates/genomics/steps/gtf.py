@@ -9,7 +9,8 @@ from warnings import warn
 
 class GtfIterator(Target):
     
-    EXT = ['.gtf', '.gtf.gz', '.gtf.bgz']
+    EXT = {'.gtf', '.gtf.gz', '.gtf.bgz'}
+    FORMAT = 'gtf'
     OUT = ['genomic_feature']
 
     def init(self):

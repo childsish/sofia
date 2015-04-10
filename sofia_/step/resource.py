@@ -5,7 +5,8 @@ from sofia_.entity import Entity
 class Resource(Step):
     """ A step that provides access to a disk based resource. """
     
-    EXT = []
+    EXT = {}
+    FORMAT = None
     
     def calculate(self):
         """ Return the resource. """
@@ -18,19 +19,9 @@ class Resource(Step):
     @classmethod
     def matches(cls, resource):
         """ Check if a disk-based source matches this resource. """
-        match_ext = cls.matches_extension(resource)
-        match_type = cls.matches_type(resource)
-        return match_ext or match_type
-    
-    @classmethod
-    def matches_extension(cls, resource):
-        """ Match the extension of the disk-based source to this resource. """
+        if resource.format is not None:
+            return resource.format == cls.FORMAT
         return any(resource.fname.endswith(ext) for ext in cls.EXT)
-    
-    @classmethod
-    def matches_type(cls, resource):
-        """ Match the entity type of the disk-based source to this resource. """
-        return set(cls.OUT) == resource.types
 
     @classmethod
     def get_output(cls, ins={}, outs={}, attr={}, entity_graph=None):
@@ -64,6 +55,6 @@ class Target(Resource):
         return 'target'
 
     @classmethod
-    def matches_type(cls, resource):
+    def matches_format(cls, resource):
         """ Match the entity type of the disk-based source to this resource. """
         return set(t + '_set' for t in cls.OUT) == resource.types

@@ -3,8 +3,8 @@ from sofia_.step import Target
 
 class RnaIterator(Target):
 
-    EXT = ['.rna']
-    TYPE = 'rna_structure'
+    EXT = {'.rna'}
+    FORMAT = 'rna'
     OUT = ['rna_structure_iterator']
 
     def init(self):

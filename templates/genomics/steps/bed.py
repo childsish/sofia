@@ -9,8 +9,8 @@ from warnings import warn
 
 class BedIterator(Target):
     
-    EXT = ['.bed', '.bed.gz']
-    TYPE = 'genomic_interval'
+    EXT = {'.bed', '.bed.gz'}
+    FORMAT = 'bed'
     OUT = ['genomic_interval']
     
     def init(self):
@@ -25,8 +25,8 @@ class BedIterator(Target):
 
 class BedSet(Resource):
     
-    EXT = ['.bed', '.bed.gz', '.bed.bgz']
-    TYPE = 'genomic_interval'
+    EXT = {'.bed', '.bed.gz', '.bed.bgz'}
+    FORMAT = 'bed'
     OUT = ['genomic_interval_set']
 
     def init(self):

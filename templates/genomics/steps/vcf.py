@@ -9,7 +9,8 @@ from warnings import warn
 
 class VcfIterator(Target):
     
-    EXT = ['.vcf', '.vcf.gz']
+    EXT = {'.vcf', '.vcf.gz'}
+    FORMAT = 'vcf'
     OUT = ['variant']
     
     def init(self):
@@ -40,7 +41,8 @@ class VcfSet(Resource):
     """A set of variants parsed from a .vcf file
     """
     
-    EXT = ['.vcf', '.vcf.gz']
+    EXT = {'.vcf', '.vcf.gz'}
+    FORMAT = 'vcf'
     OUT = ['variant_set']
     
     def init(self):

@@ -5,7 +5,8 @@ from collections import defaultdict
 
 class GenePathwayMap(Resource):
 
-    EXT = ['.txt']
+    EXT = {'.txt'}
+    FORMAT = 'txt'
     OUT = ['gene_pathway_map']
 
     def init(self):
@@ -20,7 +21,8 @@ class GenePathwayMap(Resource):
 
 class GeneGotermMap(Resource):
 
-    EXT = ['.txt']
+    EXT = {'.txt'}
+    FORMAT = 'txt'
     OUT = ['gene_goterm_map']
 
     def init(self):
@@ -31,17 +33,3 @@ class GeneGotermMap(Resource):
             parts = [part.strip() for part in line.split('\t')]
             self.parser[parts[0]].add((parts[1], parts[2]))
         fhndl.close()
-
-
-class GeneIdIterator(Target):
-
-    EXT = ['.txt']
-    OUT = ['gene_id']
-
-    def init(self):
-        fhndl = open(self.get_filename())
-        self.parser = (line.strip() for line in fhndl.read().split('\n'))
-        fhndl.close()
-
-    def calculate(self):
-        return self.parser.next()

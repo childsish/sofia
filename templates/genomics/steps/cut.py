@@ -5,7 +5,8 @@ from lhc.io.cut import CodonUsageTable
 
 class ReadCodonUsageTable(Resource):
 
-    EXT = ['.cut']
+    EXT = {'.cut'}
+    FORMAT = 'cut'
     OUT = ['codon_usage']
 
     def init(self):

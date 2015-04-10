@@ -15,8 +15,8 @@ class ResourceParser(object):
         NAME
             is an alternative name of the resource. This is used when
             referencing the resource in an step string.
-        TYPE
-            is the type of entity found in the resource
+        FORMAT
+            is the file format of the resource
         PARAM
             are the arguments passed to a resource upon initialisation
         ATTR
@@ -44,24 +44,13 @@ class ResourceParser(object):
     def parse_resource(self, resource_string):
         """ Parse a resource string. """
         args = self.parser.parse_args(resource_string.split())
-        types = None if args.type is None else frozenset(args.type.split(','))
-        attr = self._get_attr(types, args.attr)
-        return ProvidedResource(args.resource, types, args.name, args.param, attr)
-    
-    def _get_attr(self, types, attr):
-        if types is None:
-            return attr
-        for type in types:
-            tmp = {a: None for a in self.entity_graph.attr[type]}\
-                if type in self.entity_graph.attr else {}
-            attr.update(tmp)
-        return attr
+        return ProvidedResource(args.resource, args.format, args.name, args.param, args.attr)
     
     def _define_parser(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('resource')
         parser.add_argument('-n', '--name')
-        parser.add_argument('-t', '--type')
+        parser.add_argument('-f', '--format')
         parser.add_argument('-p', '--param', action=ArgumentDictionary, nargs='+', default={})
         parser.add_argument('-a', '--attr', action=ArgumentDictionary, nargs='+', default={})
         return parser
