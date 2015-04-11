@@ -32,11 +32,12 @@ class StepGraph(object):
     
     def init(self):
         """ Initialise all the steps in the graph. """
+        #TODO: Check if param is still necessary
         for ftr in self.steps.itervalues():
             try:
                 ftr.init(**ftr.param)
             except TypeError, e:
-                raise TypeError(e.args[0].replace('init()', type(ftr).__name__))
+                raise TypeError(e.args[0].replace('init()', '{}::init()'.format(type(ftr).__name__)))
 
     def update(self, other):
         """ Merge this actionGraph with another. """
