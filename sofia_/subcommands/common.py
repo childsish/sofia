@@ -16,19 +16,18 @@ def load_resource(fname, parsers, format=None):
     raise TypeError('Unrecognised file format: {}'.format(os.path.basename(fname)))
 
 
-def load_step_hypergraph(template, requested_entities=[], provided_entities=[]):
+def load_step_hypergraph(template, requested_entities=[], custom_steps=[]):
     available_steps = load_plugins(template, Step, {Resource, Target})
     entity_graph = load_entity_graph(template)
     step_graph = StepHyperGraph(entity_graph)
     for step, root in available_steps:
         step_graph.register_step(StepWrapper(step))
+    for step in custom_steps:
+        step_graph.register_step(step)
     step_graph.register_step(StepWrapper(GetIdById))
     step_graph.register_step(StepWrapper(Map))
 
     for entity in requested_entities:
-        step_graph.add_vertex(entity)
-
-    for entity in provided_entities:
         step_graph.add_vertex(entity)
 
     entities = set(step_graph.entities)
@@ -54,11 +53,11 @@ def load_step_hypergraph(template, requested_entities=[], provided_entities=[]):
 
     for (in_, out), path in extractors.iteritems():
         extractor = StepWrapper(Extractor,
-                                  'Get{}From{}'.format(entity_graph.get_entity_name(out),
-                                                       entity_graph.get_entity_name(in_)),
-                                  ins={in_: entity_graph.create_entity(in_)},
-                                  outs={out: entity_graph.create_entity(out)},
-                                  param={'path': path})
+                                'Get{}From{}'.format(entity_graph.get_entity_name(out),
+                                                     entity_graph.get_entity_name(in_)),
+                                ins={in_: entity_graph.create_entity(in_)},
+                                outs={out: entity_graph.create_entity(out)},
+                                param={'path': path})
         step_graph.register_step(extractor)
     return step_graph
 

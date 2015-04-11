@@ -29,6 +29,10 @@ class EntityGraph(object):
     def __contains__(self, item):
         return item in self.entities
 
+    def is_equivalent(self, a, b):
+        return a in self.get_equivalent_descendents(b) or\
+            b in self.get_equivalent_descendents(a)
+
     def get_ancestor_paths(self, entity):
         paths = []
         stk = [[entity]]
@@ -73,11 +77,11 @@ class EntityGraph(object):
 
     def get_equivalent_ancestors(self, entity):
         equivalents = {entity}
-        children = self.is_a.get_parents(entity)
-        while len(children) > 0:
-            entity = list(children)[0]
+        parents = self.is_a.get_parents(entity)
+        while len(parents) > 0:
+            entity = list(parents)[0]
             equivalents.add(entity)
-            children = self.is_a.get_parents(entity)
+            parents = self.is_a.get_parents(entity)
         return equivalents
 
     def create_entity(self, name):

@@ -3,31 +3,34 @@ import itertools
 import sys
 import multiprocessing
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from common import load_step_hypergraph, load_entity_graph
 from sofia_.error_manager import ERROR_MANAGER
 from sofia_.parser import EntityParser, ResourceParser
 from sofia_.graph.step_graph import StepGraph
 from sofia_.resolvers.entity_solution_iterator import EntitySolutionIterator
 from sofia_.attribute_map_factory import AttributeMapFactory
+from sofia_.step.txt import TxtIterator
+from sofia_.entity import Entity
+from sofia_.step_wrapper import StepWrapper
 
 
 class Aggregator(object):
-    def __init__(self, workflow_template, requested_entities=[]):
-        self.hyper_graph = load_step_hypergraph(workflow_template, requested_entities)
+    def __init__(self, workflow_template, requested_entities=[], custom_steps=[]):
+        self.hyper_graph = load_step_hypergraph(workflow_template, requested_entities, custom_steps)
         self.workflow_template = workflow_template
 
     def aggregate(self, requested_entities, provided_resources, args, maps={}):
-        def iter_resource(resource):
-            resource.init(**resource.param)
+        def iter_target(target):
+            target.init(**target.param)
             line_no = 1
             while True:
-                yield resource.calculate(), line_no
+                yield target.calculate(), line_no
                 line_no += 1
 
         sys.stderr.write('    Resolving entities...\n')
 
-        solution, resolved_steps = self.resolve_request(requested_entities, provided_resources, maps)
+        solution = self.resolve_request(requested_entities, provided_resources, maps)
         if args.graph:
             sys.stdout.write('{}\n\n'.format(solution))
         else:
@@ -40,8 +43,8 @@ class Aggregator(object):
         
             template = '\t'.join(['{}'] * len(requested_entities)) if args.template is None else args.template
 
-            pool_iterator = iter_resource(solution.steps['target'])
-            initargs = [resolved_steps, solution]
+            pool_iterator = iter_target(solution.steps['target'])
+            initargs = [requested_entities, solution, self.hyper_graph.entity_graph]
             if args.processes == 1:
                 init_worker(*initargs)
                 it = itertools.imap(get_annotation, pool_iterator)
@@ -111,11 +114,10 @@ class Aggregator(object):
                 step_graphs.append(possible_graphs[0])
         
         combined_graph = StepGraph()
-        resolved_steps = []
         for step_graph in step_graphs:
             combined_graph.update(step_graph)
-            resolved_steps.append(step_graph.step.name)
-        return combined_graph, resolved_steps
+        combined_graph.step = {step_graph.step.name for step_graph in step_graphs}
+        return combined_graph
 
 
 def main():
@@ -185,8 +187,16 @@ def aggregate(args):
         sys.exit(1)
 
     maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
+
+    custom_steps = []
+    for name, resource in provided_resources.iteritems():
+        if resource.format == 'custom_table':
+            step = StepWrapper(TxtIterator,
+                               outs=OrderedDict((out, Entity(out)) for out in resource.attr['out'].split(',') + ['target']),
+                               param={'out_col': resource.attr['out_col']})
+            custom_steps.append(step)
     
-    aggregator = Aggregator(args.workflow_template, [str(entity) for entity in requested_entities])
+    aggregator = Aggregator(args.workflow_template, [str(entity) for entity in requested_entities], custom_steps)
     aggregator.aggregate(requested_entities, provided_resources, args, maps)
 
 
@@ -205,14 +215,18 @@ def parse_requested_entities(steps, provided_resources):
 
 requested_entities = None
 solution = None
+entity_graph = None
 
 
-def init_worker(requested_entities_, solution_):
+def init_worker(requested_entities_, solution_, entity_graph_):
     global requested_entities
     global solution
+    global entity_graph
 
     requested_entities = requested_entities_
     solution = solution_
+    entity_graph = entity_graph_
+
     solution.init()
 
 
@@ -221,24 +235,31 @@ def get_annotation(target):
     resource. """
     global requested_entities
     global solution
+    global entity_graph
 
-    for entity in requested_entities:
-        solution.steps[entity].reset(solution.steps)
-    solution.steps['target'].calculated = True
+    for top_step in solution.step:
+        solution.steps[top_step].reset(solution.steps)
+
     target, line_no = target
-    kwargs = {'target': target}
-    row = []
-    for entity in requested_entities:
+    target_parser = solution.steps['target']
+    target = [target] if len(target_parser.outs) == 1 else target
+
+    entities = {out: entity for out, entity in zip(target_parser.outs, target)}
+    solution.steps['target'].calculated = True
+
+    for top_step in solution.step:
         try:
-            solution.steps[entity].generate(kwargs, solution.steps)
-            row.append(kwargs[entity])
+            solution.steps[top_step].generate(entities, solution.steps, entity_graph)
         except Exception:
             import sys
             import traceback
             traceback.print_exception(*sys.exc_info(), file=sys.stderr)
             sys.stderr.write('Error processing entry on line {}\n'.format(solution.steps['target'].parser.line_no))
             #sys.exit(1)
-            row.append('')
+
+    row = []
+    for entity in requested_entities:
+        row.append(entities[entity.name] if entity.name in entities else None)
     return row
 
 if __name__ == '__main__':

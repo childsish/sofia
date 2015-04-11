@@ -36,15 +36,20 @@ class Target(Resource):
     This particular step should be used to provide iterative access to the
     entities stored in the resource.
     """
-    def generate(self, entities, steps):
+    def generate(self, entities, steps, entity_graph):
         """ Overridden from Action.generate to enforce use of reset to get the
         next entity. """
         if self.calculated:
-            return entities['target']
-        entities['target'] = self.calculate()
+            return
+        outs = self.outs
+        res = [self.calculate()] if len(outs) == 1 else\
+            self.calculate()
         self.calculated = True
-        self.changed = True
-        return entities['target']
+        self.changed = False
+        for out, entity in zip(outs, res):
+            if out not in entities or entities[out] is not entity:
+                self.changed = True
+            entities[out] = entity
 
     def calculate(self):
         """ Get the next entity in the resource. """

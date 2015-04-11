@@ -53,7 +53,7 @@ class Step(object):
         """
         return str(entity)
     
-    def generate(self, entities, steps):
+    def generate(self, entities, steps, entity_graph):
         """Generate a step
         
         This function resolves all dependencies and then calculates the
@@ -64,35 +64,36 @@ class Step(object):
         :type steps: dict of steps
         """
         # TODO: implement proper multiple output support
-        name = self.name
+        outs = self.outs
         if self.calculated:
             return  # entities[name]
         
         dependencies_changed = False
         for step in self.dependencies.itervalues():
-            steps[step].generate(entities, steps)
+            steps[step].generate(entities, steps, entity_graph)
             if steps[step].changed:
                 dependencies_changed = True
-        if not dependencies_changed and name in entities:
+        if not dependencies_changed and all(out in entities for out in outs):
             self.calculated = True
             self.changed = False
-            return  # entities[name]
+            return
         
         local_entities = {}
-        for dependency_name, step in self.dependencies.iteritems():
-            outs = steps[step].outs.keys()
-            if len(outs) == 1:
-                local_entities[dependency_name] = entities[step]
-            else:
-                local_entities[dependency_name] = dict(zip(outs, entities[step]))[dependency_name]
+        for entity, step in self.dependencies.iteritems():
+            for out in steps[step].outs:
+                if entity_graph.is_equivalent(entity, out):
+                    local_entities[entity] = entities[out]
         for entity, converter in self.converters.iteritems():
             local_entities[entity] = None if local_entities[entity] is None else converter.convert(local_entities[entity])
 
-        res = self.calculate(**local_entities)
+        res = [self.calculate(**local_entities)] if len(outs) == 1 else\
+            self.calculate(**local_entities)
         self.calculated = True
-        self.changed = not (name in entities and entities[name] is res)
-        entities[name] = res
-        return  # res
+        self.changed = False
+        for out, entity in zip(outs, res):
+            if out not in entities or entities[out] is not entity:
+                self.changed = True
+            entities[out] = entity
     
     def reset(self, steps):
         """ Resets the calculation status of this step and all dependencies
