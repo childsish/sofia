@@ -25,9 +25,9 @@ class Resource(Step):
 
     @classmethod
     def get_output(cls, ins={}, outs={}, attr={}, entity_graph=None):
+        #TODO: Use entity_graph to properly construct out entities
         attr = ins['resource'].attr.copy() if len(ins) > 0 else {}
         return {out: Entity(out, attr) for out in outs}
-        #return {out: ENTITY_FACTORY.makeEntity(out, provided_resource.attr) for out in cls.OUT}
 
 
 class Target(Resource):
@@ -42,14 +42,13 @@ class Target(Resource):
         if self.calculated:
             return
         outs = self.outs
-        res = [self.calculate()] if len(outs) == 1 else\
-            self.calculate()
+        res = [self.calculate()] if len(outs) == 1 else self.calculate()
         self.calculated = True
         self.changed = False
         for out, entity in zip(outs, res):
-            if out not in entities or entities[out] is not entity:
+            if out not in entities or entities[str(out)] is not entity:
                 self.changed = True
-            entities[out] = entity
+            entities[str(out)] = entity
 
     def calculate(self):
         """ Get the next entity in the resource. """

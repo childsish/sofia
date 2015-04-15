@@ -7,11 +7,11 @@ class RequestedEntity(object):
         self.resources = resources
         self.attr = attr
         base = [name] if self.getter == '{}' else [name, getter]
-        self.header = ':'.join(base + ['{}={}'.format(k, v) for k, v in sorted(attr.iteritems())])\
+        self.header = ':'.join(base + ['{}={}'.format(k, ','.join(v)) for k, v in sorted(attr.iteritems())])\
             if header is None else header
 
     def __str__(self):
-        return self.header
+        return self.name + ':' + ':'.join('{}={}'.format(k, ','.join(v)) for k, v in self.attr.iteritems())
 
     def __eq__(self, other):
         return str(self) == str(other)

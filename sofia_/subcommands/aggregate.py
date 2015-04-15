@@ -30,7 +30,7 @@ class Aggregator(object):
 
         sys.stderr.write('    Resolving entities...\n')
 
-        solution = self.resolve_request(requested_entities, provided_resources, maps)
+        solution, matching_entities = self.resolve_requested_entities(requested_entities, provided_resources, maps)
         if args.graph:
             sys.stdout.write('{}\n\n'.format(solution))
         else:
@@ -44,7 +44,7 @@ class Aggregator(object):
             template = '\t'.join(['{}'] * len(requested_entities)) if args.template is None else args.template
 
             pool_iterator = iter_target(solution.steps['target'])
-            initargs = [requested_entities, solution, self.hyper_graph.entity_graph]
+            initargs = [matching_entities, solution, self.hyper_graph.entity_graph]
             if args.processes == 1:
                 init_worker(*initargs)
                 it = itertools.imap(get_annotation, pool_iterator)
@@ -61,63 +61,70 @@ class Aggregator(object):
                 pool.close()
                 pool.join()
 
-    def resolve_request(self, requested_entities, provided_resources, maps):
+    def resolve_requested_entities(self, requested_entities, provided_resources, maps):
+        solutions = [self.resolve_requested_entity(entity, provided_resources, maps) for entity in requested_entities]
+
+        matching_entities = self.get_matching_entities(solutions, requested_entities)
+
+        combined_solution = StepGraph()
+        for solution in solutions:
+            combined_solution.update(solution)
+        combined_solution.step = {step_graph.step.name for step_graph in solutions}
+        return combined_solution, matching_entities
+
+    def resolve_requested_entity(self, requested_entity, provided_resources, maps):
         def satisfies_request(graph, requested_resources):
             return graph.resources.intersection(requested_resources) == requested_resources
-        
-        step_graphs = []
-        for entity in requested_entities:
-            ERROR_MANAGER.reset()
-            sys.stderr.write('    {} - '.format(entity.name))
-            solution_iterator = EntitySolutionIterator(entity.name,
-                                                       self.hyper_graph,
-                                                       provided_resources,
-                                                       self.workflow_template,
-                                                       maps,
-                                                       entity.resources,)
-            possible_graphs = list(solution_iterator)
-            possible_graphs = [graph for graph in possible_graphs
-                               if satisfies_request(graph, entity.resources)]
-            if len(possible_graphs) == 0:
-                sys.stderr.write('unable to resolve entity.\n')
-                reasons = '\n      * '.join(sorted(ERROR_MANAGER.errors))
-                sys.stderr.write('      Possible reasons: \n      * {}\n'.format(reasons))
-                sys.exit(1)
-            elif len(possible_graphs) > 1:
-                matching_graphs = defaultdict(list)
-                for graph in possible_graphs:
-                    resources = frozenset([r.name for r in graph.resources if not r.name == 'target'])
-                    extra_resources = resources - entity.resources
-                    matching_graphs[len(extra_resources)].append((graph, extra_resources))
-                count, matching_graphs = sorted(matching_graphs.iteritems())[0]
-                unique = True
-                if len(matching_graphs) > 1:
-                    match_size = defaultdict(list)
-                    for graph, extra_resources in matching_graphs:
-                        match_size[len(graph)].append((graph, extra_resources))
-                    matching_graphs = sorted(match_size.iteritems())[0][1]
-                    if len(matching_graphs) > 1:
-                        unique = False
-                if not unique:
-                    for graph in possible_graphs:
-                        sys.stderr.write('{}\n\n'.format(str(graph)))
-                    sys.stderr.write('    Multiple solutions found.\n')
-                    sys.exit(1)
-                matching_graph, extra_resources = matching_graphs[0]
-                extra_resources = '\n      '.join(extra_resources)
-                err = 'unique solution found.\n' if count == 0 else\
-                    'unique solution found with {} extra resources.\n      {}\n'.format(count, extra_resources)
-                sys.stderr.write(err)
-                step_graphs.append(matching_graph)
-            else:
-                sys.stderr.write('unique solution found.\n')
-                step_graphs.append(possible_graphs[0])
-        
-        combined_graph = StepGraph()
-        for step_graph in step_graphs:
-            combined_graph.update(step_graph)
-        combined_graph.step = {step_graph.step.name for step_graph in step_graphs}
-        return combined_graph
+
+        ERROR_MANAGER.reset()
+        sys.stderr.write('    {} - '.format(requested_entity.name))
+        solution_iterator = EntitySolutionIterator(requested_entity.name,
+                                                   self.hyper_graph,
+                                                   provided_resources,
+                                                   self.workflow_template,
+                                                   maps,
+                                                   requested_entity.resources,)
+        possible_graphs = list(solution_iterator)
+        possible_graphs = [graph for graph in possible_graphs
+                           if satisfies_request(graph, requested_entity.resources)]
+        if len(possible_graphs) == 0:
+            sys.stderr.write('unable to resolve entity.\n')
+            sys.stderr.write('      Possible reasons:\n')
+            sys.stderr.write('\n      * '.join(sorted(ERROR_MANAGER.errors)))
+            sys.stderr.write('\n')
+            sys.exit(1)
+        elif len(possible_graphs) == 1:
+            sys.stderr.write('unique solution found\n')
+            return possible_graphs[0]
+
+        matching_graphs = defaultdict(list)
+        for graph in possible_graphs:
+            resources = frozenset([r.name for r in graph.resources if not r.name == 'target'])
+            extra_resources = resources - requested_entity.resources
+            matching_graphs[len(extra_resources)].append((graph, extra_resources))
+        count, matching_graphs = sorted(matching_graphs.iteritems())[0]
+        unique = True
+        if len(matching_graphs) > 1:
+            match_size = defaultdict(list)
+            for graph, extra_resources in matching_graphs:
+                match_size[len(graph)].append((graph, extra_resources))
+            matching_graphs = sorted(match_size.iteritems())[0][1]
+            if len(matching_graphs) > 1:
+                unique = False
+        if not unique:
+            for graph in possible_graphs:
+                sys.stderr.write('{}\n\n'.format(str(graph)))
+            sys.stderr.write('    Multiple solutions found.\n')
+            sys.exit(1)
+        matching_graph, extra_resources = matching_graphs[0]
+        extra_resources = '\n      '.join(extra_resources)
+        err = 'unique solution found.\n' if count == 0 else\
+            'unique solution found with {} extra resources.\n      {}\n'.format(count, extra_resources)
+        sys.stderr.write(err)
+        return matching_graph
+
+    def get_matching_entities(self, solutions, requested_entities):
+        return [solution.step.outs[entity.name] for solution, entity in zip(solutions, requested_entities)]
 
 
 def main():
@@ -196,7 +203,7 @@ def aggregate(args):
                                param={'out_col': resource.attr['out_col']})
             custom_steps.append(step)
     
-    aggregator = Aggregator(args.workflow_template, [str(entity) for entity in requested_entities], custom_steps)
+    aggregator = Aggregator(args.workflow_template, [entity.name for entity in requested_entities], custom_steps)
     aggregator.aggregate(requested_entities, provided_resources, args, maps)
 
 
@@ -244,7 +251,7 @@ def get_annotation(target):
     target_parser = solution.steps['target']
     target = [target] if len(target_parser.outs) == 1 else target
 
-    entities = {out: entity for out, entity in zip(target_parser.outs, target)}
+    entities = {str(key): value for key, value in zip(target_parser.outs.itervalues(), target)}
     solution.steps['target'].calculated = True
 
     for top_step in solution.step:
@@ -257,9 +264,7 @@ def get_annotation(target):
             sys.stderr.write('Error processing entry on line {}\n'.format(solution.steps['target'].parser.line_no))
             #sys.exit(1)
 
-    row = []
-    for entity in requested_entities:
-        row.append(entities[entity.name] if entity.name in entities else None)
+    row = [entities[str(entity)] for entity in requested_entities]
     return row
 
 if __name__ == '__main__':

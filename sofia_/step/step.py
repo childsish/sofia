@@ -63,8 +63,6 @@ class Step(object):
         :param steps: available steps
         :type steps: dict of steps
         """
-        # TODO: implement proper multiple output support
-        outs = self.outs
         if self.calculated:
             return  # entities[name]
         
@@ -73,27 +71,27 @@ class Step(object):
             steps[step].generate(entities, steps, entity_graph)
             if steps[step].changed:
                 dependencies_changed = True
-        if not dependencies_changed and all(out in entities for out in outs):
+        if not dependencies_changed and all(out in entities for out in self.outs):
             self.calculated = True
             self.changed = False
             return
         
         local_entities = {}
         for entity, step in self.dependencies.iteritems():
-            for out in steps[step].outs:
-                if entity_graph.is_equivalent(entity, out):
-                    local_entities[entity] = entities[out]
+            for out_name, out_value in steps[step].outs.iteritems():
+                if entity_graph.is_equivalent(entity, out_name):
+                    local_entities[entity] = entities[str(out_value)]
         for entity, converter in self.converters.iteritems():
             local_entities[entity] = None if local_entities[entity] is None else converter.convert(local_entities[entity])
 
-        res = [self.calculate(**local_entities)] if len(outs) == 1 else\
+        res = [self.calculate(**local_entities)] if len(self.outs) == 1 else\
             self.calculate(**local_entities)
         self.calculated = True
         self.changed = False
-        for out, entity in zip(outs, res):
-            if out not in entities or entities[out] is not entity:
+        for out, entity in zip(self.outs.itervalues(), res):
+            if out not in entities or entities[str(out)] is not entity:
                 self.changed = True
-            entities[out] = entity
+            entities[str(out)] = entity
     
     def reset(self, steps):
         """ Resets the calculation status of this step and all dependencies
