@@ -17,7 +17,7 @@ class FastaChromosomeSequenceSet(Resource):
         fname = self.get_filename()
         if os.path.exists('{}.fai'.format(fname)):
             try:
-                from lhc.io.fasta_.pysam import PysamFastaSet
+                from lhc.io.fasta_.pysam_ import PysamFastaSet
                 self.parser = PysamFastaSet(fname)
                 return
             except ImportError:
