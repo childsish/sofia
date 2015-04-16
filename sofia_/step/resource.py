@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from step import Step
 from sofia_.entity import Entity
 
@@ -27,7 +28,7 @@ class Resource(Step):
     def get_output(cls, ins={}, outs={}, attr={}, entity_graph=None):
         #TODO: Use entity_graph to properly construct out entities
         attr = ins['resource'].attr.copy() if len(ins) > 0 else {}
-        return {out: Entity(out, attr) for out in outs}
+        return OrderedDict((out, Entity(out, attr)) for out in outs)
 
 
 class Target(Resource):
