@@ -2,8 +2,8 @@ import pysam
 
 
 class PysamFastaSet(object):
-    def __init__(self, fname, extension='.fai'):
-        self.index = pysam.FastaFile(fname + extension)
+    def __init__(self, fname):
+        self.index = pysam.FastaFile(fname)
 
     def __getitem__(self, key):
         return PysamFastaEntry(self.index, key)
