@@ -21,10 +21,10 @@ def list_entities(args):
     fhndl.close()
 
     res = []
-    for entity, settings in json_obj.iteritems():
-        res.append(entity)
-        if 'description' in settings:
-            res.append('\n'.join(wrap(settings['description'], initial_indent='    ', subsequent_indent='    ')))
+    for entity in json_obj:
+        res.append(entity['name'])
+        if 'description' in entity:
+            res.append('\n'.join(wrap(entity['description'], initial_indent='    ', subsequent_indent='    ')))
     args.output.write('\n'.join(res))
 
 
