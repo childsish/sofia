@@ -1,0 +1,18 @@
+class Column(object):
+    def __init__(self, type, column, name=None):
+        self.type = type
+        self.column = column
+        self.name = str(type) if name is None else name
+
+    def __call__(self, parts):
+        return self.type(parts[self.column])
+
+
+class Entity(object):
+    def __init__(self, type, entities=[], name=None):
+        self.type = type
+        self.entities = entities
+        self.name = str(type) if name is None else name
+
+    def __call__(self, parts):
+        return self.type(*[entity(parts) for entity in self.entities])
