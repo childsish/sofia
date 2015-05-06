@@ -1,3 +1,4 @@
 from builder_guesser import BuilderGuesser
-from entry_builder import EntryBuilder
-from entry_builder_parser import EntryBuilderParser
+from entity import Entity, Column
+from entity_parser import EntityParser
+from iterator import CsvIterator
