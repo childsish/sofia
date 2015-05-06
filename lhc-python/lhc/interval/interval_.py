@@ -13,7 +13,7 @@ class Interval(object):
         self.start, self.stop = sorted((start, stop))
 
     def __str__(self):
-        return '[{start}, {stop})'.format(start=self.start, stop=self.stop)
+        return '[{start!r}, {stop!r})'.format(start=self.start, stop=self.stop)
     
     def __len__(self):
         return self.stop - self.start
