@@ -68,7 +68,7 @@ class Interval(BaseInterval):
         self.strand = strand
     
     def __str__(self):
-        return '{}:{}-{}'.format(self.chr, self.start, self.stop)
+        return '{}:{!r}-{!r}'.format(self.chr, self.start, self.stop)
     
     def __repr__(self):
         return 'GenomicInterval({s})'.format(s=str(self))
