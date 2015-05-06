@@ -4,6 +4,10 @@ from lhc.interval import Interval
 
 
 class TestInterval(unittest.TestCase):
+    def test_eq(self):
+        self.assertEquals(Interval(2, 3), Interval(2, 3))
+        self.assertFalse(Interval(2, 3) == Interval('2', '3'))
+
     def test_get_rel_pos(self):
         ivl = Interval(100, 200)
 
