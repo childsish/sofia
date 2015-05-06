@@ -5,5 +5,4 @@ class EntryBuilder(object):
         self.columns = columns
 
     def __call__(self, parts):
-        tmp = [builder(parts) for builder in self.builders] + [parts[column] for column in self.columns]
         return self.type(*[builder(parts) for builder in self.builders] + [parts[column] for column in self.columns])
