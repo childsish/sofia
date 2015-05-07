@@ -15,7 +15,7 @@ class TestBuilderGuesser(unittest.TestCase):
         builder = guesser.guess_type(fname)
 
         self.assertEquals(('V1', 'V2', 'V3', 'V4'), builder.type._fields)
-        self.assertEquals([0, 1, 2, 3], builder.columns)
+        self.assertEquals([0, 1, 2, 3], [column.column for column in builder.entities])
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 import string
 
 from collections import namedtuple
-from entry_builder import EntryBuilder
+from entity import Entity, Column
 
 
 class BuilderGuesser(object):
@@ -24,7 +24,7 @@ class BuilderGuesser(object):
                 for i, hdr in enumerate(hdrs):
                     hdrs[i] = ''.join(c if c in self.VALID_CHARS else '_' for c in hdr)
 
-                builder = EntryBuilder(namedtuple('Entry', hdrs), columns=range(len(hdrs)))
+                builder = Entity(namedtuple('Entry', hdrs), [Column(str, i) for i in xrange(len(hdrs))])
                 break
             else:
                 hdrs = line
