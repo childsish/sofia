@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from lhc.io.csv_ import BuilderGuesser
+from lhc.io.csv_ import EntryGuesser
 
 
 class TestBuilderGuesser(unittest.TestCase):
@@ -11,8 +11,8 @@ class TestBuilderGuesser(unittest.TestCase):
         os.write(fhndl, 'a\tb\tc\td\n')
         os.close(fhndl)
 
-        guesser = BuilderGuesser()
-        builder = guesser.guess_type(fname)
+        guesser = EntryGuesser()
+        builder = guesser.guess_entry(fname)
 
         self.assertEquals(('V1', 'V2', 'V3', 'V4'), builder.type._fields)
         self.assertEquals([0, 1, 2, 3], [column.column for column in builder.entities])
