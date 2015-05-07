@@ -4,15 +4,15 @@ from collections import namedtuple
 from entity import Entity, Column
 
 
-class BuilderGuesser(object):
+class EntryGuesser(object):
 
     VALID_CHARS = set(string.ascii_letters + string.digits + '_')
 
-    def guess_type(self, fname, comment='#', delimiter='\t', skip=0):
+    def guess_entry(self, fname, comment='#', delimiter='\t', skip=0):
         fhndl = open(fname)
         skipped = 0
         hdrs = None
-        builder = None
+        entry = None
         for line in fhndl:
             if line.startswith(comment):
                 hdrs = line[len(comment):]
@@ -24,12 +24,12 @@ class BuilderGuesser(object):
                 for i, hdr in enumerate(hdrs):
                     hdrs[i] = ''.join(c if c in self.VALID_CHARS else '_' for c in hdr)
 
-                builder = Entity(namedtuple('Entry', hdrs), [Column(str, i) for i in xrange(len(hdrs))])
+                entry = Entity(namedtuple('Entry', hdrs), [Column(str, i) for i in xrange(len(hdrs))])
                 break
             else:
                 hdrs = line
                 skipped += 1
         fhndl.close()
-        if builder is None:
+        if entry is None:
             raise ValueError('Unable to parse {}'.format(fname))
-        return builder
+        return entry

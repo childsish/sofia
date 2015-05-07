@@ -1,12 +1,12 @@
-from builder_guesser import BuilderGuesser
+from entry_guesser import EntryGuesser
 
 
 class CsvIterator(object):
-    def __init__(self, fname, builder=None, comment='#', skip=0, delimiter='\t'):
+    def __init__(self, fname, entry=None, comment='#', skip=0, delimiter='\t'):
         """
         Default assumes tab-delimited fields with no header and comments lines starting with "#"
         :param fname: the csv file to iterate over
-        :param builder: an function that builds the entry from the line parts (after splitting)
+        :param entry: an function that builds the entry from the line parts (after splitting)
         :param comment: the character used to denote the beginning of a comment
         :param skip: the number of lines to skip. Usually 0 or 1 (ie. no header or header)
         :param delimiter: the character used to split the line
@@ -16,7 +16,7 @@ class CsvIterator(object):
         self.skipped = 0
 
         self.fhndl = open(fname)
-        self.builder = BuilderGuesser().guess_type(fname) if builder is None else builder
+        self.entry = EntryGuesser().guess_entry(fname) if entry is None else entry
         self.delimiter = delimiter
         self.skip = skip
         self.comment = comment
@@ -38,4 +38,4 @@ class CsvIterator(object):
                 self.skipped += 1
 
         parts = line.rstrip('\r\n').split(self.delimiter)
-        return self.builder(parts)
+        return self.entry(parts)
