@@ -47,6 +47,13 @@ class TestOverlappingIntervalIndex(unittest.TestCase):
         self.assertEquals({'interval 3a', 'interval 3b'}, set(index[Interval(55, 70)]))
         self.assertEquals({'interval 3a', 'interval 3b'}, set(index[Interval(57, 68)]))
 
+    def test_distant_intervals(self):
+        index = OverlappingIntervalIndex()
+        index[Interval(10, 20)] = 'interval 1'
+        index[Interval(2540000, 2541000)] = 'interval 2'
+
+        self.assertEquals(['interval 1', 'interval 2'], index[Interval(0, 10000000)])
+
     def test_pickle(self):
         index = OverlappingIntervalIndex()
         index[Interval(10, 20)] = 'interval 1'
