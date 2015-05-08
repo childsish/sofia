@@ -1,11 +1,9 @@
 from collections import defaultdict
-from lhc.indices.index import Accessor
+from lhc.indices.index import Index
 from lhc.interval import IntervalBinner
 
 
-class OverlappingIntervalIndex(Accessor):
-    
-    __slots__ = ('bins',)
+class IntervalIndex(Index):
     
     RETURN = 'multiple'
     TYPE = 'inexact'
@@ -29,11 +27,3 @@ class OverlappingIntervalIndex(Accessor):
     def __setitem__(self, key, value):
         bin = self.binner.get_bin(key)
         self.bins[bin].append((key, value))
-    
-    def __getstate__(self):
-        return dict((attr, getattr(self, attr)) for attr in self.__slots__)
-
-    def __setstate__(self, state):
-        self.binner = IntervalBinner()
-        for attr in self.__slots__:
-            setattr(self, attr, state[attr])

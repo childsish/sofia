@@ -1,9 +1,7 @@
-from index import Accessor
+from lhc.indices.index import Index
 
 
-class ExactKeyIndex(Accessor):
-    
-    __slots__ = ('index',)
+class KeyIndex(Index):
     
     RETURN = 'single'
     TYPE = 'exact'
@@ -19,10 +17,3 @@ class ExactKeyIndex(Accessor):
     
     def __setitem__(self, key, value):
         self.index[key] = value
-
-    def __getstate__(self):
-        return dict((attr, getattr(self, attr)) for attr in self.__slots__)
-
-    def __setstate__(self, state):
-        for attr in self.__slots__:
-            setattr(self, attr, state[attr])
