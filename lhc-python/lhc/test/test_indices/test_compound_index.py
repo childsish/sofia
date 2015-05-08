@@ -1,6 +1,7 @@
 import unittest
 
 from lhc.interval import Interval
+from lhc.binf.genomic_coordinate import Interval as GenomicInterval
 from lhc.indices.compound_index import CompoundIndex, KeyValuePair
 from lhc.indices.key_index import KeyIndex
 from lhc.indices.point_index import PointIndex
@@ -25,7 +26,7 @@ class Test(unittest.TestCase):
         
         self.assertEquals(index[('y', 0)], KeyValuePair(('y', 0), 'a'))
         self.assertEquals(index[('y', 10)], KeyValuePair(('y', 10), 'c'))
-    
+
     def testKIII(self):
         index = CompoundIndex(KeyIndex, IntervalIndex)
         index[('chr1', Interval(1111190, 1111200))] = 'a'
@@ -34,6 +35,16 @@ class Test(unittest.TestCase):
         res = index[('chr1', Interval(1111195, 1111205))]
 
         self.assertEquals(res[0].key, ('chr1', Interval(1111190, 1111200)))
+        self.assertEquals(res[0].value, 'a')
+
+    def testKIII_with_key(self):
+        index = CompoundIndex(KeyIndex, IntervalIndex, key=lambda x: (x.chr, x))
+        index[GenomicInterval('chr1', 1111190, 1111200)] = 'a'
+        index[GenomicInterval('chr2', 1111190, 1111200)] = 'b'
+
+        res = index[GenomicInterval('chr1', 1111195, 1111205)]
+
+        self.assertEquals(res[0].key, GenomicInterval('chr1', 1111190, 1111200))
         self.assertEquals(res[0].value, 'a')
     
     def testEKEK(self):
