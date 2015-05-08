@@ -6,8 +6,15 @@ from lhc.interval import Interval
 
 
 class EntityParser(object):
+    """
+    <entity> ::= (<name>.)?<type><definition>
+    <definition> ::= <column> | [<entity>(,<entity>)*]
+    <name> ::= [a-zA-Z_]+
+    <type> ::= [a-zA-Z]+
+    <column> ::= [0-9]+
+    """
 
-    NAME_AND_TYPE = frozenset(string.ascii_letters + '_:')
+    NAME_AND_TYPE = frozenset(string.ascii_letters + '_.')
     TYPES = {
         's': str, 'i': int, 'f': float, 'v': Interval
     }
@@ -21,7 +28,8 @@ class EntityParser(object):
         self.stop = len(definition)
         res = self._parse_definition(definition)
         res = res[0] if len(res) == 1 else\
-            namedtuple('Entry', [r.name for r in res])(res)
+            Entity(namedtuple('Entry', [('V{}'.format(i + 1) if r.name is None else r.name) for i, r in enumerate(res)]),
+                   res, 'Entry')
         return res
 
     def _parse_definition(self, definition):
@@ -30,7 +38,7 @@ class EntityParser(object):
             pos = self.start
             while self.start < self.stop and definition[self.start] in self.NAME_AND_TYPE:
                 self.start += 1
-            name, type = ([None] + definition[pos:self.start].split(':', 1))[:2]
+            name, type = ([None] + definition[pos:self.start].split('.', 1))[-2:]
             type = self.TYPES[type]
             if definition[self.start] == '[':
                 self.start += 1
@@ -42,7 +50,9 @@ class EntityParser(object):
                 while self.start < self.stop and definition[self.start].isdigit():
                     self.start += 1
                 column = int(definition[pos:self.start])
-                res.append(Column(type, column))
+                res.append(Column(type, column, name))
+            else:
+                raise ValueError('invalid entity definition: {}'.format(definition))
 
             if self.start < len(definition) and definition[self.start] == ',':
                 self.start += 1

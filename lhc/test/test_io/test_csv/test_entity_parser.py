@@ -23,6 +23,16 @@ class TestEntityParser(unittest.TestCase):
 
         self.assertEquals(GenomicInterval('test', 2, 3), parser.parse_definition('gv[s3,i0,i1]')(row))
 
+    def test_multiple_output(self):
+        parser = EntityParser()
+
+        entity_factory = parser.parse_definition('i0,test.i1,i2,s3')
+        res = entity_factory(['2', '3', '4', 'test'])
+
+        self.assertEquals(2, res[0])
+        self.assertEquals(2, res.V1)
+        self.assertEquals(3, res.test)
+
 
 if __name__ == '__main__':
     unittest.main()
