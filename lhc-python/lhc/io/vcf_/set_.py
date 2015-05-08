@@ -1,11 +1,11 @@
-from lhc.indices import Index, ExactKeyIndex, OverlappingIntervalIndex
+from lhc.indices import CompoundIndex, KeyIndex, IntervalIndex
 from lhc.interval import Interval
 
 
 class VcfSet(object):
     def __init__(self, iterator):
         self.data = list(iterator)
-        self.ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
+        self.ivl_index = CompoundIndex((KeyIndex, IntervalIndex))
         for i, variant in enumerate(self.data):
             ivl = Interval(variant.pos, variant.pos + len(variant.ref))
             self.ivl_index[(variant.chr, ivl)] = i

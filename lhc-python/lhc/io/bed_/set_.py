@@ -1,11 +1,11 @@
-from lhc.indices import Index, ExactKeyIndex, OverlappingIntervalIndex
+from lhc.indices import CompoundIndex, KeyIndex, IntervalIndex
 from lhc.interval import Interval
 
 
 class BedSet(object):
     def __init__(self, iterator):
         self.data = list(iterator)
-        self.ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
+        self.ivl_index = CompoundIndex((KeyIndex, IntervalIndex))
         for i, entry in enumerate(self.data):
             ivl = Interval(entry.start, entry.stop)
             self.ivl_index[(entry.chr, ivl)] = i

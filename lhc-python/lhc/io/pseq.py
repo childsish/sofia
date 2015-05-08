@@ -3,7 +3,7 @@ import os
 
 from collections import namedtuple
 from lhc.io.entry_set import EntrySet
-from lhc.indices.exact_key import ExactKeyIndex
+from lhc.indices.key_index import KeyIndex
 
 Association = namedtuple('Association', ('chr', 'pos', 'ref', 'alt', 'n', 'f', 'beta', 'se', 'stat', 'p'))
 
@@ -35,7 +35,7 @@ class PseqParser(EntrySet):
                 infile.close()
             return self._getIndexedData(key)
         elif self.data is None:
-            self.pos_index = ExactKeyIndex()
+            self.pos_index = KeyIndex()
             self.data = list(iter(self))
             for i, entry in enumerate(self.data):
                 self.pos_index[(entry.chr, entry.pos)] = i
@@ -80,7 +80,7 @@ def index(fname, iname=None):
     outfile.close()
 
 def _createIndices(fname):
-    pos_index = ExactKeyIndex()
+    pos_index = KeyIndex()
     infile = open(fname, 'rb')
     while True:
         fpos = infile.tell()

@@ -1,11 +1,11 @@
-from lhc.indices import Index, ExactKeyIndex, OverlappingIntervalIndex
+from lhc.indices import CompoundIndex, KeyIndex, IntervalIndex
 from lhc.interval import Interval
 
 
 class GtfSet(object):
     def __init__(self, iterator):
-        self.key_index = ExactKeyIndex()
-        self.ivl_index = Index((ExactKeyIndex, OverlappingIntervalIndex))
+        self.key_index = KeyIndex()
+        self.ivl_index = CompoundIndex((KeyIndex, IntervalIndex))
         self.data = list(iterator)
         for i, entry in enumerate(self.data):
             self.key_index[entry.name] = i
