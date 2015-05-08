@@ -5,7 +5,7 @@ from lhc.interval import Interval
 class GtfSet(object):
     def __init__(self, iterator):
         self.key_index = KeyIndex()
-        self.ivl_index = CompoundIndex((KeyIndex, IntervalIndex))
+        self.ivl_index = CompoundIndex(KeyIndex, IntervalIndex)
         self.data = list(iterator)
         for i, entry in enumerate(self.data):
             self.key_index[entry.name] = i
