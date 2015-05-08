@@ -4,26 +4,29 @@ KeyValuePair = namedtuple('KeyValuePair', ('key', 'value'))
 
 
 class CompoundIndex(object):
-    def __init__(self, index_classes, key=None):
+    def __init__(self, *index_classes):
         self.classes = index_classes
         self.index = self.classes[0]()
         self.type = 'inexact' if any(index.TYPE == 'inexact' for index in index_classes) else 'exact'
         self.return_ = 'multiple' if any(index.RETURN == 'multiple' for index in index_classes) else 'single'
-        self.key = lambda x: x if key is None else key
+
+    def __contains__(self, key):
+        index = self.index
+        for i in xrange(len(self.factories) - 2):
+            if key not in index:
+                return False
+            index = index[key]
+        return key in index
     
     def __getitem__(self, key):
-        if not isinstance(key, tuple) and len(self.classes) == 1:
-            key = (key,)
-        assert len(key) == len(self.classes)
-        
         indices = [self.index]
-        for i in xrange(len(self.classes)):
+        for key_part in key:
             next_indices = []
             for index in indices:
                 if index.RETURN == 'single':
-                    next_indices.append(index[key[i]])
+                    next_indices.append(index[key_part])
                 elif index.RETURN == 'multiple':
-                    next_indices.extend(index[key[i]])
+                    next_indices.extend(index[key_part])
                 else:
                     raise NotImplementedError('Can not handle indices with {} returns'.format(index.RETURN))
             indices = next_indices
@@ -35,28 +38,9 @@ class CompoundIndex(object):
         return indices
     
     def __setitem__(self, key, value):
-        if not isinstance(key, tuple) and len(self.classes) == 1:
-            key = (key,)
-        stored_key = key[0] if len(self.classes) == 1 else key
-
         index = self.index
-        for factory in self.classes[1:-1]:
-            if key not in index:
-                index[key] = factory.make()
-            index = index[key]
-        index[key] = KeyValuePair(stored_key, value)
-
-
-class IndexFactory(object):
-
-    RETURN = ''
-    TYPE = ''
-    
-    def __contains__(self, key):
-        raise NotImplementedError()
-    
-    def __getitem__(self, key):
-        raise NotImplementedError()
-    
-    def __setitem__(self, key, value):
-        raise NotImplementedError()
+        for key_part, index_class in zip(key[:-1], self.classes[1:]):
+            if key_part not in index:
+                index[key_part] = index_class()
+            index = index[key_part]
+        index[key[-1]] = KeyValuePair(key, value)
