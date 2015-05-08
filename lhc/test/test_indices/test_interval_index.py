@@ -4,20 +4,20 @@ import tempfile
 import unittest
 
 from lhc.interval import Interval
-from lhc.indices.overlapping_interval import OverlappingIntervalIndex
+from lhc.indices.interval_index import IntervalIndex
 
 
 class TestOverlappingIntervalIndex(unittest.TestCase):
     
     def test_contains(self):
-        index = OverlappingIntervalIndex()
+        index = IntervalIndex()
         index[Interval(10, 20)] = 'interval 1'
         
         self.assertTrue(Interval(10, 20) in index)
         self.assertFalse(Interval(30, 40) in index)
     
     def test_getitem(self):
-        index = OverlappingIntervalIndex()
+        index = IntervalIndex()
         index[Interval(10, 20)] = 'interval 1'
         index[Interval(30, 40)] = 'interval 2a'
         index[Interval(35, 45)] = 'interval 2b'
@@ -48,14 +48,14 @@ class TestOverlappingIntervalIndex(unittest.TestCase):
         self.assertEquals({'interval 3a', 'interval 3b'}, set(index[Interval(57, 68)]))
 
     def test_distant_intervals(self):
-        index = OverlappingIntervalIndex()
+        index = IntervalIndex()
         index[Interval(10, 20)] = 'interval 1'
         index[Interval(2540000, 2541000)] = 'interval 2'
 
         self.assertEquals(['interval 1', 'interval 2'], index[Interval(0, 10000000)])
 
     def test_pickle(self):
-        index = OverlappingIntervalIndex()
+        index = IntervalIndex()
         index[Interval(10, 20)] = 'interval 1'
         index[Interval(30, 40)] = 'interval 2a'
 

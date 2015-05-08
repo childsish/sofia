@@ -5,15 +5,15 @@ import unittest
 
 from lhc.interval import Interval
 
-from lhc.indices.index import Index, KeyValuePair
-from lhc.indices.exact_key import ExactKeyIndex
-from lhc.indices.point_below import PointBelowIndex
-from lhc.indices.overlapping_interval import OverlappingIntervalIndex
+from lhc.indices.compound_index import CompoundIndex, KeyValuePair
+from lhc.indices.key_index import KeyIndex
+from lhc.indices.point_index import PointIndex
+from lhc.indices.interval_index import IntervalIndex
 
 class Test(unittest.TestCase):
 
     def testExactKey(self):
-        index = Index((ExactKeyIndex,))
+        index = CompoundIndex((KeyIndex,))
         index['a'] = 10
         index['a'] = 20
         
@@ -21,7 +21,7 @@ class Test(unittest.TestCase):
         self.assertRaises(KeyError, index.__getitem__, 'b')
     
     def testPointBelow(self):
-        index = Index((PointBelowIndex,))
+        index = CompoundIndex((PointIndex,))
         index[10] = 'a'
         index[20] = 'b'
         
@@ -31,13 +31,13 @@ class Test(unittest.TestCase):
         self.assertEquals(index[20], (20, 'b'))
     
     def testOverlappingInterval(self):
-        index = Index((OverlappingIntervalIndex,))
+        index = CompoundIndex((IntervalIndex,))
         index[Interval(1111190, 1111200)] = 'a'
         
         self.assertEquals(index[Interval(1111195, 1111205)], [(Interval(1111190, 1111200), 'a')])
     
     def testEKPB(self):
-        index = Index((ExactKeyIndex, PointBelowIndex))
+        index = CompoundIndex((KeyIndex, PointIndex))
         index[('x', 0)] = 'a'
         index[('x', 10)] = 'b'
         index[('x', 20)] = 'c'
@@ -55,14 +55,14 @@ class Test(unittest.TestCase):
         self.assertEquals(index[('y', 10)], KeyValuePair(('y', 10), 'c'))
     
     def testEKOI(self):
-        index = Index((ExactKeyIndex, OverlappingIntervalIndex))
+        index = CompoundIndex((KeyIndex, IntervalIndex))
         index[('chr1', Interval(1111190, 1111200))] = 'a'
         index[('chr2', Interval(1111190, 1111200))] = 'b'
         
         self.assertEquals(index[('chr1', Interval(1111195, 1111205))], [(('chr1', Interval(1111190, 1111200)), 'a')])
     
     def testEKEK(self):
-        index = Index((ExactKeyIndex, ExactKeyIndex))
+        index = CompoundIndex((KeyIndex, KeyIndex))
         index[('chr1', 100)] = 'a'
         index[('chr1', 200)] = 'b'
         index[('chr1', 200)] = 'c'
@@ -75,7 +75,7 @@ class Test(unittest.TestCase):
         self.assertEquals(index[('chr2', 200)], 'e')
     
     def test_pickleEKEK(self):
-        index = Index((ExactKeyIndex, ExactKeyIndex))
+        index = CompoundIndex((KeyIndex, KeyIndex))
         index[('chr1', 100)] = 'a'
         index[('chr1', 200)] = 'b'
 

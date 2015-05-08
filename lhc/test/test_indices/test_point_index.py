@@ -1,18 +1,18 @@
 import unittest
 
-from lhc.indices.point_below import PointBelowIndex
+from lhc.indices.point_index import PointIndex
 
 class Test(unittest.TestCase):
     
     def test_contains(self):
-        index = PointBelowIndex()
+        index = PointIndex()
         index[10] = [4, 5, 6]
         
         self.assertTrue(10 in index)
         self.assertFalse(20 in index)
     
     def test_getitem(self):
-        index = PointBelowIndex()
+        index = PointIndex()
         index[10] = [4, 5, 6]
         index[20] = [1, 2, 3]
         
