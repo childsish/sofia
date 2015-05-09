@@ -20,12 +20,10 @@ class EntityParser(object):
     }
 
     def __init__(self):
-        self.start = None
-        self.stop = None
+        self.pos = None
 
     def parse_definition(self, definition):
-        self.start = 0
-        self.stop = len(definition)
+        self.pos = 0
         res = self._parse_definition(definition)
         res = res[0] if len(res) == 1 else\
             Entity(namedtuple('Entry', [('V{}'.format(i + 1) if r.name is None else r.name) for i, r in enumerate(res)]),
@@ -34,28 +32,35 @@ class EntityParser(object):
 
     def _parse_definition(self, definition):
         res = []
-        while self.start < self.stop:
-            pos = self.start
-            while self.start < self.stop and definition[self.start] in self.NAME_AND_TYPE:
-                self.start += 1
-            name, type = ([None] + definition[pos:self.start].split('.', 1))[-2:]
+        while self.pos < len(definition):
+            fr = self.pos
+            while self.pos < len(definition) and definition[self.pos] in self.NAME_AND_TYPE:
+                self.pos += 1
+            name, type = ([None] + definition[fr:self.pos].split('.', 1))[-2:]
             type = self.TYPES[type]
-            if definition[self.start] == '[':
-                self.start += 1
-                self.stop -= 1
+            if definition[self.pos] == '[':
+                self.pos += 1
                 entities = self._parse_definition(definition)
                 res.append(Entity(type, entities, name))
-            elif definition[self.start].isdigit():
-                pos = self.start
-                while self.start < self.stop and definition[self.start].isdigit():
-                    self.start += 1
-                column = int(definition[pos:self.start])
+                if self.pos >= len(definition):
+                    raise ValueError('premature ending in definition; {}'.format(definition))
+                elif definition[self.pos] != ']':
+                    raise ValueError('expected "]" at position {}, found "{}"'.format(self.pos, definition[self.pos]))
+                self.pos += 1
+            elif definition[self.pos].isdigit():
+                fr = self.pos
+                while self.pos < len(definition) and definition[self.pos].isdigit():
+                    self.pos += 1
+                column = int(definition[fr:self.pos])
                 res.append(Column(type, column, name))
             else:
                 raise ValueError('invalid entity definition: {}'.format(definition))
 
-            if self.start < len(definition) and definition[self.start] == ',':
-                self.start += 1
+            if self.pos < len(definition):
+                if definition[self.pos] == ',':
+                    self.pos += 1
+                elif definition[self.pos] == ']':
+                    break
         return res
 
     @classmethod

@@ -2,7 +2,7 @@ import unittest
 
 from lhc.interval import Interval
 from lhc.binf.genomic_coordinate import Interval as GenomicInterval
-from lhc.io.csv_ import EntityParser
+from lhc.io.csv_ import EntityParser, Entity, Column
 
 
 class TestEntityParser(unittest.TestCase):
@@ -32,6 +32,22 @@ class TestEntityParser(unittest.TestCase):
         self.assertEquals(2, res[0])
         self.assertEquals(2, res.V1)
         self.assertEquals(3, res.test)
+
+    def test_multiple_nested_output(self):
+        parser = EntityParser()
+
+        entity_factory = parser.parse_definition('v[i2,i3],f5')
+
+        self.assertIsInstance(entity_factory.entities[0], Entity)
+        self.assertIsInstance(entity_factory.entities[1], Column)
+        self.assertEquals(float, entity_factory.entities[1].type)
+        self.assertEquals(5, entity_factory.entities[1].column)
+        self.assertIsInstance(entity_factory.entities[0].entities[0], Column)
+        self.assertEquals(int, entity_factory.entities[0].entities[0].type)
+        self.assertEquals(2, entity_factory.entities[0].entities[0].column)
+        self.assertIsInstance(entity_factory.entities[0].entities[1], Column)
+        self.assertEquals(int, entity_factory.entities[0].entities[1].type)
+        self.assertEquals(3, entity_factory.entities[0].entities[1].column)
 
 
 if __name__ == '__main__':
