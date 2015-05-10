@@ -3,6 +3,7 @@ import imp
 from collections import deque
 from itertools import repeat
 
+
 class enum(set):
     def __contains__(self, key):
         return super(enum, self).__contains__(key)
@@ -16,6 +17,7 @@ class enum(set):
         if name in self:
             return name
         raise AttributeError
+
 
 def window(iterable, n=2, cast=tuple):
     """ This function passes a running window along the length of the given
@@ -32,6 +34,7 @@ def window(iterable, n=2, cast=tuple):
         append(e)
         yield cast(win)
 
+
 def combinations_with_replacement(iterable, r):
     """ This function acts as a replacement for the
         itertools.combinations_with_replacement function. The original does not
@@ -46,36 +49,33 @@ def combinations_with_replacement(iterable, r):
         else:
             stk.extend(top + [i] for i in iterable)
 
+
 def argsort(seq, cmp=None, key=None):
     key = seq.__getitem__ if key is None else lambda x:key(seq[x])
     return sorted(range(len(seq)), cmp=cmp, key=key)
 
-def loadPlugins(indir, cls):
+
+def load_plugins(plugin_dir, parent_class, excluded=set()):
     import os
     import sys
-    
-    sys.path.append(indir)
-    plugins = {}
 
-    fnames = (fname for fname in os.listdir(indir)\
-        if fname[0] != '.' and fname.endswith('.py'))
-
-    for fname in fnames:
+    plugins = []
+    sys.path.append(plugin_dir)
+    for fname in os.listdir(plugin_dir):
+        if fname.startswith('.') or not fname.endswith('.py'):
+            continue
         module_name, ext = os.path.splitext(fname)
-        d = imp.load_source(module_name, os.path.join(indir, fname)).__dict__
-        for k, v in d.iteritems():
-            if k == cls.__name__:
-                continue
-            try:
-                if issubclass(v, cls):
-                    plugins[k] = v
-            except TypeError:
-                continue
+        module = imp.load_source(module_name, os.path.join(plugin_dir, fname))
+        child_classes = [child_class for child_class in module.__dict__.itervalues()
+                         if type(child_class) == type and child_class.__name__ != parent_class.__name__]
+        for child_class in child_classes:
+            if issubclass(child_class, parent_class) and child_class not in excluded:
+                plugins.append(child_class)
     return plugins
+
 
 def accumulate(xs):
     ttl = 0
     for x in xs:
         ttl += x
         yield ttl
-
