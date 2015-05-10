@@ -16,7 +16,10 @@ class EntityParser(object):
 
     NAME_AND_TYPE = frozenset(string.ascii_letters + '_.')
     TYPES = {
-        's': str, 'i': int, 'f': float, 'v': Interval
+        's': str,  # (s)tring
+        'i': int,  # (i)nteger
+        'f': float,  # (f)loat
+        'r': Interval  # (r)ange
     }
 
     def __init__(self):
