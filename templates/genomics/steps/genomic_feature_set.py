@@ -7,6 +7,8 @@ class GetGenomicFeatureByPosition(Step):
     OUT = ['genomic_feature']
 
     def calculate(self, genomic_feature_set, genomic_position):
+        if genomic_position is None:
+            return None
         #TODO: select correct gene (currently selecting largest)
         features = genomic_feature_set.fetch(
             genomic_position.chr,
