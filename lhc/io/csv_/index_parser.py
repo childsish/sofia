@@ -14,7 +14,7 @@ class IndexParser(object):
     def parse_definition(self, definition):
         match = self.REGX.match(definition)
         if not match:
-            raise ValueError('invalid index definition')
+            raise ValueError('invalid index definition: {}'.format(definition))
         return self.INDICES[match.group('code')], int(match.group('column'))
 
     @classmethod
