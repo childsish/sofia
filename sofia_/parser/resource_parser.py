@@ -28,9 +28,8 @@ class ResourceParser(object):
         -r "tmp.vcf -n tmp -t vcf -k x=x y=y -a chromosome_id=ucsc"
     """
     
-    def __init__(self, entity_graph):
+    def __init__(self):
         """ Initialise with default entity types based on file extension. """
-        self.entity_graph = entity_graph
         self.parser = self._define_parser()
     
     def parse_resources(self, resource_strings):
@@ -44,7 +43,7 @@ class ResourceParser(object):
     def parse_resource(self, resource_string):
         """ Parse a resource string. """
         args = self.parser.parse_args(resource_string.split())
-        return ProvidedResource(args.resource, args.format, args.name, args.param, args.attr)
+        return ProvidedResource(args.resource, args.format, args.name, args.param, args.attr, args.ins, args.outs)
     
     def _define_parser(self):
         parser = argparse.ArgumentParser()
@@ -53,4 +52,6 @@ class ResourceParser(object):
         parser.add_argument('-f', '--format')
         parser.add_argument('-p', '--param', action=ArgumentDictionary, nargs='+', default={})
         parser.add_argument('-a', '--attr', action=ArgumentDictionary, nargs='+', default={})
+        parser.add_argument('-i', '--ins', nargs='+', default=[])
+        parser.add_argument('-o', '--outs', nargs='+')
         return parser

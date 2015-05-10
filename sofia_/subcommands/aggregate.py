@@ -1,23 +1,21 @@
 import argparse
 import itertools
+import os
 import sys
 import multiprocessing
 
-from collections import defaultdict, OrderedDict
-from common import load_step_hypergraph, load_entity_graph
+from collections import defaultdict
+from common import parse_provided_resources, parse_requested_entities, get_program_directory
 from sofia_.error_manager import ERROR_MANAGER
-from sofia_.parser import EntityParser, ResourceParser
 from sofia_.graph.step_graph import StepGraph
 from sofia_.resolvers.entity_solution_iterator import EntitySolutionIterator
 from sofia_.attribute_map_factory import AttributeMapFactory
-from sofia_.step.txt import TxtIterator
-from sofia_.entity import Entity
-from sofia_.step_wrapper import StepWrapper
+from sofia_.template_factory import TemplateFactory
 
 
 class Aggregator(object):
-    def __init__(self, workflow_template, requested_entities=[], custom_steps=[]):
-        self.hyper_graph = load_step_hypergraph(workflow_template, requested_entities, custom_steps)
+    def __init__(self, hyper_graph, workflow_template):
+        self.hyper_graph = hyper_graph
         self.workflow_template = workflow_template
 
     def aggregate(self, requested_entities, provided_resources, args, maps={}):
@@ -172,52 +170,15 @@ def define_parser(parser):
 
 def aggregate(args):
     sys.stderr.write('\n    SoFIA started...\n\n')
-    
-    provided_resources = {}
-    if args.resource_list is not None:
-        fhndl = open(args.resource_list)
-        resource_list = fhndl.read().strip().split('\n')
-        fhndl.close()
-        provided_resources.update(parse_provided_resources(args.input, resource_list, args.workflow_template))
-    provided_resources.update(parse_provided_resources(args.input, args.resources, args.workflow_template))
-    
-    requested_entities = parse_requested_entities(args.entities, provided_resources)
-    if args.entity_list is not None:
-        fhndl = open(args.entity_list)
-        entity_list = fhndl.read().strip().split('\n')
-        fhndl.close()
-        requested_entities.extend(parse_requested_entities(entity_list, provided_resources))
 
-    if len(requested_entities) == 0:
-        sys.stderr.write('Error: No entities were requested. Please provide'
-                         'the names of the entities you wish to calculate.')
-        sys.exit(1)
+    provided_resources = parse_provided_resources(args)
+    requested_entities = parse_requested_entities(args, provided_resources)
+    template_factory = TemplateFactory(os.path.join(get_program_directory(), 'templates', args.workflow_template))
+    template = template_factory.make(provided_resources, requested_entities)
 
+    aggregator = Aggregator(template, args.workflow_template)
     maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
-
-    custom_steps = []
-    for name, resource in provided_resources.iteritems():
-        if resource.format == 'custom_table':
-            step = StepWrapper(TxtIterator,
-                               outs=OrderedDict((out, Entity(out)) for out in resource.attr['out'].split(',') + ['target']),
-                               param={'out_col': resource.attr['out_col']})
-            custom_steps.append(step)
-    
-    aggregator = Aggregator(args.workflow_template, [entity.name for entity in requested_entities], custom_steps)
     aggregator.aggregate(requested_entities, provided_resources, args, maps)
-
-
-def parse_provided_resources(target, resources, template):
-    entity_graph = load_entity_graph(template)
-    resource_parser = ResourceParser(entity_graph)
-    provided_resources = resource_parser.parse_resources(resources)
-    provided_resources['target'] = resource_parser.parse_resource(target + ' -n target')
-    return provided_resources
-
-
-def parse_requested_entities(steps, provided_resources):
-    parser = EntityParser(provided_resources)
-    return parser.parse_entity_requests(steps)
 
 
 requested_entities = None
@@ -264,6 +225,7 @@ def get_annotation(target):
             sys.stderr.write('Error processing entry on line {}\n'.format(solution.steps['target'].parser.line_no))
             #sys.exit(1)
 
+    tmp = requested_entities
     row = [entities[str(entity)] for entity in requested_entities]
     return row
 
