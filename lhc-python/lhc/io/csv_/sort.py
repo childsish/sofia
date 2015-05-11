@@ -8,6 +8,8 @@ import time
 from itertools import chain
 from lhc.itertools import ChunkedIterator, SortedIteratorMerger
 
+table = string.maketrans(string.ascii_letters, string.ascii_letters[::-1])
+
 
 class CsvSorter(object):
 
@@ -16,7 +18,7 @@ class CsvSorter(object):
     def __init__(self, fhndl, format, max_lines=1000000, delimiter='\t'):
         def key(line):
             parts = line.split(delimiter)
-            return tuple(type_(parts[column]) for type_, column in format)
+            return tuple(type_(parts) for type_ in format)
 
         self.key = key
         self.iterator = ChunkedIterator(fhndl, max_lines)
@@ -99,22 +101,53 @@ def sort(args):
 
 
 def parse_format(format):
-    regx = re.compile('(?P<code>\w+)(?P<column>\d+)')
-    types = {'s': str, 'i': int, 'f': float, 'rs': reverse_string, 'ri': reverse_int, 'rf': reverse_float}
+    regx = re.compile('(?P<code>[a-zA-Z]+)(?P<columns>[\d.]+)')
+    types = {
+        's': (get_string, ['col']),
+        'i': (get_int, ['col']),
+        'f': (get_float, ['col']),
+        'r': (get_interval, ['start', 'stop']),
+        'rs': (get_reverse_string, ['col']),
+        'ri': (get_reverse_int, ['col']),
+        'rf': (get_reverse_float, ['col']),
+        'rr': (get_reverse_interval, ['start', 'stop'])
+    }
     match = regx.match(format)
-    return types[match.group('code')], int(match.group('column')) - 1
+    func, args = types[match.group('code')]
+    columns = [int(col) - 1 for col in match.group('columns').split('.')]
+    return functools.partial(func, **dict(zip(args, columns)))
 
 
-def reverse_int(value):
-    return -int(value)
+def get_int(parts, col=0):
+    return int(parts[col])
 
 
-def reverse_float(value):
-    return -float(value)
+def get_float(parts, col=0):
+    return float(parts[col])
 
 
-reverse_string = functools.partial(string.translate,
-                                   table=string.maketrans(string.ascii_letters, string.ascii_letters[::-1]))
+def get_string(parts, col=0):
+    return parts[col]
+
+
+def get_interval(parts, start=0, stop=1):
+    return int(parts[start]), -int(parts[stop])
+
+
+def get_reverse_int(parts, col=0):
+    return -int(parts[col])
+
+
+def get_reverse_float(parts, col=0):
+    return -float(parts[col])
+
+
+def get_reverse_string(parts, col=0):
+    return string.translate(parts[col], table=table)
+
+
+def get_reverse_interval(parts, start=0, stop=1):
+    return -int(parts[start]), int(parts[stop])
 
 
 def main():
