@@ -1,6 +1,8 @@
 import argparse
+import functools
 import os
 import re
+import string
 import time
 
 from itertools import chain
@@ -98,9 +100,21 @@ def sort(args):
 
 def parse_format(format):
     regx = re.compile('(?P<code>\w+)(?P<column>\d+)')
-    types = {'s': str, 'i': int, 'f': float}
+    types = {'s': str, 'i': int, 'f': float, 'rs': reverse_string, 'ri': reverse_int, 'rf': reverse_float}
     match = regx.match(format)
     return types[match.group('code')], int(match.group('column')) - 1
+
+
+def reverse_int(value):
+    return -int(value)
+
+
+def reverse_float(value):
+    return -float(value)
+
+
+reverse_string = functools.partial(string.translate,
+                                   table=string.maketrans(string.ascii_letters, string.ascii_letters[::-1]))
 
 
 def main():
