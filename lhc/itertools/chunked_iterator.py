@@ -1,13 +1,13 @@
-import itertools
+from itertools import islice
 
 
 class ChunkedIterator(object):
     def __init__(self, iterator, chunk):
-        zipped = chunk * (iter(iterator),)
-        self.iterator = itertools.izip_longest(*zipped)
+        self.iterator = iterator
+        self.chunk = chunk
 
     def __iter__(self):
         return self
 
     def next(self):
-        return self.iterator.next()
+        return islice(self.iterator, 0, self.chunk)
