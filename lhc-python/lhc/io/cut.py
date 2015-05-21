@@ -5,7 +5,7 @@ from collections import Counter
 
 class CodonUsageTable(Counter):
 
-    REGX = re.compile(r'(?P<codon>[ACGU]{3})\s+(?P<frq>\d+\.\d+)\((\s*\d+)\)')
+    REGX = re.compile(r'(?P<codon>[ACGTU]{3})\s+(?P<frq>\d+\.\d+)\s+\((\s*\d+)\)')
 
     def __init__(self, fname):
         super(CodonUsageTable, self).__init__()
