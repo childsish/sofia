@@ -8,6 +8,10 @@ class Resource(Step):
     
     EXT = {}
     FORMAT = None
+
+    def __init__(self, resources=None, dependencies=None, param={}, ins=None, outs=None, converters={}, name=None, format=None):
+        super(Resource, self).__init__(resources, dependencies, param, ins, outs, converters, name)
+        self.format = self.FORMAT if format is None else format
     
     def calculate(self):
         """ Return the resource. """
@@ -16,13 +20,6 @@ class Resource(Step):
     def get_filename(self):
         """ Returns the filename of the resource. """
         return list(self.resources)[0].fname
-    
-    @classmethod
-    def matches(cls, resource):
-        """ Check if a disk-based source matches this resource. """
-        if resource.format is not None:
-            return resource.format == cls.FORMAT
-        return any(resource.fname.endswith(ext) for ext in cls.EXT)
 
     @classmethod
     def get_output(cls, ins={}, outs={}, attr={}, entity_graph=None):
@@ -58,8 +55,3 @@ class Target(Resource):
     def _get_name(self, name=None):
         """ Overridden to return unique name. """
         return 'target'
-
-    @classmethod
-    def matches_format(cls, resource):
-        """ Match the entity type of the disk-based source to this resource. """
-        return set(t + '_set' for t in cls.OUT) == resource.types

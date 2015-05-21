@@ -23,9 +23,9 @@ class ResourceSolutionIterator(object):
     def _get_hits(self, resources):
         step = self.step.step_class
         if issubclass(step, Target):
-            return [resources['target']] if step.matches(resources['target']) else []
+            return [resources['target']] if self.step.matches(resources['target']) else []
         res = [resource for resource in resources.itervalues()
-               if resource.name != 'target' and step.matches(resource)]
+               if resource.name != 'target' and self.step.matches(resource)]
         if hasattr(step, 'DEFAULT'):
             import os
             import sys

@@ -12,7 +12,7 @@ class StepHyperGraph(HyperGraph):
     def entities(self):
         return self.vs
 
-    def registed_entity(self, entity):
+    def register_entity(self, entity):
         self.add_vertex(entity)
 
     def register_step(self, step):

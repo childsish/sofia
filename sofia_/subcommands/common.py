@@ -1,10 +1,10 @@
 import imp
 import os
 
-from sofia_.step import Step, Extractor, Resource, Target, Map, GetIdById
-from sofia_.step_wrapper import StepWrapper
-from sofia_.graph.step_hyper_graph import StepHyperGraph
-from sofia_.graph.entity_graph import EntityGraph
+from sofia_.parser.resource_parser import ResourceParser
+from sofia_.parser.entity_parser import EntityParser
+
+from sofia_.step import Step, Resource, Target
 
 
 def load_resource(fname, parsers, format=None):
@@ -16,75 +16,49 @@ def load_resource(fname, parsers, format=None):
     raise TypeError('Unrecognised file format: {}'.format(os.path.basename(fname)))
 
 
-def load_step_hypergraph(template, requested_entities=[], custom_steps=[]):
-    available_steps = load_plugins(template, Step, {Resource, Target})
-    entity_graph = load_entity_graph(template)
-    step_graph = StepHyperGraph(entity_graph)
-    for step, root in available_steps:
-        step_graph.register_step(StepWrapper(step))
-    for step in custom_steps:
-        step_graph.register_step(step)
-    step_graph.register_step(StepWrapper(GetIdById))
-    step_graph.register_step(StepWrapper(Map))
-
-    for entity in requested_entities:
-        step_graph.add_vertex(entity)
-
-    entities = set(step_graph.entities)
-    extractors = {}
-    for in_ in entities:
-        if in_ not in entity_graph:
-            continue
-        for path in entity_graph.get_descendent_paths(in_):
-            out = path[-1]['name']
-            if out not in entities:
-                continue
-            extractors[(in_, out)] = path
-
-    redundant = set()
-    for in_, out in extractors:
-        for equivalent in entity_graph.get_equivalent_descendents(in_) - {in_}:
-            key = (equivalent, out)
-            if key in extractors:
-                redundant.add(key)
-                break
-    for key in redundant:
-        del extractors[key]
-
-    for (in_, out), path in extractors.iteritems():
-        extractor = StepWrapper(Extractor,
-                                'Get{}From{}'.format(entity_graph.get_entity_name(out),
-                                                     entity_graph.get_entity_name(in_)),
-                                ins={in_: entity_graph.create_entity(in_)},
-                                outs={out: entity_graph.create_entity(out)},
-                                param={'path': path})
-        step_graph.register_step(extractor)
-    return step_graph
+def parse_provided_resources(args):
+    provided_resource_definitions = []
+    if args.input is not None:
+        provided_resource_definitions.append(args.input + ' -n target')
+    if args.resource_list is not None:
+        provided_resource_definitions.extend(line.rstrip('\r\n') for line in open(args.resource_list))
+    provided_resource_definitions.extend(args.resources)
+    parser = ResourceParser()
+    return parser.parse_resources(provided_resource_definitions)
 
 
-def load_entity_graph(template):
-    program_dir = get_program_directory()
-    return EntityGraph(os.path.join(program_dir, 'templates', template, 'entities.json'))
+def parse_requested_entities(args, provided_resources):
+    requested_entity_definitions = []
+    if args.entity_list is not None:
+        requested_entity_definitions.extend(line.rstrip('\r\n') for line in open(args.entity_list))
+    requested_entity_definitions.extend(args.entities)
+    if len(requested_entity_definitions) == 0:
+        import sys
+        sys.stderr.write('Error: No entities were requested. Please provide'
+                         'the names of the entities you wish to calculate.')
+        sys.exit(1)
+    parser = EntityParser(provided_resources)
+    return parser.parse_entity_requests(requested_entity_definitions)
 
 
 def get_program_directory():
     return os.path.dirname(os.path.realpath(__file__)).rsplit(os.sep, 2)[0]
 
 
-def load_plugins(template, parent_class, excluded=set()):
+def load_steps(plugin_dir):
+    import os
     import sys
 
     plugins = []
-    step_dir = os.path.join(get_program_directory(), 'templates', template, 'steps')
-    sys.path.append(step_dir)
-    for fname in os.listdir(step_dir):
+    sys.path.append(plugin_dir)
+    for fname in os.listdir(plugin_dir):
         if fname.startswith('.') or not fname.endswith('.py'):
             continue
         module_name, ext = os.path.splitext(fname)
-        module = imp.load_source(module_name, os.path.join(step_dir, fname))
+        module = imp.load_source(module_name, os.path.join(plugin_dir, fname))
         child_classes = [child_class for child_class in module.__dict__.itervalues()
-                         if type(child_class) == type and child_class.__name__ != parent_class.__name__]
+                         if type(child_class) == type]
         for child_class in child_classes:
-            if issubclass(child_class, parent_class) and child_class not in excluded:
-                plugins.append((child_class, template))
+            if issubclass(child_class, Step) and child_class not in {Step, Resource, Target}:
+                plugins.append(child_class)
     return plugins

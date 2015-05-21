@@ -1,6 +1,6 @@
 import argparse
 
-from txt_ import sorter, compress
+from txt_ import compress
 
 
 def main():
@@ -14,9 +14,6 @@ def get_parser():
 
 def define_parser(parser):
     subparsers = parser.add_subparsers()
-
-    sort_parser = subparsers.add_parser('sort')
-    sorter.define_parser(sort_parser)
 
     compress_parser = subparsers.add_parser('compress')
     compress.define_parser(compress_parser)

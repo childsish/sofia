@@ -116,13 +116,13 @@ class Step(object):
             if len(tmp) > 0:
                 name.append('-r ' + tmp)
         if len(self.param) != 0:
-            tmp = ','.join('{0}={0}'.format(e) for e in self.param.iteritems())
+            tmp = ','.join('{}={}'.format(k, v) for k, v in self.param.iteritems())
             name.append('-p ' + tmp)
         if len(self.outs) != 0:
             tmp = []
             for entity in self.outs.itervalues():
                 tmp.extend((k, v) for k, v in entity.attr.iteritems() if v is not None)
-            tmp = ','.join('{0}={0}'.format(e) for e in tmp)
+            tmp = ','.join('{}={}'.format(k, v) for k, v in tmp)
             if len(tmp) > 0:
                 name.append('-a ' + tmp)
         return '\\n'.join(name)

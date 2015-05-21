@@ -3,15 +3,18 @@ import json
 import os
 import sys
 
-from common import get_program_directory, load_step_hypergraph, load_plugins
+from common import get_program_directory, parse_provided_resources, parse_requested_entities
 from sofia_.step import Step, Resource, Target
+from template_factory import TemplateFactory
 from textwrap import wrap
 from lhc.argparse import OpenWritableFile
 
 
 def generate_graph(args):
-    graph = load_step_hypergraph(args.workflow_template)
-    args.output.write(str(graph))
+    provided_resources = parse_provided_resources(args)
+    template_factory = TemplateFactory(os.path.join(get_program_directory(), 'templates', args.workflow_template))
+    template = template_factory.make(provided_resources)
+    args.output.write(str(template))
 
 
 def list_entities(args):
@@ -69,6 +72,11 @@ def define_parser(parser):
     subparsers = parser.add_subparsers()
 
     graph_parser = subparsers.add_parser('graph')
+    graph_parser.add_argument('-i', '--input')
+    graph_parser.add_argument('-e', '--entities', nargs='+', default=[])
+    graph_parser.add_argument('-E', '--entity-list')
+    graph_parser.add_argument('-r', '--resources', nargs='+', default=[])
+    graph_parser.add_argument('-R', '--resource_list')
     graph_parser.add_argument('-w', '--workflow-template', default='genomics',
                               help='specify a workflow template (default: genomics).')
     graph_parser.set_defaults(func=generate_graph)

@@ -1,28 +1,29 @@
-from resource import Target
-
-
-class TableIterator(object):
-    def __init__(self, fname, out_col):
-        self.fhndl = open(fname)
-        self.out_col = out_col
-        self.line_no = 0
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        line = self.fhndl.readline()
-        if line == '':
-            raise StopIteration()
-        parts = line.rstrip('\r\n').split('\t')
-        return [parts[col] for col in self.out_col] + [tuple(parts)]
+from lhc.io.csv_ import CsvIterator, CsvSet
+from resource import Target, Resource, Step
 
 
 class TxtIterator(Target):
 
-    EXT = {'.txt'}
-    FORMAT = 'custom_table'
+    EXT = set()
+    FORMAT = None
 
-    def init(self, out_col):
-        self.parser = TableIterator(self.get_filename(),
-                                    [int(col) - 1 for col in out_col.split(',')])
+    def init(self, entry, skip=0):
+        self.parser = CsvIterator(self.get_filename(), entry, skip=skip)
+
+
+class TxtSet(Resource):
+
+    EXT = set()
+    FORMAT = None
+
+    def init(self, entry, index, key, skip=0):
+        self.parser = CsvSet(CsvIterator(self.get_filename(), entry, skip=skip), index(), key)
+
+
+class TxtAccessor(Step):
+    def init(self, set_name, key_name):
+        self.set_name = set_name
+        self.key_name = key_name
+
+    def calculate(self, **kwargs):
+        return kwargs[self.set_name][kwargs[self.key_name]]

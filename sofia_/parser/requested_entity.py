@@ -11,7 +11,10 @@ class RequestedEntity(object):
             if header is None else header
 
     def __str__(self):
-        return self.name + ':' + ':'.join('{}={}'.format(k, ','.join(v)) for k, v in self.attr.iteritems())
+        res = self.name
+        if len(self.attr) > 0:
+            res += ':' + ':'.join('{}={}'.format(k, ','.join(v)) for k, v in self.attr.iteritems())
+        return res
 
     def __eq__(self, other):
         return str(self) == str(other)
