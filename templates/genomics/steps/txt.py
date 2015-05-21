@@ -6,7 +6,7 @@ from collections import defaultdict
 class GenePathwayMap(Resource):
 
     EXT = {'.txt'}
-    FORMAT = 'txt'
+    FORMAT = 'gene_pathway_map'
     OUT = ['gene_pathway_map']
 
     def init(self):

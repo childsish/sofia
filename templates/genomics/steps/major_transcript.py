@@ -8,6 +8,8 @@ class GetCodonSequenceLength(Step):
     OUT = ['major_transcript_length']
 
     def calculate(self, major_transcript):
+        if major_transcript is None:
+            return None
         return len(major_transcript)
 
 

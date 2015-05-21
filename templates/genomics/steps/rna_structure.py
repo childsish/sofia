@@ -22,6 +22,8 @@ class GetTranslationStartMinimumFreeEnergy(Step):
         self.fold = RNA.fold if type == 'mfe' else RNA.pf_fold
 
     def calculate(self, major_transcript, chromosome_sequence_set):
+        if major_transcript is None:
+            return None
         offset = 50
         start_position = Position(major_transcript.chr,
                                   major_transcript.get_5p(),

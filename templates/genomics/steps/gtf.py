@@ -14,10 +14,13 @@ class GtfIterator(Target):
     OUT = ['genomic_feature']
 
     def init(self):
-        self.parser = GtfIterator(self.get_filename())
+        self.parser = GtfEntryIterator(self.get_filename())
 
     def calculate(self):
-        entry = self.parser.next()
+        try: #REMOVEME
+            entry = self.parser.next()
+        except Exception:
+            return None
         while entry.type != 'gene':
             entry = self.parser.next()
         entry.name = entry.name.rsplit('.')[0]

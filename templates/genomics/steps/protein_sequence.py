@@ -23,6 +23,8 @@ class GetPest(Step):
         self.mono = 'mono' if mono else 'avg'
 
     def calculate(self, protein_sequence, molecular_weight_set):
+        if protein_sequence is None:
+            return None
         protein_sequence = protein_sequence.rstrip('*')
         if '*' in protein_sequence:
             warn('protein sequence terminates early')
