@@ -10,10 +10,13 @@ class GetGenomicFeatureByPosition(Step):
         if genomic_position is None:
             return None
         #TODO: select correct gene (currently selecting largest)
-        features = genomic_feature_set.fetch(
-            genomic_position.chr,
-            genomic_position.pos,
-            genomic_position.pos + 1)
+        try:
+            features = genomic_feature_set.fetch(
+                genomic_position.chr,
+                genomic_position.pos,
+                genomic_position.pos + 1)
+        except Exception, e:
+            return None
         if features is None or len(features) == 0:
             return None
         res = sorted(features, key=len)[-1]
