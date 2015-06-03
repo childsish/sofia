@@ -24,6 +24,8 @@ def list_entities(args):
     fhndl.close()
 
     res = []
+
+    graph = load_step_hypergraph(args.workflow_template)
     for entity in json_obj:
         res.append(entity['name'])
         if 'description' in entity:

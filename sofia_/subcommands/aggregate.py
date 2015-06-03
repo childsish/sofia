@@ -226,7 +226,7 @@ def get_annotation(target):
             #sys.exit(1)
 
     tmp = requested_entities
-    row = [entities[str(entity)] for entity in requested_entities]
+    row = [entities.get(str(entity), '') for entity in requested_entities]
     return row
 
 if __name__ == '__main__':
