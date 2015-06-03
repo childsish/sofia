@@ -1,7 +1,8 @@
 import argparse
+import merger
 
-from vcf_.iterator import VcfEntryIterator, VcfLineIterator
-from vcf_ import merger, sample, filter, compare
+from iterator import VcfEntryIterator
+from tools import compare, filter, sample
 
 
 def iter_vcf(fname):
@@ -26,7 +27,7 @@ def get_parser():
 
     sample_parser = subparsers.add_parser('sample')
     sample.define_parser(sample_parser)
-    
+
     compare_parser = subparsers.add_parser('compare')
     compare.define_parser(compare_parser)
 
