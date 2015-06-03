@@ -1,6 +1,6 @@
 import argparse
 
-from iterator import VcfLineIterator
+from lhc.io.vcf.iterator import VcfLineIterator
 from lhc.argparse import OpenReadableFile, OpenWritableFile
 
 
