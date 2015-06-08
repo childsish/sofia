@@ -20,7 +20,7 @@ class IntervalIndex(Index):
         res = []
         bins = self.binner.get_overlapping_bins(key)
         for bin_fr, bin_to in bins:
-            for bin in xrange(bin_fr, bin_to + (bin_fr == bin_to)):
+            for bin in xrange(bin_fr, bin_to + 1):
                 res.extend(v for k, v in self.bins.get(bin, []) if k.overlaps(key))
         return res
     
