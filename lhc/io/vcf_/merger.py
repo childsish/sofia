@@ -40,7 +40,7 @@ class VcfMerger(object):
         self.filters = filters
 
     def __iter__(self):
-        """ Iterate through merged vcf lines.
+        """ Iterate through merged vcf_ lines.
     
         TODO: phased genotypes aren't handled
         """
@@ -276,7 +276,7 @@ def define_parser(parser):
     add_arg('-q', '--quality', type=float, default=0,
             help='Variants below the given quality are filtered.')
     add_arg('-o', '--output', default=sys.stdout, action=OpenWritableFile,
-            help='The name of the merged vcf (default: stdout).')
+            help='The name of the merged vcf_ (default: stdout).')
     add_arg('-f', '--filter', nargs='+', default=[],
             help='Filters to apply')
     parser.set_defaults(func=lambda args: merge(args.inputs, args.quality, args.output, args.bams, args.filter))

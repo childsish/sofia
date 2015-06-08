@@ -30,7 +30,7 @@ class TestVcf(unittest.TestCase):
 
         prc = Popen(['bgzip', self.fname])
         prc.wait()
-        prc = Popen(['tabix', '-p', 'vcf', '%s.gz'%self.fname])
+        prc = Popen(['tabix', '-p', 'vcf_', '%s.gz'%self.fname])
         prc.wait()
     
     def test_iterEntries(self):
