@@ -173,6 +173,12 @@ def aggregate(args):
 
     provided_resources = parse_provided_resources(args)
     requested_entities = parse_requested_entities(args, provided_resources)
+    if len(requested_entities) == 0:
+        import sys
+        sys.stderr.write('Error: No entities were requested. Please provide'
+                         'the names of the entities you wish to calculate.')
+        sys.exit(1)
+
     template_factory = TemplateFactory(os.path.join(get_program_directory(), 'templates', args.workflow_template))
     template = template_factory.make(provided_resources, requested_entities)
 

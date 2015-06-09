@@ -18,25 +18,22 @@ def load_resource(fname, parsers, format=None):
 
 def parse_provided_resources(args):
     provided_resource_definitions = []
-    if args.input is not None:
+    if 'input' in args and args.input is not None:
         provided_resource_definitions.append(args.input + ' -n target')
-    if args.resource_list is not None:
+    if 'resource_list' in args and args.resource_list is not None:
         provided_resource_definitions.extend(line.rstrip('\r\n') for line in open(args.resource_list))
-    provided_resource_definitions.extend(args.resources)
+    if 'resources' in args:
+        provided_resource_definitions.extend(args.resources)
     parser = ResourceParser()
     return parser.parse_resources(provided_resource_definitions)
 
 
 def parse_requested_entities(args, provided_resources):
     requested_entity_definitions = []
-    if args.entity_list is not None:
+    if 'entity_list' in args and args.entity_list is not None:
         requested_entity_definitions.extend(line.rstrip('\r\n') for line in open(args.entity_list))
-    requested_entity_definitions.extend(args.entities)
-    if len(requested_entity_definitions) == 0:
-        import sys
-        sys.stderr.write('Error: No entities were requested. Please provide'
-                         'the names of the entities you wish to calculate.')
-        sys.exit(1)
+    if 'entities' in args:
+        requested_entity_definitions.extend(args.entities)
     parser = EntityParser(provided_resources)
     return parser.parse_entity_requests(requested_entity_definitions)
 
