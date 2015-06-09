@@ -8,7 +8,7 @@ from step.txt import TxtSet, TxtIterator, TxtAccessor
 from step.map import GetIdById, Map
 from wrappers.step_wrapper import StepWrapper
 from wrappers.resource_wrapper import ResourceWrapper
-from graph.step_hyper_graph import StepHyperGraph
+from graph.template import Template
 from graph.entity_graph import EntityGraph
 from entity import Entity
 from lhc.io.csv_ import EntityParser, IndexParser
@@ -32,7 +32,7 @@ class TemplateFactory(object):
 
     def load_template(self):
         entity_graph = self.load_entity_graph()
-        template = StepHyperGraph(entity_graph)
+        template = Template(entity_graph)
         for step in self.steps:
             if issubclass(step, Resource):
                 template.register_step(ResourceWrapper(step))

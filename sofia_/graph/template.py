@@ -1,10 +1,10 @@
 from lhc.graph import HyperGraph
 
 
-class StepHyperGraph(HyperGraph):
+class Template(HyperGraph):
     """ A hyper graph of all the possible step calculation pathways. """
     def __init__(self, entity_graph):
-        super(StepHyperGraph, self).__init__()
+        super(Template, self).__init__()
         self.steps = dict()
         self.entity_graph = entity_graph
 
