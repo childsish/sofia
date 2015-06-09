@@ -8,6 +8,26 @@ class Template(HyperGraph):
         self.steps = dict()
         self.entity_graph = entity_graph
 
+    def __str__(self):
+        """ Convert to string
+
+        :return: A string representing the graph in Graphviz format.
+        """
+        res = ['digraph {} {{'.format(self.name)]
+        for e, vs in sorted(self.graph.es.iteritems()):
+            for v in vs:
+                res.append('    "{}" -> "{}";'.format(*v))
+        for entity in self.entity_graph.entities.itervalues():
+            if 'is_a' in entity:
+                res.append('    "{}" -> "{}" [color=red,type=dotted,label="is_a"]'.format(entity['name'], entity['is_a']))
+            if 'has_a' in entity:
+                for has_a in entity['has_a']:
+                    res.append('    "{}" -> "{}" [color=blue,type=dotted,label="has_a"]'.format(entity['name'], has_a))
+        for v in sorted(self.vs):
+            res.append('    "{}" [shape=box];'.format(v))
+        res.append('}')
+        return '\n'.join(res)
+
     @property
     def entities(self):
         return self.vs
