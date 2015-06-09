@@ -169,6 +169,7 @@ def define_parser(parser):
 
 
 def aggregate(args):
+    import sys
     sys.stderr.write('\n    SoFIA started...\n\n')
 
     provided_resources = parse_provided_resources(args)
