@@ -14,6 +14,7 @@ class StepHyperGraph(HyperGraph):
 
     def register_entity(self, entity):
         self.add_vertex(entity)
+        self.entity_graph.register_entity(entity)
 
     def register_step(self, step):
         """ Add an step to the hyper graph.
@@ -24,6 +25,8 @@ class StepHyperGraph(HyperGraph):
 
         for in_ in step.ins:
             self.add_outward_edge(in_, step.name)
+            self.register_entity(in_)
 
         for out in step.outs:
             self.add_inward_edge(out, step.name)
+            self.register_entity(out)

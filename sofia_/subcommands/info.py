@@ -17,19 +17,17 @@ def generate_graph(args):
 
 
 def list_entities(args):
-    program_dir = get_program_directory()
-    fhndl = open(os.path.join(program_dir, 'templates', args.workflow_template, 'entities.json'))
-    json_obj = json.load(fhndl)
-    fhndl.close()
+    provided_resources = parse_provided_resources(args)
+    requested_entities = parse_requested_entities(args, provided_resources)
+    template_factory = TemplateFactory(os.path.join(get_program_directory(), 'templates', args.workflow_template))
+    template = template_factory.make(provided_resources, requested_entities)
 
-    res = []
-
-    graph = load_step_hypergraph(args.workflow_template)
-    for entity in json_obj:
-        res.append(entity['name'])
+    for entity in sorted(template.entity_graph.entities.itervalues(), key=lambda x: x['name']):
+        args.output.write(entity['name'])
+        args.output.write('\n')
         if 'description' in entity:
-            res.append('\n'.join(wrap(entity['description'], initial_indent='    ', subsequent_indent='    ')))
-    args.output.write('\n'.join(res))
+            args.output.write('\n'.join(wrap(entity['description'], initial_indent='    ', subsequent_indent='    ')))
+            args.output.write('\n')
 
 
 def list_steps(args):
