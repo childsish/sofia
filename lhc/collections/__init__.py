@@ -1,3 +1,5 @@
+__author__ = 'Liam Childs'
+
 from augmented_tree import AugmentedTree
 from interval_tree import IntervalTree
 from sorted_dict import SortedDict
