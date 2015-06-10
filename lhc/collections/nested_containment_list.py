@@ -2,62 +2,38 @@ import numpy as np
 
 from bisect import bisect_left
 from collections import Counter
-from netCDF4 import Dataset
 from lhc.misc.tools import argsort
 from lhc.interval import Interval
 
 
 class NestedContainmentList(object):
-    def __init__(self, root, ivls=None):
-        """Create a nested containment list with a netCDF backend
-        
-        :param root: either a filename or the Dataset object to work upon
-        :type root: string or netCDF4.Dataset
-        :param ivls: if provided will insert the given intervals into the database overriding anything already there
-        :type ivls: list of interval
-        """
-        mode = 'r' if ivls is None else 'w'
-        self.root = Dataset(root, mode) if isinstance(root, basestring) else root
-        self.closed = False
-        if mode == 'w':
-            ivl_table, grp_table, ordering = get_tables(ivls)
-            self._populate_root(ivl_table, grp_table)
+    def __init__(self, intervals=None):
+        ivl_table, grp_table, ordering = get_tables(intervals)
+        self.ivl_table = ivl_table
+        self.grp_table = grp_table
+        self.ordering = ordering
     
-    def intersect(self, ivl, grp_id=0):
+    def intersect(self, interval, grp_id=0):
         """Find all overlapping intervals
         
-        :param interval ivl: find intervals intersecting this interval
+        :param interval interval: find intervals intersecting this interval
         :param integer grp_id: the group to begin looking in
         """
-        grp_var = self.root.variables['grps']
-        ivl_var = self.root.variables['ivls']
         res = []
         
         stk = [grp_id]
         while len(stk) > 0:
-            grp_fr, grp_sz = grp_var[stk.pop(0), :]
+            grp_fr, grp_sz = self.grp_table[stk.pop(0), :]
             grp_to = grp_fr + grp_sz
-            grp_to = grp_fr + bisect_left(ivl_var[grp_fr:grp_to,0], ivl.stop)
+            grp_to = grp_fr + bisect_left(self.ivl_table[grp_fr:grp_to,0], interval.stop)
             while grp_fr < grp_to:
-                start, stop, grp_idx = ivl_var[grp_fr]
-                if ivl.start < stop:
+                start, stop, grp_idx = self.ivl_table[grp_fr]
+                if interval.start < stop:
                     res.append(Interval(start, stop))
                 if grp_idx != -1:
                     stk.append(grp_idx)
                 grp_fr += 1
         return res
-    
-    def close(self):
-        if hasattr(self, 'closed') and not self.closed and hasattr(self.root, 'closed'):
-            self.root.close()
-    
-    def _populate_root(self, ivl_table, grp_table):
-        self.root.createDimension('ivls', len(ivl_table))
-        self.root.createDimension('ivl_col', 3)
-        self.root.createDimension('grps', len(grp_table))
-        self.root.createDimension('grp_col', 2)
-        self.root.createVariable('ivls', 'i4', ('ivls', 'ivl_col'))[:] = ivl_table
-        self.root.createVariable('grps', 'i4', ('grps', 'grp_col'))[:] = grp_table
 
 
 def get_tables(ivls):
@@ -129,8 +105,8 @@ def _get_group_table(parent_ids):
     cpos = 0
     for group_id, (parent_id, group_size) in enumerate(sorted(cnts.iteritems())):
         pnt2grp[parent_id] = group_id
-        grp_table[group_id,0] = cpos
-        grp_table[group_id,1] = group_size
+        grp_table[group_id, 0] = cpos
+        grp_table[group_id, 1] = group_size
         cpos += group_size
     return grp_table, pnt2grp
 
@@ -139,7 +115,7 @@ def _get_interval_table(ivls, pnt2grp, parent_ids):
     ivl_table = np.array([[ivl.start, ivl.stop, -1] for ivl in ivls], dtype='i4')
     for pnt_id, grp_id in pnt2grp.iteritems():
         if pnt_id >= 0:
-            ivl_table[pnt_id,2] = grp_id
+            ivl_table[pnt_id, 2] = grp_id
     idxs = np.argsort(parent_ids)
     ivl_table = ivl_table[idxs]
     return ivl_table, idxs

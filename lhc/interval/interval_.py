@@ -5,12 +5,13 @@ from collections import namedtuple
 @total_ordering
 class Interval(object):
 
-    __slots__ = ('start', 'stop')
+    __slots__ = ('start', 'stop', 'data')
 
     INTERVAL_PAIR = namedtuple('IntervalPair', ('left', 'right'))
 
-    def __init__(self, start, stop):
+    def __init__(self, start, stop, data=None):
         self.start, self.stop = sorted((start, stop))
+        self.data = data
 
     def __str__(self):
         return '[{start!r}, {stop!r})'.format(start=self.start, stop=self.stop)
@@ -187,8 +188,8 @@ class Interval(object):
         return seq[self.start:self.stop]
 
     def __getstate__(self):
-        return {'start': self.start, 'stop': self.stop}
+        return self.start, self.stop
 
     def __setstate__(self, state):
-        for attribute, value in state.iteritems():
+        for attribute, value in zip(self.__slots__, state):
             setattr(self, attribute, value)
