@@ -1,3 +1,4 @@
+import gzip
 import os
 
 from sofia_.step import Resource, Target
@@ -14,7 +15,8 @@ class VcfIterator(Target):
     OUT = ['variant']
     
     def init(self):
-        self.fileobj = open(self.get_filename())
+        filename = self.get_filename()
+        self.fileobj = gzip.open(filename) if filename.endswith('.gz') else open(self.get_filename())
         self.parser = iter(VcfEntryIterator(self.fileobj))
         self.variant = None
         self.c_alt = 0
