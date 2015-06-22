@@ -1,7 +1,7 @@
 import argparse
 
-from gff_.iterator import GffEntryIterator
-from lhc.io.txt_ import compress
+from .gff_.iterator import GffEntryIterator
+from .txt_.tools import compress
 
 
 def iter_gff(fname):
@@ -19,11 +19,8 @@ def get_parser():
 
 def define_parser(parser):
     subparsers = parser.add_subparsers()
-
     compress_parser = subparsers.add_parser('compress')
-    compress_parser = compress.define_parser(compress_parser)
-    compress_parser.set_defaults(column_types=['1s', '4,5v'])
-
+    compress.define_parser(compress_parser)
     return parser
 
 if __name__ == '__main__':

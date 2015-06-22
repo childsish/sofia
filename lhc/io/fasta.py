@@ -1,21 +1,9 @@
+from .fasta_ import indexer, wrap
+from .fasta_.iterator import FastaEntryIterator
+from .txt_.tools import compress
 from argparse import ArgumentParser
 from itertools import izip, product
-from fasta_ import indexer, wrap, compress
-from fasta_.iterator import FastaEntryIterator
 from lhc.binf.sequence import revcmp as rc
-from lhc.argparse import OpenReadableFile, OpenWritableFile
-
-
-def cross_product(xs, ys):
-    for x, y in product(FastaEntryIterator(xs), FastaEntryIterator(ys)):
-        sys.stdout.write('>{}_{}\n{}{}\n'.format(x.hdr, y.hdr, x.seq, y.seq))
-
-
-def revcmp(in_fhndl, out_fhndl, both=False):
-    for hdr, seq in in_fhndl:
-        if both:
-            out_fhndl.write('>{}\n{}\n'.format(hdr, seq))
-        out_fhndl.write('>{}_revcmp\n{}\n'.format(hdr, rc(seq)))
 
 
 def iter_entries(fname):
@@ -24,6 +12,21 @@ def iter_entries(fname):
     for entry in it:
         yield entry
     it.close()
+
+
+def cross_product(xs, ys):
+    for x, y in product(FastaEntryIterator(xs), FastaEntryIterator(ys)):
+        sys.stdout.write('>{}_{}\n{}{}\n'.format(x.hdr, y.hdr, x.seq, y.seq))
+
+
+def revcmp(input, output, both=False):
+    if both:
+        for hdr, seq in input:
+            output.write('>{}\n{}\n'.format(hdr, seq))
+            output.write('>{}_revcmp\n{}\n'.format(hdr, rc(seq)))
+    else:
+        for hdr, seq in input:
+            output.write('>{}_revcmp\n{}\n'.format(hdr, rc(seq)))
 
 
 def compare(a_fname, b_fname):
@@ -73,6 +76,9 @@ def extract(fname, header, out_fname=None):
     out_fhndl.close()
 
 
+# CLI
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -80,8 +86,6 @@ def main():
 
 
 def get_parser():
-    import sys
-
     parser = ArgumentParser()
     subparsers = parser.add_subparsers()
 
@@ -109,14 +113,24 @@ def get_parser():
 
     revcmp_parser = subparsers.add_parser('revcmp')
     revcmp_parser.add_argument('-b', '--both', action='store_true', help='Keep both')
-    revcmp_parser.add_argument('-i', '--input', action=OpenReadableFile, default=sys.stdin)
-    revcmp_parser.add_argument('-o', '--output', action=OpenWritableFile, default=sys.stdout)
-    revcmp_parser.set_defaults(func=lambda args: revcmp(FastaEntryIterator(args.input), args.output, args.both))
+    revcmp_parser.add_argument('input', nargs='?',
+                               help='input file (default: stdin)')
+    revcmp_parser.add_argument('output', nargs='?',
+                               help='output file (default: stdout)')
+    revcmp_parser.set_defaults(func=init_revcmp)
 
     wrap_parser = subparsers.add_parser('wrap')
     wrap.define_parser(wrap_parser)
 
     return parser
+
+def init_revcmp(args):
+    import sys
+    input = sys.stdin if args.input is None else args.input
+    output = sys.stdin if args.output is None else args.output
+    revcmp(input, output)
+    input.close()
+    output.close()
 
 
 if __name__ == '__main__':

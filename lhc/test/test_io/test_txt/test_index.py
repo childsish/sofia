@@ -2,8 +2,8 @@ import os
 import tempfile
 import unittest
 
-from lhc.io.txt_.index import IndexedFile
-from lhc.io.txt_.compress import compress
+from lhc.io.txt_.tools.index import IndexedFile
+from lhc.io.txt_.tools import compress
 
 
 class TestIndexedFile(unittest.TestCase):
