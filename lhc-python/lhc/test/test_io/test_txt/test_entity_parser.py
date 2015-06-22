@@ -49,6 +49,13 @@ class TestEntityParser(unittest.TestCase):
         self.assertEquals(int, entity_factory.entities[0].entities[1].type)
         self.assertEquals(2, entity_factory.entities[0].entities[1].column)
 
+    def test_incorrect_definition(self):
+        parser = EntityParser()
+
+        self.assertRaises(ValueError, parser.parse_definition, 's[s1.i4')
+        self.assertRaises(ValueError, parser.parse_definition, 's1,i4')
+        self.assertRaises(ValueError, parser.parse_definition, 's,i4')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -64,8 +64,6 @@ class EntityParser(object):
                 res.append(Entity(type, entities, name))
                 if self.pos >= len(definition):
                     raise ValueError('premature ending in definition; {}'.format(definition))
-                elif definition[self.pos] != ']':
-                    raise ValueError('expected "]" at position {}, found "{}"'.format(self.pos, definition[self.pos]))
                 self.pos += 1
             elif definition[self.pos].isdigit():
                 fr = self.pos
@@ -74,13 +72,17 @@ class EntityParser(object):
                 column = int(definition[fr:self.pos])
                 res.append(Column(type, column - 1, name))
             else:
-                raise ValueError('invalid entity definition: {}'.format(definition))
+                raise ValueError('invalid entity definition: {}. Expected {} or a digit at position {}.'.format(
+                    definition, self.OPEN_SUBENTITY, self.pos))
 
             if self.pos < len(definition):
                 if definition[self.pos] == self.FIELD_DELIMITER:
                     self.pos += 1
                 elif definition[self.pos] == self.CLOSE_SUBENTITY:
                     break
+                else:
+                    raise ValueError('invalid entity definition: {}. Expected either {} or {} at position {}.'.format(
+                        definition, self.FIELD_DELIMITER, self.CLOSE_SUBENTITY, self.pos))
         return res
 
     @classmethod
