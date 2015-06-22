@@ -1,7 +1,8 @@
 import argparse
 
-from bed_ import depth
-from bed_.iterator import BedEntryIterator
+from .bed_ import depth
+from .bed_.iterator import BedEntryIterator
+from .txt_.tools import compress
 
 
 def iter_bed(fname):
@@ -22,10 +23,13 @@ def get_parser():
 
 def define_parser(parser):
     subparsers = parser.add_subparsers()
-
+    # Compress parser
+    compress_parser = subparsers.add_parser('compress')
+    compress.define_parser(compress_parser)
+    compress_parser.set_defaults(block_delimiter='\n')
+    # Depth parser
     depth_parser = subparsers.add_parser('depth')
     depth.define_parser(depth_parser)
-
     return parser
 
 if __name__ == '__main__':
