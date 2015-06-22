@@ -60,7 +60,7 @@ class EntityParser(object):
                 while self.pos < len(definition) and definition[self.pos].isdigit():
                     self.pos += 1
                 column = int(definition[fr:self.pos])
-                res.append(Column(type, column, name))
+                res.append(Column(type, column - 1, name))
             else:
                 raise ValueError('invalid entity definition: {}'.format(definition))
 
