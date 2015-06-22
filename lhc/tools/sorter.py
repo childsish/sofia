@@ -1,3 +1,4 @@
+import cPickle
 import os
 
 from itertools import chain
@@ -29,7 +30,7 @@ class Sorter(object):
         import tempfile
         tmp_dir = tempfile.mkdtemp()
         fnames = self._split(chain([lines], iterator), tmp_dir)
-        return SortedIteratorMerger([open(fname) for fname in fnames], self.key)
+        return SortedIteratorMerger([unpickle_iter(open(fname)) for fname in fnames], self.key)
 
     def _split(self, iterator, tmp_dir):
         """
@@ -59,7 +60,14 @@ class Sorter(object):
         :param fname: The name of the temporary file.
         :return:
         """
-        out_fhndl = open(fname, 'w')
+        out_fhndl = open(fname, 'wb')
         for line in sorted(lines, key=self.key):
-            out_fhndl.write(line)
+            cPickle.dump(line, out_fhndl)
         out_fhndl.close()
+
+def unpickle_iter(fileobj):
+    try:
+        while True:
+             yield cPickle.load(fileobj)
+    except EOFError:
+        raise StopIteration
