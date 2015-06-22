@@ -28,15 +28,15 @@ class Compressor(object):
             output.write(data)
 
     def compress_with_delimiter(self, input, output):
-        block_size = self.block_size
-        block_delimiter = self.block_delimiter
-
-        data = ''
-        while True:
-            data += input.read(block_size - len(data))
-            if not data:
-                break
-            idx = data.rfind(block_delimiter)
-            output.write(data[:idx])
-            output.flush()
-            data = data[idx:]
+        data = []
+        size = 0
+        for line in input:
+            if size + len(line) >= self.block_size:
+                output.write(''.join(data))
+                output.flush()
+                data = []
+                size = 0
+            data.append(line)
+            size += len(line)
+        output.write(''.join(data))
+        output.flush()

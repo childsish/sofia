@@ -23,16 +23,18 @@ def define_parser(parser):
             help='input file name (default: stdin)')
     add_arg('output', nargs='?',
             help='output file name (default: stdout)')
-    add_arg('-e', '--new-entry', default='\n',
-            help='how to end blocks')
-    parser.set_defaults(func=input)
+    add_arg('-d', '--block-delimiter', default='',
+            help='block can only end with these characters')
+    add_arg('-s', '--block-size', default=65536,
+            help='maximum uncompressed size of a block (default: 65536)')
+    parser.set_defaults(func=init_compress)
     return parser
 
 
-def init(args):
+def init_compress(args):
     input = sys.stdin if args.input is None else open(args.input)
-    output = sys.stdout if args.output is None else open(args.output, 'w')
-    compress(input, output)
+    output = sys.stdout if args.output is None else open(args.output, 'wb')
+    compress(input, output, args.block_size, args.block_delimiter)
     input.close()
     output.close()
 
