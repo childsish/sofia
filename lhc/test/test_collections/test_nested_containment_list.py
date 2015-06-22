@@ -7,7 +7,7 @@ from lhc.collections import nested_containment_list as ncl
 from lhc.interval import Interval
 
 
-class Test(unittest.TestCase):
+class TestNestedContainmentList(unittest.TestCase):
     def setUp(self):
         self.hndl, self.fname = mkstemp()
         os.close(self.hndl)
@@ -77,21 +77,19 @@ class Test(unittest.TestCase):
         ivls = [Interval(0, 10), Interval(2, 30), Interval(3, 20), Interval(5, 7), Interval(9, 15), Interval(20, 25),
                 Interval(21, 22), Interval(25, 31), Interval(35, 39), Interval(36, 39)]
         
-        nclist = ncl.NestedContainmentList(self.fname, ivls)
+        nclist = ncl.NestedContainmentList(ivls)
         
-        self.assertEquals(nclist.root.variables['ivls'][:].tolist(), [[0, 10, -1], [2, 30, 1], [25, 31, -1], [35, 39, 4], [3, 20, 2], [20, 25, 3], [5, 7, -1], [9, 15, -1], [21, 22, -1], [36, 39, -1]])
-        self.assertEquals(nclist.root.variables['grps'][:].tolist(), [[0, 4], [4, 2], [6, 2], [8, 1], [9, 1]])
-        nclist.close()
+        self.assertEquals(nclist.ivl_table.tolist(), [[0, 10, -1], [2, 30, 1], [25, 31, -1], [35, 39, 4], [3, 20, 2], [20, 25, 3], [5, 7, -1], [9, 15, -1], [21, 22, -1], [36, 39, -1]])
+        self.assertEquals(nclist.grp_table.tolist(), [[0, 4], [4, 2], [6, 2], [8, 1], [9, 1]])
     
     def test_intersect(self):
         ivls = [Interval(0, 10), Interval(2, 30), Interval(3, 20), Interval(5, 7), Interval(9, 15), Interval(20, 25),
                 Interval(21, 22), Interval(25, 31), Interval(35, 39), Interval(36, 39)]
         
-        nclist = ncl.NestedContainmentList(self.fname, ivls)
+        nclist = ncl.NestedContainmentList(ivls)
         
         self.assertEquals({Interval(2, 30), Interval(3, 20), Interval(20, 25), Interval(21, 22), Interval(25, 31)},
                           set(nclist.intersect(Interval(15, 30))))
-        nclist.close()
 
 if __name__ == "__main__":
     import sys
