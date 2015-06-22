@@ -1,8 +1,10 @@
 import argparse
 import time
 
+from ..iterator import Iterator
 from ..entity_parser import EntityParser
-from ..sorter import Sorter
+from lhc.tools.sorter import Sorter
+
 
 def sort(input, output, format=('s1',), max_lines=1000000, delimiter='\t'):
     # TODO: use delimiter argument
@@ -10,14 +12,13 @@ def sort(input, output, format=('s1',), max_lines=1000000, delimiter='\t'):
 
     parser = EntityParser()
 
-    entity_factory = [parser.parse_definition(f) for f in format]
-    input = sys.stdin if input is None else open(input)
-    output = sys.stdout if output is None else open(output, 'w')
+    entity_factory = parser.parse_definition(EntityParser.FIELD_DELIMITER.join(format))
     start = time.time()
     sorter = Sorter(entity_factory, max_lines)
-    sorted_iterator = sorter.sort(input)
+    sorted_iterator = sorter.sort(Iterator(input, delimiter=delimiter))
     for i, line in enumerate(sorted_iterator):
-        output.write(line)
+        output.write(delimiter.join(line))
+        output.write('\n')
     duration = time.time() - start
     output.close()
 
@@ -27,13 +28,16 @@ def sort(input, output, format=('s1',), max_lines=1000000, delimiter='\t'):
     sys.stderr.write('Sorted {} lines in {:.3f} seconds{} using{} temporary file{}.\n'.format(i, duration, negator, n_tmp, plural))
 
 
+# CLI
+
+
 def main():
     args = get_parser().parse_args()
     args.func(args)
 
 
 def get_parser():
-    return define_parser(argparse.ArgumentParser())
+    return define_parser(argparse.ArgumentParser("sort is a lhc.python native utility only intended to be used if no other more appropriate solution is available."))
 
 
 def define_parser(parser):
