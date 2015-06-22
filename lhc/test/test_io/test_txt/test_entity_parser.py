@@ -13,7 +13,7 @@ class TestEntityParser(unittest.TestCase):
 
         self.assertEquals(4, parser.parse_definition('i3')(row))
         self.assertEquals('test', parser.parse_definition('s4')(row))
-        self.assertEquals(Interval(2, 3), parser.parse_definition('r[i1,i2]')(row))
+        self.assertEquals(Interval(2, 3), parser.parse_definition('r[i1.i2]')(row))
 
     def test_register_entity(self):
         parser = EntityParser()
@@ -21,12 +21,12 @@ class TestEntityParser(unittest.TestCase):
 
         row = ['2', '3', '4', 'test']
 
-        self.assertEquals(GenomicInterval('test', 2, 3), parser.parse_definition('gr[s4,i1,i2]')(row))
+        self.assertEquals(GenomicInterval('test', 2, 3), parser.parse_definition('gr[s4.i1.i2]')(row))
 
     def test_multiple_output(self):
         parser = EntityParser()
 
-        entity_factory = parser.parse_definition('i1,test.i2,i3,s4')
+        entity_factory = parser.parse_definition('i1.test-i2.i3.s4')
         res = entity_factory(['2', '3', '4', 'test'])
 
         self.assertEquals(2, res[0])
@@ -36,7 +36,7 @@ class TestEntityParser(unittest.TestCase):
     def test_multiple_nested_output(self):
         parser = EntityParser()
 
-        entity_factory = parser.parse_definition('r[i2,i3],f5')
+        entity_factory = parser.parse_definition('r[i2.i3].f5')
 
         self.assertIsInstance(entity_factory.entities[0], Entity)
         self.assertIsInstance(entity_factory.entities[1], Column)
