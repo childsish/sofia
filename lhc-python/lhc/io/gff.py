@@ -1,7 +1,7 @@
 import argparse
 
 from gff_.iterator import GffEntryIterator
-from lhc.io.txt_ import compress
+from lhc.io.txt_.tools import compress
 
 
 def iter_gff(fname):

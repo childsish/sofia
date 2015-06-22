@@ -1,7 +1,7 @@
 import string
-
 from collections import namedtuple
-from entity import Entity, Column
+
+from lhc.io.txt_.entity import Entity, Column
 
 
 class EntryGuesser(object):

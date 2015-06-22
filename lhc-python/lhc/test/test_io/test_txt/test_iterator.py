@@ -3,7 +3,7 @@ import tempfile
 import unittest
 
 from lhc.binf.genomic_coordinate import Interval
-from lhc.io.csv_ import CsvIterator, Entity, Column
+from lhc.io.txt_ import Iterator, Entity, Column
 
 
 class TestITerator(unittest.TestCase):
@@ -19,7 +19,7 @@ class TestITerator(unittest.TestCase):
         os.close(fhndl)
 
     def test_iterator_plain(self):
-        it = CsvIterator(self.fname)
+        it = Iterator(self.fname)
 
         self.assertEquals(self.data[0], tuple(it.next()))
         self.assertEquals(self.data[1], tuple(it.next()))
@@ -30,7 +30,7 @@ class TestITerator(unittest.TestCase):
         self.assertRaises(StopIteration, it.next)
 
     def test_iterator_builder(self):
-        it = CsvIterator(self.fname, Entity(Interval, [Column(str, 0), Column(int, 1), Column(int, 2)]))
+        it = Iterator(self.fname, Entity(Interval, [Column(str, 0), Column(int, 1), Column(int, 2)]))
 
         self.assertEquals(Interval('1', 10, 20), it.next())
         self.assertEquals(Interval('1', 30, 60), it.next())

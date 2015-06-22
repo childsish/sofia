@@ -1,6 +1,6 @@
 import argparse
 
-from txt_ import compress
+from lhc.io.txt_.tools import compress
 
 
 def main():

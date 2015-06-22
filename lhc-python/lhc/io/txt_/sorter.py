@@ -1,49 +1,37 @@
-import argparse
 import os
 
-from functools import partial
 from itertools import chain
-from lhc.argparse import OpenWritableFile, OpenReadableFile
 from lhc.itertools import ChunkedIterator, SortedIteratorMerger
-from tracker_factory import TrackerFactory
-
-
-def default_key(line):
-    return line
-
 
 class Sorter(object):
 
     TMP_FNAME = '{}.txt'
 
-    def __init__(self, iterator, key=default_key, max_lines=2 ** 16):
+    def __init__(self, key=None, max_lines=1000000):
         self.key = key
-        self.iterator = ChunkedIterator(iterator, max_lines)
-        self.sorted_iterator = self._get_sorted_iterator()
+        self.max_lines = max_lines
 
-    def __iter__(self):
-        return self
+    def sort(self, iterator):
+        iterator = ChunkedIterator(iterator, self.max_lines)
+        return self._get_sorted_iterator(iterator)
 
-    def next(self):
-        return self.sorted_iterator.next()
-
-    def _get_sorted_iterator(self):
+    def _get_sorted_iterator(self, iterator):
         """
         Get the iterator over the sorted items.
 
         This function decides whether the items can be sorted in memory or on disk.
         :return:
         """
-        lines = self.iterator.next()
-        if lines[-1] is None:
-            return iter(sorted((line for line in lines if line is not None), key=self.key))
+        lines = list(iterator.next())
+        if len(lines) < self.max_lines:
+            return iter(sorted(lines, key=self.key))
 
         import tempfile
         tmp_dir = tempfile.mkdtemp()
-        fnames = self._split(tmp_dir, lines)
+        fnames = self._split(chain([lines], iterator), tmp_dir)
         return SortedIteratorMerger([open(fname) for fname in fnames], self.key)
 
-    def _split(self, tmp_dir, orig_lines=[]):
+    def _split(self, iterator, tmp_dir):
         """
         Splits the file into several chunks.
 
@@ -54,10 +42,13 @@ class Sorter(object):
         :return: The names of the intermediate files.
         """
         fnames = []
-        for i, lines in enumerate(chain([orig_lines], self.iterator)):
+        for i, lines in enumerate(iterator):
+            lines = list(lines)
             out_fname = os.path.join(tmp_dir, self.TMP_FNAME.format(i + 1))
             self._write(lines, out_fname)
             fnames.append(out_fname)
+            if len(lines) < self.max_lines:
+                break
         return fnames
 
     def _write(self, lines, fname):
@@ -69,48 +60,6 @@ class Sorter(object):
         :return:
         """
         out_fhndl = open(fname, 'w')
-        for line in sorted((line for line in lines if line is not None), key=self.key):
+        for line in sorted(lines, key=self.key):
             out_fhndl.write(line)
         out_fhndl.close()
-
-
-def sort(args):
-    def parse_line(line, trackers):
-        parts = line.rstrip('\r\n').split(args.separator)
-        return tuple(tracker.convert(parts) for tracker in trackers)
-
-    factory = TrackerFactory()
-    trackers = [factory.make(arg) for arg in args.columns]
-    key = partial(parse_line, trackers=trackers)
-    sorter = Sorter(args.input, key=key)
-    for line in sorter:
-        args.output.write(line)
-
-
-def main():
-    args = get_parser().parse_args()
-    args.func(args)
-
-
-def get_parser():
-    return define_parser(argparse.ArgumentParser())
-
-
-def define_parser(parser):
-    import sys
-
-    add_arg = parser.add_argument
-    add_arg('-c', '--columns', nargs='+', default='1s',
-            help='Which columns and types to extract (default: 1s).')
-    add_arg('-i', '--input', action=OpenReadableFile, default=sys.stdin,
-            help='The input file (default: stdin).')
-    add_arg('-o', '--output', action=OpenWritableFile, default=sys.stdout,
-            help='The output file (default: stdout')
-    add_arg('-s', '--separator', default='\t',
-            help='The character seperating the columns (default: \\t).')
-    parser.set_defaults(func=sort)
-    return parser
-
-if __name__ == '__main__':
-    import sys
-    sys.exit(main())
