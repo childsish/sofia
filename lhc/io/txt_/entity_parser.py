@@ -7,11 +7,16 @@ from lhc.interval import Interval
 
 class EntityParser(object):
     """
+    Grammar
     <entity> ::= (<name>.)?<type><definition>
-    <definition> ::= <column> | [<entity>(,<entity>)*]
+    <definition> ::= <column> | "[" <entity> ("," <entity>)* "]"
     <name> ::= [a-zA-Z_]+
     <type> ::= [a-zA-Z]+
-    <column> ::= [0-9]+
+    <column> ::= [0-9]+  # 1-indexed
+
+    Examples
+    s1       - create a string using column 1.
+    r[i2,i3] - create integers from columns 2 and 3 then create an interval from the integers
     """
 
     NAME_AND_TYPE = frozenset(string.ascii_letters + '_.')

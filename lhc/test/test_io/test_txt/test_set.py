@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from lhc.io.csv_ import CsvIterator, CsvSet
+from lhc.io.txt_ import Iterator, Set
 from lhc.indices import CompoundIndex, KeyIndex, IntervalIndex
 from lhc.interval import Interval
 
@@ -20,8 +20,8 @@ class TestSet(unittest.TestCase):
         os.close(fhndl)
 
     def test_set(self):
-        it = CsvIterator(self.fname)
-        data = CsvSet(it, CompoundIndex(KeyIndex, IntervalIndex), key=lambda x: (x.V1, Interval(int(x.V2), int(x.V3))))
+        it = Iterator(self.fname)
+        data = Set(it, CompoundIndex(KeyIndex, IntervalIndex), key=lambda x: (x.V1, Interval(int(x.V2), int(x.V3))))
 
         self.assertEquals(self.data[0], tuple(data[('1', Interval(0, 15))][0]))
 

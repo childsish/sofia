@@ -2,10 +2,10 @@ import os
 import tempfile
 import unittest
 
-from lhc.io.csv_ import EntryGuesser
+from lhc.io.txt_ import EntryGuesser
 
 
-class TestBuilderGuesser(unittest.TestCase):
+class TestEntryGuesser(unittest.TestCase):
     def test_guess_type(self):
         fhndl, fname = tempfile.mkstemp()
         os.write(fhndl, 'a\tb\tc\td\n')

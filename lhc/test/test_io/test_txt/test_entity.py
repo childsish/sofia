@@ -1,7 +1,7 @@
 import unittest
 
 from collections import namedtuple
-from lhc.io.csv_ import Entity, Column
+from lhc.io.txt_ import Entity, Column
 
 
 class TestEntity(unittest.TestCase):
