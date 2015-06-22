@@ -1,20 +1,11 @@
 import argparse
 
-from Bio.bgzf import BgzfWriter
+from ..compressor import Compressor
 
 
-def compress(input, output):
-    if not isinstance(output, BgzfWriter):
-        output = BgzfWriter(fileobj=output)
-    data = ''
-    while True:
-        data += input.read(65536 - len(data))
-        if not data:
-            break
-        idx = data.rfind('\n')
-        output.write(data[:idx])
-        output.flush()
-        data = data[idx:]
+def compress(input, output, block_size=65536, block_delimiter=None):
+    compressor = Compressor(block_size, block_delimiter)
+    compressor.compress(input, output)
 
 
 def main():
@@ -32,6 +23,8 @@ def define_parser(parser):
             help='input file name (default: stdin)')
     add_arg('output', nargs='?',
             help='output file name (default: stdout)')
+    add_arg('-e', '--new-entry', default='\n',
+            help='how to end blocks')
     parser.set_defaults(func=input)
     return parser
 
