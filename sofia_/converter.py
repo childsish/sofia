@@ -1,6 +1,5 @@
 from copy import copy
 from itertools import izip
-from sofia_.entity_wrapper import EntityWrapper
 
 
 class Converter(object):

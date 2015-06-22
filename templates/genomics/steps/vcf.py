@@ -1,7 +1,7 @@
 import os
 
 from sofia_.step import Resource, Target
-from lhc.io.vcf_.index import IndexedVcfFile
+from lhc.io.vcf_.tools.index import IndexedVcfFile
 from lhc.io.vcf_.iterator import VcfEntryIterator
 from lhc.io.vcf_.set_ import VcfSet as VcfSetBase
 from warnings import warn
@@ -14,7 +14,8 @@ class VcfIterator(Target):
     OUT = ['variant']
     
     def init(self):
-        self.parser = iter(VcfEntryIterator(self.get_filename()))
+        self.fileobj = open(self.get_filename())
+        self.parser = iter(VcfEntryIterator(self.fileobj))
         self.variant = None
         self.c_alt = 0
         self.alts = []

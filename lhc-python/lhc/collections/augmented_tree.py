@@ -1,3 +1,5 @@
+__author__ = 'Liam Childs'
+
 import operator
 
 
@@ -11,22 +13,12 @@ class AugmentedTree(object):
         
         :param list ivls: a list of intervals to be stored. The original list will be left untouched.
         """
-        self.ivls = sorted(ivls, key=operator.attrgetter('start'))
+        self.intervals = sorted(ivls, key=operator.attrgetter('start'))
         self.stops = [0 for ivl in ivls]
         self._refresh()
     
     def __iter__(self):
-        return iter(self.ivls)
-    
-    def __getstate__(self):
-        return {
-            'ivls': self.ivls,
-            'stops': self.stops
-        }
-    
-    def __setstate__(self, state):
-        for k, v in state.iteritems():
-            setattr(self, k, v)
+        return iter(self.intervals)
     
     def intersect(self, qry):
         """Find all overlapping intervals
@@ -34,11 +26,11 @@ class AugmentedTree(object):
         :param interval qry: find intervals overlapping this interval
         """
         res = []
-        stk = [(0, len(self.ivls))]
+        stk = [(0, len(self.intervals))]
         while len(stk) > 0:
             lo, hi = stk.pop()
             mid = (hi + lo) / 2
-            ivl = self.ivls[mid]
+            ivl = self.intervals[mid]
             stop = self.stops[mid]
             if qry.overlaps(ivl):
                 res.append(ivl)
@@ -56,14 +48,26 @@ class AugmentedTree(object):
         :param int hi: upper bound of the array/tree
         """
         lo = 0 if lo is None else lo
-        hi = len(self.ivls) if hi is None else hi
+        hi = len(self.intervals) if hi is None else hi
         mid = (hi + lo) / 2
         
         if lo == mid:
-            stop = self.ivls[mid].stop
+            stop = self.intervals[mid].stop
         elif mid + 1 == hi:
-            stop = max(self._refresh(lo, mid), self.ivls[mid].stop)
+            stop = max(self._refresh(lo, mid), self.intervals[mid].stop)
         else:
             stop = max(self._refresh(lo, mid), self._refresh(mid + 1, hi))
         self.stops[mid] = stop
         return stop
+
+
+    # pickle helpers
+
+    __slots__ = ('intervals', 'stops')
+
+    def __getstate__(self):
+        return self.intervals, self.stops
+
+    def __setstate__(self, state):
+        for k, v in zip(self.__slots__, state):
+            setattr(self, k, v)

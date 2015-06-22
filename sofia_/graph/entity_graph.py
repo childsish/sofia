@@ -29,6 +29,18 @@ class EntityGraph(object):
     def __contains__(self, item):
         return item in self.entities
 
+    def register_entity(self, name, description=None, has_a=None, is_a=None):
+        if name in self.entities:
+            return
+        entity = {'name': name}
+        if description is not None:
+            entity['description'] = description
+        if has_a is not None:
+            entity['has_a'] = has_a
+        if is_a is not None:
+            entity['is_a'] = is_a
+        self.entities[name] = entity
+
     def is_equivalent(self, a, b):
         return a in self.get_equivalent_descendents(b) or\
             b in self.get_equivalent_descendents(a)

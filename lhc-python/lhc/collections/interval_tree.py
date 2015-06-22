@@ -3,8 +3,6 @@ import operator
 
 
 class IntervalTree(collections.Iterable):
-    __slots__ = ('ivls', 'left', 'right', 'mid')
-
     def __init__(self, ivls, depth=16, minbucket=64, maxbucket=512, _extent=None):
         depth -= 1
         if (depth == 0 or len(ivls) < minbucket) and len(ivls) < maxbucket:
@@ -19,7 +17,7 @@ class IntervalTree(collections.Iterable):
         mid = (left + right) / 2.0
         
         self.ivls = []
-        lefts, rights  = [], []
+        lefts, rights = [], []
         for ivl in ivls:
             if ivl.stop < mid:
                 lefts.append(ivl)
@@ -43,6 +41,9 @@ class IntervalTree(collections.Iterable):
         if self.right:
             for r in self.right:
                 yield r
+
+    def __getitem__(self, item):
+        return self.intersect(item)
  
     def intersect(self, qry):
         """Find all overlapping intervals
@@ -59,15 +60,15 @@ class IntervalTree(collections.Iterable):
             overlapping.extend(self.right.intersect(qry))
 
         return overlapping
-    
+
+
+    # pickle helpers
+
+    __slots__ = ('ivls', 'left', 'right', 'mid')
+
     def __getstate__(self):
-        return {
-            'ivls': self.ivls,
-            'left': self.left,
-            'right': self.right,
-            'mid': self.mid
-        }
+        return self.ivls, self.left, self.right, self.mid
 
     def __setstate__(self, state):
-        for k, v in state.iteritems():
+        for k, v in zip(self.__slots__, state):
             setattr(self, k, v)

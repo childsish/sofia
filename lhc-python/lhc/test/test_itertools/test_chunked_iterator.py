@@ -14,7 +14,7 @@ class TestChunkedIterator(unittest.TestCase):
         self.assertEquals(it.next(), tuple(x[:6]))
         self.assertEquals(it.next(), tuple(x[6:12]))
         self.assertEquals(it.next(), tuple(x[12:18]))
-        self.assertEquals(it.next(), tuple(x[18:] + [None, None, None, None]))
+        self.assertEquals(it.next(), tuple(x[18:]))
 
 
 if __name__ == '__main__':

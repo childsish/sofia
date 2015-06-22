@@ -1,67 +1,33 @@
 import argparse
-import sys
 
-from fastq_.iterator import FastqEntryIterator
-from fastq_ import split
-from lhc.argparse import OpenReadableFile, OpenWritableFile
+from .fastq_.iterator import FastqEntryIterator
+from .fastq_ import split
+from .txt_.tools import compress
 
 
-def iter_entries(fname):
+def iter_fastq(fname):
     for entry in FastqEntryIterator(fname):
         yield entry
 
 
-def main(argv):
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers()
-    
-    parser_rmdup = subparsers.add_parser('rmdup')
-    parser_rmdup.add_argument('input')
-    parser_rmdup.add_argument('output', nargs='?', default=None)
-    parser_rmdup.set_defaults(func=lambda args:rmdup(args.input, args.output))
-    
-    parser_interleave = subparsers.add_parser('interleave')
-    parser_interleave.add_argument('fastq1')
-    parser_interleave.add_argument('fastq2')
-    parser_interleave.set_defaults(\
-        func=lambda args:interleave(args.fastq1, args.fastq2))
-
-    parser_split = subparsers.add_parser('split')
-    split.define_parser(parser_split)
-    
-    parser_to_fasta = subparsers.add_parser('to_fasta')
-    parser_to_fasta.add_argument('-i', '--input', default=sys.stdin, action=OpenReadableFile,
-                                help='Input fastq file (default: stdin).')
-    parser_to_fasta.add_argument('-o', '--output', default=sys.stdout, action=OpenWritableFile,
-                                help='Output fasta file (default: stdout).')
-    parser_to_fasta.set_defaults(func=lambda args: to_fasta(FastqEntryIterator(args.input), args.output))
-    
-    args = parser.parse_args(argv[1:])
-    args.func(args)
-
-
-def rmdup(infname, outfname=None):
+def rmdup(input, output):
     def meanQuality(v):
         return mean(quality(v[2]))
-        
+
     from collections import defaultdict
     from numpy import mean
-    
-    if outfname is None:
-        outfname = '%s.unq.fastq'%infname.rsplit('.', 1)[1]
+
     visited = defaultdict(list)
-    for hdr, seq, plus, qua in iter_entries(infname):
+    for hdr, seq, plus, qua in input:
         visited[seq].append((hdr, seq, qua))
     print visited.values()[0]
-    outfile = open(outfname, 'w')
     for hdr, seq, qua in sorted(visited.itervalues(), key=meanQuality):
-        outfile.write(hdr)
-        outfile.write('\n')
-        outfile.write(seq)
-        outfile.write('\n+\n')
-        outfile.write(qua)
-        outfile.write('\n')
-    outfile.close()
+        output.write(hdr)
+        output.write('\n')
+        output.write(seq)
+        output.write('\n+\n')
+        output.write(qua)
+        output.write('\n')
 
 
 def quality(qua, offset=33):
@@ -84,9 +50,71 @@ def interleave(fastq1, fastq2, outfile=sys.stdout):
     infile1.close()
     infile2.close()
 
-def to_fasta(in_fhndl, out_fhndl):
-    for entry in in_fhndl:
-        out_fhndl.write('>{}\n{}\n'.format(entry.hdr, entry.seq))
+def to_fasta(input, output):
+    for entry in input:
+        output.write('>{}\n{}\n'.format(entry.hdr, entry.seq))
+
+
+# CLI
+
+
+def main():
+    args = get_parser().parse_args()
+    args.func(args)
+
+
+def get_parser():
+    return define_parser(argparse.ArgumentParser())
+
+
+def define_parser(parser):
+    subparsers = parser.add_subparsers()
+
+    compress_parser = subparsers.add_parser('compress')
+    compress.define_parser(compress_parser)
+    compress_parser.set_defaults(block_delimiter='\n>')
+    
+    parser_rmdup = subparsers.add_parser('rmdup')
+    parser_rmdup.add_argument('input', nargs='?',
+                              help='input file (default: stdin)')
+    parser_rmdup.add_argument('output', nargs='?',
+                              help='output file (default: stdout)')
+    parser_rmdup.set_defaults(func=init_rmdup)
+    
+    parser_interleave = subparsers.add_parser('interleave')
+    parser_interleave.add_argument('fastq1')
+    parser_interleave.add_argument('fastq2')
+    parser_interleave.set_defaults(func=lambda args:interleave(args.fastq1, args.fastq2))
+
+    parser_split = subparsers.add_parser('split')
+    split.define_parser(parser_split)
+    
+    parser_to_fasta = subparsers.add_parser('to_fasta')
+    parser_to_fasta.add_argument('input', nargs='?',
+                                 help='input fastq file (default: stdin).')
+    parser_to_fasta.add_argument('output', nargs='?',
+                                 help='output fasta file (default: stdout).')
+    parser_to_fasta.set_defaults(func=init_to_fasta)
+    
+    args = parser.parse_args(argv[1:])
+    args.func(args)
+
+
+def init_rmdup(args):
+    import sys
+    input = sys.stdin if args.input is None else args.input
+    output = sys.stdout if args.output is None else args.output
+    rmdup(input, output)
+    input.close()
+    output.close()
+
+def init_to_fasta(args):
+    import sys
+    input = sys.stdin if args.input is None else args.input
+    output = sys.stdout if args.output is None else args.output
+    to_fasta(input, output)
+    input.close()
+    output.close()
 
 
 if __name__ == '__main__':

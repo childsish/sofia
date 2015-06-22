@@ -1,2 +1,2 @@
-from interval_ import Interval
-from binner import IntervalBinner
+from .interval import Interval
+from .binner import IntervalBinner
