@@ -10,7 +10,8 @@ class GetIntervalByPosition(Step):
         print type(genomic_interval_set)
         return genomic_interval_set.fetch(
             genomic_position.chr,
-            genomic_position.pos)
+            genomic_position.pos,
+            genomic_position.pos + 1)
     
     def format(self, genomic_interval):
         return genomic_interval.name
