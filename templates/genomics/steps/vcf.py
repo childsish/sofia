@@ -4,6 +4,7 @@ from sofia_.step import Resource, Target
 from lhc.io.vcf_.tools.index import IndexedVcfFile
 from lhc.io.vcf_.iterator import VcfEntryIterator
 from lhc.io.vcf_.set_ import VcfSet as VcfSetBase
+from lhc.io.vcf_.tools.split_alt import _split_variant
 from warnings import warn
 
 
@@ -16,26 +17,12 @@ class VcfIterator(Target):
     def init(self):
         self.fileobj = open(self.get_filename())
         self.parser = iter(VcfEntryIterator(self.fileobj))
-        self.variant = None
-        self.c_alt = 0
-        self.alts = []
-        self.arrays = []
+        self.variants = []
 
     def calculate(self):
-        if self.c_alt == len(self.alts):
-            self.variant = self.parser.next()
-            self.c_alt = 0
-            self.alts = self.variant.alt.split(',')
-            self.arrays = []
-            for sample in self.variant.samples:
-                for k, v in self.variant.samples[sample].iteritems():
-                    if ',' in v:
-                        self.arrays.append((sample, k, v.split(',')))
-        res = self.variant._replace(alt=self.alts[self.c_alt])
-        for sample, k, vs in self.arrays:
-            res.samples[sample][k] = vs[self.c_alt]
-        self.c_alt += 1
-        return res
+        if len(self.variants) == 0:
+            self.variants = _split_variant(self.parser.next())
+        return self.variants.pop()
 
 
 class VcfSet(Resource):
