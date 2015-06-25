@@ -17,9 +17,10 @@ def sort(input, output, format=('s1',), max_lines=1000000, comment='#', delimite
     start = time.time()
     sorter = Sorter(entity_factory, max_lines)
     for line in input:
-        if line.startswith(comment):
-            output.write(line)
-    sorted_iterator = sorter.sort(chain([line], Iterator(input, delimiter=delimiter)))
+        if not line.startswith(comment):
+            break
+        output.write(line)
+    sorted_iterator = sorter.sort(Iterator(chain([line], input), delimiter=delimiter))
     for i, line in enumerate(sorted_iterator):
         output.write(delimiter.join(line))
         output.write('\n')
@@ -63,9 +64,10 @@ def define_parser(parser):
 
 
 def init(args):
+    import sys
     input = sys.stdin if args.input is None else open(args.input)
     output = sys.stdout if args.output is None else open(args.output, 'w')
-    sort(input, output, args.format, args.max_lines, args.delimiter)
+    sort(input, output, args.format, args.max_lines, args.comment, args.delimiter)
     input.close()
     output.close()
 
