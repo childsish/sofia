@@ -18,7 +18,7 @@ class VcfMerger(object):
         self.fnames = fnames
         self.quality = quality
         self.depth = depth
-        self.iterators = [VcfEntryIterator(fname) for fname in fnames]
+        self.iterators = [VcfEntryIterator(open(fname)) for fname in fnames]
         hdrs = [it.hdrs for it in self.iterators]
         self.hdrs = self._merge_headers(hdrs)
         self.samples = reduce(add, [it.samples for it in self.iterators])
