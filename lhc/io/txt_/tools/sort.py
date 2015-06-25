@@ -3,10 +3,11 @@ import time
 
 from ..iterator import Iterator
 from ..entity_parser import EntityParser
+from itertools import chain
 from lhc.tools.sorter import Sorter
 
 
-def sort(input, output, format=('s1',), max_lines=1000000, delimiter='\t'):
+def sort(input, output, format=('s1',), max_lines=1000000, comment='#', delimiter='\t'):
     # TODO: use delimiter argument
     import sys
 
@@ -15,7 +16,10 @@ def sort(input, output, format=('s1',), max_lines=1000000, delimiter='\t'):
     entity_factory = parser.parse_definition(EntityParser.FIELD_DELIMITER.join(format))
     start = time.time()
     sorter = Sorter(entity_factory, max_lines)
-    sorted_iterator = sorter.sort(Iterator(input, delimiter=delimiter))
+    for line in input:
+        if line.startswith(comment):
+            output.write(line)
+    sorted_iterator = sorter.sort(chain([line], Iterator(input, delimiter=delimiter)))
     for i, line in enumerate(sorted_iterator):
         output.write(delimiter.join(line))
         output.write('\n')
@@ -37,21 +41,23 @@ def main():
 
 
 def get_parser():
-    return define_parser(argparse.ArgumentParser("sort is a lhc.python native utility only intended to be used if no other more appropriate solution is available."))
+    return define_parser(argparse.ArgumentParser("sort is a lhc-python native utility only intended to be used if no other more appropriate solution is available."))
 
 
 def define_parser(parser):
     add_arg = parser.add_argument
     add_arg('input', default=None, nargs='?',
-            help='The input file (default: stdin).')
+            help='input file (default: stdin).')
     add_arg('output', default=None, nargs='?',
-            help='The output file (default: stdout')
+            help='output file (default: stdout')
+    add_arg('-c', '--comment', default='#',
+            help='comment character (default: #)')
     add_arg('-f', '--format', nargs='+', default=['s1'],
-            help='Which columns and types to extract (default: s1).')
+            help='columns and types to extract (default: s1).')
     add_arg('-s', '--delimiter', default='\t',
-            help='The character delimiting the columns (default: \\t).')
+            help='character delimiting the columns (default: \\t).')
     add_arg('-m', '--max-lines', default=1000000, type=int,
-            help='The maximum number of lines to sort simultaneously')
+            help='maximum number of lines to sort simultaneously')
     parser.set_defaults(func=init)
     return parser
 
