@@ -27,12 +27,12 @@ class TestTrack(unittest.TestCase):
     def test_contains(self):
         track = Track([I(0, 5, 0), I(10, 15, 1), I(20, 25, 2)])
 
-        self.assertFalse(I(-1, 0) in track)
-        self.assertTrue(I(-1, 1) in track)
-        self.assertTrue(I(1, 4) in track)
-        self.assertTrue(I(4, 6) in track)
-        self.assertTrue(I(-1, 6) in track)
-        self.assertFalse(I(5, 6) in track)
+        self.assertNotIn(I(-1, 0), track)
+        self.assertIn(I(-1, 1), track)
+        self.assertIn(I(1, 4), track)
+        self.assertIn(I(4, 6), track)
+        self.assertIn(I(-1, 6), track)
+        self.assertNotIn(I(5, 6), track)
 
     def test_getitem(self):
         track = Track([I(0, 5, 0), I(10, 15, 1), I(20, 25, 2)])
@@ -76,21 +76,21 @@ class TestTrack(unittest.TestCase):
 
         track[14:21] = 2
 
-        self.assertAlmostEquals(1.5, track.get_cost())
+        self.assertEquals(2, track.get_cost())
 
     def test_get_cost_merge_new(self):
         track = Track([I(0, 5, 0), I(10, 15, 1), I(20, 25, 2)])
 
         track[14:21] = 3
 
-        self.assertEquals(2, track.get_cost())
+        self.assertEquals(3, track.get_cost())
 
     def test_get_cost_nochange(self):
         track = Track([I(0, 5, 0), I(10, 15, 1), I(20, 25, 2)])
 
         self.assertEquals(1, track.get_cost(I(30, 35), 3))
-        self.assertEquals(2, track.get_cost(I(14, 21), 3))
-        self.assertAlmostEquals(1.5, track.get_cost(I(14, 21), 2))
+        self.assertEquals(3, track.get_cost(I(14, 21), 3))
+        self.assertEquals(2, track.get_cost(I(14, 21), 2))
         self.assertRaises(ValueError, track.get_cost, I(14, 21))
 
     def test_intersect(self):

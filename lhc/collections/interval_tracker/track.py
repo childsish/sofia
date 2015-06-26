@@ -2,6 +2,7 @@ __author__ = 'Liam Childs'
 
 import bisect
 
+from math import log
 from operator import or_
 
 
@@ -54,7 +55,7 @@ class Track(object):
                     del lens[i]
             else:
                 lens.append(1)
-        return sum(lens) / float(len(lens))
+        return max(lens)
 
     def _intersect(self, interval):
         return bisect.bisect_right(self.stops, interval.start),\
