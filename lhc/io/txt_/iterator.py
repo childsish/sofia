@@ -14,7 +14,7 @@ class Iterator(object):
 
         self.iterator = iterator
         #self.entry_factory = EntryGuesser().guess_entry(fname) if entry_factory is None else entry_factory
-        self.entry_factory = lambda x: x if entry_factory is None else entry_factory
+        self.entry_factory = (lambda x: x) if entry_factory is None else entry_factory
         self.delimiter = delimiter
         self.skip = skip
         self.comment = comment

@@ -19,7 +19,7 @@ class TestITerator(unittest.TestCase):
         os.close(fhndl)
 
     def test_iterator_plain(self):
-        it = Iterator(self.fname)
+        it = Iterator(open(self.fname))
 
         self.assertEquals(self.data[0], tuple(it.next()))
         self.assertEquals(self.data[1], tuple(it.next()))
@@ -30,7 +30,8 @@ class TestITerator(unittest.TestCase):
         self.assertRaises(StopIteration, it.next)
 
     def test_iterator_builder(self):
-        it = Iterator(self.fname, Entity(Interval, [Column(str, 0), Column(int, 1), Column(int, 2)]))
+        entity_factory = Entity(Interval, [Column(str, 0, 'chr'), Column(int, 1, 'start'), Column(int, 2, 'stop')])
+        it = Iterator(open(self.fname), entity_factory)
 
         self.assertEquals(Interval('1', 10, 20), it.next())
         self.assertEquals(Interval('1', 30, 60), it.next())
