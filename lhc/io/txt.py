@@ -1,6 +1,6 @@
 import argparse
 
-from lhc.io.txt_.tools import check_format, compress, sort
+from lhc.io.txt_.tools import check_format, compress, index, sort
 
 
 def main():
@@ -20,6 +20,9 @@ def define_parser(parser):
 
     compress_parser = subparsers.add_parser('compress')
     compress.define_parser(compress_parser)
+
+    index_parser = subparsers.add_parser('index')
+    index.define_parser(index_parser)
 
     sort_parser = subparsers.add_parser('sort')
     sort.define_parser(sort_parser)
