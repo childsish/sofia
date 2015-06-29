@@ -41,16 +41,16 @@ class EntityParser(object):
     def __init__(self):
         self.pos = None
 
-    def parse_definition(self, definition):
+    def parse(self, definition):
         self.pos = 0
-        res = self._parse_definition(definition)
+        res = self._parse(definition)
         res = res[0] if len(res) == 1 else\
             Entity(namedtuple('Entry', [('V{}'.format(i + 1) if r.name is None else r.name)
                                         for i, r in enumerate(res)]),
                    res, 'Entry')
         return res
 
-    def _parse_definition(self, definition):
+    def _parse(self, definition):
         res = []
         while self.pos < len(definition):
             fr = self.pos
@@ -60,7 +60,7 @@ class EntityParser(object):
             type = self.TYPES[type]
             if definition[self.pos] == self.OPEN_SUBENTITY:
                 self.pos += 1
-                entities = self._parse_definition(definition)
+                entities = self._parse(definition)
                 res.append(Entity(type, entities, name))
                 if self.pos >= len(definition):
                     raise ValueError('premature ending in definition; {}'.format(definition))
