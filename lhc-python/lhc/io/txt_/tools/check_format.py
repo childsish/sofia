@@ -8,7 +8,7 @@ from ..entity_parser import EntityParser
 
 def check_format(input, format):
     parser = EntityParser()
-    entity = parser.parse_definition(format)
+    entity = parser.parse(format)
 
     for i, line in enumerate(input):
         parts = line.rstrip('\r\n').split('\t')
