@@ -21,6 +21,7 @@ def index(input, output, format='s1'):
             break
         entity = entity_factory(line.rstrip('\r\n').split('\t'))
         index.add(entity, block_offset)
+    index = index.compress()
     json.dump(output, index.__getstate__())
 
 

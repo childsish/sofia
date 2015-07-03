@@ -13,7 +13,7 @@ def sort(input, output, format=('s1',), max_lines=1000000, comment='#', delimite
 
     parser = EntityParser()
 
-    entity_factory = parser.parse(EntityParser.FIELD_DELIMITER.join(format))
+    entity_factory = parser.parse_definition(EntityParser.FIELD_DELIMITER.join(format))
     start = time.time()
     sorter = Sorter(entity_factory, max_lines)
     for line in input:
