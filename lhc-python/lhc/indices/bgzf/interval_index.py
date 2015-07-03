@@ -37,6 +37,11 @@ class IntervalIndex(object):
     def get_cost(self, key=None, value=None):
         return max(track.get_cost(key, value) for track in self.tracks)
 
+    def compress(self, factor):
+        for i, track in enumerate(self.tracks):
+            self.tracks[i] = track.compress(factor)
+        return self
+
     # pickle helpers
 
     def __getstate__(self):

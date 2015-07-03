@@ -52,6 +52,18 @@ class TestPointIndex(unittest.TestCase):
     def test_fetch_extraarg(self):
         self.assertEquals({0, 1, 2}, self.index.fetch(5, 20))
 
+    def test_compress(self):
+        index = self.index.compress()
+
+        self.assertEquals([5, 15, 20], index.keys)
+        self.assertEquals([{0}, {1}, {2}], index.values)
+
+    def test_compress_factor(self):
+        index = self.index.compress(factor=2)
+
+        self.assertEquals([5, 15], index.keys)
+        self.assertEquals([{0}, {1, 2}], index.values)
+
 
 if __name__ == '__main__':
     unittest.main()

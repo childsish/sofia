@@ -75,6 +75,31 @@ class PointIndex(object):
             return max(len(v) for v in self.values)
         return max(v.get_cost(None if key is None else key, value) for v in self.values)
 
+    def compress(self, factor=1):
+        if not self.is_leaf:
+            for i, value in enumerate(self.values):
+                self.values[i] = value.compress(factor)
+            return self
+        keys = self.keys
+        values = self.values
+        res = PointIndex(self.index_classes)
+        res.keys.append(keys[0])
+        res.values.append(values[0].copy())
+
+        i = 0
+        while i < len(keys):
+            j = i + 1
+            c_factor = 1
+            while j < len(keys) and (values[j] == res.values or c_factor < factor):
+                res.values[-1].update(values[j])
+                c_factor += 1
+                j += 1
+            if j < len(keys):
+                res.keys.append(keys[j])
+                res.values.append(values[j].copy())
+            i = j
+        return res
+
     def _get_interval(self, start, stop=None):
         fr = bisect_left(self.keys, start)
         to = (fr + (fr < len(self.keys) and self.keys[fr] == start))\
