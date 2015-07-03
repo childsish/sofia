@@ -46,6 +46,7 @@ class IntervalIndex(object):
 
     def __getstate__(self):
         return {
+            'type': type(self),
             'tracks': [track.__getstate__() for track in self.tracks],
             'index_classes': self.index_classes,
             'max_tracks': self.max_tracks
