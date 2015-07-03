@@ -105,6 +105,36 @@ class Track(object):
                 costs.append(1)
         return max(costs)
 
+    def compress(self, factor):
+        if not self.is_leaf:
+            for i, value in enumerate(self.values):
+                self.values[i] = value.compress(factor)
+            return self
+
+        starts = self.starts
+        stops = self.stops
+        values = self.values
+        res = Track(self.index_classes)
+        res.starts.append(starts[0])
+        res.stops.append(stops[0])
+        res.values.append(values[0].copy())
+
+        i = 0
+        while i < len(starts):
+            j = i + 1
+            c_factor = 1
+            while j < len(starts) and (values[j] == res.values or c_factor < factor):
+                res.stops[-1] = stops[j]
+                res.values[-1].update(values[j])
+                c_factor += 1
+                j += 1
+            if j < len(starts):
+                res.starts.append(starts[j])
+                res.stops.append(stops[j])
+                res.values.append(values[j].copy())
+            i = j
+        return res
+
     def _get_interval(self, start, stop):
         return bisect.bisect_right(self.stops, start),\
             bisect.bisect_left(self.starts, stop)

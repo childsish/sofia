@@ -12,11 +12,12 @@ class TestTrack(unittest.TestCase):
         self.track.add([I(0, 5)], 0)
         self.track.add([I(10, 15)], 1)
         self.track.add([I(20, 25)], 2)
+        self.track.add([I(30, 35)], 2)
 
     def test_add(self):
-        self.assertEquals([0, 10, 20], self.track.starts)
-        self.assertEquals([5, 15, 25], self.track.stops)
-        self.assertEquals([{0}, {1}, {2}], self.track.values)
+        self.assertEquals([0, 10, 20, 30], self.track.starts)
+        self.assertEquals([5, 15, 25, 35], self.track.stops)
+        self.assertEquals([{0}, {1}, {2}, {2}], self.track.values)
 
     def test_contains(self):
         self.assertNotIn([I(-1, 0)], self.track)
@@ -94,6 +95,20 @@ class TestTrack(unittest.TestCase):
         self.assertEquals((2, 3), self.track._get_interval(15, 21))
         self.assertEquals((2, 3), self.track._get_interval(24, 25))
         self.assertEquals((3, 3), self.track._get_interval(25, 25))
+
+    def test_compress(self):
+        track = self.track.compress()
+
+        self.assertEquals([0, 10, 20], track.starts)
+        self.assertEquals([5, 15, 25], track.stops)
+        self.assertEquals([{0}, {1}, {2}], track.values)
+
+    def test_compress_factor(self):
+        track = self.track.compress(factor=2)
+
+        self.assertEquals([0, 20], track.starts)
+        self.assertEquals([15, 35], track.stops)
+        self.assertEquals([{0, 1}, {2}], track.values)
 
 if __name__ == '__main__':
     unittest.main()
