@@ -114,6 +114,7 @@ class PointIndex(object):
     def __getstate__(self):
         values = [list(v) for v in self.values] if self.is_leaf else [value.__getstate__() for value in self.values]
         return {
+            'type': type(self),
             'index_classes': self.index_classes,
             'keys': self.keys,
             'values': values

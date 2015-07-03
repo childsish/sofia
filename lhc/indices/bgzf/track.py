@@ -123,7 +123,7 @@ class Track(object):
         while i < len(starts):
             j = i + 1
             c_factor = 1
-            while j < len(starts) and (values[j] == res.values or c_factor < factor):
+            while j < len(starts) and (values[j] == res.values[-1] or c_factor < factor):
                 res.stops[-1] = stops[j]
                 res.values[-1].update(values[j])
                 c_factor += 1
