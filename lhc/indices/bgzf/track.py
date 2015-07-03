@@ -145,7 +145,7 @@ class Track(object):
     # pickle helpers
 
     def __getstate__(self):
-        values = self.values if self.is_leaf else [value.__getstate__() for value in self.values]
+        values = [list(v) for v in self.values] if self.is_leaf else [value.__getstate__() for value in self.values]
         return {
             'index_classes': self.index_classes,
             'starts': self.starts,
@@ -157,7 +157,7 @@ class Track(object):
         self.index_classes = state['index_classes']
         self.starts = state['starts']
         self.stops = state['stops']
-        self.values = state['values'] if self.is_leaf else\
+        self.values = set(state['values']) if self.is_leaf else\
             [self.init_from_state(state, self.index_classes) for state in state['values']]
 
     @staticmethod

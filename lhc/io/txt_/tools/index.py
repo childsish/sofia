@@ -6,7 +6,16 @@ import json
 
 from ..entity_parser import EntityParser
 from ..index_parser import IndexParser
+from lhc.indices.bgzf import PointIndex, IntervalIndex
+from lhc.indices.bgzf.track import Track
 from Bio import bgzf
+
+
+class ClassEncoder(json.JSONEncoder):
+    def default(self, o):
+        if o in {PointIndex, IntervalIndex, Track}:
+            return o.__name__[0]
+        return super(ClassEncoder, self).default(o)
 
 
 def index(input, output, format='s1'):
@@ -22,7 +31,7 @@ def index(input, output, format='s1'):
         entity = entity_factory(line.rstrip('\r\n').split('\t'))
         index.add(entity, block_offset)
     index = index.compress()
-    json.dump(output, index.__getstate__())
+    json.dump(index.__getstate__(), output)
 
 
 def main():
