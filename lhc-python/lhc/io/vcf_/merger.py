@@ -141,8 +141,10 @@ class VcfMerger(object):
     
     def _next_line(self, idx):
         entry = self.iterators[idx].next()
+        local_variables = entry._asdict()
+        local_variables.update({'NOCALL': 'NOCALL', 'PASS': 'PASS'})
         try:
-            while any(eval(filter, entry._asdict()) for filter in self.filters):
+            while any(eval(filter, local_variables) for filter in self.filters):
                 entry = self.iterators[idx].next()
         except StopIteration:
             pass
@@ -151,7 +153,7 @@ class VcfMerger(object):
             it = self.iterators[idx]
             sys.stderr.write('error occured on line {} of {}\n'.format(it.line_no, it.fname))
             raise e
-        if any(eval(filter, entry._asdict()) for filter in self.filters):
+        if any(eval(filter, local_variables) for filter in self.filters):
             raise StopIteration
         return entry
     
