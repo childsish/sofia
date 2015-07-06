@@ -2,10 +2,9 @@ __author__ = 'Liam Childs'
 
 import argparse
 
-from .vcf_ import merger
 from .vcf_.iterator import VcfEntryIterator
-from .vcf_.tools import compare, filter, sample, split_alt, trim_alt
-from .txt_.tools import compress
+from .vcf_.tools import compare, filter, sample, split_alt, trim_alt, merge
+from lhc.io.txt_.tools import compress
 
 
 def iter_vcf(fname):
@@ -30,7 +29,7 @@ def get_parser():
     compress_parser.set_defaults(block_delimiter='\n')
     # Merge parser
     merge_parser = subparsers.add_parser('merge')
-    merger.define_parser(merge_parser)
+    merge.define_parser(merge_parser)
     # Filter parser
     filter_parser = subparsers.add_parser('filter')
     filter.define_parser(filter_parser)
