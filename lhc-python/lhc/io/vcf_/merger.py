@@ -146,6 +146,8 @@ class VcfMerger(object):
         try:
             while any(eval(filter, local_variables) for filter in self.filters):
                 entry = self.iterators[idx].next()
+                local_variables = entry._asdict()
+                local_variables.update({'NOCALL': 'NOCALL', 'PASS': 'PASS'})
         except StopIteration:
             pass
         except Exception, e:
