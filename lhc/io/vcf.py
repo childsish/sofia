@@ -12,8 +12,7 @@ def iter_vcf(fname):
 
 
 def main():
-    parser = get_parser()
-    args = parser.parse_args()
+    args = get_parser().parse_args()
     args.func(args)
 
 
