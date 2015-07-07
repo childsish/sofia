@@ -12,10 +12,8 @@ class VcfMerger(object):
     
     CHR_REGX = re.compile('\d+$|X$|Y$|M$')
     
-    def __init__(self, iterators, quality=0, depth=0, bams=[], filters=[]):
+    def __init__(self, iterators, bams=[], filters=[]):
         self.iterators = [VcfEntryIterator(i) for i in iterators]
-        self.quality = quality
-        self.depth = depth
         hdrs = [it.hdrs for it in self.iterators]
         self.hdrs = self._merge_headers(hdrs)
         self.samples = reduce(add, [it.samples for it in self.iterators])
