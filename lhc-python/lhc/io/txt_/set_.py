@@ -1,5 +1,5 @@
 class Set(object):
-    def __init__(self, iterator, index, key=None):
+    def __init__(self, iterator, index_factory=None, key=None):
         self.index = index
         key = (lambda x: x) if key is None else key
         for entry in iterator:

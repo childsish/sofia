@@ -26,6 +26,7 @@ class EntityParser(object):
     * Can not use ',' in windows command lines.
     """
 
+    VALID_CHARS = set(string.ascii_letters + string.digits + '_')
     NAME_AND_TYPE = frozenset(string.ascii_letters + '_-')
     TYPES = {
         's': str,  # (s)tring
