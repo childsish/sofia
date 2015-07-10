@@ -32,6 +32,62 @@ https://github.com/childsish/sofia/releases/latest
 
 `sofia /home/user/tmp/tmp.vcf -e chromosome_id position gene_id amino_acid_variant variant_type -r /home/user/tmp/tmp.gtf /home/user/tmp/tmp.fasta`
 
+Using the API
+-------------
+
+SoFIA can also be used programatically. All output will be automatically printed to standard output.
+
+1. Create provided resources
+
+```python
+
+    from sofia_.parser.provided_resource import ProvidedResource
+    
+    provided_resources = {
+        'target': ProvidedResource('/absolute/path/to/target/file.extension', 'target')
+        'sequence': ProvidedResource('/absolute/path/to/sequence/file.fasta'),
+        'features': ProvidedResource('/absolute/path/to/feature/file.gtf')
+    }
+```
+
+2. Create requested entities
+
+```python
+
+    from sofia_.parser.requested_entity import RequestedEntity
+    
+    requested_entities = [
+        RequestedEntity('gene_name'),
+        RequestedEntity('amino_acid_variant'),
+        RequestedEntity('variant_type')
+    ]
+
+```
+
+3. Create the template
+
+```python
+
+    from sofia_.template_factory import TemplateFactory
+    
+    template_factory = TemplateFactory('/absolute/path/to/template_directory')
+    template = template_factor.make(provided_resources, requested_entities)
+    
+```
+
+4. Call the aggregator
+
+```python
+ 
+    from collections import namedtuple
+    from sofia_.subcommands.aggregate import Aggregator
+    
+    Arguments = namedtuple('Arguments', ['header', 'template', 'processes', 'simultaneous_entries'])
+    aggregator = Aggregator(template, 'template_directory')
+    aggregator.aggregate(requested_entities, provided_resources, Arguments(None, None, 1, None))
+     
+```
+
 Defining a template
 -------------------
 
