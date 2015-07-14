@@ -5,8 +5,6 @@ from collections import namedtuple
 @total_ordering
 class Interval(object):
 
-    __slots__ = ('start', 'stop', 'data')
-
     INTERVAL_PAIR = namedtuple('IntervalPair', ('left', 'right'))
 
     def __init__(self, start, stop, data=None):
@@ -186,10 +184,3 @@ class Interval(object):
     
     def get_sub_seq(self, seq):
         return seq[self.start:self.stop]
-
-    def __getstate__(self):
-        return self.start, self.stop
-
-    def __setstate__(self, state):
-        for attribute, value in zip(self.__slots__, state):
-            setattr(self, attribute, value)

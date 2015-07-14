@@ -137,23 +137,6 @@ class TestGenomicFeature(unittest.TestCase):
         self.assertEquals(seq[:5] + seq[25:30], feature['l3c'].get_sub_seq(sequence_set))
         self.assertEquals(seq[40:60], feature['l3d'].get_sub_seq(sequence_set))
 
-    def test_pickling(self):
-        l2b = Interval('1', 0, 100)
-        l3c = Interval('1', 0, 30)
-        l3d = Interval('1', 40, 60)
-        l4a = Interval('1', 0, 5)
-        l4b = Interval('1', 25, 30)
-        feature = GenomicFeature('l2b', 'transcript', l2b)
-        feature.add_child(GenomicFeature('l3c', 'CDS', l3c))
-        feature.add_child(GenomicFeature('l3d', 'CDS', l3d))
-        feature['l3c'].add_child(GenomicFeature('l4a', 'CDS', l4a))
-        feature['l3c'].add_child(GenomicFeature('l4b', 'CDS', l4b))
-
-        unpickled_feature = cPickle.loads(cPickle.dumps(feature))
-
-        self.assertEquals('l2b', unpickled_feature.name)
-        self.assertEquals({'l3c', 'l3d'}, set(child.name for child in unpickled_feature.children))
-
 
 if __name__ == '__main__':
     import sys

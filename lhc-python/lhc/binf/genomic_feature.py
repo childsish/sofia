@@ -5,29 +5,14 @@ from lhc.collections.sorted_list import SortedList
 
 class GenomicFeature(Interval):
 
-    __slots__ = ('_chr', 'start', 'stop', 'strand', 'children', 'name', 'type', 'attr')
-
-    def __init__(self, name, type=None, interval=None, attr={}):
-        self._chr = None
+    def __init__(self, name, type=None, interval=None, data=None):
         self.children = SortedList()
         if interval is None:
-            super(GenomicFeature, self).__init__(None, None, None)
+            super(GenomicFeature, self).__init__(None, None, None, data)
         else:
-            super(GenomicFeature, self).__init__(interval.chr, interval.start, interval.stop, interval.strand)
+            super(GenomicFeature, self).__init__(interval.chr, interval.start, interval.stop, interval.strand, data)
         self.name = name
         self.type = type
-        self.attr = attr
-
-    @property
-    def chr(self):
-        return self._chr
-
-    @chr.setter
-    def chr(self, value):
-        self._chr = value
-        if hasattr(self, 'children'):  # Check needed due to depickling.
-            for child in self.children:
-                child.chr = value
 
     def __len__(self):
         if len(self.children) == 0:
@@ -98,29 +83,3 @@ class GenomicFeature(Interval):
         if depth == 0:
             return res if self.strand == '+' else revcmp(res)
         return res
-
-    def __getstate__(self):
-        return {
-            'chr': self.chr,
-            'start': self.start,
-            'stop': self.stop,
-            'strand': self.strand,
-            'children': [child.__getstate__() for child in self.children],
-            'name': self.name,
-            'type': self.type,
-            'attr': self.attr
-        }
-
-    def __setstate__(self, state):
-        setattr(self, 'chr', state['chr'])
-        setattr(self, 'start', state['start'])
-        setattr(self, 'stop', state['stop'])
-        setattr(self, 'strand', state['strand'])
-        setattr(self, 'name', state['name'])
-        setattr(self, 'type', state['type'])
-        setattr(self, 'attr', state['attr'])
-        setattr(self, 'children', SortedList())
-        for child_state in state['children']:
-            child = GenomicFeature(child_state['name'])
-            child.__setstate__(child_state)
-            self.children.add(child)
