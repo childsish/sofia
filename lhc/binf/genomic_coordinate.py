@@ -7,8 +7,6 @@ from lhc.interval import Interval as BaseInterval
 @total_ordering
 class Position(object):
 
-    __slots__ = ('chr', 'pos', 'strand')
-
     def __init__(self, chromosome, position, strand='+'):
         self.chr = chromosome
         self.pos = position
@@ -37,34 +35,24 @@ class Position(object):
             pos = pos.pos
         return Interval(self.chr, self.pos, pos, self.strand)
 
-    def __getstate__(self):
-        return {'chr': self.chr, 'pos': self.pos, 'strand': self.strand}
-
-    def __setstate__(self, state):
-        for attribute, value in state.iteritems():
-            setattr(self, attribute, value)
-
-
 
 @total_ordering
 class Interval(BaseInterval):
-
-    __slots__ = ('chr', 'start', 'stop', 'strand')
     
     REVCMP = string.maketrans('acgtuwrkysmbhdvnACGTUWRKYSMBHDVN',
                               'tgcaawymrskvdhbnTGCAAWYMRSKVDHBN')
     
-    def __init__(self, chm, start, stop, strand='+'):
+    def __init__(self, chr, start, stop, strand='+', data=None):
         """Create a genomic interval
         
-        :param string chm: the chromosome the interval is on
+        :param string chr: the chromosome the interval is on
         :param int start: the start position of the interval (inclusive, 0-indexed)
         :param int stop: the stop position of the interval (not inclusive)
         :param strand: the strand the interval is on
         :type strand: '+' or '-'
         """
-        super(Interval, self).__init__(start, stop)
-        self.chr = chm
+        super(Interval, self).__init__(start, stop, data)
+        self.chr = chr
         self.strand = strand
     
     def __str__(self):
@@ -181,10 +169,3 @@ class Interval(BaseInterval):
     def get_3p(self):
         return self.stop if self.strand == '+' else\
             self.start
-
-    def __getstate__(self):
-        return {'chr': self.chr, 'start': self.start, 'stop': self.stop, 'strand': self.strand}
-
-    def __setstate__(self, state):
-        for attribute, value in state.iteritems():
-            setattr(self, attribute, value)
