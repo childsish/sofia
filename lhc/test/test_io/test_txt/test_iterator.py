@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from lhc.binf.genomic_coordinate import Interval
+from lhc.binf.genomic_coordinate import GenomicInterval as Interval
 from lhc.io.txt_ import Iterator, Entity, Column
 
 

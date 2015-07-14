@@ -1,4 +1,4 @@
-from genomic_coordinate import Interval
+from genomic_coordinate import GenomicInterval as Interval
 from lhc.binf.sequence import revcmp
 from lhc.collections.sorted_list import SortedList
 

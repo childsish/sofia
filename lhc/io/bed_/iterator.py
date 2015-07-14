@@ -1,5 +1,5 @@
 from collections import namedtuple
-from lhc.binf.genomic_coordinate import Interval
+from lhc.binf.genomic_coordinate import GenomicInterval as Interval
 from lhc.filetools.flexible_opener import open_flexibly
 
 

@@ -1,7 +1,6 @@
-import cPickle
 import unittest
 
-from lhc.binf.genomic_coordinate import Interval
+from lhc.binf.genomic_coordinate import GenomicInterval as Interval
 from lhc.binf.genomic_feature import GenomicFeature
 
 

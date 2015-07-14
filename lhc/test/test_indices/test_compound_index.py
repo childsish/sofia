@@ -1,7 +1,7 @@
 import unittest
 
 from lhc.interval import Interval
-from lhc.binf.genomic_coordinate import Interval as GenomicInterval
+from lhc.binf.genomic_coordinate import GenomicInterval
 from lhc.indices.compound_index import CompoundIndex, KeyValuePair
 from lhc.indices.key_index import KeyIndex
 from lhc.indices.point_index import PointIndex

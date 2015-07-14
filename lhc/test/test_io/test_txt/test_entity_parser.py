@@ -1,7 +1,7 @@
 import unittest
 
 from lhc.interval import Interval
-from lhc.binf.genomic_coordinate import Interval as GenomicInterval
+from lhc.binf.genomic_coordinate import GenomicInterval
 from lhc.io.txt_ import EntityParser, Entity, Column
 
 

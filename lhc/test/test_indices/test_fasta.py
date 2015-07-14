@@ -4,7 +4,7 @@ import tempfile
 import unittest
 
 from lhc.indices.fasta import FastaIndex
-from lhc.binf.genomic_coordinate import Position
+from lhc.binf.genomic_coordinate import GenomicPosition as Position
 
 class TestFastaIndex(unittest.TestCase):
     
