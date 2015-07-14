@@ -1,6 +1,6 @@
 class Set(object):
     def __init__(self, iterator, index_factory=None, key=None):
-        self.index = index
+        self.index = index_factory
         key = (lambda x: x) if key is None else key
         for entry in iterator:
             self.index[key(entry)] = entry
