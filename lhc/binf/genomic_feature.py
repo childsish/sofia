@@ -45,7 +45,7 @@ class GenomicFeature(Interval):
 
     # Position functions
     
-    def get_abs_pos(self, pos, partial_rel_pos=0):
+    def get_abs_pos(self, pos):
         if len(self.children) == 0:
             return self.start + pos if self.strand == '+' else self.stop + pos - len(self)
 

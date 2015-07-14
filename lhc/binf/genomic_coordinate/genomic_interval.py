@@ -1,15 +1,10 @@
 __author__ = 'Liam Childs'
 
-import string
-
 from lhc.interval import Interval
+from lhc.binf.sequence import revcmp
 
 
 class GenomicInterval(Interval):
-
-    REVCMP = string.maketrans('acgtuwrkysmbhdvnACGTUWRKYSMBHDVN',
-                              'tgcaawymrskvdhbnTGCAAWYMRSKVDHBN')
-
     def __init__(self, chr, start, stop, strand='+', data=None):
         """Create a genomic interval
 
@@ -127,7 +122,7 @@ class GenomicInterval(Interval):
         to = self.stop if to is None else min(self.stop, to)
         res = seq[self.chr][fr:to]
         if self.strand == '-':
-            res = res.translate(GenomicInterval.REVCMP)[::-1]
+            res = revcmp(res)
         return res
 
     def get_5p(self):
