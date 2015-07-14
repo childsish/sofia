@@ -5,7 +5,7 @@ from lhc.binf.sequence import revcmp
 
 
 class GenomicInterval(Interval):
-    def __init__(self, chr, start, stop, strand='+', data=None):
+    def __init__(self, chr, start, stop, strand='+', type=None, data=None):
         """Create a genomic interval
 
         :param string chr: the chromosome the interval is on
@@ -17,6 +17,7 @@ class GenomicInterval(Interval):
         super(GenomicInterval, self).__init__(start, stop, data)
         self.chr = chr
         self.strand = strand
+        self.type = type
 
     def __str__(self):
         return '{}:{!r}-{!r}'.format(self.chr, self.start, self.stop)
