@@ -2,7 +2,8 @@ import unittest
 
 from lhc.binf.genomic_coordinate import GenomicInterval as Interval
 
-class TestGeneticCoordinate(unittest.TestCase):
+
+class TestGenomicInterval(unittest.TestCase):
     def test_comparisons(self):
         a = Interval('1', 0, 10)
         b = Interval('1', 5, 10)

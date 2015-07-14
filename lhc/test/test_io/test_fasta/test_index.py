@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from lhc.io.fasta_.compress import compress
+#from lhc.io.fasta_.compress import compress
 from lhc.io.fasta_.index import IndexedFastaSet
 
 
@@ -21,7 +21,7 @@ class TestIndexedFastaSet(unittest.TestCase):
                 os.write(fhndl, '\n')
         os.close(fhndl)
 
-        compress(self.fname)
+        #compress(self.fname)
 
     def test_get_by_key(self):
         parser = IndexedFastaSet('{}.bgz'.format(self.fname))
