@@ -30,7 +30,7 @@ class TestTools(TestCase):
         self.assertEquals(res, [2, 3, 6, 7, 8, 5, 4, 1, 0])
     
     def test_argsortInterval(self):
-        from lhc.binf.genomic_coordinate import Interval
+        from lhc.binf.genomic_coordinate import GenomicInterval as Interval
         values = [Interval('1', 10, 20), Interval('1', 5, 15), Interval('1', 15, 25)]
         
         res = argsort(values)

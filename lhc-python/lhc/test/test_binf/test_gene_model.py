@@ -1,7 +1,7 @@
 import unittest
 
 from lhc.binf.gene_model import Exon, Transcript, Gene
-from lhc.binf.genomic_coordinate import Interval
+from lhc.binf.genomic_coordinate import GenomicInterval as Interval
 
 
 class TestGeneModel(unittest.TestCase):
