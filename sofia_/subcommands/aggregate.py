@@ -229,7 +229,7 @@ def get_annotation(target):
             import sys
             import traceback
             traceback.print_exception(*sys.exc_info(), file=sys.stderr)
-            sys.stderr.write('Error processing entry on line {}\n'.format(solution.steps['target'].parser.line_no))
+            sys.stderr.write('Error processing entry on line {}\n'.format(solution.steps['target'].interface.line_no))
             #sys.exit(1)
 
     tmp = requested_entities
