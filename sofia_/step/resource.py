@@ -12,10 +12,17 @@ class Resource(Step):
     def __init__(self, resources=None, dependencies=None, param={}, ins=None, outs=None, converters={}, name=None, format=None):
         super(Resource, self).__init__(resources, dependencies, param, ins, outs, converters, name)
         self.format = self.FORMAT if format is None else format
+        self.interface = None
+
+    def init(self):
+        self.interface = self.get_interface(self.get_filename())
+
+    def get_interface(self, filename):
+        raise NotImplementedError()
     
     def calculate(self):
         """ Return the resource. """
-        return self.parser
+        return self.interface
     
     def get_filename(self):
         """ Returns the filename of the resource. """
@@ -50,7 +57,7 @@ class Target(Resource):
 
     def calculate(self):
         """ Get the next entity in the resource. """
-        return self.parser.next()
+        return self.interface.next()
 
     def _get_name(self, name=None):
         """ Overridden to return unique name. """

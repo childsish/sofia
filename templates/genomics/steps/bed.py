@@ -13,14 +13,8 @@ class BedIterator(Target):
     FORMAT = 'bed'
     OUT = ['genomic_interval']
     
-    def init(self):
-        self.parser = BedLineIterator(self.get_filename())
-
-    def calculate(self):
-        return self.parser.next()
-
-    def format(self, genomic_interval):
-        return genomic_interval['data'].name
+    def get_interface(self, filename):
+        return BedLineIterator(filename)
 
 
 class BedSet(Resource):
@@ -29,18 +23,15 @@ class BedSet(Resource):
     FORMAT = 'bed'
     OUT = ['genomic_interval_set']
 
-    def init(self):
-        fname = self.get_filename()
-        if os.path.exists('{}.tbi'.format(fname)):
+    def get_interface(self, filename):
+        if os.path.exists('{}.tbi'.format(filename)):
             try:
                 import pysam
-                self.parser = IndexedBedFile(pysam.TabixFile(fname))
-                return
+                return IndexedBedFile(pysam.TabixFile(filename))
             except ImportError:
                 pass
-        if os.path.exists('{}.lci'.format(fname)):
+        if os.path.exists('{}.lci'.format(filename)):
             from lhc.io.txt_ import index
-            self.parser = IndexedBedFile(index.IndexedFile(fname))
-            return
-        warn('no index available for {}, loading whole file...'.format(fname))
-        self.parser = BedSetBase(BedLineIterator(fname))
+            return IndexedBedFile(index.IndexedFile(filename))
+        warn('no index available for {}, loading whole file...'.format(filename))
+        return BedSetBase(BedLineIterator(filename))

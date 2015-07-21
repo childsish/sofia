@@ -13,13 +13,13 @@ class GffIterator(Target):
     FORMAT = 'gff'
     OUT = ['genomic_feature']
 
-    def init(self):
-        self.parser = iter(GffEntryIterator(self.get_filename()))
+    def get_interface(self, filename):
+        return iter(GffEntryIterator(filename))
 
     def calculate(self):
-        entry = self.parser.next()
+        entry = self.interface.next()
         while entry.type != 'gene':
-            entry = self.parser.next()
+            entry = self.interface.next()
         entry.name = entry.name.rsplit('.')[0]
         return entry
 
@@ -27,20 +27,18 @@ class GffIterator(Target):
 class GffSet(Resource):
     
     EXT = ['.gff', '.gff.gz', '.gff.bgz', '.gff3', '.gff3.gz', '.gff3.bgz']
+    FORMAT = 'gff'
     OUT = ['genomic_feature_set']
 
-    def init(self):
-        fname = self.get_filename()
-        if os.path.exists('{}.tbi'.format(fname)):
+    def get_interface(self, filename):
+        if os.path.exists('{}.tbi'.format(filename)):
             try:
                 import pysam
-                self.parser = IndexedGffFile(pysam.TabixFile(fname))
-                return
+                return IndexedGffFile(pysam.TabixFile(filename))
             except ImportError:
                 pass
-        if os.path.exists('{}.lci'.format(fname)):
+        if os.path.exists('{}.lci'.format(filename)):
             from lhc.io.txt_ import index
-            self.parser = IndexedGffFile(index.IndexedFile(fname))
-            return
-        warn('no index available for {}, loading whole file...'.format(fname))
-        self.parser = GffSetBase(GffEntryIterator(fname))
+            return IndexedGffFile(index.IndexedFile(filename))
+        warn('no index available for {}, loading whole file...'.format(filename))
+        return GffSetBase(GffEntryIterator(filename))

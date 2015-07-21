@@ -9,14 +9,15 @@ class GenePathwayMap(Resource):
     FORMAT = 'gene_pathway_map'
     OUT = ['gene_pathway_map']
 
-    def init(self):
-        fhndl = open(self.get_filename())
+    def get_interface(self, filename):
+        fhndl = open(filename)
         fhndl.next()
-        self.parser = defaultdict(set)
+        res = defaultdict(set)
         for line in fhndl:
             gene_id, pathway_id = line.strip('\r\n').split('\t')
-            self.parser[gene_id].add(pathway_id)
+            res[gene_id].add(pathway_id)
         fhndl.close()
+        return res
 
 
 class GeneGotermMap(Resource):
@@ -25,11 +26,12 @@ class GeneGotermMap(Resource):
     FORMAT = 'txt'
     OUT = ['gene_goterm_map']
 
-    def init(self):
-        fhndl = open(self.get_filename())
+    def get_interface(self, filename):
+        fhndl = open(filename)
         fhndl.next()
-        self.parser = defaultdict(set)
+        res = defaultdict(set)
         for line in fhndl:
             parts = [part.strip() for part in line.split('\t')]
-            self.parser[parts[0]].add((parts[1], parts[2]))
+            res[parts[0]].add((parts[1], parts[2]))
         fhndl.close()
+        return res

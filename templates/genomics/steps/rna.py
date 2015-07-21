@@ -7,8 +7,8 @@ class RnaIterator(Target):
     FORMAT = 'rna'
     OUT = ['rna_structure_iterator']
 
-    def init(self):
-        self.parser = None
+    def get_interface(self, filename):
+        raise NotImplementedError
 
 
 class RnaSet(Target):
@@ -17,5 +17,5 @@ class RnaSet(Target):
     TYPE = 'rna_structure'
     OUT = ['rna_structure_set']
 
-    def init(self):
-        self.parser = None
+    def get_interface(self, filename):
+        raise NotImplementedError

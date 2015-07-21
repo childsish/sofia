@@ -15,15 +15,14 @@ class VcfIterator(Target):
     FORMAT = 'vcf'
     OUT = ['variant']
     
-    def init(self):
-        filename = self.get_filename()
-        self.fileobj = gzip.open(filename) if filename.endswith('.gz') else open(filename)
-        self.parser = iter(VcfEntryIterator(self.fileobj))
+    def get_interface(self, filename):
         self.variants = []
+        fileobj = gzip.open(filename) if filename.endswith('.gz') else open(filename)
+        return iter(VcfEntryIterator(fileobj))
 
     def calculate(self):
         if len(self.variants) == 0:
-            self.variants = _split_variant(self.parser.next())
+            self.variants = _split_variant(self.interface.next())
         return self.variants.pop()
 
 
@@ -35,18 +34,15 @@ class VcfSet(Resource):
     FORMAT = 'vcf'
     OUT = ['variant_set']
     
-    def init(self):
-        fname = self.get_filename()
-        if os.path.exists('{}.tbi'.format(fname)):
+    def get_interface(self, filename):
+        if os.path.exists('{}.tbi'.format(filename)):
             try:
                 import pysam
-                self.parser = IndexedVcfFile(fname, pysam.TabixFile(fname))
-                return
+                return IndexedVcfFile(filename, pysam.TabixFile(filename))
             except ImportError:
                 pass
-        if os.path.exists('{}.lci'.format(fname)):
+        if os.path.exists('{}.lci'.format(filename)):
             from lhc.io.txt_ import index
-            self.parser = IndexedVcfFile(fname, index.IndexedFile(fname))
-            return
-        warn('no index available for {}, loading whole file...'.format(fname))
-        self.parser = VcfSetBase(VcfEntryIterator(fname))
+            return IndexedVcfFile(filename, index.IndexedFile(filename))
+        warn('no index available for {}, loading whole file...'.format(filename))
+        return VcfSetBase(VcfEntryIterator(filename))
