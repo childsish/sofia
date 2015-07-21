@@ -62,12 +62,12 @@ class Aggregator(object):
     def resolve_requested_entities(self, requested_entities, provided_resources, maps):
         solutions = [self.resolve_requested_entity(entity, provided_resources, maps) for entity in requested_entities]
 
-        matching_entities = self.get_matching_entities(solutions, requested_entities)
-
         combined_solution = Workflow()
         for solution in solutions:
-            combined_solution.update(solution)
+            combined_solution.join(solution)
         combined_solution.step = {step_graph.step.name for step_graph in solutions}
+
+        matching_entities = self.get_matching_entities(solutions, requested_entities)
         return combined_solution, matching_entities
 
     def resolve_requested_entity(self, requested_entity, provided_resources, maps):

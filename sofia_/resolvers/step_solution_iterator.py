@@ -58,7 +58,7 @@ class StepSolutionIterator(object):
                 step_instance = self.step(resources, dependencies, ins=ins, outs=outs, converters=converters)
                 solution = Workflow(step_instance)
                 for e, s in izip(entities, disjoint_solution):
-                    solution.join(s.step.outs[e], step_instance.name, s.step.name, s)
+                    solution.join(s, s.step.outs[e])
                 res[len(resources - self.requested_resources)].append(solution)
         if len(res) > 0:
             for solution in res[min(res)]:

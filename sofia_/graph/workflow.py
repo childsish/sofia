@@ -1,4 +1,5 @@
 from lhc.graph import Graph
+from uuid import uuid4 as uuid
 
 
 class Workflow(object):
@@ -32,9 +33,11 @@ class Workflow(object):
         for ftr in self.steps.itervalues():
             ftr.init(**ftr.param)
 
-    def join(self, edge, fr, to, other):
+    def join(self, other, edge=None):
         """ Merge this StepGraph with another. """
         self.graph.update(other.graph)
         self.steps.update(other.steps)
         self.resources.update(other.resources)
-        self.graph.add_edge(edge, fr, to)
+        if edge is not None:
+            edge = str(uuid())[:8] # TODO: remove use of uuid in favour of digraph
+            self.graph.add_edge(self.step.name, other.step.name, edge)
