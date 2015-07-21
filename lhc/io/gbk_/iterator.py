@@ -84,8 +84,7 @@ class GbkIterator(object):
             return cls._parse_join(tokens)
         elif tokens[0] == 'complement':
             return cls._parse_complement(tokens)
-        else:
-            raise ValueError('interval {} does not fit pattern.'.format(tokens))
+        raise ValueError('interval {} does not fit pattern.'.format(tokens))
 
     @classmethod
     def _parse_interval(cls, tokens):
@@ -124,6 +123,7 @@ class GbkIterator(object):
         res = cls._parse_nested_interval(tokens)
         tokens.pop(0)  # Pop ')'
         res.strand = '-' if res.strand == '+' else '+'
+        return res
 
     @classmethod
     def _iter_qualifiers(cls, iterator):
@@ -135,9 +135,14 @@ class GbkIterator(object):
                     value = [c[c.find('=') + 1:]]
                 else:
                     yield c[22:], True
+                    if n[:21].strip() != '':
+                        raise StopIteration
                     continue
             else:
-                value.append(c[21:])
+                try:
+                    value.append(c[21:])
+                except AttributeError, e:
+                    raise e
 
             if n[:21].strip() != '' or n[21] == '/':
                 value = ''.join(value) if key == 'translation' else ' '.join(value)
