@@ -15,6 +15,17 @@ class TestGraph(unittest.TestCase):
         self.assertEquals(4, len(graph.es))
         self.assertEquals(4, len(graph.vs))
 
+    def test_add_edge(self):
+        graph = Graph()
+
+        graph.add_edge('a', 'b')
+        graph.add_edge('b', 'c', 'bc')
+
+        self.assertEquals({'a', 'b', 'c'}, set(graph.vs))
+        self.assertEquals(2, len(graph.es))
+        self.assertIn('bc', graph.es)
+        self.assertRaises(ValueError, graph.add_edge, 'c', 'b', 'bc')
+
     def test_get_family(self):
         graph = Graph([('a', 'b'), ('a', 'c'), ('b', 'd'), ('d', 'a')], directed=False)
 
@@ -55,8 +66,7 @@ class TestGraph(unittest.TestCase):
         g1.add_edge('a', 'b', 'ab')
         g1.add_edge('a', 'c', 'ac')
         g2 = Graph(directed=False)
-        g2.add_edge('b', 'a', 'ab')
-        g2.add_edge('b', 'e', 'be')
+        g2.add_edge('a', 'd', 'ab')
 
         self.assertRaises(ValueError, g1.update, g2)
 

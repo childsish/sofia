@@ -1,7 +1,8 @@
 from collections import defaultdict, namedtuple
 from uuid import uuid4 as uuid
 
-Edge = namedtuple('Edge', ('name', 'vertex'))
+Edge = namedtuple('Edge', ('fr', 'to'))
+Endpoint = namedtuple('Endpoint', ('edge', 'vertex'))
 
 
 class Graph(object):
@@ -53,10 +54,13 @@ class Graph(object):
         if e is None:
             e = '{}.{}'.format(self.anon_prefix, self.edge_id)
             self.edge_id += 1
-        self.es[e] = (fr, to)
-        self.vs[fr].add(Edge(name=e, vertex=to))
+        edge = Edge(fr, to) if self.directed else Edge(min(fr, to), max(fr, to))
+        if e in self.es and self.es[e] != edge:
+            raise ValueError('edge {} already defined'.format(e))
+        self.es[e] = edge
+        self.vs[fr].add(Endpoint(edge=e, vertex=to))
         if not self.directed:
-            self.vs[to].add(Edge(name=e, vertex=fr))
+            self.vs[to].add(Endpoint(edge=e, vertex=fr))
         elif to not in self.vs:
             self.vs[to] = set()
         return e
@@ -92,9 +96,9 @@ class Graph(object):
                 continue
             visited.add(fr)
             stk = [(fr, to) for to in tos]
-            graph = Graph(vs=[fr])
+            graph = Graph(vs=[fr], directed=self.directed)
             for fr, to in stk:
-                graph.add_edge(fr, to.vertex, to.name)
+                graph.add_edge(fr, to.vertex, to.edge)
             while len(stk) > 0:
                 root, fr = stk.pop()
                 if fr.vertex in visited:
@@ -102,7 +106,7 @@ class Graph(object):
                 visited.add(fr.vertex)
                 es = [(fr.vertex, to) for to in self.vs[fr.vertex]]
                 for fr, to in es:
-                    graph.add_edge(fr, to.vertex, to.name)
+                    graph.add_edge(fr, to.vertex, to.edge)
                 stk.extend(es)
             graphs.append(graph)
         return graphs
