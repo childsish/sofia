@@ -2,7 +2,7 @@ __author__ = 'Liam Childs'
 
 import argparse
 
-from gbk_ import GbkIterator
+from gbk_ import GbkIterator, GbkSequenceSet
 from gbk_.tools import extract, split
 
 
