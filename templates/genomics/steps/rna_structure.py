@@ -1,4 +1,4 @@
-from lhc.binf.genomic_coordinate import Position
+from lhc.binf.genomic_coordinate import GenomicPosition
 from sofia_.step import Step
 
 
@@ -25,9 +25,9 @@ class GetTranslationStartMinimumFreeEnergy(Step):
         if major_transcript is None:
             return None
         offset = 50
-        start_position = Position(major_transcript.chr,
-                                  major_transcript.get_5p(),
-                                  major_transcript.strand)
+        start_position = GenomicPosition(major_transcript.chr,
+                                         major_transcript.get_5p(),
+                                         major_transcript.strand)
         interval = start_position.get_offset(-offset).get_interval(start_position.get_offset(50))
         seq = interval.get_sub_seq(chromosome_sequence_set)
         return self.fold(seq)[1]
