@@ -12,5 +12,8 @@ class GbkSequenceSet(object):
             seq.extend(line.split()[1:])
         self.seq = ''.join(seq)
 
+    def __getitem__(self, item):
+        return self.seq[item]
+
     def fetch(self, chr, start, stop):
         return self.seq[start:stop]
