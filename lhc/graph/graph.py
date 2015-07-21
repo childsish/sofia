@@ -106,3 +106,10 @@ class Graph(object):
                 stk.extend(es)
             graphs.append(graph)
         return graphs
+
+    def update(self, other):
+        for e in other.es:
+            if e in self.es and self.es[e] != other.es[e]:
+                raise ValueError('edge {} has conflicting endpoints: {}, {}'.format(e, self.es[e], other.es[e]))
+        self.vs.update(other.vs)
+        self.es.update(other.es)
