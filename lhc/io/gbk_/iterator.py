@@ -10,6 +10,7 @@ HeaderStep = namedtuple('HeaderStep', ('header', 'indent'))
 
 class GbkIterator(object):
     def __init__(self, fileobj):
+        self.line_no = 0
         self.tokeniser = GenbankTokeniser()
         fileobj = iter(fileobj)
         self.hdr = self._parse_headers(fileobj)
@@ -24,6 +25,7 @@ class GbkIterator(object):
         key = None
         value = []
         for c, n in self.it:
+            self.line_no += 1
             if key is None:
                 key = c[:21].strip()
             if key == 'ORIGIN':
@@ -36,12 +38,12 @@ class GbkIterator(object):
         interval.data = dict(self._iter_qualifiers(self.it))
         return interval
 
-    @classmethod
-    def _parse_headers(cls, iterator):
+    def _parse_headers(self, iterator):
         headers = {}
         header_path = []
         c_value = []
         for line in iterator:
+            self.line_no += 1
             header = line[:12].strip()
             indent = len(line[:12]) - len(line[:12].lstrip(' '))
             value = line[12:].strip()
@@ -127,10 +129,10 @@ class GbkIterator(object):
         res.strand = '-' if res.strand == '+' else '+'
         return res
 
-    @classmethod
-    def _iter_qualifiers(cls, iterator):
+    def _iter_qualifiers(self, iterator):
         value = []
         for c, n in iterator:
+            self.line_no += 1
             if c[21] == '/':
                 if '=' in c:
                     key = c[22:c.find('=')]
