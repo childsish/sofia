@@ -7,7 +7,7 @@ import multiprocessing
 from collections import defaultdict
 from common import parse_provided_resources, parse_requested_entities, get_program_directory
 from sofia_.error_manager import ERROR_MANAGER
-from sofia_.graph.step_graph import StepGraph
+from sofia_.graph import Workflow
 from sofia_.resolvers.entity_solution_iterator import EntitySolutionIterator
 from sofia_.attribute_map_factory import AttributeMapFactory
 from sofia_.template_factory import TemplateFactory
@@ -64,7 +64,7 @@ class Aggregator(object):
 
         matching_entities = self.get_matching_entities(solutions, requested_entities)
 
-        combined_solution = StepGraph()
+        combined_solution = Workflow()
         for solution in solutions:
             combined_solution.update(solution)
         combined_solution.step = {step_graph.step.name for step_graph in solutions}

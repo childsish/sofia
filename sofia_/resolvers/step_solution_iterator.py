@@ -3,7 +3,7 @@ from copy import deepcopy
 from itertools import izip, product
 from operator import or_
 
-from sofia_.graph.step_graph import StepGraph
+from sofia_.graph import Workflow
 from sofia_.converter import Converter
 from sofia_.error_manager import ERROR_MANAGER
 from entity_solution_iterator import EntitySolutionIterator
@@ -56,10 +56,9 @@ class StepSolutionIterator(object):
                 resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
                 dependencies = {e: s.step.name for e, s in izip(original_entities, disjoint_solution)}
                 step_instance = self.step(resources, dependencies, ins=ins, outs=outs, converters=converters)
-                solution = StepGraph(step_instance)
-                for e, s in izip(original_entities, disjoint_solution):
-                    solution.add_edge(e, step_instance.name, s.step.name)
-                    solution.update(s)
+                solution = Workflow(step_instance)
+                for e, s in izip(entities, disjoint_solution):
+                    solution.join(s.step.outs[e], step_instance.name, s.step.name, s)
                 res[len(resources - self.requested_resources)].append(solution)
         if len(res) > 0:
             for solution in res[min(res)]:

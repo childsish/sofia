@@ -1,5 +1,5 @@
 from sofia_.step import Target
-from sofia_.graph.step_graph import StepGraph
+from sofia_.graph import Workflow
 from sofia_.parser.provided_resource import ProvidedResource
 from sofia_.error_manager import ERROR_MANAGER
 
@@ -40,6 +40,6 @@ class ResourceSolutionIterator(object):
         """ Create a single node ActionGraph. """
         outs = self.step.get_output({'resource': resource})
         step_instance = self.step({resource}, {}, {}, outs)
-        res = StepGraph(step_instance)
+        res = Workflow(step_instance)
         res.add_resource(resource)
         return res
