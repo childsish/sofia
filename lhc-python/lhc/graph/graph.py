@@ -33,10 +33,9 @@ class Graph(object):
         for v in sorted(self.vs):
             if v.startswith(self.anon_prefix):
                 res.append('    "{}" [label=""]'.format(v))
-        for e, vs in sorted(self.es.iteritems()):
+        for e, (v1, v2) in sorted(self.es.iteritems()):
             e = '' if e.startswith(self.anon_prefix) else ' [label="{}"]'.format(e)
-            for v1, v2 in vs:
-                res.append('    "{}" -> "{}"{};'.format(v1, v2, e))
+            res.append('    "{}" -> "{}"{};'.format(v1, v2, e))
         res.append('}')
         return '\n'.join(res)
 
