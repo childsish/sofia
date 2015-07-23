@@ -18,6 +18,23 @@ class GetUpstreamSequence(Step):
         return start_pos.get_interval(upstream_pos)
 
 
+class GetUpstreamSequence2(Step):
+    """
+    Get the region 1000 nucleotides upstream of the major transcript transcriptional start site.
+    """
+
+    IN = ['genomic_interval', 'chromosome_sequence_set']
+    OUT = ['upstream_sequence']
+
+    def init(self, offset=1000):
+        self.offset = offset
+
+    def calculate(self, genomic_interval, chromosome_sequence_set):
+        start_pos = genomic_interval.get_5p()
+        upstream_pos = start_pos.get_upstream(self.offset)
+        return start_pos.get_interval(upstream_pos)
+
+
 class GetUpstreamORFs(Step):
     """
     Get the ORFs in the upstream region.

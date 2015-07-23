@@ -39,3 +39,11 @@ class NestedGenomicInterval(object):
     def get_sub_seq(self, sequence_set):
         res = ''.join(interval.get_sub_seq(sequence_set) for interval in self.intervals)
         return res if self.strand == '+' else revcmp(res)
+
+    def get_5p(self):
+        return self.intervals[0].get_5p() if self.strand == '+' else\
+            self.intervals[-1].get_5p()
+
+    def get_3p(self):
+        return self.intervals[-1].get_3p() if self.strand == '+' else\
+            self.intervals[0].get_3p()

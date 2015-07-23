@@ -33,6 +33,37 @@ class GetTranslationStartMinimumFreeEnergy(Step):
         return self.fold(seq)[1]
 
 
+class GetTranslationStartMinimumFreeEnergy2(Step):
+    """
+    Get the minimum free energy around the start codon of the major transcript.
+    """
+
+    IN = ['genomic_interval', 'chromosome_sequence_set']
+    OUT = ['translation_start_mfe']
+
+    def init(self, offset=50, type='mfe'):
+        """ Initialise the step
+
+        :param offset: the range upstream and downstream to fold
+        :param type: (mfe, efe)
+        :return:
+        """
+        import RNA
+        self.offset = offset
+        self.fold = RNA.fold if type == 'mfe' else RNA.pf_fold
+
+    def calculate(self, genomic_interval, chromosome_sequence_set):
+        if genomic_interval is None:
+            return None
+        offset = 50
+        start_position = GenomicPosition(genomic_interval.chr,
+                                         genomic_interval.get_5p(),
+                                         genomic_interval.strand)
+        interval = start_position.get_offset(-offset).get_interval(start_position.get_offset(50))
+        seq = interval.get_sub_seq(chromosome_sequence_set)
+        return self.fold(seq)[1]
+
+
 class GetStructuralFeatures(Step):
     """
     Get the RNA secondary structural features of the given secondary structure.
