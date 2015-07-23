@@ -178,7 +178,8 @@ class VcfMerger(object):
         for k, v in sorted(all_keys.iteritems(), key=lambda item: sum(item[1])):
             values = OrderedDict()
             for hdr in hdrs:
-                values.update((value, None) for value in hdr[k])
+                if k in hdr:
+                    values.update((value, None) for value in hdr[k])
             res[k] = list(values)
         return res
     
