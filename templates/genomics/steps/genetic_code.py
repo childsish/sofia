@@ -9,6 +9,5 @@ class GeneticCode(Resource):
     OUT = ['genetic_code']
     DEFAULT = 'gc.prt'
 
-    def init(self, gc='Standard'):
-        fname = self.get_filename()
-        self.parser = GeneticCodes(fname)[gc]
+    def get_interface(self, filename, gc='Standard'):
+        return GeneticCodes(filename)[gc]
