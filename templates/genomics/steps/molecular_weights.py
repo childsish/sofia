@@ -11,14 +11,14 @@ class MolecularWeights(Resource):
     OUT = ['molecular_weight_set']
     DEFAULT = 'Emolwt.dat'
 
-    def init(self):
-        fname = self.get_filename()
-        infile = open(fname)
+    def get_interface(self, filename):
+        infile = open(filename)
         data = infile.read()
         infile.close()
-        self.parser = {}
+        interface = {}
         for line in data.split('\n'):
             if line.strip() == '' or line[0] == '#' or line.startswith('Mol'):
                 continue
             parts = line.split()
-            self.parser[parts[0]] = {'avg': float(parts[1]), 'mono': float(parts[2])}
+            interface[parts[0]] = {'avg': float(parts[1]), 'mono': float(parts[2])}
+        return interface

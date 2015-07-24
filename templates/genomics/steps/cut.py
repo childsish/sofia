@@ -9,5 +9,5 @@ class ReadCodonUsageTable(Resource):
     FORMAT = 'cut'
     OUT = ['codon_usage']
 
-    def init(self):
-        self.parser = CodonUsageTable(self.get_filename())
+    def get_interface(self, filename):
+        self.parser = CodonUsageTable(filename)
