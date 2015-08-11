@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from sofia_.entity import Entity
 from sofia_.error_manager import ERROR_MANAGER
 from operator import or_
@@ -16,9 +17,8 @@ class Step(object):
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
         self.param = param
-        #self.ins = {in_: in_ for in_ in self.IN} if ins is None else ins
-        self.ins = ins
-        self.outs = {out: Entity(out) for out in self.OUT} if outs is None else outs
+        self.ins = OrderedDict([(in_, Entity(in_)) for in_ in self.IN]) if ins is None else ins
+        self.outs = OrderedDict([(out, Entity(out)) for out in self.OUT]) if outs is None else outs
         self.name = self._get_name(name)
         self.converters = converters
     
@@ -45,13 +45,6 @@ class Step(object):
             entities['target'].
         """
         raise NotImplementedError('You must override this function')
-
-    def format(self, entity):
-        """Convert entity produced by this step to a string
-        
-        :param object entity: convert this entity
-        """
-        return str(entity)
     
     def generate(self, entities, steps, entity_graph):
         """Generate a step
@@ -136,6 +129,9 @@ class Step(object):
         """
         #TODO use the entity graph to return proper entities with attributes
         # Check that input entity attributes match
+        if len(ins) == 0:
+            return OrderedDict()
+
         common_attr_names = set.intersection(*[set(entity.attr) for entity in ins.itervalues()])
         for name in common_attr_names:
             common_attr = {entity.attr[name] for entity in ins.itervalues()}
@@ -171,6 +167,5 @@ class Step(object):
                 remove.add(attr)
         for attr in remove:
             del out_attr[attr]
-        outs = {out: Entity(out, out_attr) for out in outs}
+        outs = OrderedDict([(out, Entity(out, out_attr)) for out in outs])  # TODO: use an entity factory
         return outs
-        #return {out: ENTITY_FACTORY.makeEntity(out, attr) for out in outs}

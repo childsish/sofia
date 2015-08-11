@@ -58,7 +58,7 @@ class GetRelativeSynonymousCodonUsage(Step):
                 ws = len(usgs) * [0]
             else:
                 rscus = [usg / ttl_usg for usg in usgs]
-                ws = [usg / max(usgs) for usg in usgs]
+                ws = [usg / float(max(usgs)) for usg in usgs]
             for cdn, rscu_, w_ in izip(cdns, rscus, ws):
                 rscu[cdn] = rscu_
                 w[cdn] = w_
