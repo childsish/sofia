@@ -73,13 +73,16 @@ class TemplateFactory(object):
                         'key': (lambda x: x[index_key]),
                         'skip': int(resource.attr.get('skip', 0))
                     }
-                    step = ResourceWrapper(TxtSet, outs={resource.format: Entity(resource.format)}, param=param, format=resource.format)
+                    step = ResourceWrapper(TxtSet,
+                                           outs=OrderedDict([(resource.format, Entity(resource.format))]),
+                                           param=param,
+                                           format=resource.format)
                     res.append(step)
                     for in_ in resource.ins:
                         ins = OrderedDict([(resource.format, Entity(resource.format)),
                                            (in_, Entity(resource.ins[0]))])
-                        outs = OrderedDict((out, Entity(out)) for i, out in enumerate(entry_factory.type._fields)\
-                                           if i != index_key)
+                        outs = OrderedDict([(out, Entity(out)) for i, out in enumerate(entry_factory.type._fields)
+                                           if i != index_key])
                         step = StepWrapper(TxtAccessor, '{}[{}]'.format(resource.format, in_), ins=ins, outs=outs, param={
                             'set_name': resource.format,
                             'key_name': in_
