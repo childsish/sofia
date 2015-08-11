@@ -12,6 +12,36 @@ class GetPosition(Step):
     def calculate(self, chromosome_pos):
         return chromosome_pos + 1
 
+class GetVariantAlleleFrequency(Step):
+    
+    IN = ['variant']
+    OUT = ['variant_allele_frequency']
+
+    def calculate(self, variant):
+        if variant is None:
+            return None
+        no_calculate = 'AF' in variant.info or\
+            (hasattr(variant, 'samples') and\
+                any('AF' in sample for sample in variant.samples))
+        if hasattr(variant, 'samples'):
+            res = {}
+            if no_calculate:
+                for name, sample in variant.samples.iteritems():
+                    if sample != '.':
+                        res[name] = float(sample['AF'])
+            else:
+                for name, sample in variant.samples.iteritems():
+                    if sample != '.':
+                        ao = float(sample['AO'])
+                        ro = float(sample['RO'])
+                        res[name] = ao / (ao + ro)
+            return res
+        if no_calculate:
+            return float(variant.info['AF'])
+        ao = float(variant.info['AO'])
+        ro = float(variant.info['RO'])
+        return ao / (ao + ro)
+
 
 class VariantType(Step):
     """
