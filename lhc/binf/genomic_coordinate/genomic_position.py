@@ -1,5 +1,7 @@
 __author__ = 'Liam Childs'
 
+from genomic_interval import GenomicInterval
+
 
 class GenomicPosition(object):
 
@@ -20,12 +22,12 @@ class GenomicPosition(object):
             (self.chm == other.chm) and (self.pos < other.pos)
 
     def get_offset(self, pos):
-        return Position(self.chr,
-                        self.pos + pos if self.strand == '+' else self.pos - pos,
-                        self.strand)
+        return GenomicPosition(self.chr,
+                               self.pos + pos if self.strand == '+' else self.pos - pos,
+                               self.strand)
 
     def get_interval(self, pos):
-        if isinstance(pos, Position):
+        if isinstance(pos, GenomicPosition):
             if pos.chr != self.chr or pos.strand != self.strand:
                 raise ValueError('Positions not on same strand or chromosome: {} vs. {}'.format(self, pos))
             pos = pos.pos

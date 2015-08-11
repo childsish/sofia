@@ -3,7 +3,8 @@ from lhc.binf.sequence import revcmp
 
 class NestedGenomicInterval(object):
 
-    def __init__(self, intervals=None, strand='+', data=None):
+    def __init__(self, intervals=None, chr=None, strand='+', data=None):
+        self.chr = intervals[0].chr if len(intervals) > 0 and chr is None else chr
         self.intervals = [] if intervals is None else intervals
         self.strand = strand
         self.data = data

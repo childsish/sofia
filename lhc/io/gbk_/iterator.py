@@ -136,7 +136,7 @@ class GbkIterator(object):
             if c[21] == '/':
                 if '=' in c:
                     key = c[22:c.find('=')]
-                    value = [c[c.find('=') + 1:]]
+                    value = [c[c.find('=') + 1:].strip()]
                 else:
                     yield c[22:], True
                     if n[:21].strip() != '':
