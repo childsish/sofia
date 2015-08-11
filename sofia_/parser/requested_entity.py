@@ -28,5 +28,5 @@ class RequestedEntity(object):
             sys.stderr.write('Error formatting entity {}.\n'.format(self.name))
             sys.stderr.write('Format string: {}.\n'.format(self.getter))
             sys.stderr.write('Entity: {}.\n'.format(entity))
-            raise e
+            #raise e
         return ''

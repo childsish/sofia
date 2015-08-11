@@ -48,7 +48,7 @@ class GetUpstreamORFs(Step):
     OUT = ['upstream_orfs']
 
     def calculate(self, upstream_sequence, genetic_code):
-        stops = genetic_code.translate('*')
+        stops = genetic_code.get_codons('*')
         res = []
         for i in xrange(len(upstream_sequence)):
             if not upstream_sequence[i:i + 3] == 'atg':
