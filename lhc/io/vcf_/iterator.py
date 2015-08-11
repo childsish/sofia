@@ -3,7 +3,7 @@ from operator import or_
 
 
 class Variant(namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'samples'))):
-    def __new__(cls, chr, pos, id, ref, alt, qual, filter, info, samples={}):
+    def __new__(cls, chr, pos, id, ref, alt, qual=None, filter=None, info=None, samples={}):
         return super(Variant, cls).__new__(cls, chr, pos, id, ref, alt, qual, filter, info, samples)
 
     def __str__(self):
