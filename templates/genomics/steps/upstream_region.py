@@ -1,5 +1,7 @@
 from sofia_.step import Step
 
+from lhc.binf.genomic_coordinate import GenomicPosition
+
 
 class GetUpstreamSequence(Step):
     """
@@ -13,9 +15,10 @@ class GetUpstreamSequence(Step):
         self.offset = offset
 
     def calculate(self, major_transcript, chromosome_sequence_set):
-        start_pos = major_transcript.ivl.get_5p()
-        upstream_pos = start_pos.get_upstream(self.offset)
-        return start_pos.get_interval(upstream_pos)
+        ivl = major_transcript.ivl
+        start_pos = GenomicPosition(ivl.chr, ivl.get_5p(), ivl.strand)
+        upstream_pos = start_pos.get_offset(-self.offset)
+        return start_pos.get_interval(upstream_pos).get_sub_seq(chromosome_sequence_set)
 
 
 class GetUpstreamSequence2(Step):
@@ -30,9 +33,10 @@ class GetUpstreamSequence2(Step):
         self.offset = offset
 
     def calculate(self, genomic_interval, chromosome_sequence_set):
-        start_pos = genomic_interval.get_5p()
-        upstream_pos = start_pos.get_upstream(self.offset)
-        return start_pos.get_interval(upstream_pos)
+        ivl = genomic_interval
+        start_pos = GenomicPosition(ivl.chr, ivl.get_5p(), ivl.strand)
+        upstream_pos = start_pos.get_offset(-self.offset)
+        return start_pos.get_interval(upstream_pos).get_sub_seq(chromosome_sequence_set)
 
 
 class GetUpstreamORFs(Step):
