@@ -90,7 +90,8 @@ class VcfEntryIterator(VcfLineIterator):
         return self.parse_entry(super(VcfEntryIterator, self).next())
 
     def parse_entry(self, line):
-        samples = self._parse_samples(line.format.split(':'), line.samples.split('\t'))
+        samples = None if line.samples is None else\
+            self._parse_samples(line.format.split(':'), line.samples.split('\t'))
         return Variant(line.chr,
                        line.pos,
                        line.id,
