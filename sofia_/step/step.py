@@ -171,6 +171,5 @@ class Step(object):
                 remove.add(attr)
         for attr in remove:
             del out_attr[attr]
-        outs = {out: Entity(out, out_attr) for out in outs}
+        outs = OrderedDict([(out, Entity(out, out_attr)) for out in outs])  # TODO: use an entity factory
         return outs
-        #return {out: ENTITY_FACTORY.makeEntity(out, attr) for out in outs}
