@@ -13,16 +13,16 @@ class GtfIterator(Target):
     FORMAT = 'gtf'
     OUT = ['genomic_feature']
 
-    def init(self):
-        self.parser = GtfEntryIterator(self.get_filename())
+    def get_interface(self, filename):
+        return GtfEntryIterator(filename)
 
     def calculate(self):
         try: #REMOVEME
-            entry = self.parser.next()
+            entry = self.interface.next()
         except Exception:
             return None
         while entry.type != 'gene':
-            entry = self.parser.next()
+            entry = self.interface.next()
         entry.name = entry.name.rsplit('.')[0]
         return entry
 
@@ -32,18 +32,15 @@ class GtfSet(Resource):
     EXT = ['.gtf', '.gtf.gz', '.gtf.bgz']
     OUT = ['genomic_feature_set']
 
-    def init(self):
-        fname = self.get_filename()
-        if os.path.exists('{}.tbi'.format(fname)):
+    def get_interface(self, filename):
+        if os.path.exists('{}.tbi'.format(filename)):
             try:
                 import pysam
-                self.parser = IndexedGtfFile(pysam.TabixFile(fname))
-                return
+                return IndexedGtfFile(pysam.TabixFile(filename))
             except ImportError:
                 pass
-        if os.path.exists('{}.lci'.format(fname)):
+        if os.path.exists('{}.lci'.format(filename)):
             from lhc.io.txt_ import index
-            self.parser = IndexedGtfFile(index.IndexedFile(fname))
-            return
-        warn('no index available for {}, loading whole file...'.format(fname))
-        self.parser = GtfSetBase(GtfEntryIterator(fname))
+            return IndexedGtfFile(index.IndexedFile(filename))
+        warn('no index available for {}, loading whole file...'.format(filename))
+        return GtfSetBase(GtfEntryIterator(filename))
