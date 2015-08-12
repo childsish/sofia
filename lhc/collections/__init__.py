@@ -6,5 +6,9 @@ from sorted_dict import SortedDict
 from sorted_list import SortedList
 from sorted_set import SortedSet
 from sorted_value_dict import SortedValueDict
-from nested_containment_list import NestedContainmentList
 from interval_binner import IntervalBinner
+try:
+    from nested_containment_list import NestedContainmentList
+except ImportError, e:
+    if e.message != 'No module named numpy':
+        raise e
