@@ -14,12 +14,11 @@ class FastaChromosomeSequenceSet(Resource):
     OUT = ['chromosome_sequence_set']
     
     def get_interface(self, filename):
-        if os.path.exists('{}.fai'.format(filename)):
-            try:
-                from lhc.io.fasta_.pysam_ import PysamFastaSet
-                return PysamFastaSet(filename)
-            except ImportError:
-                pass
+        try:
+            from lhc.io.fasta_.pysam_ import PysamFastaSet
+            return PysamFastaSet(filename)
+        except Exception, e:
+            warn(e.message)
         #if os.path.exists('{}.lci'.format(filename)):
         #    return IndexedFastaSet(filename)
         warn('no index available for {}, loading whole file...'.format(filename))
