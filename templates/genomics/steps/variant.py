@@ -43,14 +43,14 @@ class GetVariantAlleleFrequency(Step):
         return ao / (ao + ro)
 
 
-class VariantType(Step):
+class GetVariantEffect(Step):
     """
     Determines the variant type according to the sequence ontology
     (http://www.sequenceontology.org)
     """
     
     IN = ['major_transcript', 'variant', 'coding_variant', 'amino_acid_variant']
-    OUT = ['variant_type']
+    OUT = ['variant_effect']
     
     def calculate(self, major_transcript, variant, coding_variant, amino_acid_variant):
         #TODO: Improve intron detection
@@ -73,9 +73,6 @@ class VariantType(Step):
                 else:
                     res.append('frameshift_truncation')
         return res
-    
-    def format(self, variant_type):
-        return ','.join(variant_type)
 
     def _get_amino_acid_type(self, pos, ref, alt):
         if ref == alt:

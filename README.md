@@ -30,7 +30,7 @@ https://github.com/childsish/sofia/releases/latest
 3. (optional) Add the installation directory to the PATH environment variable.
 4. To update: `git pull`
 
-`sofia /home/user/tmp/tmp.vcf -e chromosome_id position gene_id amino_acid_variant variant_type -r /home/user/tmp/tmp.gtf /home/user/tmp/tmp.fasta`
+`sofia /home/user/tmp/tmp.vcf -e chromosome_id position gene_id amino_acid_variant variant_effect -r /home/user/tmp/tmp.gtf /home/user/tmp/tmp.fasta`
 
 Using the API
 -------------
@@ -59,7 +59,7 @@ SoFIA can also be used programatically. All output will be automatically printed
     requested_entities = [
         RequestedEntity('gene_name'),
         RequestedEntity('amino_acid_variant'),
-        RequestedEntity('variant_type')
+        RequestedEntity('variant_effect')
     ]
 
 ```
