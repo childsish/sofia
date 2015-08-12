@@ -1,4 +1,4 @@
-from lhc.io.csv_ import CsvIterator, CsvSet
+from lhc.io.txt_ import Iterator, Set
 from resource import Target, Resource, Step
 
 
@@ -8,7 +8,7 @@ class TxtIterator(Target):
     FORMAT = None
 
     def init(self, entry, skip=0):
-        self.parser = CsvIterator(self.get_filename(), entry, skip=skip)
+        self.parser = Iterator(self.get_filename(), entry, skip=skip)
 
 
 class TxtSet(Resource):
@@ -17,7 +17,7 @@ class TxtSet(Resource):
     FORMAT = None
 
     def init(self, entry, index, key, skip=0):
-        self.parser = CsvSet(CsvIterator(self.get_filename(), entry, skip=skip), index(), key)
+        self.parser = Set(Iterator(self.get_filename(), entry, skip=skip), index(), key)
 
 
 class TxtAccessor(Step):
