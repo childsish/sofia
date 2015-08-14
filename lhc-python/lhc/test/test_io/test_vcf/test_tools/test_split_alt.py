@@ -68,6 +68,13 @@ class TestSplitAlt(unittest.TestCase):
             's2': {'DP': '1000', 'AO': '200', 'AF': '0.2'}
         }), v2)
 
+    def test_split_variant_no_samples(self):
+        variant = Variant('1', 100, None, 'G', 'GAAC,C', None, None, {'f1': '0,1', 'f2': '3'}, None)
+
+        v1, v2 = _split_variant(variant)
+        self.assertIsNone(v1.samples)
+        self.assertIsNone(v2.samples)
+
 
 if __name__ == '__main__':
     unittest.main()
