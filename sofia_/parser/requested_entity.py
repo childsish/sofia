@@ -3,17 +3,20 @@ class RequestedEntity(object):
     def __init__(self, name, getter='', header=None, attr={}, resources=frozenset()):
         self.name = name
         self.getter = '{' + getter + '}'
-        self.header = name if header is None else header
         self.resources = resources
         self.attr = attr
         base = [name] if self.getter == '{}' else [name, getter]
-        self.header = ':'.join(base + ['{}={}'.format(k, ','.join(v)) for k, v in sorted(attr.iteritems())])\
-            if header is None else header
+
+        self.header = header
+        if header is None:
+            header = [self.name]
+            header.extend('{}={}'.format(k, v) for k, v in self.attr.iteritems())
+            self.header = ':'.join(header)
 
     def __str__(self):
-        if len(self.attr) == 0:
-            return self.name
-        return self.name + ':' + ':'.join('{}={}'.format(k, ','.join(v)) for k, v in self.attr.iteritems())
+        res = [self.name]
+        res.extend('{}={}'.format(k, v) for k, v in self.attr.iteritems())
+        return ':'.join(res)
 
     def __eq__(self, other):
         return str(self) == str(other)

@@ -25,7 +25,7 @@ class EntityParser(object):
         -e gene_id:resource=gencode.gtf,gene_id=ensemble
     """
 
-    REGX = re.compile(r'(?P<entity>[^[.:]+)(?P<getter>[^:]+)?:?(?P<header>[^=]+(:|$))?(?P<attributes>.+)?')
+    REGX = re.compile(r'(?P<entity>[^[.:]+)(?P<getter>[^:]+)?:?(?P<header>[^=:]+)?:?(?P<attributes>.+)?')
     
     def __init__(self, provided_resources):
         """ Initialise the ActionParser with a list of resources that the user
