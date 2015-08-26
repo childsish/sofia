@@ -25,7 +25,7 @@ class EntityParser(object):
         -e gene_id:resource=gencode.gtf,gene_id=ensemble
     """
 
-    REGX = re.compile(r'(?P<entity>[^[.:]+)(?P<getter>[^:]+)?:?(?P<header>[^=:]+)?:?(?P<attributes>.+)?')
+    REGX = re.compile(r'(?P<entity>[^[.:]+)(?P<getter>[^:]+)?')
     
     def __init__(self, provided_resources):
         """ Initialise the ActionParser with a list of resources that the user
@@ -47,15 +47,20 @@ class EntityParser(object):
         :param entity_request: an entity request string
         :return: a RequestedEntity
         """
-        match = self.REGX.match(entity_request)
+        parts = entity_request.split(':')
+        match = self.REGX.match(parts[0])
         if match is None:
             raise ValueError('Unrecognised entity request.')
         entity = match.group('entity')
         getter = '' if match.group('getter') is None else match.group('getter')
-        header = None if match.group('header') is None else match.group('header')
-        attributes = {} if match.group('attributes') is None else\
-            {k: sorted(v.split(',')) for k, v in
-             (part.split('=', 1) for part in match.group('attributes').split(':'))}
+        header = None
+        attributes = {}
+        for part in parts[1:]:
+            if '=' in part:
+                k, v = part.split('=', 1)
+                attributes[k] = sorted(v.split(','))
+            else:
+                header = part
         if 'resource' in attributes:
             resources = self._get_resources(attributes['resource'], entity)
             del attributes['resource']
