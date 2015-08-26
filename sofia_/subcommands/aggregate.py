@@ -110,7 +110,7 @@ class Aggregator(object):
             if len(matching_graphs) > 1:
                 unique = False
         if not unique:
-            for graph in possible_graphs:
+            for graph, extra_resources in matching_graphs:
                 sys.stderr.write('{}\n\n'.format(str(graph)))
             sys.stderr.write('    Multiple solutions found.\n')
             sys.exit(1)
