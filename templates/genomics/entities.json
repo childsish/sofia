@@ -1,11 +1,80 @@
 [
   {
-    "name": "genomic_position",
+    "name": "amino_acid_frequency",
+    "description": "The number of each amino acid in a protein sequence"
+  },
+  {
+    "name": "amino_acid_variant",
+    "description": "The amino acid change wrought by a variant"
+  },
+  {
+    "name": "bounds_proximity",
+    "description": "The distance to the closest interval start or stop position"
+  },
+  {
+    "name": "chromosome_sequence_set",
+    "attributes": ["chromosome_id"],
+    "description": "A set of chromosome sequences. The attributes of the chromosome_id can be set. eg. FASTA"
+  },
+  {
+    "name": "chromosome_id",
+    "attributes": ["chromosome_id"],
+    "description": "A chromosome identifier. Just the name of the chromosome, but different groups tend to use different names. eg. \"Chr1\" vs. \"1\"."
+  },
+  {
+    "name": "coding_sequence",
+    "description": "The coding sequence for a gene"
+  },
+  {
+    "name": "coding_variant",
+    "description": "The variant on the same strand as a gene (if any)"
+  },
+  {
+    "name": "codon_adaptation_index",
+    "description": "The codon adaptation index (a measure of translation efficiency)"
+  },
+  {
+    "name": "codon_usage",
+    "description": "The number of each codon in a coding sequence"
+  },
+  {
+    "name": "codon_variant",
+    "description": "The variant in a codon context"
+  },
+  {
+    "name": "downstream_sequence",
+    "description": "The sequence downstream of a position. Used for calculating various downstream features"
+  },
+  {
+    "name": "effective_number_of_codons",
+    "description": "The effective number of codons (a measure of translation efficiency)"
+  },
+  {
+    "name": "five_prime_utr",
+    "description": "The untranslated upstream region of a gene"
+  },
+  {
+    "name": "gene_id",
+    "is_a": "id",
+    "attributes": ["gene_id"],
+    "description": "A gene identifier."
+  },
+  {
+    "name": "genetic_code",
+    "description": "The genetic code for a given organism"
+  },
+  {
+    "name": "genomic_feature",
+    "is_a": "genomic_interval",
     "has_a": [
-      { "name": "chromosome_id", "key": "chr", "type": "attr" },
-      { "name": "chromosome_pos", "key": "pos", "type": "attr" }
+      { "name": "gene_id", "key": "name", "type": "attr" }
     ],
-    "description": "A position on a chromosome."
+    "description": "A model of transcribed DNA. This includes all alternative transcripts."
+  },
+  {
+    "name": "genomic_feature_set",
+    "attributes": ["chromosome_id", "gene_id"],
+    "description": "A set of genomic_features. The attributes of the chromosome_id and gene_id can be set. eg. GTF"
   },
   {
     "name": "genomic_interval",
@@ -15,12 +84,73 @@
     "description": "An interval on a chromosome."
   },
   {
-    "name": "genomic_feature",
+    "name": "genomic_interval_set",
+    "attributes": ["chromosome_id"],
+    "description": "A set of genomic_intervals. The attributes of the chromosome_id can be set. eg. BED"
+  },
+  {
+    "name": "genomic_position",
+    "has_a": [
+      { "name": "chromosome_id", "key": "chr", "type": "attr" },
+      { "name": "chromosome_pos", "key": "pos", "type": "attr" }
+    ],
+    "description": "A position on a chromosome."
+  },
+  {
+    "name": "homopolymer",
+    "description": "The sequence of nucleotides with the same identity at a given position. Important for assessing variant quality"
+  },
+  {
+    "name": "major_transcript",
     "is_a": "genomic_interval",
     "has_a": [
-      { "name": "gene_id", "key": "name", "type": "attr" }
+      { "name": "chromosome_id", "key": "chr", "type": "attr" }
     ],
-    "description": "A model of transcribed DNA. This includes all alternative transcripts."
+    "description": "The major transcript of a gene model. Currently defined as the transcript with the longest coding sequence."
+  },
+  {
+    "name": "molecular_weight_set",
+    "description": "A set of molecular weights used to calculate various other features"
+  },
+  {
+    "name": "pest_sequences",
+    "description": "The PEST rich sequences upstream of the translation start site"
+  },
+  {
+    "name": "position",
+    "description": "The genomic position, 1-indexed"
+  },
+  {
+    "name": "protein_sequence",
+    "description": "The protein sequence of a gene"
+  },
+  {
+    "name": "relative_codon_adaptiveness",
+    "description": "An intermediate to calculating the codon adaptation index"
+  },
+  {
+    "name": "relative_synonymous_codon_usage",
+    "description": "An intermediate to calculating the codon adaptation index"
+  },
+  {
+    "name": "rna_secondary_structure",
+    "description": "Dot-bracket notation for the secondary structure of a sequence"
+  },
+  {
+    "name": "rna_structure_set",
+    "description": "A set of RNA structures"
+  },
+  {
+    "name": "translation_start_mfe",
+    "description": "The minimum free energy of the translation start RNA secondary structure (a measure of translation efficiency)"
+  },
+  {
+    "name": "upstream_orfs",
+    "description": "The upstream open reading frames of a gene (a measure of translation efficiency)"
+  },
+  {
+    "name": "upstream_sequence",
+    "description": "The sequence upstream of a position. Used for calculating various upstream features"
   },
   {
     "name": "variant",
@@ -35,42 +165,12 @@
     "description": "A sequence variant. Similar to an entry in a VCF file."
   },
   {
-    "name": "major_transcript",
-    "is_a": "genomic_interval",
-    "has_a": [
-      { "name": "chromosome_id", "key": "chr", "type": "attr" }
-    ],
-    "description": "The major transcript of a gene model. Currently defined as the transcript with the longest coding sequence."
-  },
-  {
-    "name": "chromosome_id",
-    "attributes": ["chromosome_id"],
-    "description": "A chromosome identifier. Just the name of the chromosome, but different groups tend to use different names. eg. \"Chr1\" vs. \"1\"."
-  },
-  {
-    "name": "gene_id",
-    "is_a": "id",
-    "attributes": ["gene_id"],
-    "description": "A gene identifier."
-  },
-  {
-    "name": "chromosome_sequence_set",
-    "attributes": ["chromosome_id"],
-    "description": "A set of chromosome sequences. The attributes of the chromosome_id can be set. eg. FASTA"
+    "name": "variant_effect",
+    "description": "The effect of the variant eg. non-synonymous, intronic etc..."
   },
   {
     "name": "variant_set",
     "attributes": ["chromosome_id"],
     "description": "A set of sequence variants. The attributes of the chromosome_id can be set. eg. VCF"
-  },
-  {
-    "name": "genomic_interval_set",
-    "attributes": ["chromosome_id"],
-    "description": "A set of genomic_intervals. The attributes of the chromosome_id can be set. eg. BED"
-  },
-  {
-    "name": "genomic_feature_set",
-    "attributes": ["chromosome_id", "gene_id"],
-    "description": "A set of genomic_features. The attributes of the chromosome_id and gene_id can be set. eg. GTF"
   }
 ]
