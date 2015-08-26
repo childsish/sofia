@@ -6,7 +6,7 @@ Endpoint = namedtuple('Endpoint', ('edge', 'vertex'))
 
 
 class Graph(object):
-    def __init__(self, es=list(), vs=list(), name=None, directed=True):
+    def __init__(self, es=list(), vs=list(), name=None, directed=True, edge_names='unique'):
         """
         Initialise a graph
 
@@ -14,6 +14,7 @@ class Graph(object):
         :param vs: list of vertex names (without edges)
         :param name: name of the graph
         :param directed: whether the graph is directed or not (default: True)
+        :param edge_names: {'unique', 'vertex'} name edges uniquely or by the sorted fr/to pair
         """
         self.anon_prefix = str(uuid())[:8]
         self.vertex_id = 0
@@ -23,6 +24,8 @@ class Graph(object):
         self.es = {}
         self.vs = defaultdict(set)
         self.directed = directed
+        self.edge_names = edge_names
+
         for fr, to in es:
             self.add_edge(fr, to)
         for v in vs:
@@ -50,10 +53,13 @@ class Graph(object):
         :param e: The edge name. If not given a unique id will be created.
         :return: The edge name, given or created.
         """
-        if e is None:
-            e = '{}.{}'.format(self.anon_prefix, self.edge_id)
-            self.edge_id += 1
         edge = Edge(fr, to) if self.directed else Edge(min(fr, to), max(fr, to))
+        if e is None:
+            if self.edge_names == 'unique':
+                e = '{}.{}'.format(self.anon_prefix, self.edge_id)
+                self.edge_id += 1
+            elif self.edge_names == 'vertex':
+                e = '{}.{}.{}'.format(self.anon_prefix, edge.fr, edge.to)
         if e in self.es and self.es[e] != edge:
             raise ValueError('edge {} already defined'.format(e))
         self.es[e] = edge
@@ -111,8 +117,10 @@ class Graph(object):
         return graphs
 
     def update(self, other):
-        for e in other.es:
-            if e in self.es and self.es[e] != other.es[e]:
-                raise ValueError('edge {} has conflicting endpoints: {}, {}'.format(e, self.es[e], other.es[e]))
+        for e, edge in other.es.iteritems():
+            if e in self.es and self.es[e] != edge:
+                raise ValueError('edge {} has conflicting endpoints: {}, {}'.format(e, self.es[e], edge))
+            elif e.startswith(other.anon_prefix):
+                e = self.anon_prefix + e[8:]
+            self.es[e] = edge
         self.vs.update(other.vs)
-        self.es.update(other.es)
