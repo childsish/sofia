@@ -65,7 +65,6 @@
   },
   {
     "name": "genomic_feature",
-    "is_a": "genomic_interval",
     "has_a": [
       { "name": "gene_id", "key": "name", "type": "attr" }
     ],
@@ -102,7 +101,6 @@
   },
   {
     "name": "major_transcript",
-    "is_a": "genomic_interval",
     "has_a": [
       { "name": "chromosome_id", "key": "chr", "type": "attr" }
     ],
