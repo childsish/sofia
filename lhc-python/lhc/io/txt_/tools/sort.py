@@ -7,13 +7,13 @@ from itertools import chain
 from lhc.tools.sorter import Sorter
 
 
-def sort(input, output, format=('s1',), max_lines=1000000, comment='#', delimiter='\t'):
+def sort(input, output, format='s1', max_lines=1000000, comment='#', delimiter='\t'):
     # TODO: use delimiter argument
     import sys
 
     parser = EntityParser()
 
-    entity_factory = parser.parse_definition(EntityParser.FIELD_DELIMITER.join(format))
+    entity_factory = parser.parse(format)
     start = time.time()
     sorter = Sorter(entity_factory, max_lines)
     for line in input:
@@ -53,7 +53,7 @@ def define_parser(parser):
             help='output file (default: stdout')
     add_arg('-c', '--comment', default='#',
             help='comment character (default: #)')
-    add_arg('-f', '--format', nargs='+', default=['s1'],
+    add_arg('-f', '--format', default='s1',
             help='columns and types to extract (default: s1).')
     add_arg('-s', '--delimiter', default='\t',
             help='character delimiting the columns (default: \\t).')
