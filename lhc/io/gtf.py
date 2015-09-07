@@ -1,7 +1,7 @@
 import argparse
 
 from .gtf_.iterator import GtfEntryIterator
-from .txt_.tools import compress, sort
+from .txt_.tools import compress, sort, index
 
 
 def iter_gtf(fname):
@@ -29,7 +29,11 @@ def define_parser(parser):
     # Sort parser
     sort_parser = subparsers.add_parser('sort')
     sort.define_parser(sort_parser)
-    sort_parser.set_defaults(format=('s1', 'i4'))
+    sort_parser.set_defaults(format='s1.i4.i5')
+    # Index parser
+    index_parser = subparsers.add_parser('index')
+    index.define_parser(index_parser)
+    index_parser.set_defaults(format='s1.r[i4.i5]')
     return parser
 
 if __name__ == '__main__':
