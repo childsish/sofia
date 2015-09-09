@@ -29,11 +29,11 @@ class GetMajorTranscriptCodingSequence(Step):
         if major_transcript is None:
             return None
 
-        buffer_key = (id(chromosome_sequence_set), major_transcript.name)
+        buffer_key = (id(chromosome_sequence_set), id(major_transcript))
         if buffer_key in self.buffer:
             return self.buffer[buffer_key]
 
-        res = major_transcript.get_sub_seq(chromosome_sequence_set, types={'CDS'})
+        res = major_transcript.get_sub_seq(chromosome_sequence_set)
         if len(res) % 3 != 0:
             warn('{} coding sequence length not a multiple of 3, possible mis-annotation'.format(major_transcript.name))
             #return None

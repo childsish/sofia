@@ -125,9 +125,9 @@ class GetCodingVariant(Step):
         ref = variant.ref
         pos = variant.pos
         try:
-            coding_position = major_transcript.get_rel_pos(pos, {'CDS'})\
+            coding_position = major_transcript.get_rel_pos(pos)\
                 if major_transcript.strand == '+'\
-                else major_transcript.get_rel_pos(pos + len(ref) - 1, {'CDS'})
+                else major_transcript.get_rel_pos(pos + len(ref) - 1)
         except IndexError:
             return None
         except ValueError:
