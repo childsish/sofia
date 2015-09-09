@@ -54,7 +54,7 @@ class TestEntityParser(unittest.TestCase):
 
         self.assertRaises(ValueError, parser.parse, 's[s1.i4')
         self.assertRaises(ValueError, parser.parse, 's1,i4')
-        self.assertRaises(ValueError, parser.parse, 's,i4')
+        self.assertRaises(ValueError, parser.parse, 's.i4')
 
 
 if __name__ == '__main__':

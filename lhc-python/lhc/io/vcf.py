@@ -1,10 +1,14 @@
 __author__ = 'Liam Childs'
 
+if __name__ == '__main__' and __package__ is None:
+    import lhc.io
+    __package__ = 'lhc.io'
+
 import argparse
 
 from .vcf_.iterator import VcfEntryIterator
 from .vcf_.tools import compare, filter, sample, split_alt, trim_alt, merge
-from lhc.io.txt_.tools import compress
+from .txt_.tools import sort, compress, index
 
 
 def iter_vcf(fname):
@@ -26,6 +30,14 @@ def get_parser():
     compress_parser = subparsers.add_parser('compress')
     compress.define_parser(compress_parser)
     compress_parser.set_defaults(block_delimiter='\n')
+    # Sort parser
+    sort_parser = subparsers.add_parser('sort')
+    sort.define_parser(sort_parser)
+    sort_parser.set_defaults(format='s1.i2')
+    # Index parser
+    index_parser = subparsers.add_parser('index')
+    index.define_parser(index_parser)
+    index_parser.set_defaults(format='s1.i2')
     # Merge parser
     merge_parser = subparsers.add_parser('merge')
     merge.define_parser(merge_parser)

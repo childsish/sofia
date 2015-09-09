@@ -19,7 +19,7 @@ class IndexEncoder(json.JSONEncoder):
         return super(IndexEncoder, self).default(o)
 
 
-def index(input, output, format='s1'):
+def index(input, output, format='s1', factor=1):
     entity_parser = EntityParser()
     index_parser = IndexParser()
     entity_factory = entity_parser.parse(format)
@@ -35,9 +35,10 @@ def index(input, output, format='s1'):
             break
         entity = entity_factory(line.rstrip('\r\n').split('\t'))
         index.add(entity, block_offset)
-    index = index.compress()
+    index = index.compress(factor)
     sys.stderr.write('{} lines indexed in {} seconds\n'.format(i, time.time() - t))
 
+    index['format'] = format
     json.dump(index.__getstate__(), output, cls=IndexEncoder)
 
 
@@ -56,6 +57,8 @@ def define_parser(parser):
             help='compressed file (using blocked gzip) to index')
     add_arg('-f', '--format', default='s1',
             help='format of the compressed file (default: s1)')
+    add_arg('-c', '--compression_factor', default=1,
+            help='reduce the number of points to 1 / factor')
     parser.set_defaults(func=init_index)
     return parser
 
@@ -63,7 +66,7 @@ def define_parser(parser):
 def init_index(args):
     input = bgzf.open(args.input, 'rb')
     output = gzip.open(args.input + '.lci', 'wb')
-    index(input, output, args.format)
+    index(input, output, args.format, args.compression_factor)
     input.close()
     output.close()
 

@@ -1,9 +1,15 @@
+__author__ = 'Liam Childs'
+
+if __name__ == '__main__' and __package__ is None:
+    import lhc.io
+    __package__ = 'lhc.io'
+
 from .fasta_ import indexer, wrap
 from .fasta_.iterator import FastaEntryIterator
 from .txt_.tools import compress
+from ..binf.sequence import revcmp as rc
 from argparse import ArgumentParser
 from itertools import izip, product
-from lhc.binf.sequence import revcmp as rc
 
 
 def iter_entries(fname):
