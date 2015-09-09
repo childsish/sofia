@@ -1,6 +1,12 @@
+__author__ = 'Liam Childs'
+
+if __name__ == '__main__' and __package__ is None:
+    import lhc.io
+    __package__ = 'lhc.io'
+
 import argparse
 
-from sam_ import clip, filter
+from .sam_ import clip, filter
 
 
 def main():

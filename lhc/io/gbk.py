@@ -1,9 +1,13 @@
 __author__ = 'Liam Childs'
 
+if __name__ == '__main__' and __package__ is None:
+    import lhc.io
+    __package__ = 'lhc.io'
+
 import argparse
 
-from gbk_ import GbkIterator, GbkSequenceSet
-from gbk_.tools import extract, split
+from .gbk_ import GbkIterator, GbkSequenceSet
+from .gbk_.tools import extract, split
 
 
 def main():
