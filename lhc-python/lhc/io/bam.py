@@ -1,6 +1,12 @@
+__author__ = 'Liam Childs'
+
+if __name__ == '__main__' and __package__ is None:
+    import lhc.io
+    __package__ = 'lhc.io'
+
 import argparse
 
-from bam_ import rename, subset
+from .bam_ import rename, subset
 
 
 def main():
