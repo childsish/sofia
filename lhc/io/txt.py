@@ -1,6 +1,12 @@
+__author__ = 'Liam Childs'
+
+if __name__ == '__main__' and __package__ is None:
+    import lhc.io
+    __package__ = 'lhc.io'
+
 import argparse
 
-from lhc.io.txt_.tools import check_format, compress, index, sort
+from .txt_.tools import check_format, compress, index, sort
 
 
 def main():

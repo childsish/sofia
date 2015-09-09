@@ -1,10 +1,14 @@
 __author__ = 'Liam Childs'
 
+if __name__ == '__main__' and __package__ is None:
+    import lhc.io
+    __package__ = 'lhc.io'
+
 import argparse
 
 from .vcf_.iterator import VcfEntryIterator
 from .vcf_.tools import compare, filter, sample, split_alt, trim_alt, merge
-from lhc.io.txt_.tools import sort, compress, index
+from .txt_.tools import sort, compress, index
 
 
 def iter_vcf(fname):
