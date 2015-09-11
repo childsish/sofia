@@ -2,9 +2,9 @@ __author__ = 'Liam Childs'
 
 
 class Filter(object):
-    def __init__(self, it, filters=[], constants=frozenset()):
+    def __init__(self, it, filter, constants=frozenset()):
         self.it = it
-        self.filters = filters
+        self.filter = filter
         self.constants = constants
 
     def __iter__(self):
@@ -12,14 +12,14 @@ class Filter(object):
 
     def next(self):
         it = self.it
-        filters = self.filters
+        filter = self.filter
         constants = self.constants
 
-        entry = it.next()
-        local_variables = entry._asdict()
-        local_variables.update(constants)
         try:
-            while any(eval(filter, local_variables) for filter in filters):
+            entry = it.next()
+            local_variables = entry._asdict()
+            local_variables.update(constants)
+            while not eval(filter, local_variables):
                 entry = it.next()
                 local_variables = entry._asdict()
                 local_variables.update(constants)
@@ -30,6 +30,6 @@ class Filter(object):
             import sys
             sys.stderr.write('error occured on line {} of {}\n'.format(it.line_no, it.fname))
             raise e
-        if any(eval(filter, local_variables) for filter in filters):
+        if not eval(filter, local_variables):
             raise StopIteration
         return entry

@@ -13,8 +13,8 @@ class VcfMerger(object):
     
     CHR_REGX = re.compile('\d+$|X$|Y$|M$')
     
-    def __init__(self, iterators, bams=[], filters=[]):
-        self.iterators = [Filter(VcfEntryIterator(i), filters) for i in iterators]
+    def __init__(self, iterators, bams=[], filter=None):
+        self.iterators = [Filter(VcfEntryIterator(i), filter) for i in iterators]
         hdrs = [it.hdrs for it in self.iterators]
         self.hdrs = self._merge_headers(hdrs)
         self.samples = reduce(add, [it.samples for it in self.iterators])
@@ -33,7 +33,6 @@ class VcfMerger(object):
                     self.sample_to_bam[sample] = bam
                 else:
                     bam.close()
-        self.filters = filters
 
     def __iter__(self):
         """ Iterate through merged vcf_ lines.
