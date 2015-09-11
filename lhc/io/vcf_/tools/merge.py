@@ -7,8 +7,8 @@ import sys
 from ..merger import VcfMerger
 
 
-def merge(fnames, out, bams, filters):
-    merger = VcfMerger(fnames, bams=bams, filters=filters)
+def merge(fnames, out, bams, filter):
+    merger = VcfMerger(fnames, bams=bams, filter=filter)
     for key, values in merger.hdrs.iteritems():
         for value in values:
             out.write('{}={}\n'.format(key, value))
@@ -46,11 +46,11 @@ def define_parser(parser):
     add_arg = parser.add_argument
     add_arg('inputs', nargs='+')
     add_arg('-b', '--bams', nargs='+',
-            help='If provided, the read counts from the bam files with be included.')
+            help='include read counts from bam files')
     add_arg('-o', '--output',
-            help='The name of the merged vcf_ (default: stdout).')
-    add_arg('-f', '--filter', nargs='+', default=[],
-            help='Filters to apply')
+            help='name of the merged vcf_ (default: stdout).')
+    add_arg('-f', '--filter',
+            help='filter to apply')
     parser.set_defaults(func=init_merge)
     return parser
 
