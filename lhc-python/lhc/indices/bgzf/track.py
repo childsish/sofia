@@ -4,6 +4,7 @@ import bisect
 
 from operator import or_
 from lhc.misc.tools import argsort
+from itertools import izip
 
 
 class Track(object):
@@ -78,17 +79,24 @@ class Track(object):
             start, stop = (args[0].start, args[0].stop)\
                 if hasattr(args[0], 'start') and hasattr(args[0], 'stop')\
                 else (args[0], args[0] + 1)
-            fr, to = self._get_interval(start, stop)
         elif len(args) == 2:
-            fr, to = self._get_interval(args[0], args[1])
+            start, stop = args
         else:
             raise KeyError('invalid key {}'.format(args))
 
+        fr, to = self._get_interval(start, stop)
         if self.is_leaf:
             return reduce(or_, (self.values[idx] for idx in xrange(fr, to)), set())
         return reduce(or_, (self.values[idx].fetch(*args[1:]) for idx in xrange(fr, to)), set())
 
     def get_cost(self, key=None, value=None):
+        """
+        Cost is the maximum number of blocks that would need to be accessed
+
+        :param key: if specified, include the key in calculating costs
+        :param value: if specified, include the value in calculating costs
+        :return: cost for track access
+        """
         costs = [len(v) for v in self.values]\
             if self.is_leaf\
             else [v.get_cost(None if key is None else key[1:], value) for v in self.values]
@@ -105,34 +113,30 @@ class Track(object):
                 costs.append(1)
         return max(costs)
 
-    def compress(self, factor):
+    def compress(self, factor=1):
         if not self.is_leaf:
             for i, value in enumerate(self.values):
                 self.values[i] = value.compress(factor)
             return self
 
-        starts = self.starts
-        stops = self.stops
-        values = self.values
+        it = izip(self.starts, self.stops, self.values)
+        start, stop, value = it.next()
         res = Track(self.index_classes)
-        res.starts.append(starts[0])
-        res.stops.append(stops[0])
-        res.values.append(values[0].copy())
+        res.starts.append(start)
+        res.stops.append(stop)
+        res.values.append(value.copy())
 
-        i = 0
-        while i < len(starts):
-            j = i + 1
-            c_factor = 1
-            while j < len(starts) and (values[j] == res.values[-1] or c_factor < factor):
-                res.stops[-1] = stops[j]
-                res.values[-1].update(values[j])
+        c_factor = 1
+        for start, stop, value in it:
+            if value == res.values[-1] or c_factor < factor:
+                res.stops[-1] = stop
+                res.values[-1].update(value)
                 c_factor += 1
-                j += 1
-            if j < len(starts):
-                res.starts.append(starts[j])
-                res.stops.append(stops[j])
-                res.values.append(values[j].copy())
-            i = j
+            else:
+                res.starts.append(start)
+                res.stops.append(stop)
+                res.values.append(value.copy())
+                c_factor = 1
         return res
 
     def _get_interval(self, start, stop):
