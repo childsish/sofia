@@ -1,18 +1,28 @@
+__author__ = 'Liam Childs'
+
 import argparse
+import time
 
 from Bio.bgzf import BgzfWriter
 
 
 def compress(input, output, block_size=65536, block_delimiter='\n'):
+    import sys
+
+    start = time.time()
     data = ''
+    bytes = 0
     while True:
         data += input.read(block_size - len(data))
+        bytes += len(data)
         if not data:
             break
         idx = data.rfind(block_delimiter, 0, block_size)
         output.write(data[:idx + 1])
         output.flush()
         data = data[idx + 1:]
+    duration = time.time() - start
+    sys.stderr.write('Compressed {} bytes in {:.3f} seconds.\n'.format(bytes, duration))
 
 
 def main():
