@@ -23,7 +23,7 @@ class TestSet(unittest.TestCase):
     def test_set(self):
         columns = [Column(str, i) for i in xrange(4)]
         entity_factory = Entity(namedtuple('Entry', ['V1', 'V2', 'V3', 'V4']), columns)
-        it = Iterator(open(self.fname), entity_factory)
+        it = Iterator(open(self.fname), entry_factory=entity_factory)
         index = CompoundIndex(KeyIndex, IntervalIndex)
         data = Set(it, index, key=lambda x: (x.V1, Interval(int(x.V2), int(x.V3))))
 

@@ -1,6 +1,8 @@
 __author__ = 'Liam Childs'
 
+
 from bisect import bisect_left, bisect_right
+from itertools import izip
 from operator import or_
 
 
@@ -80,24 +82,22 @@ class PointIndex(object):
             for i, value in enumerate(self.values):
                 self.values[i] = value.compress(factor)
             return self
-        keys = self.keys
-        values = self.values
-        res = PointIndex(self.index_classes)
-        res.keys.append(keys[0])
-        res.values.append(values[0].copy())
 
-        i = 0
-        while i < len(keys):
-            j = i + 1
-            c_factor = 1
-            while j < len(keys) and (values[j] == res.values or c_factor < factor):
-                res.values[-1].update(values[j])
+        it = izip(self.keys, self.values)
+        key, value = it.next()
+        res = PointIndex(self.index_classes)
+        res.keys.append(key)
+        res.values.append(value.copy())
+
+        c_factor = 1
+        for key, value in it:
+            if value == res.values[-1] or c_factor < factor:
+                res.values[-1].update(value)
                 c_factor += 1
-                j += 1
-            if j < len(keys):
-                res.keys.append(keys[j])
-                res.values.append(values[j].copy())
-            i = j
+            else:
+                res.keys.append(key)
+                res.values.append(value.copy())
+                c_factor = 1
         return res
 
     def _get_interval(self, start, stop=None):

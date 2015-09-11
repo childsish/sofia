@@ -1,8 +1,13 @@
 import unittest
 
-from lhc.misc.performance_measures import *
+try:
+    from lhc.misc.performance_measures import *
+    skip = False
+except ImportError:
+    skip = True
 
 
+@unittest.skipIf(skip, 'unable to import numpy')
 class TestAccuracyMeasures(unittest.TestCase):
     def test_specificity(self):
         self.assertAlmostEqual(0.5, specificity(tp=5, fn=5))
