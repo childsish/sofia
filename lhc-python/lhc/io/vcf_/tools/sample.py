@@ -26,8 +26,12 @@ def define_parser(parser):
     add_arg('number', type=int)
     add_arg('-r', '--randomise', action='store_true')
     add_arg('-s', '--seed', type=int)
-    parser.set_defaults(func=sample)
+    parser.set_defaults(func=sample_init)
     return parser
+
+
+def sample_init(args):
+    sample(args.input)
 
 if __name__ == '__main__':
     import sys
