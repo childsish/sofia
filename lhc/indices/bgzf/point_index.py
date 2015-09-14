@@ -122,8 +122,9 @@ class PointIndex(object):
 
     def __setstate__(self, state):
         self.index_classes = state['index_classes']
+        self.is_leaf = len(self.index_classes) == 0
         self.keys = state['keys']
-        self.values = set(state['values']) if self.is_leaf else\
+        self.values = [set(v) for v in state['values']] if self.is_leaf else\
             [self.init_from_state(state, self.index_classes) for state in state['values']]
 
     @staticmethod
