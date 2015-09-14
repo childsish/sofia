@@ -2,6 +2,7 @@ __author__ = 'Liam Childs'
 
 import bisect
 
+from Bio.bgzf import split_virtual_offset
 from operator import or_
 from lhc.misc.tools import argsort
 from itertools import izip
@@ -12,6 +13,7 @@ class Track(object):
         self.starts = []
         self.stops = []
         self.values = []
+        self.blocks = []
         self.index_classes = index_classes
         self.is_leaf = len(index_classes) == 0
 
@@ -52,19 +54,23 @@ class Track(object):
         return res
 
     def add(self, key, value):
+        block = split_virtual_offset(value)[0]
         fr, to = self._get_interval(key[0].start, key[0].stop)
         idxs = range(fr, to)
         if len(idxs) > 0:
             start = min(key[0].start, *[self.starts[i] for i in idxs])
             stop = max(key[0].stop, *[self.stops[i] for i in idxs])
             value = reduce(or_, (self.values[i] for i in idxs), {value})
+            block = reduce(or_, (self.blocks[i] for i in idxs), {block})
             for i in reversed(idxs):
                 del self.starts[i]
                 del self.stops[i]
                 del self.values[i]
+                del self.blocks[i]
         else:
             start = key[0].start
             stop = key[0].stop
+            block = {block}
             if self.is_leaf:
                 value = {value}
             else:
@@ -73,6 +79,7 @@ class Track(object):
         self.starts.insert(fr, start)
         self.stops.insert(fr, stop)
         self.values.insert(fr, value)
+        self.blocks.insert(fr, block)
 
     def fetch(self, *args):
         if not self.is_leaf or len(args) == 1:
@@ -89,6 +96,19 @@ class Track(object):
             return reduce(or_, (self.values[idx] for idx in xrange(fr, to)), set())
         return reduce(or_, (self.values[idx].fetch(*args[1:]) for idx in xrange(fr, to)), set())
 
+    def fetch_blocks(self, *args):
+        if not self.is_leaf or len(args) == 1:
+            start, stop = (args[0].start, args[0].stop)\
+                if hasattr(args[0], 'start') and hasattr(args[0], 'stop')\
+                else (args[0], args[0] + 1)
+        elif len(args) == 2:
+            start, stop = args
+        else:
+            raise KeyError('invalid key {}'.format(args))
+
+        fr, to = self._get_interval(start, stop)
+        return reduce(or_, (self.blocks[idx] for idx in xrange(fr, to)), set())
+
     def get_cost(self, key=None, value=None):
         """
         Cost is the maximum number of blocks that would need to be accessed
@@ -97,16 +117,17 @@ class Track(object):
         :param value: if specified, include the value in calculating costs
         :return: cost for track access
         """
-        costs = [len(v) for v in self.values]\
+        costs = [len(blocks) for blocks in self.blocks]\
             if self.is_leaf\
             else [v.get_cost(None if key is None else key[1:], value) for v in self.values]
         if key is not None:
             if value is None:
                 raise ValueError('block must be passed along with the interval')
+            block = split_virtual_offset(value)[0]
             fr, to = self._get_interval(key[0].start, key[0].stop)
             idxs = range(fr, to)
             if len(idxs) > 0:
-                costs.append(len(self.fetch(*key) | {value}))
+                costs.append(len(self.fetch_blocks(*key) | {block}))
                 for i in reversed(idxs):
                     del costs[i]
             else:
@@ -154,7 +175,8 @@ class Track(object):
             'index_classes': self.index_classes,
             'starts': self.starts,
             'stops': self.stops,
-            'values': values
+            'values': values,
+            'blocks': self.blocks
         }
 
     def __setstate__(self, state):
@@ -163,6 +185,7 @@ class Track(object):
         self.stops = state['stops']
         self.values = set(state['values']) if self.is_leaf else\
             [self.init_from_state(state, self.index_classes) for state in state['values']]
+        self.blocks = state['blocks']
 
     @staticmethod
     def init_from_state(state, index_classes):
