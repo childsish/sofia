@@ -18,6 +18,7 @@ class TestTrack(unittest.TestCase):
         self.assertEquals([0, 10, 20, 30], self.track.starts)
         self.assertEquals([5, 15, 25, 35], self.track.stops)
         self.assertEquals([{0}, {1}, {2}, {2}], self.track.values)
+        self.assertEquals([{0}, {0}, {0}, {0}], self.track.blocks)
 
     def test_contains(self):
         self.assertNotIn([I(-1, 0)], self.track)
