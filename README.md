@@ -5,6 +5,11 @@ Software for the Flexible Integration of Annotation (SoFIA) is a framework desig
 
 By default, vanilla SoFIA comes with a genomics workflow, capable of annotating variants and genes, and calculating sequence features. If different functionality is required, SoFIA has been designed to be extensible allowing the user to easily extend the current workflow or even create a whole new workflow for completely different purposes.
 
+Community
+---------
+
+There is a [Google Group][google-group] for discussions about SoFIA.  
+
 Installation
 ------------
 
@@ -198,3 +203,4 @@ Refer to the GitHub [issues][issues] page for upcoming improvements, to make sug
 [hgvs]: http://www.hgvs.org/mutnomen/ "Human Genome Variation Society"
 [so]: http://www.sequenceontology.org/ "The Sequence Ontology"
 [issues]: https://github.com/childsish/sofia/issues "To Do"
+[google-group]: https://groups.google.com/forum/#!forum/workflows-on-demand
