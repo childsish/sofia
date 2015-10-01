@@ -6,7 +6,7 @@ if __name__ == '__main__' and __package__ is None:
 
 import argparse
 
-from .txt_.tools import check_format, compress, index, sort
+from .txt_.tools import check_format, compress, index, sort, fetch
 
 
 def main():
@@ -32,6 +32,9 @@ def define_parser(parser):
 
     sort_parser = subparsers.add_parser('sort')
     sort.define_parser(sort_parser)
+
+    fetch_parser = subparsers.add_parser('fetch')
+    fetch.define_parser(fetch_parser)
 
     return parser
 

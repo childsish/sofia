@@ -2,11 +2,10 @@ from unittest import TestCase, main
 
 from lhc.binf.genetic_code import GeneticCodes
 
+
 class TestGeneticCodes(TestCase):
     def test_integration(self):
         gc = GeneticCodes()
-        
-        print gc['Standard']
 
         self.assertIn('Standard', gc.name2id)
         self.assertEquals(gc['Standard']['ttt'], 'F')

@@ -121,7 +121,7 @@ class GenomicInterval(Interval):
     def get_sub_seq(self, sequence_set, fr=None, to=None):
         fr = self.start if fr is None else max(self.start, fr)
         to = self.stop if to is None else min(self.stop, to)
-        res = sequence_set[self.chr][fr:to] if isinstance(sequence_set, dict) else sequence_set[fr:to]
+        res = sequence_set[self.chr][fr:to]# if isinstance(sequence_set, dict) else sequence_set[fr:to]
         if self.strand == '-':
             res = revcmp(res)
         return res

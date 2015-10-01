@@ -20,13 +20,13 @@ class GetMajorTranscriptFromGenomicFeature(Step):
         return sum(len(child) for child in transcript.children if child.type == 'CDS')
 
 
-class GetMajorTranscriptFromGenomicInterval(Step):
-    """
-    Get the major transcript of a genomic feature. Defined as the longest transcript (ie. most complete).
-    """
+#class GetMajorTranscriptFromGenomicInterval(Step):
+#    """
+#    Get the major transcript of a genomic feature. Defined as the longest transcript (ie. most complete).
+#    """
 
-    IN = ['genomic_interval']
-    OUT = ['major_transcript']
+#    IN = ['genomic_interval']
+#    OUT = ['major_transcript']
 
-    def calculate(self, genomic_interval):
-        return genomic_interval
+#    def calculate(self, genomic_interval):
+#        return genomic_interval

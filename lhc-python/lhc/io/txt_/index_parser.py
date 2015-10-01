@@ -1,3 +1,5 @@
+__author__ = 'Liam Childs'
+
 from lhc.interval import Interval
 from lhc.indices.bgzf import PointIndex, IntervalIndex
 
