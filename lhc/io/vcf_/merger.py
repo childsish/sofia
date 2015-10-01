@@ -5,6 +5,7 @@ from itertools import izip
 from operator import add
 from lhc.binf.identifier import Chromosome
 from lhc.collections.sorted_dict import SortedDict
+from lhc.io.txt_ import Filter
 from iterator import VcfEntryIterator, Variant
 
 
@@ -12,8 +13,8 @@ class VcfMerger(object):
     
     CHR_REGX = re.compile('\d+$|X$|Y$|M$')
     
-    def __init__(self, iterators, bams=[], filters=[]):
-        self.iterators = [VcfEntryIterator(i) for i in iterators]
+    def __init__(self, iterators, bams=[], filter=None):
+        self.iterators = [Filter(VcfEntryIterator(i), filter) for i in iterators]
         hdrs = [it.hdrs for it in self.iterators]
         self.hdrs = self._merge_headers(hdrs)
         self.samples = reduce(add, [it.samples for it in self.iterators])
@@ -32,7 +33,6 @@ class VcfMerger(object):
                     self.sample_to_bam[sample] = bam
                 else:
                     bam.close()
-        self.filters = filters
 
     def __iter__(self):
         """ Iterate through merged vcf_ lines.
@@ -132,30 +132,10 @@ class VcfMerger(object):
 
             for idx in idxs:
                 try:
-                    tops[idx] = self._next_line(idx)
+                    tops[idx] = self.iterators[idx].next()
                     self._update_sorting(sorted_tops, tops[idx], idx)
                 except StopIteration:
                     pass
-    
-    def _next_line(self, idx):
-        entry = self.iterators[idx].next()
-        local_variables = entry._asdict()
-        local_variables.update({'NOCALL': 'NOCALL', 'PASS': 'PASS'})
-        try:
-            while any(eval(filter, local_variables) for filter in self.filters):
-                entry = self.iterators[idx].next()
-                local_variables = entry._asdict()
-                local_variables.update({'NOCALL': 'NOCALL', 'PASS': 'PASS'})
-        except StopIteration:
-            pass
-        except Exception, e:
-            import sys
-            it = self.iterators[idx]
-            sys.stderr.write('error occured on line {} of {}\n'.format(it.line_no, it.fname))
-            raise e
-        if any(eval(filter, local_variables) for filter in self.filters):
-            raise StopIteration
-        return entry
     
     def _init_sorting(self, tops):
         sorted_tops = SortedDict()

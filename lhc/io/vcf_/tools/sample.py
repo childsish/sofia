@@ -1,10 +1,17 @@
 import argparse
+import random
 
-from lhc.argparse import OpenWritableFile, OpenReadableFile
+from ..iterator import VcfLineIterator
 
 
-def sample(args):
-    pass
+def sample(input, output, proportion):
+    it = VcfLineIterator(input)
+    for k, vs in it.hdrs.iteritems():
+        output.write('\n'.join('{}={}'.format(k, v) for v in vs))
+    output.write('\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t' + '\t'.join(it.samples) + '\n')
+    for line in it:
+        if random.random() < proportion:
+            output.write('{}\n'.format(line))
 
 
 def main():
@@ -17,17 +24,25 @@ def get_parser():
 
 
 def define_parser(parser):
-    import sys
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-b', '--bed')
     add_arg = parser.add_argument
-    add_arg('-i', '--input', default=sys.stdin, action=OpenReadableFile)
-    add_arg('-o', '--output', default=sys.stdout, action=OpenWritableFile)
-    add_arg('number', type=int)
-    add_arg('-r', '--randomise', action='store_true')
+    add_arg('input', nargs='?')
+    add_arg('output', nargs='?')
+    add_arg('-p', '--proportion', default=0.01, type=float)
     add_arg('-s', '--seed', type=int)
-    parser.set_defaults(func=sample)
+    parser.set_defaults(func=sample_init)
     return parser
+
+
+def sample_init(args):
+    import sys
+    input = sys.stdin if args.input is None else open(args.input)
+    output = sys.stdout if args.output is None else open(args.output, 'w')
+    if args.seed is not None:
+        random.seed(args.seed)
+    sample(input, output, args.proportion)
+    input.close()
+    output.close()
+
 
 if __name__ == '__main__':
     import sys

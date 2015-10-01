@@ -18,6 +18,7 @@ class TestTrack(unittest.TestCase):
         self.assertEquals([0, 10, 20, 30], self.track.starts)
         self.assertEquals([5, 15, 25, 35], self.track.stops)
         self.assertEquals([{0}, {1}, {2}, {2}], self.track.values)
+        self.assertEquals([{0}, {0}, {0}, {0}], self.track.blocks)
 
     def test_contains(self):
         self.assertNotIn([I(-1, 0)], self.track)
@@ -51,8 +52,8 @@ class TestTrack(unittest.TestCase):
         self.track.add([I(30, 35)], 3)
 
         self.assertEquals({2, 3}, self.track.fetch(24, 31))
-        self.assertEquals({3}, self.track.fetch(29, 31))
-        self.assertEquals({3}, self.track.fetch(34, 36))
+        self.assertEquals({2, 3}, self.track.fetch(29, 31))
+        self.assertEquals({2, 3}, self.track.fetch(34, 36))
 
     def test_add_merge(self):
         self.track.add([I(14, 21)], 3)
@@ -77,7 +78,7 @@ class TestTrack(unittest.TestCase):
         self.assertEquals(3, self.track.get_cost())
 
     def test_get_cost_nochange(self):
-        self.assertEquals(1, self.track.get_cost([I(30, 35)], 3))
+        self.assertEquals(2, self.track.get_cost([I(30, 35)], 3))
         self.assertEquals(3, self.track.get_cost([I(14, 21)], 3))
         self.assertEquals(2, self.track.get_cost([I(14, 21)], 2))
         self.assertRaises(ValueError, self.track.get_cost, I(14, 21))
@@ -100,7 +101,7 @@ class TestTrack(unittest.TestCase):
         track = self.track.compress()
 
         self.assertEquals([0, 10, 20], track.starts)
-        self.assertEquals([5, 15, 25], track.stops)
+        self.assertEquals([5, 15, 35], track.stops)
         self.assertEquals([{0}, {1}, {2}], track.values)
 
     def test_compress_factor(self):

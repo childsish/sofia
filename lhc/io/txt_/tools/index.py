@@ -19,7 +19,9 @@ class IndexEncoder(json.JSONEncoder):
         return super(IndexEncoder, self).default(o)
 
 
-def index(input, output, format='s1', factor=1):
+def index(input, output, format='s1', header='#', delimiter='\t', factor=1):
+    import sys
+
     entity_parser = EntityParser()
     index_parser = IndexParser()
     entity_factory = entity_parser.parse(format)
@@ -28,18 +30,21 @@ def index(input, output, format='s1', factor=1):
     t = time.time()
     i = 0
     while True:
-        block_offset, inblock_offset = bgzf.split_virtual_offset(input.tell())
+        virtual_offset = input.tell()
         line = input.readline()
         i += 1
         if line == '':
             break
-        entity = entity_factory(line.rstrip('\r\n').split('\t'))
-        index.add(entity, block_offset)
+        elif line.startswith(header):
+            continue
+        entity = entity_factory(line.rstrip('\r\n').split(delimiter))
+        index.add(entity, virtual_offset)
     index = index.compress(factor)
     sys.stderr.write('{} lines indexed in {} seconds\n'.format(i, time.time() - t))
 
-    index['format'] = format
-    json.dump(index.__getstate__(), output, cls=IndexEncoder)
+    state = index.__getstate__()
+    state['format'] = format
+    json.dump(state, output, cls=IndexEncoder)
 
 
 def main():
@@ -57,6 +62,10 @@ def define_parser(parser):
             help='compressed file (using blocked gzip) to index')
     add_arg('-f', '--format', default='s1',
             help='format of the compressed file (default: s1)')
+    add_arg('-a', '--header', default='#',
+            help='character denoting a header line (default: #).')
+    add_arg('-d', '--delimiter', default='\t',
+            help='character delimiting the columns (default: \\t).')
     add_arg('-c', '--compression_factor', default=1,
             help='reduce the number of points to 1 / factor')
     parser.set_defaults(func=init_index)
@@ -66,7 +75,7 @@ def define_parser(parser):
 def init_index(args):
     input = bgzf.open(args.input, 'rb')
     output = gzip.open(args.input + '.lci', 'wb')
-    index(input, output, args.format, args.compression_factor)
+    index(input, output, args.format, args.header, args.delimiter, args.compression_factor)
     input.close()
     output.close()
 

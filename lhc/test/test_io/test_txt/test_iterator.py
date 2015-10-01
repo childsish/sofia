@@ -31,7 +31,7 @@ class TestITerator(unittest.TestCase):
 
     def test_iterator_builder(self):
         entity_factory = Entity(Interval, [Column(str, 0, 'chr'), Column(int, 1, 'start'), Column(int, 2, 'stop')])
-        it = Iterator(open(self.fname), entity_factory)
+        it = Iterator(open(self.fname), entry_factory=entity_factory)
 
         self.assertEquals(Interval('1', 10, 20), it.next())
         self.assertEquals(Interval('1', 30, 60), it.next())

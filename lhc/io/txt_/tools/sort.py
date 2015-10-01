@@ -55,7 +55,7 @@ def define_parser(parser):
             help='comment character (default: #)')
     add_arg('-f', '--format', default='s1',
             help='columns and types to extract (default: s1).')
-    add_arg('-s', '--delimiter', default='\t',
+    add_arg('-d', '--delimiter', default='\t',
             help='character delimiting the columns (default: \\t).')
     add_arg('-m', '--max-lines', default=1000000, type=int,
             help='maximum number of lines to sort simultaneously')
