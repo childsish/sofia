@@ -17,13 +17,14 @@ class EntityParser(object):
 
     Examples
     --------
-    s1       - create a string using column 1.
-    r[i2.i3] - create integers from columns 2 and 3 then create an interval from the integers
-    chr-s1.pos-i4
+    s1            - create a string using column 1.
+    r[i2.i3]      - create integers from columns 2 and 3 then create an interval from the integers
+    chr-s1.pos-i4 - create a namedtuple with the fields chr and pos, where pos is an integer
 
     Notes
     -----
-    * Can not use ',' in windows command lines.
+     * Can not use ',' in windows command lines.
+     * ':' can be used by other tools as a delimiter.
     """
 
     VALID_CHARS = set(string.ascii_letters + string.digits + '_')
