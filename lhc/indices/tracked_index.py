@@ -1,8 +1,6 @@
 __author__ = 'Liam Childs'
 
 from bisect import bisect_left, bisect_right
-from itertools import izip
-from math import log
 from operator import add
 from lhc.interval import Interval
 
@@ -13,7 +11,7 @@ class TrackedIndex(object):
         self.tracks = [Track(n)]
 
     def add(self, item, offset):
-        cost_increases = [(track.get_cost_increase(item, offset), i) for i, track in enumerate(self.tracks)]
+        cost_increases = [(track.get_cost_increase(item), i) for i, track in enumerate(self.tracks)]
         min_increase, index = min(cost_increases)
         self.tracks[index].add(item, offset)
         if index == len(self.tracks) - 1:
@@ -66,18 +64,39 @@ class Track(object):
             stop[-1] = item[-1]
         return start, stop
 
-    def get_cost_increase(self, interval, offset):
-        offsets = self.offsets
-
-        if len(offsets) == 0:
-            return 2
+    def get_cost_increase(self, interval):
+        if len(self.offsets) == 0:
+            return 50
         start, stop = self.get_start_stop(interval)
-        if start < self.starts[-1] or offset <= offsets[-1][1]:
-            raise ValueError('intervals and offsets must be added in-order')
-        lens = [offset[2] for offset in offsets]
-        cost = log(len(lens), 2) + max(lens)
-        if start < self.stops[-1]:
-            lens[-1] += 1
-        else:
-            lens.append(1)
-        return log(len(lens), 2) + max(lens) - cost
+        if start < self.starts[-1]:
+            raise ValueError('intervals must be added in-order')
+        return self.offsets[-1][2] if start < self.stops[-1] else 0
+
+
+def save_index(fileobj, index):
+    import json
+
+    json.dump({
+        'n': index.n,
+        'format': format,
+        'tracks': [
+            {'n': track.n,
+             'starts': track.starts,
+             'stops': track.stops,
+             'offsets': track.offsets} for track in index.tracks
+        ]
+    }, fileobj)
+
+
+def load_index(fileobj):
+    import json
+
+    data = json.load(fileobj)
+    index = TrackedIndex(data['n'])
+    for track_data in data['tracks']:
+        track = Track(track_data['n'])
+        track.starts = track_data['starts']
+        track.stops = track_data['stops']
+        track.offsets = track_data['offsets']
+        index.tracks.append(track)
+    return index

@@ -2,33 +2,24 @@ __author__ = 'Liam Childs'
 
 import argparse
 import gzip
-import json
 import time
 
 from ..entity_parser import EntityParser
-from ..index_parser import IndexParser
-from lhc.indices.bgzf import PointIndex, IntervalIndex
-from lhc.indices.bgzf.track import Track
+from lhc.indices.tracked_index import TrackedIndex, save_index
 from Bio import bgzf
-
-
-class IndexEncoder(json.JSONEncoder):
-    def default(self, o):
-        if o in {PointIndex, IntervalIndex, Track}:
-            return o.__name__[0]
-        return super(IndexEncoder, self).default(o)
+from collections import Counter
 
 
 def index(input, output, format='s1', header='#', delimiter='\t', factor=1):
     import sys
 
     entity_parser = EntityParser()
-    index_parser = IndexParser()
     entity_factory = entity_parser.parse(format)
-    index = index_parser.parse(entity_factory)
+    index = TrackedIndex(len(entity_factory.entities))
 
     t = time.time()
     i = 0
+    ttls = Counter()
     while True:
         virtual_offset = input.tell()
         line = input.readline()
@@ -38,13 +29,12 @@ def index(input, output, format='s1', header='#', delimiter='\t', factor=1):
         elif line.startswith(header):
             continue
         entity = entity_factory(line.rstrip('\r\n').split(delimiter))
+        ttls[entity.V1] += 1
+        if ttls[entity.V1] > 1000:
+            continue
         index.add(entity, virtual_offset)
-    index = index.compress(factor)
     sys.stderr.write('{} lines indexed in {} seconds\n'.format(i, time.time() - t))
-
-    state = index.__getstate__()
-    state['format'] = format
-    json.dump(state, output, cls=IndexEncoder)
+    save_index(output, index)
 
 
 def main():
@@ -68,13 +58,15 @@ def define_parser(parser):
             help='character delimiting the columns (default: \\t).')
     add_arg('-c', '--compression_factor', default=1,
             help='reduce the number of points to 1 / factor')
+    add_arg('-z', '--zip', default=False, action='store_true',
+            help='compress output using gzip (default: false)')
     parser.set_defaults(func=init_index)
     return parser
 
 
 def init_index(args):
     input = bgzf.open(args.input, 'rb')
-    output = gzip.open(args.input + '.lci', 'wb')
+    output = gzip.open(args.input + '.lci', 'wb') if args.zip else open(args.input + '.lci', 'w')
     index(input, output, args.format, args.header, args.delimiter, args.compression_factor)
     input.close()
     output.close()
