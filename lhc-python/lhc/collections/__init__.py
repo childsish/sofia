@@ -5,8 +5,9 @@ from interval_tree import IntervalTree
 from sorted_dict import SortedDict
 from sorted_list import SortedList
 from sorted_set import SortedSet
-from sorted_value_dict import SortedValueDict
 from interval_binner import IntervalBinner
+from tracked_set import TrackedSet
+from tracked_map import TrackedMap
 try:
     from nested_containment_list import NestedContainmentList
 except ImportError, e:
