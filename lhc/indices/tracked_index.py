@@ -1,6 +1,5 @@
 __author__ = 'Liam Childs'
 
-from Bio import bgzf
 from bisect import bisect_left, bisect_right
 from itertools import izip
 from math import log
@@ -42,14 +41,15 @@ class Track(object):
         start, stop = self.get_start_stop(interval)
 
         if len(self.starts) > 0 and start < self.stops[-1]:
-            if start < self.starts[-1] or offset < self.offsets[-1][1]:
+            if start < self.starts[-1] or offset <= self.offsets[-1][1]:
                 raise ValueError('intervals and offsets must be added in-order')
             self.stops[-1] = max(self.stops[-1], stop)
             self.offsets[-1][1] = offset
+            self.offsets[-1][2] += 1
         else:
             self.starts.append(start)
             self.stops.append(stop)
-            self.offsets.append([offset, offset])
+            self.offsets.append([offset, offset, 1])
 
     def fetch(self, *args):
         start, stop = self.get_start_stop(args)
@@ -72,39 +72,12 @@ class Track(object):
         if len(offsets) == 0:
             return 2
         start, stop = self.get_start_stop(interval)
-        if start < self.starts[-1] or offset < offsets[-1][1]:
-            raise ValueError('intervals must be added in-order')
-        lens = [get_offset_count(fr, to) for fr, to in offsets]
+        if start < self.starts[-1] or offset <= offsets[-1][1]:
+            raise ValueError('intervals and offsets must be added in-order')
+        lens = [offset[2] for offset in offsets]
         cost = log(len(lens), 2) + max(lens)
         if start < self.stops[-1]:
-            lens[-1] = get_offset_count(offsets[-1][0], max(offsets[-1][1], offset))
+            lens[-1] += 1
         else:
             lens.append(1)
         return log(len(lens), 2) + max(lens) - cost
-
-
-def multivariate_overlap(a, b):
-    return all(univariate_overlap(ai, bi) for ai, bi in izip(a, b))
-
-
-def univariate_overlap(a, b):
-    a_start, a_stop = (a.start, a.stop) if isinstance(a, Interval) else (a, a)
-    b_start, b_stop = (b.start, b.stop) if isinstance(b, Interval) else (b, b)
-    return a_start == b_start or a_start < b_stop and b_start < a_stop
-
-
-def get_item(starts, stops):
-    return [start if start == stop else Interval(start, stop) for start, stop in izip(starts, stops)]
-
-
-def get_offset_count(fr, to):
-    block_fr, in_block_fr = bgzf.split_virtual_offset(fr)
-    block_to, in_block_to = bgzf.split_virtual_offset(to)
-    return block_to - block_fr + 1
-
-
-def merge_offset_ranges(ranges, new_offset=None):
-    mins, maxs = zip(*ranges)
-    if new_offset is not None:
-        maxs.append(new_offset)
-    return min(mins), max(maxs)
