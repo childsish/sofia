@@ -36,7 +36,7 @@ class TestBgzfIndex(unittest.TestCase):
         self.assertTrue(multivariate_overlap(['chr1', Interval(0, 11)], ['chr1', Interval(10, 20)]))
         self.assertFalse(multivariate_overlap([Interval('chr1', 'chr2'), Interval(0, 10)],
                                               [Interval('chr3', 'chr4'), Interval(0, 10)]))
-        self.assertTrue(multivariate_overlap([Interval('chr1', 'chr2'), Interval(0, 10)],
+        self.assertTrue(multivariate_overlap([Interval('chr1', 'chr3'), Interval(0, 10)],
                                               [Interval('chr2', 'chr3'), Interval(0, 10)]))
 
     def test_get_item(self):
@@ -93,6 +93,14 @@ class TestBgzfIndex(unittest.TestCase):
     def test_get_cost_increase(self):
         track = Track(2)
         self.assertEquals(2, track.get_cost_increase(['chr1', Interval(0, 1000)], bgzf.make_virtual_offset(0, 12)))
+
+    def test_add(self):
+        track = Track(2)
+        track.add(['chr1', Interval(0, 1000)], 1)
+
+        self.assertEquals([['chr1', 0]], track.starts)
+        self.assertEquals([['chr1', 1000]], track.stops)
+        self.assertEquals([[1, 1]], track.offsets)
 
 
 class TestTrackAdd(unittest.TestCase):

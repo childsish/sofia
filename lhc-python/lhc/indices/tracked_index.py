@@ -9,13 +9,12 @@ from lhc.interval import Interval
 
 
 class TrackedIndex(object):
-    def __init__(self, filename, n):
-        self.fileobj = bgzf.open(filename)
+    def __init__(self, n):
         self.n = n
         self.tracks = [Track(n)]
 
     def add(self, item, offset):
-        cost_increases = [(track.get_cost_increase(item), i) for i, track in enumerate(self.tracks)]
+        cost_increases = [(track.get_cost_increase(item, offset), i) for i, track in enumerate(self.tracks)]
         min_increase, index = min(cost_increases)
         self.tracks[index].add(item, offset)
         if index == len(self.tracks) - 1:
@@ -41,10 +40,10 @@ class Track(object):
         :return:
         """
         start, stop = self.get_start_stop(interval)
-        if start < self.starts[-1] or offset < self.offsets[-1][1]:
-            raise ValueError('intervals must be added in-order')
 
-        if start < self.stops[-1]:
+        if len(self.starts) > 0 and start < self.stops[-1]:
+            if start < self.starts[-1] or offset < self.offsets[-1][1]:
+                raise ValueError('intervals and offsets must be added in-order')
             self.stops[-1] = max(self.stops[-1], stop)
             self.offsets[-1][1] = offset
         else:
