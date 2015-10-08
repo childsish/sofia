@@ -14,10 +14,10 @@ class TrackedIndex(object):
         self.n = n
         self.tracks = [Track(n)]
 
-    def add(self, item):
+    def add(self, item, offset):
         cost_increases = [(track.get_cost_increase(item), i) for i, track in enumerate(self.tracks)]
         min_increase, index = min(cost_increases)
-        self.tracks[index].add(item)
+        self.tracks[index].add(item, offset)
         if index == len(self.tracks) - 1:
             self.tracks.append(Track(self.n))
 
