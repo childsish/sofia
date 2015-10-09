@@ -9,7 +9,7 @@ from lhc.indices.tracked_index import Track
 class TestEmptyTrackedIndex(unittest.TestCase):
     def test_get_cost_increase(self):
         track = Track(2)
-        self.assertEquals(2, track.get_cost_increase(['chr1', Interval(0, 1000)], 0))
+        self.assertEquals(50, track.get_cost_increase(['chr1', Interval(0, 1000)]))
 
     def test_add(self):
         track = Track(2)
@@ -52,10 +52,9 @@ class TestTrackIndex(unittest.TestCase):
         self.assertEquals([[0, 2, 3], [3, 5, 3], [6, 8, 3], [9, 11, 3], [12, 12, 1]], self.track.offsets)
 
     def test_get_cost_increase(self):
-        self.assertRaises(ValueError, self.track.get_cost_increase, ['chr1', Interval(0, 1000)], 12)
-        self.assertRaises(ValueError, self.track.get_cost_increase, ['chr2', Interval(5000, 6000)], 11)
-        self.assertAlmostEquals(1, self.track.get_cost_increase(['chr2', Interval(3500, 4500)], 12))
-        self.assertAlmostEquals(0.3219281, self.track.get_cost_increase(['chr2', Interval(5000, 6000)], 12))
+        self.assertRaises(ValueError, self.track.get_cost_increase, ['chr1', Interval(0, 1000)])
+        self.assertAlmostEquals(3, self.track.get_cost_increase(['chr2', Interval(3500, 4500)]))
+        self.assertAlmostEquals(0, self.track.get_cost_increase(['chr2', Interval(5000, 6000)]))
 
 if __name__ == '__main__':
     unittest.main()
