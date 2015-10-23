@@ -6,6 +6,9 @@ Endpoint = namedtuple('Endpoint', ('edge', 'vertex'))
 
 
 class Graph(object):
+
+    __slots__ = ('anon_prefix', 'vertex_id', 'edge_id', 'name', 'es', 'vs', 'directed', 'edge_names')
+
     def __init__(self, es=list(), vs=list(), name=None, directed=True, edge_names='unique'):
         """
         Initialise a graph
@@ -44,6 +47,12 @@ class Graph(object):
 
     def __len__(self):
         return len(self.vs)
+
+    def __delitem__(self, key):
+        tos = self.vs[key]
+        for to in tos:
+            del self.es[(key, to)]
+        del self.vs[key]
 
     def add_edge(self, fr, to, e=None):
         """ Add an edge to the graph
@@ -93,28 +102,27 @@ class Graph(object):
     def get_children(self, v):
         return {edge.vertex for edge in self.vs[v]}
 
-    def decompose(self, visited=None):
-        graphs = []
-        visited = set() if visited is None else visited
+    def decompose(self, removed=None):
+        visited = set()
+        removed = set() if removed is None else removed
         for fr, tos in self.vs.iteritems():
-            if fr in visited:
+            if fr in visited or fr in removed:
                 continue
             visited.add(fr)
-            stk = [(fr, to) for to in tos]
             graph = Graph(vs=[fr], directed=self.directed)
+            stk = [(fr, to) for to in tos if to.vertex not in removed]
             for fr, to in stk:
                 graph.add_edge(fr, to.vertex, to.edge)
             while len(stk) > 0:
                 root, fr = stk.pop()
-                if fr.vertex in visited:
+                if fr.vertex in visited or fr.vertex in removed:
                     continue
                 visited.add(fr.vertex)
-                es = [(fr.vertex, to) for to in self.vs[fr.vertex]]
+                es = [(fr.vertex, to) for to in self.vs[fr.vertex] if to.vertex not in removed]
                 for fr, to in es:
                     graph.add_edge(fr, to.vertex, to.edge)
                 stk.extend(es)
-            graphs.append(graph)
-        return graphs
+            yield graph
 
     def update(self, other):
         for e, edge in other.es.iteritems():

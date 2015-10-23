@@ -23,8 +23,7 @@ class TrackedIndex(object):
 
 class Track(object):
     def __init__(self, n):
-        self.starts = []
-        self.stops = []
+        self.points = []
         self.offsets = []
         self.n = n
 
@@ -38,10 +37,9 @@ class Track(object):
         """
         start, stop = self.get_start_stop(interval)
 
-        if len(self.starts) > 0 and start < self.stops[-1]:
+        if len(self.starts) > 0:
             if start < self.starts[-1] or offset <= self.offsets[-1][1]:
                 raise ValueError('intervals and offsets must be added in-order')
-            self.stops[-1] = max(self.stops[-1], stop)
             self.offsets[-1][1] = offset
             self.offsets[-1][2] += 1
         else:
@@ -78,7 +76,6 @@ def save_index(fileobj, index):
 
     json.dump({
         'n': index.n,
-        'format': format,
         'tracks': [
             {'n': track.n,
              'starts': track.starts,

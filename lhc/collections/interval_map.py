@@ -1,6 +1,7 @@
 __author__ = 'Liam Childs'
 
 from collections import defaultdict
+from itertools import izip
 from lhc.interval import IntervalBinner
 
 
@@ -17,6 +18,11 @@ class IntervalMap(object):
 
     def __len__(self):
         return self.len
+
+    def __iter__(self):
+        for bin in self.bins.itervalues():
+            for item in bin:
+                yield item
 
     def __contains__(self, item):
         bins = self.binner.get_overlapping_bins(item)
@@ -40,3 +46,18 @@ class IntervalMap(object):
                 for i, set_interval in enumerate(self.bins[bin]):
                     if set_interval.overlaps(item):
                         yield self.values[bin][i]
+
+    def iterkeys(self):
+        for bin in self.bins.itervalues():
+            for item in bin:
+                yield item
+
+    def itervalues(self):
+        for bin in self.values.itervalues():
+            for value in bin:
+                yield value
+
+    def iteritems(self):
+        for keys, values in izip(self.bins.iteritems(), self.values.iteritems()):
+            for key, value in izip(keys, values):
+                yield key, value

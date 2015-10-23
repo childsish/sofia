@@ -7,7 +7,6 @@ import time
 from ..entity_parser import EntityParser
 from lhc.indices.tracked_index import TrackedIndex, save_index
 from Bio import bgzf
-from collections import Counter
 
 
 def index(input, output, format='s1', header='#', delimiter='\t', factor=1):
@@ -19,7 +18,6 @@ def index(input, output, format='s1', header='#', delimiter='\t', factor=1):
 
     t = time.time()
     i = 0
-    ttls = Counter()
     while True:
         virtual_offset = input.tell()
         line = input.readline()
@@ -29,9 +27,6 @@ def index(input, output, format='s1', header='#', delimiter='\t', factor=1):
         elif line.startswith(header):
             continue
         entity = entity_factory(line.rstrip('\r\n').split(delimiter))
-        ttls[entity.V1] += 1
-        if ttls[entity.V1] > 1000:
-            continue
         index.add(entity, virtual_offset)
     sys.stderr.write('{} lines indexed in {} seconds\n'.format(i, time.time() - t))
     save_index(output, index)

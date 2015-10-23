@@ -1,11 +1,11 @@
-from lhc.indices import CompoundIndex, KeyIndex, IntervalIndex
+from lhc.collections import MultiDimensionMap
 from lhc.interval import Interval
 
 
 class GffSet(object):
     def __init__(self, iterator):
-        self.key_index = KeyIndex()
-        self.ivl_index = CompoundIndex((KeyIndex, IntervalIndex))
+        self.key_index = MultiDimensionMap([str])
+        self.ivl_index = MultiDimensionMap([str, Interval])
         self.data = list(iterator)
         for i, entry in enumerate(self.data):
             self.key_index[entry.name] = i
@@ -15,4 +15,4 @@ class GffSet(object):
         return self.data[self.key_index[key]]
     
     def fetch(self, chr, start, stop):
-        return [self.data[v] for k, v in self.ivl_index[chr, Interval(start, stop)]]
+        return [self.data[v] for v in self.ivl_index[(chr, start, stop)]]
