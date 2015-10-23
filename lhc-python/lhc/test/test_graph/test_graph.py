@@ -40,7 +40,7 @@ class TestGraph(unittest.TestCase):
         graph.add_edge('e', 'f', 'ef')
         graph.add_edge('e', 'g', 'eg')
 
-        graphs = graph.decompose()
+        graphs = list(graph.decompose())
         graph1, graph2 = (graphs[0], graphs[1]) if 'a' in graphs[0].vs else (graphs[1], graphs[0])
 
         self.assertEquals({'ab', 'ac', 'bd', 'da'}, set(graph1.es))

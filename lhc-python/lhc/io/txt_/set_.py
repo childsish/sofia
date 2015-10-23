@@ -6,4 +6,4 @@ class Set(object):
             self.index[key(entry)] = entry
 
     def __getitem__(self, key):
-        return [v for k, v in self.index[key]]
+        return [v for v in self.index[key]]

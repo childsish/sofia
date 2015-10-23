@@ -2,13 +2,12 @@ __author__ = 'Liam Childs'
 
 import argparse
 
-from ..indexed_set import IndexedSet
+from lhc.io.txt_ import IndexedSet, Set, Iterator
 
 
-def fetch(input, query, format):
-    query = [eval(f)(q) for f, q in zip(format, query)]
-    set_ = IndexedSet(input)
-    print ''.join(set_.fetch(*query))
+def fetch(set_, query):
+    for entry in set_.fetch(query):
+        yield entry
 
 
 def main():
@@ -21,7 +20,8 @@ def get_parser():
 
 
 def define_parser(parser):
-    parser.add_argument('input')
+    parser.add_argument('input', nargs='?')
+    parser.add_argument('output', nargs='?')
     parser.add_argument('-q', '--query', nargs='+', default=[])
     parser.add_argument('-f', '--format', nargs='+', default=[])
     parser.set_defaults(func=fetch_init)
@@ -29,7 +29,17 @@ def define_parser(parser):
 
 
 def fetch_init(args):
-    fetch(args.input, args.query, args.format)
+    import os
+    import sys
+
+    if args.input is None:
+        input = Set(Iterator(sys.stdin, args.format))
+    elif os.exists(args.input + '.lci'):
+        input = IndexedSet(args.input)
+    else:
+        input = Set(Iterator(args.input, args.format))
+    output = sys.stdout if args.output is None else args.output
+    fetch(input, output, args.query, args.format)
 
 if __name__ == '__main__':
     import sys

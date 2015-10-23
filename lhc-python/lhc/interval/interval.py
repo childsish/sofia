@@ -5,6 +5,8 @@ from collections import namedtuple
 @total_ordering
 class Interval(object):
 
+    __slots__ = ('start', 'stop', 'data')
+
     INTERVAL_PAIR = namedtuple('IntervalPair', ('left', 'right'))
 
     def __init__(self, start, stop, data=None):
