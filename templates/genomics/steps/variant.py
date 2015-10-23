@@ -12,6 +12,26 @@ class GetPosition(Step):
     def calculate(self, chromosome_pos):
         return chromosome_pos + 1
 
+
+class GetSubstitutionContext(Step):
+    
+    IN = ['variant', 'chromosome_sequence_set']
+    OUT = ['substitution_context']
+
+    def calculate(self, variant, chromosome_sequence_set):
+        context = chromosome_sequence_set[variant.chr][variant.pos - 1: variant.pos + 2]
+        return context if variant.ref[0] in 'CT' else revcmp(context)
+
+
+class GetSubstitutionType(Step):
+
+    IN = ['variant']
+    OUT = ['substitution_type']
+
+    def calculate(self, variant):
+        return '{}>{}'.format(variant.ref, variant.alt) if variant.ref[0] in 'CT' else '{}>{}'.format(revcmp(variant.ref), revcmp(variant.alt))
+
+
 class GetVariantAlleleFrequency(Step):
     
     IN = ['variant']
