@@ -17,7 +17,7 @@ Installation
 
 SoFIA requires [Python 2.7][python] to be installed.
 
-The framework of SoFIA has no dependencies on external libraries. However, the default workflow has 'soft' dependencies on the [htslib][htslib] and [pysam][pysam] libraries for indexing various file formats. If either of these libraries is not installed, then the framework will resort to reading in the entire file. This can significantly slow down the framework.
+The framework of SoFIA has no dependencies on external libraries. However, the default workflow has 'soft' dependencies on the [htslib][htslib] and [pysam][pysam] libraries for indexing various file formats. If either of these libraries is not installed, then the framework will resort to reading in the entire file which will significantly slow down the framework. Currently htslib and pysam do not play well with Windows. If you only have access to a Windows machine, consider using virtualisation software like [VirtualBox][vbox] to run a Linux operating system like [Linux Mint][mint].
 
 ### via Source
 
@@ -36,6 +36,10 @@ https://github.com/childsish/sofia/releases/latest
 4. To update: `git pull`
 
 `sofia /home/user/tmp/tmp.vcf -e chromosome_id position gene_id amino_acid_variant variant_effect -r /home/user/tmp/tmp.gtf /home/user/tmp/tmp.fasta`
+
+### Downloading data
+
+SoFIA does not package any data internally as you are expected to know what is best for your own analyses. However, to help you get started, we provide shell scripts in the `scripts` directory that download the basic necessities for annotating with the GRCh37 version of the human genome.
 
 Using the API
 -------------
@@ -204,3 +208,5 @@ Refer to the GitHub [issues][issues] page for upcoming improvements, to make sug
 [so]: http://www.sequenceontology.org/ "The Sequence Ontology"
 [issues]: https://github.com/childsish/sofia/issues "To Do"
 [google-group]: https://groups.google.com/forum/#!forum/workflows-on-demand
+[vbox]: https://www.virtualbox.org/wiki/Downloads
+[mint]: http://www.linuxmint.com/download.php
