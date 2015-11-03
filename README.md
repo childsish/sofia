@@ -18,7 +18,7 @@ The framework of SoFIA has no dependencies on external libraries. However, the d
 
 ### via Source
 
-As a Python program, SoFIA does not need to be compiled. As such, you can simply download the source and run it. However, You will need to check manually for updates.
+As a Python program, SoFIA does not need to be compiled. As such, you can simply download the source and run it. However, you will have to repeat the steps when you want to update.
 
 1. Download and unzip the compressed version from GitHub:
 https://github.com/childsish/sofia/releases/latest
