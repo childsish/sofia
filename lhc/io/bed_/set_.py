@@ -1,11 +1,11 @@
-from lhc.indices import CompoundIndex, KeyIndex, IntervalIndex
+from lhc.collections import MultiDimensionMap
 from lhc.interval import Interval
 
 
 class BedSet(object):
     def __init__(self, iterator):
         self.data = list(iterator)
-        self.ivl_index = CompoundIndex(KeyIndex, IntervalIndex)
+        self.ivl_index = MultiDimensionMap([str, Interval])
         for i, entry in enumerate(self.data):
             ivl = Interval(entry.start, entry.stop)
             self.ivl_index[(entry.chr, ivl)] = i
