@@ -55,7 +55,7 @@ class GeneticCode:
     BASE2IDX = {'a': 0, 'c': 1, 'g': 2, 't': 3, 'u': 3}
     IDX2BASE = 'acgt'
     
-    AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWY")
+    AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWY*")
 
     def __init__(self, na2aa):
         self.__aa2na = {}

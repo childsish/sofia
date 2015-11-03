@@ -1,0 +1,60 @@
+chr1	100	gene0		intron_variant
+chr1	156	gene0		intron_variant
+chr1	193	gene0	p.*11C	stop_lost
+chr1	233			intergenic_variant
+chr1	305	gene1		intron_variant
+chr1	439	gene1		intron_variant
+chr1	482	gene1	p.C2W	missense_variant
+chr1	509	gene1	p.R11R	synonymous_variant
+chr1	588			intergenic_variant
+chr1	616			intergenic_variant
+chr1	644	gene2		intron_variant
+chr1	688	gene2		intron_variant
+chr1	740	gene2		intron_variant
+chr1	769	gene2		intron_variant
+chr1	800	gene2		intron_variant
+chr1	836	gene2		intron_variant
+chr1	869	gene2		intron_variant
+chr1	921	gene2	p.I11I	synonymous_variant
+chr1	966	gene2	p.T26T	synonymous_variant
+chr1	997			intergenic_variant
+chr2	25			intergenic_variant
+chr2	52			intergenic_variant
+chr2	71			intergenic_variant
+chr2	182			intergenic_variant
+chr2	250			intergenic_variant
+chr2	324			intergenic_variant
+chr2	386	gene3		intron_variant
+chr2	422	gene3		intron_variant
+chr2	474	gene3		intron_variant
+chr2	524	gene3		intron_variant
+chr2	585	gene3	p.L6*	stop_gained
+chr2	644			intergenic_variant
+chr2	669			intergenic_variant
+chr2	717	gene4		intron_variant
+chr2	764	gene4		intron_variant
+chr2	810	gene4		intron_variant
+chr2	881			intergenic_variant
+chr2	948			intergenic_variant
+chr3	24			intergenic_variant
+chr3	49	gene5		intron_variant
+chr3	87	gene5		intron_variant
+chr3	123	gene5		intron_variant
+chr3	154	gene5		intron_variant
+chr3	192	gene5		intron_variant
+chr3	208	gene5		intron_variant
+chr3	241	gene5		intron_variant
+chr3	298	gene5		intron_variant
+chr3	320	gene5	p.G4R	missense_variant
+chr3	385	gene5	p.A25A	synonymous_variant
+chr3	417	gene6		intron_variant
+chr3	538	gene6		intron_variant
+chr3	611	gene6	p.S19N	missense_variant
+chr3	691	gene7		intron_variant
+chr3	739	gene7		intron_variant
+chr3	778	gene7		intron_variant
+chr3	792	gene7		intron_variant
+chr3	829	gene7		intron_variant
+chr3	899	gene7	p.A9A	synonymous_variant
+chr3	916	gene7	p.Q15P	missense_variant
+chr3	998			intergenic_variant

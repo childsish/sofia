@@ -5,9 +5,6 @@ Software for the Flexible Integration of Annotation (SoFIA) is a framework desig
 
 By default, vanilla SoFIA comes with a genomics workflow, capable of annotating variants and genes, and calculating sequence features. If different functionality is required, SoFIA has been designed to be extensible allowing the user to easily extend the current workflow or even create a whole new workflow for completely different purposes.
 
-Community
----------
-
 There is a [Google Group][google-group] for discussions about SoFIA.  
 
 Installation
@@ -35,11 +32,19 @@ https://github.com/childsish/sofia/releases/latest
 3. (optional) Add the installation directory to the PATH environment variable.
 4. To update: `git pull`
 
-`sofia /home/user/tmp/tmp.vcf -e chromosome_id position gene_id amino_acid_variant variant_effect -r /home/user/tmp/tmp.gtf /home/user/tmp/tmp.fasta`
+Running SoFIA
+-------------
 
-### Downloading data
+SoFIA comes with a small toy example for you to familiarise yourself. Try running this example from the command line.
 
-SoFIA does not package any data internally as you are expected to know what is best for your own analyses. However, to help you get started, we provide shell scripts in the `scripts` directory that download the basic necessities for annotating with the GRCh37 version of the human genome.
+`python sofia.py aggregate ./data/example/randome.vcf -e chromosome_id position gene_id amino_acid_variant variant_effect -r ./data/example/randome.gff ./data/example/randome.fasta`
+
+### Data download scripts
+
+SoFIA does not package any further data internally as you know best what is required your own analyses. However, to help you get started, we provide shell scripts in the `scripts` directory that download the basic necessities for annotation. If you wish for further "standard" annotation sets to be added, please let us know the url of each file or provide us a shell script and we will consider adding it to the default SoFIA installation.
+
+Available:
+ * GRCh37 version of the human genome
 
 Using the API
 -------------

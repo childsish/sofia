@@ -11,7 +11,7 @@ from wrappers.resource_wrapper import ResourceWrapper
 from graph.template import Template
 from graph.entity_graph import EntityGraph
 from entity import Entity
-from lhc.io.txt_ import EntityParser, IndexParser
+from lhc.io.txt_ import EntityParser
 from subcommands.common import load_steps
 
 
@@ -127,11 +127,12 @@ class TemplateFactory(object):
         return EntityGraph(os.path.join(self.root, 'entities.json'))
 
     def get_index_registry(self):
-        registry = IndexParser()
-        path = os.path.join(self.root, 'index_registry.py')
-        for k, v in imp.load_source('index_registry', path).INDEX_REGISTRY.iteritems():
-            registry.register_index(k, v)
-        return registry
+        return
+        #registry = IndexParser()
+        #path = os.path.join(self.root, 'index_registry.py')
+        #for k, v in imp.load_source('index_registry', path).INDEX_REGISTRY.iteritems():
+        #    registry.register_index(k, v)
+        #return registry
 
     def get_entity_registry(self):
         registry = EntityParser()
