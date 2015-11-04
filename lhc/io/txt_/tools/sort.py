@@ -2,7 +2,7 @@ import argparse
 import time
 
 from ..iterator import Iterator
-from ..entity_parser import EntityParser
+from ..format_parser import FormatParser
 from itertools import chain
 from lhc.tools.sorter import Sorter
 
@@ -11,7 +11,7 @@ def sort(input, output, format='s1', max_lines=1000000, comment='#', delimiter='
     # TODO: use delimiter argument
     import sys
 
-    parser = EntityParser()
+    parser = FormatParser()
 
     entity_factory = parser.parse(format)
     start = time.time()
