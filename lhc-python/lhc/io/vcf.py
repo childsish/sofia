@@ -7,7 +7,7 @@ if __name__ == '__main__' and __package__ is None:
 import argparse
 
 from .vcf_.iterator import VcfEntryIterator
-from .vcf_.tools import compare, filter, sample, split_alt, trim_alt, merge
+from .vcf_.tools import compare, filter, sample, split_alt, trim_alt, merge, difference
 from .txt_.tools import sort, compress, index
 
 
@@ -30,6 +30,9 @@ def get_parser():
     compress_parser = subparsers.add_parser('compress')
     compress.define_parser(compress_parser)
     compress_parser.set_defaults(block_delimiter='\n')
+    # Difference parser
+    difference_parser = subparsers.add_parser('difference')
+    difference.define_parser(difference_parser)
     # Sort parser
     sort_parser = subparsers.add_parser('sort')
     sort.define_parser(sort_parser)

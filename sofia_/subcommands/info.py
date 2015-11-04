@@ -5,7 +5,6 @@ import sys
 from common import get_program_directory, parse_provided_resources, parse_requested_entities
 from template_factory import TemplateFactory
 from textwrap import wrap
-from lhc.argparse import OpenWritableFile
 
 
 def generate_graph(args):
@@ -56,8 +55,13 @@ def list_step(step, args):
 
 
 def main():
+    import sys
     parser = get_parser()
     args = parser.parse_args()
+    if args.output is None:
+        args.output = sys.stdout
+    else:
+        args.output = open(args.output, 'w')
     args.func(args)
 
 
@@ -99,7 +103,7 @@ def define_parser(parser):
                                help='specify a workflow template (default: genomics).')
     entity_parser.set_defaults(func=list_entities)
 
-    parser.add_argument('-o', '--output', action=OpenWritableFile, default=sys.stdout,
+    parser.add_argument('-o', '--output',
                         help='specify where to put output')
 
 
