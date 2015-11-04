@@ -3,7 +3,7 @@ import tempfile
 import unittest
 
 from collections import namedtuple
-from lhc.io.txt_ import Iterator, Set, Entity, Column
+from lhc.io.txt_ import Iterator, Set, EntityFormatter, ColumnFormatter
 from lhc.collections import MultiDimensionMap
 from lhc.interval import Interval
 
@@ -21,8 +21,8 @@ class TestSet(unittest.TestCase):
         os.close(fhndl)
 
     def test_set(self):
-        columns = [Column(str, i) for i in xrange(4)]
-        entity_factory = Entity(namedtuple('Entry', ['V1', 'V2', 'V3', 'V4']), columns)
+        columns = [ColumnFormatter(str, i) for i in xrange(4)]
+        entity_factory = EntityFormatter(namedtuple('Entry', ['V1', 'V2', 'V3', 'V4']), columns)
         it = Iterator(open(self.fname), entry_factory=entity_factory)
         index = MultiDimensionMap([str, Interval])
         data = Set(it, index, key=lambda x: (x.V1, Interval(int(x.V2), int(x.V3))))

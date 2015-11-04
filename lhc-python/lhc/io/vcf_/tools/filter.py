@@ -1,11 +1,11 @@
 import argparse
 
-from ..iterator import VcfLineIterator
+from ..iterator import VcfEntryIterator
 from lhc.io.txt_ import Filter
 
 
 def filter(input, output, filter=None):
-    it = VcfLineIterator(input)
+    it = VcfEntryIterator(input)
     filtered_it = Filter(it, filter, {'NOCALL': 'NOCALL', 'PASS': 'PASS'})
     for k, vs in it.hdrs.iteritems():
         output.write('\n'.join('{}={}'.format(k, v) for v in vs))
