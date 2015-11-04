@@ -1,3 +1,5 @@
+__author__ = 'Liam Childs'
+
 import unittest
 
 from lhc.io.txt_.tools.sort import Sorter
