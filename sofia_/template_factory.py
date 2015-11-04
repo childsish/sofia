@@ -11,7 +11,7 @@ from wrappers.resource_wrapper import ResourceWrapper
 from graph.template import Template
 from graph.entity_graph import EntityGraph
 from entity import Entity
-from lhc.io.txt_ import EntityParser
+from lhc.io.txt_ import FormatParser
 from subcommands.common import load_steps
 
 
@@ -135,7 +135,7 @@ class TemplateFactory(object):
         #return registry
 
     def get_entity_registry(self):
-        registry = EntityParser()
+        registry = FormatParser()
         path = os.path.join(self.root, 'entity_registry.py')
         for k, v in imp.load_source('entity_registry', path).ENTITY_REGISTRY.iteritems():
             registry.register_type(k, v)
