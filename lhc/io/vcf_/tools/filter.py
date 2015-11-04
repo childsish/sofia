@@ -1,17 +1,21 @@
 import argparse
 
-from ..iterator import VcfEntryIterator
-from lhc.io.txt_ import Filter
+from lhc.io.vcf_.iterator import VcfEntryIterator
+from lhc.io.txt_ import Filter, Iterator
+from lhc.io.txt_.iterator import Line
 
 
-def filter(input, output, filter=None):
+def filter(input, _filter=None):
     it = VcfEntryIterator(input)
-    filtered_it = Filter(it, filter, {'NOCALL': 'NOCALL', 'PASS': 'PASS'})
     for k, vs in it.hdrs.iteritems():
-        output.write('\n'.join('{}={}'.format(k, v) for v in vs))
-    output.write('\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t' + '\t'.join(it.samples) + '\n')
-    for line in filtered_it:
-        output.write('{}\n'.format(line))
+        for v in vs:
+            yield '{}={}\n'.format(k, v)
+    yield '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t' + '\t'.join(it.samples) + '\n'
+    for line in it:
+        local_variables = line._asdict()
+        local_variables.update({'NOPASS': 'NOPASS', 'PASS': 'PASS'})
+        if eval(_filter, local_variables):
+            yield '{}\n'.format(line)
 
 
 def main():
@@ -39,7 +43,8 @@ def filter_init(args):
     import sys
     input = sys.stdin if args.input is None else open(args.input)
     output = sys.stdout if args.output is None else open(args.output, 'w')
-    filter(input, output, args.filter)
+    for line in filter(input, args.filter):
+        output.write(line)
     input.close()
     output.close()
 

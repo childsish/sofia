@@ -5,7 +5,6 @@ from itertools import izip
 from operator import add
 from lhc.binf.identifier import Chromosome
 from lhc.collections.sorted_dict import SortedDict
-from lhc.io.txt_ import Filter
 from iterator import VcfEntryIterator, Variant
 
 
@@ -13,8 +12,8 @@ class VcfMerger(object):
     
     CHR_REGX = re.compile('\d+$|X$|Y$|M$')
     
-    def __init__(self, iterators, bams=[], filter=None):
-        self.iterators = [Filter(VcfEntryIterator(i), filter) for i in iterators]
+    def __init__(self, iterators, bams=[]):
+        self.iterators = [VcfEntryIterator(i) for i in iterators]
         hdrs = [it.hdrs for it in self.iterators]
         self.hdrs = self._merge_headers(hdrs)
         self.samples = reduce(add, [it.samples for it in self.iterators])
@@ -39,7 +38,7 @@ class VcfMerger(object):
     
         TODO: phased genotypes aren't handled
         """
-        tops = [self._next_line(idx) for idx in xrange(len(self.iterators))]
+        tops = [iterator.next() for iterator in self.iterators]
         sorted_tops = self._init_sorting(tops)
 
         while len(sorted_tops) > 0:
@@ -168,10 +167,8 @@ class VcfMerger(object):
             a1, a2 = map(int, gt.split('/'))
         except ValueError:
             return './.'
-        if a1 != '0':
-            a1 = str(new_alt.index(old_alt[a1 - 1]) + 1)
-        if a2 != '0':
-            a2 = str(new_alt.index(old_alt[a2 - 1]) + 1)
+        a1 = new_alt.index(old_alt[a1 - 1]) + 1 if 0 < a1 <= len(old_alt) else 0
+        a2 = new_alt.index(old_alt[a2 - 1]) + 1 if 0 < a2 <= len(old_alt) else 0
         return '{}/{}'.format(a1, a2)
     
     def _get_ao(self, ao, old_alt, new_alt):

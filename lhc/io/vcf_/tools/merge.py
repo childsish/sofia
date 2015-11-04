@@ -7,8 +7,8 @@ import sys
 from ..merger import VcfMerger
 
 
-def merge(fnames, out, bams, filter):
-    merger = VcfMerger(fnames, bams=bams, filter=filter)
+def merge(fnames, out, bams):
+    merger = VcfMerger(fnames, bams=bams)
     for key, values in merger.hdrs.iteritems():
         for value in values:
             out.write('{}={}\n'.format(key, value))
@@ -49,8 +49,6 @@ def define_parser(parser):
             help='include read counts from bam files')
     add_arg('-o', '--output',
             help='name of the merged vcf_ (default: stdout).')
-    add_arg('-f', '--filter',
-            help='filter to apply')
     parser.set_defaults(func=init_merge)
     return parser
 
@@ -58,7 +56,7 @@ def define_parser(parser):
 def init_merge(args):
     inputs = [gzip.open(i) if i.endswith('gz') else open(i) for i in args.inputs]
     output = sys.stdout if args.output is None else open(args.output)
-    merge(inputs, output, args.bams, args.filter)
+    merge(inputs, output, args.bams)
 
 
 if __name__ == '__main__':

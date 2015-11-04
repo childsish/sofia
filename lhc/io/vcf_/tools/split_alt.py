@@ -6,23 +6,15 @@ import sys
 from lhc.io.vcf_.iterator import VcfEntryIterator, Variant
 
 
-def split_alt(input, output):
-    """
-    Split variants with multiple alts.
-
-    :param input: stream to read from
-    :param output: stream to write to
-    """
+def split_alt(input):
     # TODO: figure out what to do with GT
-    it = VcfEntryIterator(input)
-    for k, vs in it.hdrs.iteritems():
+    for k, vs in input.hdrs.iteritems():
         for v in vs:
-            output.write('{}={}\n'.format(k, v))
-    for variant in it:
+            yield '{}={}\n'.format(k, v)
+    yield '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t' + '\t'.join(input.samples) + '\n'
+    for variant in input:
         for split_variant in _split_variant(variant):
-            output.write('{}\n'.format(split_variant))
-    input.close()
-    output.close()
+            yield '{}\n'.format(split_variant)
 
 
 def _split_variant(variant):
@@ -83,8 +75,10 @@ def define_parser(parser):
 
 def init(args):
     input = sys.stdin if args.input is None else open(args.input)
+    input = VcfEntryIterator(input)
     output = sys.stdout if args.output is None else open(args.output, 'w')
-    split_alt(input, output)
+    for line in split_alt(input):
+        output.write(line)
     input.close()
     output.close()
 
