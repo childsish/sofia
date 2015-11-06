@@ -39,6 +39,13 @@ SoFIA comes with a small toy example for you to familiarise yourself. Try runnin
 
 `python sofia.py aggregate ./data/example/randome.vcf -e chromosome_id position gene_id amino_acid_variant variant_effect -r ./data/example/randome.gff ./data/example/randome.fasta`
 
+The command line can be broken down into several parts:
+
+1. `python sofia.py aggregate` Run SoFIA in data aggregation mode.
+2. `./data/example/randome.vcf` Annotate a set of variants.
+3. `-e chromosome_id position gene_id amino_acid_variant variant_effect` Annotate each variant with the chromosome, position, gene name, amino acid variant and variant effect. 
+4. `-r ./data/example/randome.gff ./data/example/randome.fasta` Use a set of genes descriptions and chromosome sequences to provide the extra information needed to generate the requested entities.
+
 ### Data download scripts
 
 SoFIA does not package any further data internally as you know best what is required your own analyses. However, to help you get started, we provide shell scripts in the `scripts` directory that download the basic necessities for annotation. If you wish for further "standard" annotation sets to be added, please let us know the url of each file or provide us a shell script and we will consider adding it to the default SoFIA installation.
