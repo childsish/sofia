@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+echo "Making directories"
+
+for dirname in data data/genomic_feature data/chromosome_sequence data/sequence_variant data/txt
+do
+    if [ ! -e ../$dirname ]
+    then
+        mkdir ../$dirname
+    fi
+done
+
 echo "Downloading data"
 
 # GRCh37
@@ -18,5 +28,5 @@ echo "Sorting, compressing and indexing data"
 # GRCh37
 gunzip ../data/genomic_feature/GRCh37.gtf.gz
 (grep ^"#" ../data/genomic_feature/GRCh37.gtf; grep -v ^"#" ../data/genomic_feature/GRCh37.gtf | sort -k1,1 -k4,4n) | bgzip > ../data/genomic_feature/GRCh37.gtf.gz;
-tabix -Pgff ./data/genomic_feature/GRCh37.gtf.gz
+tabix -p gff ../data/genomic_feature/GRCh37.gtf.gz
 samtools faidx ../data/chromosome_sequence/GRCh37.fasta.gz
