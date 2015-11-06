@@ -28,7 +28,7 @@ https://github.com/childsish/sofia/releases/latest
 ### via Git
 
 1. Change to desired installation directory
-2. To install `git clone git@github.com:childsish/sofia.git`
+2. To install `git clone https://github.com/childsish/sofia.git`
 3. (optional) Add the installation directory to the PATH environment variable.
 4. To update: `git pull`
 
