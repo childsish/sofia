@@ -8,10 +8,15 @@ from textwrap import wrap
 
 
 def generate_graph(args):
+    if args.output is None:
+        args.output = sys.stdout
+    else:
+        args.output = open(args.output, 'w')
     provided_resources = parse_provided_resources(args)
     template_factory = TemplateFactory(os.path.join(get_program_directory(), 'templates', args.workflow_template))
     template = template_factory.make(provided_resources)
     args.output.write(str(template))
+    args.output.close()
 
 
 def list_entities(args):
@@ -79,6 +84,8 @@ def define_parser(parser):
     graph_parser.add_argument('-E', '--entity-list')
     graph_parser.add_argument('-r', '--resources', nargs='+', default=[])
     graph_parser.add_argument('-R', '--resource_list')
+    graph_parser.add_argument('-o', '--output',
+                              help='output destination (default: stdout)')
     graph_parser.add_argument('-t', '--target', dest='input', default=None,
                               help='specify the target resource')
     graph_parser.add_argument('-w', '--workflow-template', default='genomics',
