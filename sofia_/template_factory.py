@@ -39,7 +39,7 @@ class TemplateFactory(object):
             else:
                 template.register_step(StepWrapper(step))
         template.register_step(StepWrapper(GetIdById))
-        template.register_step(StepWrapper(Map))
+        template.register_step(ResourceWrapper(Map))
         return template
 
     def load_custom_steps(self, provided_resources):
@@ -49,7 +49,7 @@ class TemplateFactory(object):
         res = []
         for name, resource in provided_resources.iteritems():
             if resource.format is not None and resource.format not in self.recognised_formats:
-                entry_factory = entity_registry.parse_definition(resource.format)
+                entry_factory = entity_registry.parse(resource.format)
                 if resource.name == 'target':
                     outs = OrderedDict((out, Entity(out)) for out in entry_factory.type._fields) if entry_factory.name == 'Entry' else\
                         OrderedDict([(entry_factory.name, Entity(entry_factory.name))])
