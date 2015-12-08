@@ -34,6 +34,6 @@ class GetVariantIdByGenomicInterval(Step):
             return None
         try:
             hits = variant_set.fetch(genomic_interval.chr, genomic_interval.start, genomic_interval.stop)
-        except ValueError:
+        except ValueError, e:
             return None
-        return ''.join(hit.id for hit in hits)
+        return ','.join(hit.id for hit in hits)
