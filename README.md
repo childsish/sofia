@@ -28,7 +28,7 @@ https://github.com/childsish/sofia/releases/latest
 ### via Git
 
 1. Change to desired installation directory
-2. To install `git clone git@github.com:childsish/sofia.git`
+2. To install `git clone https://github.com/childsish/sofia.git`
 3. (optional) Add the installation directory to the PATH environment variable.
 4. To update: `git pull`
 
@@ -38,6 +38,13 @@ Running SoFIA
 SoFIA comes with a small toy example for you to familiarise yourself. Try running this example from the command line.
 
 `python sofia.py aggregate ./data/example/randome.vcf -e chromosome_id position gene_id amino_acid_variant variant_effect -r ./data/example/randome.gff ./data/example/randome.fasta`
+
+The command line can be broken down into several parts:
+
+1. `python sofia.py aggregate` Run SoFIA in data aggregation mode.
+2. `./data/example/randome.vcf` Annotate a set of variants.
+3. `-e chromosome_id position gene_id amino_acid_variant variant_effect` Annotate each variant with the chromosome, position, gene name, amino acid variant and variant effect. 
+4. `-r ./data/example/randome.gff ./data/example/randome.fasta` Use a set of genes descriptions and chromosome sequences to provide the extra information needed to generate the requested entities.
 
 ### Data download scripts
 
