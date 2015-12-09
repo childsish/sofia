@@ -13,4 +13,4 @@ class BedSet(object):
     def fetch(self, chr, start, stop=None):
         if stop is None:
             stop = start + 1
-        return [self.data[v] for k, v in self.ivl_index[(chr, Interval(start, stop))]]
+        return [self.data[v] for v in self.ivl_index[(chr, Interval(start, stop))]]
