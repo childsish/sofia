@@ -19,7 +19,7 @@ def load_resource(fname, parsers, format=None):
 def parse_provided_resources(args):
     provided_resource_definitions = []
     if 'input' in args and args.input is not None:
-        provided_resource_definitions.append(args.input + ' -n target')
+        provided_resource_definitions.append('{}:target'.format(args.input))
     if 'resource_list' in args and args.resource_list is not None:
         provided_resource_definitions.extend(line.rstrip('\r\n') for line in open(args.resource_list))
     if 'resources' in args:
@@ -46,6 +46,8 @@ def load_steps(plugin_dir):
     import os
     import sys
 
+    format_error = 'Unable to import step {}. Parameter "format" is reserved and can not be used in attribute PARAMS.'
+
     plugins = []
     sys.path.append(plugin_dir)
     for fname in os.listdir(plugin_dir):
@@ -57,5 +59,7 @@ def load_steps(plugin_dir):
                          if type(child_class) == type]
         for child_class in child_classes:
             if issubclass(child_class, Step) and child_class not in {Step, Resource, Target}:
+                if 'format' in child_class.PARAMS:
+                    raise ImportError(format_error.format(child_class.__name__))
                 plugins.append(child_class)
     return plugins

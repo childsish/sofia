@@ -39,7 +39,7 @@ class TemplateFactory(object):
             else:
                 template.register_step(StepWrapper(step))
         template.register_step(StepWrapper(GetIdById))
-        template.register_step(StepWrapper(Map))
+        template.register_step(ResourceWrapper(Map))
         return template
 
     def load_custom_steps(self, provided_resources):
@@ -49,7 +49,7 @@ class TemplateFactory(object):
         res = []
         for name, resource in provided_resources.iteritems():
             if resource.format is not None and resource.format not in self.recognised_formats:
-                entry_factory = entity_registry.parse_definition(resource.format)
+                entry_factory = entity_registry.parse(resource.format)
                 if resource.name == 'target':
                     outs = OrderedDict((out, Entity(out)) for out in entry_factory.type._fields) if entry_factory.name == 'Entry' else\
                         OrderedDict([(entry_factory.name, Entity(entry_factory.name))])
@@ -83,7 +83,7 @@ class TemplateFactory(object):
                                            (in_, Entity(resource.ins[0]))])
                         outs = OrderedDict([(out, Entity(out)) for i, out in enumerate(entry_factory.type._fields)
                                            if i != index_key])
-                        step = StepWrapper(TxtAccessor, '{}[{}]'.format(resource.format, in_), ins=ins, outs=outs, param={
+                        step = StepWrapper(TxtAccessor, '{}[{}]'.format(resource.format, in_), ins=ins, outs=outs, attr={
                             'set_name': resource.format,
                             'key_name': in_
                         })
@@ -101,25 +101,18 @@ class TemplateFactory(object):
                 out = path[-1]['name']
                 if out not in entities:
                     continue
-                extractors[(in_, out)] = path
+                extractors[(in_, out)] = (path, 'Get{}From{}'.format(entity_graph.get_entity_name(out),
+                                                                     entity_graph.get_entity_name(in_)))
+            for out in entity_graph.get_equivalent_ancestors(in_) - {in_}:
+                extractors[(in_, out)] = ([], 'Cast{}To{}'.format(entity_graph.get_entity_name(in_),
+                                                                  entity_graph.get_entity_name(out)))
 
-        redundant = set()
-        for in_, out in extractors:
-            for equivalent in entity_graph.get_equivalent_descendents(in_) - {in_}:
-                key = (equivalent, out)
-                if key in extractors:
-                    redundant.add(key)
-                    break
-        for key in redundant:
-            del extractors[key]
-
-        for (in_, out), path in extractors.iteritems():
+        for (in_, out), (path, name) in extractors.iteritems():
             extractor = StepWrapper(Extractor,
-                                    'Get{}From{}'.format(entity_graph.get_entity_name(out),
-                                                         entity_graph.get_entity_name(in_)),
+                                    name,
                                     ins={in_: entity_graph.create_entity(in_)},
                                     outs={out: entity_graph.create_entity(out)},
-                                    param={'path': path})
+                                    attr={'path': path})
             template.register_step(extractor)
         return template
 

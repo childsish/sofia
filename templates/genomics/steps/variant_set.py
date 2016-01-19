@@ -21,3 +21,19 @@ class GetVariantByVariant(Step):
         elif len(hits) == 0:
             return None
         return hits[0]
+
+
+class GetVariantIdByGenomicInterval(Step):
+
+    IN = ['variant_set', 'genomic_interval']
+    OUT = ['variant_id']
+
+    def calculate(self, variant_set, genomic_interval):
+        #TODO: check matched variants
+        if genomic_interval is None:
+            return None
+        try:
+            hits = variant_set.fetch(genomic_interval.chr, genomic_interval.start, genomic_interval.stop)
+        except ValueError, e:
+            return None
+        return ','.join(hit.id for hit in hits)

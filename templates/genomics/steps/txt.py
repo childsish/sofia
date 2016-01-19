@@ -14,7 +14,7 @@ class GenePathwayMap(Resource):
         fhndl.next()
         res = defaultdict(set)
         for line in fhndl:
-            gene_id, pathway_id = line.strip('\r\n').split('\t')
+            gene_id, pathway_id = line.strip('\r\n').split('\t', 1)
             res[gene_id].add(pathway_id)
         fhndl.close()
         return res

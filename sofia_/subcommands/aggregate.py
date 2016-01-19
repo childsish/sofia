@@ -14,13 +14,15 @@ from sofia_.template_factory import TemplateFactory
 
 
 class Aggregator(object):
-    def __init__(self, hyper_graph, workflow_template):
+    def __init__(self, hyper_graph, workflow_template, stdout=sys.stdout):
         self.hyper_graph = hyper_graph
         self.workflow_template = workflow_template
+        self.stdout = stdout
 
     def aggregate(self, requested_entities, provided_resources, args, maps={}):
         def iter_target(target):
-            target.init(**target.param)
+            params = {key: target.attr[key] for key in target.PARAMS if key in target.attr}
+            target.init(**params)
             line_no = 1
             while True:
                 yield target.calculate(), line_no
@@ -30,34 +32,33 @@ class Aggregator(object):
 
         solution, matching_entities = self.resolve_requested_entities(requested_entities, provided_resources, maps)
         if args.graph:
-            sys.stdout.write('{}\n\n'.format(solution))
+            self.stdout.write('{}\n\n'.format(solution))
+            return
+
+        pool_iterator = iter_target(solution.steps['target'])
+        initargs = [matching_entities, solution, self.hyper_graph.entity_graph]
+        if args.processes == 1:
+            init_worker(*initargs)
+            it = itertools.imap(get_annotation, pool_iterator)
         else:
-            sys.stderr.write('\n    Aggregating information...\n\n')
-            if args.header is None:
-                sys.stdout.write('\t'.join(entity.header for entity in requested_entities))
-            else:
-                sys.stdout.write(args.header)
-            sys.stdout.write('\n')
-        
-            template = '\t'.join(['{}'] * len(requested_entities)) if args.template is None else args.template
+            pool = multiprocessing.Pool(args.processes, initializer=init_worker, initargs=initargs)
+            it = pool.imap(get_annotation, pool_iterator, args.simultaneous_entries)
 
-            pool_iterator = iter_target(solution.steps['target'])
-            initargs = [matching_entities, solution, self.hyper_graph.entity_graph]
-            if args.processes == 1:
-                init_worker(*initargs)
-                it = itertools.imap(get_annotation, pool_iterator)
-            else:
-                pool = multiprocessing.Pool(args.processes, initializer=init_worker, initargs=initargs)
-                it = pool.imap(get_annotation, pool_iterator, args.simultaneous_entries)
+        sys.stderr.write('\n    Aggregating information...\n\n')
+        if args.header is None:
+            self.stdout.write('\t'.join(entity.header for entity in requested_entities))
+        else:
+            self.stdout.write(args.header)
+        self.stdout.write('\n')
+        template = '\t'.join(['{}'] * len(requested_entities)) if args.template is None else args.template
+        for row in it:
+            row = [requested_entity.format(entity) for requested_entity, entity in zip(requested_entities, row)]
+            self.stdout.write(template.format(*row))
+            self.stdout.write('\n')
 
-            for row in it:
-                row = [requested_entity.format(entity) for requested_entity, entity in zip(requested_entities, row)]
-                sys.stdout.write(template.format(*row))
-                sys.stdout.write('\n')
-
-            if args.processes > 1:
-                pool.close()
-                pool.join()
+        if args.processes > 1:
+            pool.close()
+            pool.join()
 
     def resolve_requested_entities(self, requested_entities, provided_resources, maps):
         solutions = [self.resolve_requested_entity(entity, provided_resources, maps) for entity in requested_entities]
@@ -75,7 +76,7 @@ class Aggregator(object):
             return graph.resources.intersection(requested_resources) == requested_resources
 
         ERROR_MANAGER.reset()
-        sys.stderr.write('    {} - '.format(requested_entity.name))
+        sys.stderr.write('     {} - '.format(requested_entity.name))
         solution_iterator = EntitySolutionIterator(requested_entity.name,
                                                    self.hyper_graph,
                                                    provided_resources,
@@ -86,9 +87,9 @@ class Aggregator(object):
         possible_graphs = [graph for graph in possible_graphs
                            if satisfies_request(graph, requested_entity.resources)]
         if len(possible_graphs) == 0:
-            sys.stderr.write('unable to resolve entity.\n')
-            sys.stderr.write('      Possible reasons:\n')
-            sys.stderr.write('\n      * '.join(sorted(ERROR_MANAGER.errors)))
+            sys.stderr.write('unable to resolve entity.\n\n')
+            sys.stderr.write('     Possible reasons:\n     * ')
+            sys.stderr.write('\n     * '.join(sorted(ERROR_MANAGER.errors)))
             sys.stderr.write('\n')
             sys.exit(1)
         elif len(possible_graphs) == 1:
@@ -110,9 +111,10 @@ class Aggregator(object):
             if len(matching_graphs) > 1:
                 unique = False
         if not unique:
-            for graph, extra_resources in matching_graphs:
+            sys.stderr.write('multiple solutions found.\n\n')
+            for i, (graph, extra_resources) in enumerate(matching_graphs):
+                sys.stderr.write('Solution {}:\n'.format(i))
                 sys.stderr.write('{}\n\n'.format(str(graph)))
-            sys.stderr.write('    Multiple solutions found.\n')
             sys.exit(1)
         matching_graph, extra_resources = matching_graphs[0]
         extra_resources = '\n      '.join(extra_resources)
@@ -183,9 +185,11 @@ def aggregate(args):
     template_factory = TemplateFactory(os.path.join(get_program_directory(), 'templates', args.workflow_template))
     template = template_factory.make(provided_resources, requested_entities)
 
-    aggregator = Aggregator(template, args.workflow_template)
+    stdout = sys.stdout if args.output is None else open(args.output, 'w')
+    aggregator = Aggregator(template, args.workflow_template, stdout)
     maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
     aggregator.aggregate(requested_entities, provided_resources, args, maps)
+    stdout.close()
 
 
 requested_entities = None
@@ -232,7 +236,6 @@ def get_annotation(target):
             sys.stderr.write('Error processing entry on line {}\n'.format(solution.steps['target'].interface.line_no))
             #sys.exit(1)
 
-    tmp = requested_entities
     row = [entities.get(str(entity), '') for entity in requested_entities]
     return row
 

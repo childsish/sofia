@@ -1,6 +1,3 @@
-import argparse
-
-from argument_dictionary import ArgumentDictionary
 from provided_resource import ProvidedResource
 
 
@@ -8,29 +5,24 @@ class ResourceParser(object):
     """ A parser for resources on the command line and from resource files.
     
     The resource string takes the form of:
-        -r "[-n NAME] [-t TYPE] [-p PARAM] [-a ATTR] resource"
+        <provided_resource> ::= <resource>[:<name>][:<attribute>[:<attribute>]*]
+        <attribute> ::= <key>=<value>[,<value>]*
     where
         resource
             is the file name of the resource
-        NAME
+        <name>
             is an alternative name of the resource. This is used when
-            referencing the resource in an step string.
-        FORMAT
-            is the file format of the resource
-        PARAM
-            are the arguments passed to a resource upon initialisation
-        ATTR
-            are the attributes of the resource
+            referencing the resource in a requested entity.
+        <key>
+            is the name of an attribute
+        <value>
+            is the value of an attribute
     
     An example:
         -r /tmp/tmp.vcf
-        -r "/tmp/tmp.vcf -n tmp -t vcf"
-        -r "tmp.vcf -n tmp -t vcf -k x=x y=y -a chromosome_id=ucsc"
+        -r "/tmp/tmp.vcf:tmp:format=vcf"
+        -r "tmp.vcf:tmp:format=vcf:x=x:y=y:chromosome_id=ucsc"
     """
-    
-    def __init__(self):
-        """ Initialise with default entity types based on file extension. """
-        self.parser = self._define_parser()
     
     def parse_resources(self, resource_strings):
         """ Parse all resource strings in a list. """
@@ -41,17 +33,20 @@ class ResourceParser(object):
         return res
     
     def parse_resource(self, resource_string):
-        """ Parse a resource string. """
-        args = self.parser.parse_args(resource_string.split())
-        return ProvidedResource(args.resource, args.format, args.name, args.param, args.attr, args.ins, args.outs)
-    
-    def _define_parser(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('resource')
-        parser.add_argument('-n', '--name')
-        parser.add_argument('-f', '--format')
-        parser.add_argument('-p', '--param', action=ArgumentDictionary, nargs='+', default={})
-        parser.add_argument('-a', '--attr', action=ArgumentDictionary, nargs='+', default={})
-        parser.add_argument('-i', '--ins', nargs='+', default=[])
-        parser.add_argument('-o', '--outs', nargs='+')
-        return parser
+        """ Parse a single provided resource.
+
+        :param resource_string: definition of provided resource
+        :return: ProvidedResource
+        """
+        parts = resource_string.split(':')
+        resource = parts[0]
+        name = None
+        attributes = {}
+        for part in parts[1:]:
+            if '=' in part:
+                k, v = part.split('=', 1)
+                attributes[k] = v.split(',')[0] #TODO: allow multiple values
+            else:
+                name = part
+        format = attributes.pop('format', None)
+        return ProvidedResource(resource, format, name, attributes)

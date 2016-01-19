@@ -5,6 +5,7 @@ class GetGotermByGene(Step):
     
     IN = ['gene_id', 'gene_goterm_map']
     OUT = ['goterm']
+    PARAMETERS = ['domain']
     
     def init(self, domain=None):
         self.domain = domain

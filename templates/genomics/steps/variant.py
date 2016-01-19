@@ -240,6 +240,7 @@ class GetAminoAcidVariant(Step):
     
     IN = ['codon_variant', 'genetic_code']
     OUT = ['amino_acid_variant']
+    PARAMS = ['use_3code']
     
     BUFFER = 50
 

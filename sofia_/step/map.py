@@ -5,6 +5,7 @@ from resource import Resource
 class Map(Resource):
 
     OUT = ['map']
+    FORMAT = 'map'
 
     def init(self):
         resource = list(self.resources)[0]

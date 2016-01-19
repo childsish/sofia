@@ -8,9 +8,9 @@ class GenomicFeature(Interval):
     def __init__(self, name, type=None, interval=None, data=None):
         self.children = SortedList()
         if interval is None:
-            super(GenomicFeature, self).__init__(None, None, None, data)
+            super(GenomicFeature, self).__init__(None, None, None, data=data)
         else:
-            super(GenomicFeature, self).__init__(interval.chr, interval.start, interval.stop, interval.strand, data)
+            super(GenomicFeature, self).__init__(interval.chr, interval.start, interval.stop, interval.strand, data=data)
         self.name = name
         self.type = type
 

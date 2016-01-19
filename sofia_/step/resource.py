@@ -9,9 +9,9 @@ class Resource(Step):
     EXT = {}
     FORMAT = None
 
-    def __init__(self, resources=None, dependencies=None, param={}, ins=None, outs=None, converters={}, name=None, format=None):
-        super(Resource, self).__init__(resources, dependencies, param, ins, outs, converters, name)
-        self.format = self.FORMAT if format is None else format
+    def __init__(self, resources=None, dependencies=None, attr={}, ins=None, outs=None, converters={}, name=None):
+        super(Resource, self).__init__(resources, dependencies, attr, ins, outs, converters, name)
+        self.format = attr.get('format', self.FORMAT)
         self.interface = None
 
     def init(self):

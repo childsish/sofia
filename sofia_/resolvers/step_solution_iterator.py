@@ -25,8 +25,7 @@ class StepSolutionIterator(object):
         return self.step.name
     
     def __iter__(self):
-        original_entities = sorted(self.graph.get_children(self.step.name))
-        equivalents = [self.graph.entity_graph.get_equivalent_descendents(entity) for entity in original_entities]
+        entities = sorted(self.graph.get_children(self.step.name))
         resolvers = {entity: EntitySolutionIterator(entity,
                                                     self.graph,
                                                     self.provided_resources,
@@ -34,32 +33,31 @@ class StepSolutionIterator(object):
                                                     self.maps,
                                                     self.requested_resources,
                                                     self.visited)
-                     for entity in reduce(or_, equivalents)}
+                                  for entity in entities}
         resolvers = {entity: list(resolver) for entity, resolver in resolvers.iteritems()}
 
         res = defaultdict(list)
-        for entities in product(*equivalents):
-            disjoint_solutions = [resolvers[entity] for entity in entities]
-            for disjoint_solution in product(*disjoint_solutions):
-                ins = {o: deepcopy(s.step.outs[e]) for o, e, s in izip(original_entities, entities, disjoint_solution)}
+        disjoint_solutions = [resolvers[entity] for entity in entities]
+        for disjoint_solution in product(*disjoint_solutions):
+            ins = {e: deepcopy(s.step.outs[e]) for e, s in izip(entities, disjoint_solution)}
 
-                converters = self.get_converters(ins)
-                if converters is None:
-                    continue
+            converters = self.get_converters(ins)
+            if converters is None:
+                continue
 
-                for parent_entity, converter in converters.iteritems():
-                    for entity, (fr, to) in converter.entities.iteritems():
-                        ins[parent_entity].attr[entity] = to
-                outs = self.step.get_output(ins, entity_graph=self.graph.entity_graph)
-                if outs is None:
-                    continue
-                resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
-                dependencies = {e: s.step.name for e, s in izip(original_entities, disjoint_solution)}
-                step_instance = self.step(resources, dependencies, ins=ins, outs=outs, converters=converters)
-                solution = Workflow(step_instance)
-                for e, s in izip(entities, disjoint_solution):
-                    solution.join(s, s.step.outs[e])
-                res[len(resources - self.requested_resources)].append(solution)
+            for parent_entity, converter in converters.iteritems():
+                for entity, (fr, to) in converter.entities.iteritems():
+                    ins[parent_entity].attr[entity] = to
+            outs = self.step.get_output(ins, entity_graph=self.graph.entity_graph)
+            if outs is None:
+                continue
+            resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
+            dependencies = {e: s.step.name for e, s in izip(entities, disjoint_solution)}
+            step_instance = self.step(resources, dependencies, ins=ins, outs=outs, converters=converters)
+            solution = Workflow(step_instance)
+            for e, s in izip(entities, disjoint_solution):
+                solution.join(s, s.step.outs[e])
+            res[len(resources - self.requested_resources)].append(solution)
         if len(res) > 0:
             for solution in res[min(res)]:
                 yield solution
@@ -68,6 +66,8 @@ class StepSolutionIterator(object):
         matching_entities = defaultdict(lambda: defaultdict(set))
         for edge, entity in ins.iteritems():
             for entity_name, entity_value in entity.attr.iteritems():
+                if entity_name == 'resource':
+                    continue
                 matching_entities[entity_name][entity_value].add(edge)
 
         converters = defaultdict(Converter)
@@ -75,7 +75,7 @@ class StepSolutionIterator(object):
             if len(entity_values) == 1:
                 continue
             elif entity_name not in self.maps:
-                ERROR_MANAGER.add_error('There are no converters for {}'.format(entity_name))
+                ERROR_MANAGER.add_error('There are no converters for attribute "{}"'.format(entity_name))
                 return None
             else:
                 for value in entity_values:

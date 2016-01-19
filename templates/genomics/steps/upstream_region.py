@@ -10,6 +10,7 @@ class GetUpstreamSequence(Step):
 
     IN = ['major_transcript', 'chromosome_sequence_set']
     OUT = ['upstream_sequence']
+    PARAMS = ['offset']
 
     def init(self, offset=1000):
         self.offset = offset
@@ -28,6 +29,7 @@ class GetUpstreamSequence2(Step):
 
     IN = ['genomic_interval', 'chromosome_sequence_set']
     OUT = ['upstream_sequence']
+    PARAMS = ['offset']
 
     def init(self, offset=1000):
         self.offset = offset
