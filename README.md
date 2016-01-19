@@ -46,6 +46,10 @@ The command line can be broken down into several parts:
 3. `-e chromosome_id position gene_id amino_acid_variant variant_effect` Annotate each variant with the chromosome, position, gene name, amino acid variant and variant effect. 
 4. `-r ./data/example/randome.gff ./data/example/randome.fasta` Use a set of genes descriptions and chromosome sequences to provide the extra information needed to generate the requested entities.
 
+To check if you got the correct output, pipe the output to a temporary file and run:
+
+`diff ./data/example/output.txt <name of your temporary file>`
+
 ### Data download scripts
 
 SoFIA does not package any further data internally as you know best what is required your own analyses. However, to help you get started, we provide shell scripts in the `scripts` directory that download the basic necessities for annotation. If you wish for further "standard" annotation sets to be added, please let us know the url of each file or provide us a shell script and we will consider adding it to the default SoFIA installation.
