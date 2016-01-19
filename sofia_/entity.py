@@ -5,5 +5,5 @@ class Entity(object):
 
     def __str__(self):
         res = [self.name]
-        res.extend('{}={}'.format(k, ','.join(v)) for k, v in self.attr.iteritems())
+        res.extend('{}={}'.format(k, str(v)) for k, v in self.attr.iteritems())
         return ':'.join(res)
