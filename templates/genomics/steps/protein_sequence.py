@@ -13,6 +13,7 @@ class GetPest(Step):
 
     IN = ['protein_sequence', 'molecular_weight_set']
     OUT = ['pest_sequences']
+    PARAMETERS = ['win', 'thr', 'mono']
 
     POSITIVE = set('RHK')
     REQUIRED = ('P', 'DE', 'ST')

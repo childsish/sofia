@@ -9,6 +9,7 @@ class GetTranslationStartMinimumFreeEnergy(Step):
 
     IN = ['major_transcript', 'chromosome_sequence_set']
     OUT = ['translation_start_mfe']
+    PARAMS = ['offset', 'type']
 
     def init(self, offset=50, type='mfe'):
         """ Initialise the step
@@ -40,6 +41,7 @@ class GetTranslationStartMinimumFreeEnergy2(Step):
 
     IN = ['genomic_interval', 'chromosome_sequence_set']
     OUT = ['translation_start_mfe']
+    PARAMS = ['offset', 'type']
 
     def init(self, offset=50, type='mfe'):
         """ Initialise the step

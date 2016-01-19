@@ -28,12 +28,13 @@ class Workflow(object):
     
     def init(self):
         """ Initialise all the steps in the graph. """
-        #TODO: Check if param is still necessary
-        for ftr in self.steps.itervalues():
-            ftr.init(**ftr.param)
+        for step in self.steps.itervalues():
+            # TODO: Currently only initialise resources
+            params = {key: step.attr[key] for key in step.PARAMS if key in step.attr}
+            step.init(**params)
 
     def join(self, other, edge=None):
-        """ Merge this StepGraph with another. """
+        """ Merge this workflow with another. """
         self.graph.update(other.graph)
         self.steps.update(other.steps)
         self.resources.update(other.resources)
