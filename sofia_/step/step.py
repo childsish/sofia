@@ -9,14 +9,15 @@ class Step(object):
     
     IN = []
     OUT = []
+    PARAMS = []
     
-    def __init__(self, resources=None, dependencies=None, param={}, ins=None, outs=None, converters={}, name=None):
+    def __init__(self, resources=None, dependencies=None, attr={}, ins=None, outs=None, converters={}, name=None):
         # TODO: Consider equivalence of dependencies and ins
         self.changed = True
         self.calculated = False
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
-        self.param = param
+        self.attr = attr
         self.ins = OrderedDict([(in_, Entity(in_)) for in_ in self.IN]) if ins is None else ins
         self.outs = OrderedDict([(out, Entity(out)) for out in self.OUT]) if outs is None else outs
         self.name = self._get_name(name)
@@ -101,23 +102,19 @@ class Step(object):
         return res
     
     def _get_name(self, name=None):
-        """ Return the name of the step based on it's resources and
-        arguments. """
+        """ Return the name of the step based on it's resources and arguments. """
         name = [type(self).__name__ if name is None else name]
         if len(self.resources) != 0:
             tmp = ','.join(resource.name for resource in self.resources if resource.name != 'target')
             if len(tmp) > 0:
-                name.append('-r ' + tmp)
-        if len(self.param) != 0:
-            tmp = ','.join('{}={}'.format(k, v) for k, v in self.param.iteritems())
-            name.append('-p ' + tmp)
+                name.append('resource=' + tmp)
         if len(self.outs) != 0:
             tmp = []
             for entity in self.outs.itervalues():
                 tmp.extend((k, v) for k, v in entity.attr.iteritems() if v is not None)
             tmp = ','.join('{}={}'.format(k, v) for k, v in tmp)
             if len(tmp) > 0:
-                name.append('-a ' + tmp)
+                name.append(tmp)
         return '\\n'.join(name)
     
     @classmethod
@@ -132,7 +129,7 @@ class Step(object):
         if len(ins) == 0:
             return OrderedDict()
 
-        common_attr_names = set.intersection(*[set(entity.attr) for entity in ins.itervalues()])
+        common_attr_names = set.intersection(*[set(entity.attr) for entity in ins.itervalues()]) - {'resource'}
         for name in common_attr_names:
             common_attr = {entity.attr[name] for entity in ins.itervalues()}
             if len(common_attr) > 1:

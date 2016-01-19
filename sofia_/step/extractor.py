@@ -3,7 +3,10 @@ from sofia_.graph.entity_graph import EntityGraph
 
 
 class Extractor(Step):
-    def init(self, path):
+
+    PARAMS = ['path']
+
+    def init(self, path=[]):
         self.path = path
 
     def calculate(self, **kwargs):

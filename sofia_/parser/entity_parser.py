@@ -63,7 +63,6 @@ class EntityParser(object):
                 header = part
         if 'resource' in attributes:
             resources = self._get_resources(attributes['resource'], entity)
-            del attributes['resource']
         else:
             resources = frozenset()
         return RequestedEntity(entity, getter, header, attributes, resources)
