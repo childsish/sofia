@@ -164,5 +164,5 @@ class Step(object):
                 remove.add(attr)
         for attr in remove:
             del out_attr[attr]
-        outs = OrderedDict([(out, Entity(out, out_attr)) for out in outs])  # TODO: use an entity factory
+        outs = OrderedDict([(out, Entity(out, attr=out_attr)) for out in outs])  # TODO: use an entity factory
         return outs

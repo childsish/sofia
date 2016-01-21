@@ -46,7 +46,7 @@ class Aggregator(object):
 
         sys.stderr.write('\n    Aggregating information...\n\n')
         if args.header is None:
-            self.stdout.write('\t'.join(entity.header for entity in requested_entities))
+            self.stdout.write('\t'.join(entity.alias for entity in requested_entities))
         else:
             self.stdout.write(args.header)
         self.stdout.write('\n')
