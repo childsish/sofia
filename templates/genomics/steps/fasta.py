@@ -10,7 +10,7 @@ from warnings import warn
 class FastaChromosomeSequenceSet(Resource):
     
     EXT = {'.fasta', '.fasta.gz', '.fasta.bgz', '.fa', '.fa.gz'}
-    FORMAT = 'fasta'
+    FORMAT = 'fasta_file'
     OUT = ['chromosome_sequence_set']
     
     def get_interface(self, filename):

@@ -1,0 +1,2 @@
+gc.prt:genetic_code:entity=genetic_code_file
+Emolwt.dat:molecular_weights:entity=molecular_weight_file

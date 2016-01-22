@@ -12,7 +12,7 @@ from warnings import warn
 class VcfIterator(Target):
     
     EXT = {'.vcf', '.vcf.gz'}
-    FORMAT = 'vcf'
+    FORMAT = 'vcf_file'
     OUT = ['variant']
     
     def get_interface(self, filename):
@@ -31,7 +31,7 @@ class VcfSet(Resource):
     """
     
     EXT = {'.vcf', '.vcf.gz'}
-    FORMAT = 'vcf'
+    FORMAT = 'vcf_file'
     OUT = ['variant_set']
     
     def get_interface(self, filename):

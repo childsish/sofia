@@ -16,9 +16,7 @@ class GetVariantByVariant(Step):
             return None
         hits = [o for o in overlap if o.pos == variant.pos and
                 o.ref == variant.ref and o.alt == variant.alt]
-        if len(hits) > 1:
-            raise ValueError('Too many hits')
-        elif len(hits) == 0:
+        if len(hits) == 0:
             return None
         return hits[0]
 

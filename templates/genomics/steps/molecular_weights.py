@@ -10,6 +10,7 @@ class MolecularWeights(Resource):
     EXT = ['.dat', '.mol']
     OUT = ['molecular_weight_set']
     DEFAULT = 'Emolwt.dat'
+    FORMAT = 'molecular_weight_file'
 
     def get_interface(self, filename):
         infile = open(filename)

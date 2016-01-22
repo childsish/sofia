@@ -10,7 +10,7 @@ from warnings import warn
 class BedIterator(Target):
     
     EXT = {'.bed', '.bed.gz'}
-    FORMAT = 'bed'
+    FORMAT = 'bed_file'
     OUT = ['genomic_interval']
     
     def get_interface(self, filename):
@@ -20,7 +20,7 @@ class BedIterator(Target):
 class BedSet(Resource):
     
     EXT = {'.bed', '.bed.gz', '.bed.bgz'}
-    FORMAT = 'bed'
+    FORMAT = 'bed_file'
     OUT = ['genomic_interval_set']
 
     def get_interface(self, filename):

@@ -23,7 +23,7 @@ class GenePathwayMap(Resource):
 class GeneGotermMap(Resource):
 
     EXT = {'.txt'}
-    FORMAT = 'txt'
+    FORMAT = 'txt_file'
     OUT = ['gene_goterm_map']
 
     def get_interface(self, filename):
