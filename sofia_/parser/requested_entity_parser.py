@@ -3,7 +3,7 @@ import re
 from sofia_.entity import Entity
 
 
-class EntityParser(object):
+class ProvidedEntityParser(object):
     """ A parser for entity requests.
         
     The entity request takes the form of:

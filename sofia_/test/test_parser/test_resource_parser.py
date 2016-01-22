@@ -4,7 +4,7 @@ import unittest
 import os
 import tempfile
 
-from sofia_.parser.resource_parser import ResourceParser
+from sofia_.parser.provided_entity_parser import ResourceParser
 
 
 class TestResourceParser(unittest.TestCase):

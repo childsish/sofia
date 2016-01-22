@@ -48,8 +48,8 @@ class TemplateFactory(object):
 
         res = []
         for name, resource in provided_resources.iteritems():
-            if resource.format is not None and resource.format not in self.recognised_formats:
-                entry_factory = entity_registry.parse(resource.format)
+            if resource.name is not None and resource.name not in self.recognised_formats:
+                entry_factory = entity_registry.parse(resource.name)
                 if resource.name == 'target':
                     outs = OrderedDict((out, Entity(out)) for out in entry_factory.type._fields) if entry_factory.name == 'Entry' else\
                         OrderedDict([(entry_factory.name, Entity(entry_factory.name))])
@@ -58,7 +58,7 @@ class TemplateFactory(object):
                         'entry': entry_factory,
                         'skip': int(resource.attr.get('skip', 0))
                     }
-                    step = ResourceWrapper(TxtIterator, outs=outs, param=param, format=resource.format)
+                    step = ResourceWrapper(TxtIterator, outs=outs, param=param, format=resource.name)
                     res.append(step)
                 else:
                     if 'index' not in resource.attr:
@@ -74,17 +74,17 @@ class TemplateFactory(object):
                         'skip': int(resource.attr.get('skip', 0))
                     }
                     step = ResourceWrapper(TxtSet,
-                                           outs=OrderedDict([(resource.format, Entity(resource.format))]),
+                                           outs=OrderedDict([(resource.name, Entity(resource.name))]),
                                            param=param,
-                                           format=resource.format)
+                                           format=resource.name)
                     res.append(step)
                     for in_ in resource.ins:
-                        ins = OrderedDict([(resource.format, Entity(resource.format)),
+                        ins = OrderedDict([(resource.name, Entity(resource.name)),
                                            (in_, Entity(resource.ins[0]))])
                         outs = OrderedDict([(out, Entity(out)) for i, out in enumerate(entry_factory.type._fields)
                                            if i != index_key])
-                        step = StepWrapper(TxtAccessor, '{}[{}]'.format(resource.format, in_), ins=ins, outs=outs, attr={
-                            'set_name': resource.format,
+                        step = StepWrapper(TxtAccessor, '{}[{}]'.format(resource.name, in_), ins=ins, outs=outs, attr={
+                            'set_name': resource.name,
                             'key_name': in_
                         })
                         res.append(step)

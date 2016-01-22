@@ -11,7 +11,7 @@ class Resource(Step):
 
     def __init__(self, resources=None, dependencies=None, attr={}, ins=None, outs=None, converters={}, name=None):
         super(Resource, self).__init__(resources, dependencies, attr, ins, outs, converters, name)
-        self.format = attr.get('format', self.FORMAT)
+        self.format = attr.get('name', self.FORMAT)
         self.interface = None
 
     def init(self):
@@ -26,7 +26,7 @@ class Resource(Step):
     
     def get_filename(self):
         """ Returns the filename of the resource. """
-        return list(self.resources)[0].fname
+        return list(self.resources)[0].attr['filename']
 
     @classmethod
     def get_output(cls, ins={}, outs={}, attr={}, entity_graph=None):

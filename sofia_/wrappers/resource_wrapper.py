@@ -9,6 +9,6 @@ class ResourceWrapper(StepWrapper):
 
     def matches(self, resource):
         """ Check if a disk-based source matches this resource. """
-        if resource.format is not None:
-            return resource.format == self.format
-        return any(resource.fname.endswith(ext) for ext in self.ext)
+        if resource.name is not None:
+            return resource.name == self.format
+        return any(resource.attr['filename'].endswith(ext) for ext in self.ext)

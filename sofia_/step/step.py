@@ -129,7 +129,7 @@ class Step(object):
         if len(ins) == 0:
             return OrderedDict()
 
-        common_attr_names = set.intersection(*[set(entity.attr) for entity in ins.itervalues()]) - {'resource'}
+        common_attr_names = set.intersection(*[set(entity.attr) for entity in ins.itervalues()]) - {'resource', 'filename'}
         for name in common_attr_names:
             common_attr = {entity.attr[name] for entity in ins.itervalues()}
             if len(common_attr) > 1:

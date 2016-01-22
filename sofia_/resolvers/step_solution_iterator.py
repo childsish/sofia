@@ -66,7 +66,7 @@ class StepSolutionIterator(object):
         matching_entities = defaultdict(lambda: defaultdict(set))
         for edge, entity in ins.iteritems():
             for entity_name, entity_value in entity.attr.iteritems():
-                if entity_name == 'resource':
+                if entity_name in {'resource', 'filename'}:
                     continue
                 matching_entities[entity_name][entity_value].add(edge)
 
