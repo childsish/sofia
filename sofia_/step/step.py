@@ -129,8 +129,8 @@ class Step(object):
         if len(ins) == 0:
             return OrderedDict()
 
-        common_attr_names = set.intersection(*[set(entity.attr) for entity in ins.itervalues()]) - {'resource', 'filename'}
-        for name in common_attr_names:
+        common_attributes = set.intersection(*[set(entity.attr) for entity in ins.itervalues()]) - {'resource', 'filename'}
+        for name in common_attributes:
             common_attr = {entity.attr[name] for entity in ins.itervalues()}
             if len(common_attr) > 1:
                 attributes = ', '.join('({}: {})'.format(k, v.attr[name]) for k, v in ins.iteritems())
@@ -164,5 +164,7 @@ class Step(object):
                 remove.add(attr)
         for attr in remove:
             del out_attr[attr]
-        outs = OrderedDict([(out, Entity(out, attr=out_attr)) for out in outs])  # TODO: use an entity factory
+
+        resources = reduce(or_, (entity.resources for entity in ins.itervalues()), set())
+        outs = OrderedDict([(out, Entity(out, resources, attr=out_attr)) for out in outs])  # TODO: use an entity factory
         return outs

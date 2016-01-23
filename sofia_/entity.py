@@ -13,7 +13,7 @@ class Entity(object):
         self.getter = '{' + getter + '}'
 
     def __str__(self):
-        res = [self.alias]
+        res = [self.alias, 'resource={}'.format(','.join(sorted(self.resources)))]
         res.extend('{}={}'.format(k, str(v)) for k, v in sorted(self.attr.iteritems()))
         return ':'.join(res)
 
