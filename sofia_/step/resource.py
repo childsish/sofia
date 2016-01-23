@@ -32,7 +32,7 @@ class Resource(Step):
     @classmethod
     def get_output(cls, ins={}, outs={}, attr={}, entity_graph=None):
         #TODO: Use entity_graph to properly construct out entities
-        attr = ins['resource'].attributes.copy() if len(ins) > 0 else {}
+        attr = ins['resource'].attr.copy() if len(ins) > 0 else {}
         resources = reduce(or_, (entity.resources for entity in ins.itervalues()), set())
         return OrderedDict((out, Entity(out, resources, attr=attr)) for out in outs)
 
