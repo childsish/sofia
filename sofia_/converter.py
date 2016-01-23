@@ -4,12 +4,12 @@ from itertools import izip
 
 class Converter(object):
     def __init__(self, entity=None, fr=None, to=None, path=None, id_map=None):
-        self.entities = {} if entity is None else {entity: (fr, to)}
+        self.attributes = {} if entity is None else {entity: (fr, to)}
         self.paths = [] if path is None else [path]
         self.id_maps = [] if id_map is None else [id_map]
 
     def __str__(self):
-        return ','.join('{}:{}->{}'.format(e, f, t) for e, (f, t) in self.entities.iteritems())
+        return ','.join('{}:{}->{}'.format(e, f, t) for e, (f, t) in self.attributes.iteritems())
 
     def __len__(self):
         return len(self.paths)
@@ -24,7 +24,7 @@ class Converter(object):
         return entity
 
     def update(self, other):
-        self.entities.update(other.entities)
+        self.attributes.update(other.attributes)
         self.paths.extend(other.paths)
         self.id_maps.extend(other.id_maps)
 
@@ -32,15 +32,22 @@ class Converter(object):
         if len(path) == 0:
             return id_map[entity]
 
-        child = getattr(entity, path[0]['key']) if path[0]['type'] == 'attr' else\
-            entity[path[0]['key']]
+        step = path[0]
+        child = getattr(entity, step['key']) if step['type'] == 'attr' else\
+            getattr(entity, step['key'])() if step['type'] == 'function' else\
+            entity[step['key']]
+
         value = self._convert(child, path[1:], id_map)
-        if hasattr(entity, '__setitem__'):
-            entity = entity.copy()
-            entity[path[0]['key']] = value
-        elif hasattr(entity, '_replace'):
-            entity = entity._replace(**{path[0]['key']: value})
+
+        if step['type'] == 'attr':
+            if hasattr(entity, '_replace'):  # for tuples
+                entity = entity._replace(**{path[0]['key']: value})
+            else:
+                setattr(entity, step['key'], value)
+        elif step['type'] == 'function':
+            getattr(entity, step['key'])(value)
         else:
-            entity = copy(entity)
-            setattr(entity, path[0]['key'], value)
+            entity = entity.copy()
+            entity[step['key']] = value
+
         return entity

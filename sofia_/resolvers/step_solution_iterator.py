@@ -45,9 +45,9 @@ class StepSolutionIterator(object):
             if converters is None:
                 continue
 
-            for parent_entity, converter in converters.iteritems():
-                for entity, (fr, to) in converter.entities.iteritems():
-                    ins[parent_entity].attr[entity] = to
+            for entity, converter in converters.iteritems():
+                for attribute, (fr, to) in converter.attributes.iteritems():
+                    ins[entity].attr[attribute] = to
             outs = self.step.get_output(ins, entity_graph=self.graph.entity_graph)
             if outs is None:
                 continue
@@ -63,55 +63,55 @@ class StepSolutionIterator(object):
                 yield solution
 
     def get_converters(self, ins):
-        matching_entities = defaultdict(lambda: defaultdict(set))
+        matching_attributes = defaultdict(lambda: defaultdict(set))
         for edge, entity in ins.iteritems():
-            for entity_name, entity_value in entity.attr.iteritems():
-                if entity_name in {'resource', 'filename'}:
+            for attribute_key, attribute_value in entity.attr.iteritems():
+                if attribute_key in {'resource', 'filename'}:
                     continue
-                matching_entities[entity_name][entity_value].add(edge)
+                matching_attributes[attribute_key][attribute_value].add(edge)
 
         converters = defaultdict(Converter)
-        for entity_name, entity_values in matching_entities.iteritems():
-            if len(entity_values) == 1:
+        for attribute_key, attribute_values in matching_attributes.iteritems():
+            if len(attribute_values) == 1:
                 continue
-            elif entity_name not in self.maps:
-                ERROR_MANAGER.add_error('There are no converters for attribute "{}"'.format(entity_name))
+            elif attribute_key not in self.maps:
+                ERROR_MANAGER.add_error('There are no converters for attribute "{}"'.format(attribute_key))
                 return None
             else:
-                for value in entity_values:
-                    if value not in self.maps[entity_name].hdrs:
-                        ERROR_MANAGER.add_error('Converter for {} has can not convert {}'.format(entity_name, value))
+                for value in attribute_values:
+                    if value not in self.maps[attribute_key].hdrs:
+                        ERROR_MANAGER.add_error('Converter for {} has can not convert {}'.format(attribute_key, value))
                         return None
 
-            edge_converters = self.convert_edge(entity_name, entity_values)
+            edge_converters = self.convert_edge(attribute_key, attribute_values)
             if edge_converters is None:
                 return None
             for edge, converter in edge_converters.iteritems():
                 converters[edge].update(converter)
         return converters
 
-    def convert_edge(self, entity, entity_values):
+    def convert_edge(self, attribute_key, attribute_values):
         errors = set()
-        for to_value in entity_values:
-            converters = self.convert_edge_to(entity, entity_values, to_value, errors)
+        for to_value in attribute_values:
+            converters = self.convert_edge_to(attribute_key, attribute_values, to_value, errors)
             if converters is not None:
                 return converters
         for error in errors:
             ERROR_MANAGER.add_error(error)
 
-    def convert_edge_to(self, entity, entity_values, to_value, errors):
+    def convert_edge_to(self, attribute_key, attribute_values, to_value, errors):
         converters = {}
-        for fr_value, parent_entities in entity_values.iteritems():
+        for fr_value, entities in attribute_values.iteritems():
             if fr_value == to_value:
                 continue
-            for parent_entity in parent_entities:
-                path = [] if entity in self.graph.entity_graph.get_equivalent_descendents(parent_entity) else\
-                    self.graph.entity_graph.get_descendent_path_to(parent_entity, entity)
+            for entity in entities:
+                path = [] if attribute_key in self.graph.entity_graph.get_equivalent_descendents(entity) else\
+                    self.graph.entity_graph.get_descendent_path_to(entity, attribute_key)
                 if path is None:
-                    errors.add('Could not get {} from {} ({})'.format(entity, parent_entity, self.step.name))
+                    errors.add('Could not get {} from {} ({})'.format(attribute_key, entity, self.step.name))
                     return None
-                if parent_entity not in converters:
-                    converters[parent_entity] = Converter(entity, fr_value, to_value)
-                converters[parent_entity].paths.append(path)
-                converters[parent_entity].id_maps.append(self.maps[entity].make(fr_value, to_value))
+                if entity not in converters:
+                    converters[entity] = Converter(attribute_key, fr_value, to_value)
+                converters[entity].paths.append(path)
+                converters[entity].id_maps.append(self.maps[attribute_key].make(fr_value, to_value))
         return converters
