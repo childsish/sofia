@@ -104,7 +104,7 @@ class EntityGraph(object):
                     continue
                 for name in self.attr[step['name']]:
                     attr[name] = None
-        return Entity(name, attr)
+        return Entity(name, attr=attr)
 
     @classmethod
     def get_entity_name(cls, entity):

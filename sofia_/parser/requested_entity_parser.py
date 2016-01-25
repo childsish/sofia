@@ -1,9 +1,9 @@
 import re
 
-from requested_entity import RequestedEntity
+from sofia_.entity import Entity
 
 
-class EntityParser(object):
+class ProvidedEntityParser(object):
     """ A parser for entity requests.
         
     The entity request takes the form of:
@@ -53,24 +53,16 @@ class EntityParser(object):
             raise ValueError('Unrecognised entity request.')
         entity = match.group('entity')
         getter = '' if match.group('getter') is None else match.group('getter')
-        header = None
+        alias = None
         attributes = {}
         for part in parts[1:]:
             if '=' in part:
                 k, v = part.split('=', 1)
                 attributes[k] = sorted(v.split(','))
             else:
-                header = part
-        if 'resource' in attributes:
-            resources = self._get_resources(attributes['resource'], entity)
-        else:
-            resources = frozenset()
-        return RequestedEntity(entity, getter, header, attributes, resources)
-    
-    def _get_resources(self, resources, entity):
-        """ Parse a resource from the step string and check if any requested
-        resources have been provided by the user. """
+                alias = part
         try:
-            return frozenset(self.provided_resources[r] for r in resources)
+            resources = frozenset(self.provided_resources[r] for r in ['target'] + attributes.get('resource', []))
         except KeyError, e:
             raise KeyError('Resource "{}" requested by entity "{}" not provided.'.format(e.args[0], entity))
+        return Entity(entity, resources, attributes, alias, getter)

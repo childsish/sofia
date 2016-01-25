@@ -1,0 +1,32 @@
+[
+  {
+    "name": "bed_file",
+    "extensions": [".bed", ".bed.gz"],
+    "description": "A set of genomic features"
+  },
+  {
+    "name": "fasta_file",
+    "extensions": [".fasta", ".fasta.gz", ".fa", ".fa.gz"],
+    "description": "A set of sequences"
+  },
+  {
+    "name": "gbk_file",
+    "extensions": [".gbk", ".gbk.gz"],
+    "description": "A set of genbank entries"
+  },
+  {
+    "name": "gff_file",
+    "extensions": [".gff", ".gff.gz", ".gff3", ".gff3.gz"],
+    "description": "A set of genomic features"
+  },
+  {
+    "name": "gtf_file",
+    "extensions": [".gtf", ".gtf.gz"],
+    "description": "A set of genomic features"
+  },
+  {
+    "name": "vcf_file",
+    "extensions": [".vcf", ".vcf.gz"],
+    "description": "A set of sequence variants"
+  }
+]

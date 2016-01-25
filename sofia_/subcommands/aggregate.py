@@ -46,7 +46,7 @@ class Aggregator(object):
 
         sys.stderr.write('\n    Aggregating information...\n\n')
         if args.header is None:
-            self.stdout.write('\t'.join(entity.header for entity in requested_entities))
+            self.stdout.write('\t'.join(entity.alias for entity in requested_entities))
         else:
             self.stdout.write(args.header)
         self.stdout.write('\n')
@@ -98,8 +98,8 @@ class Aggregator(object):
 
         matching_graphs = defaultdict(list)
         for graph in possible_graphs:
-            resources = frozenset([r.name for r in graph.resources if not r.name == 'target'])
-            extra_resources = resources - requested_entity.resources
+            resources = frozenset([r.alias for r in graph.resources if not r.name == 'target'])
+            extra_resources = resources - {r.alias for r in requested_entity.resources}
             matching_graphs[len(extra_resources)].append((graph, extra_resources))
         count, matching_graphs = sorted(matching_graphs.iteritems())[0]
         unique = True
@@ -174,7 +174,9 @@ def aggregate(args):
     import sys
     sys.stderr.write('\n    SoFIA started...\n\n')
 
-    provided_resources = parse_provided_resources(args)
+    template_directory = os.path.join(get_program_directory(), 'templates', args.workflow_template)
+
+    provided_resources = parse_provided_resources(args, template_directory)
     requested_entities = parse_requested_entities(args, provided_resources)
     if len(requested_entities) == 0:
         import sys
@@ -182,7 +184,7 @@ def aggregate(args):
                          'the names of the entities you wish to calculate.')
         sys.exit(1)
 
-    template_factory = TemplateFactory(os.path.join(get_program_directory(), 'templates', args.workflow_template))
+    template_factory = TemplateFactory(template_directory)
     template = template_factory.make(provided_resources, requested_entities)
 
     stdout = sys.stdout if args.output is None else open(args.output, 'w')
@@ -195,16 +197,19 @@ def aggregate(args):
 requested_entities = None
 solution = None
 entity_graph = None
+entities = None
 
 
 def init_worker(requested_entities_, solution_, entity_graph_):
     global requested_entities
     global solution
     global entity_graph
+    global entities
 
     requested_entities = requested_entities_
     solution = solution_
     entity_graph = entity_graph_
+    entities = {}
 
     solution.init()
 
@@ -215,6 +220,7 @@ def get_annotation(target):
     global requested_entities
     global solution
     global entity_graph
+    global entities
 
     for top_step in solution.step:
         solution.steps[top_step].reset(solution.steps)
@@ -223,7 +229,7 @@ def get_annotation(target):
     target_parser = solution.steps['target']
     target = [target] if len(target_parser.outs) == 1 else target
 
-    entities = {str(key): value for key, value in zip(target_parser.outs.itervalues(), target)}
+    entities.update({str(key): value for key, value in zip(target_parser.outs.itervalues(), target)})
     solution.steps['target'].calculated = True
 
     for top_step in solution.step:

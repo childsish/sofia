@@ -9,7 +9,7 @@ from lhc.io.gbk import GbkIterator as Iterator, GbkSequenceSet
 class GbkIterator(Target):
 
     EXT = ['.gbk', '.gbk.gz']
-    FORMAT = 'gbk'
+    FORMAT = 'gbk_file'
     OUT = ['genomic_interval']
 
     def get_interface(self, filename):
@@ -26,7 +26,7 @@ class GbkIterator(Target):
 class GbkSet(Resource):
 
     EXT = ['.gbk', '.gbk.gz']
-    FORMAT = 'gbk'
+    FORMAT = 'gbk_file'
     OUT = ['chromosome_sequence_set']
 
     def get_interface(self, filename):

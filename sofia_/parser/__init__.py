@@ -1,2 +1,2 @@
-from resource_parser import ResourceParser
-from entity_parser import EntityParser
+from provided_entity_parser import ResourceParser
+from requested_entity_parser import ProvidedEntityParser

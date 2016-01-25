@@ -10,7 +10,7 @@ from warnings import warn
 class GtfIterator(Target):
     
     EXT = {'.gtf', '.gtf.gz', '.gtf.bgz'}
-    FORMAT = 'gtf'
+    FORMAT = 'gtf_file'
     OUT = ['genomic_feature']
 
     def get_interface(self, filename):
@@ -30,6 +30,7 @@ class GtfIterator(Target):
 class GtfSet(Resource):
     
     EXT = ['.gtf', '.gtf.gz', '.gtf.bgz']
+    FORMAT = 'gtf_file'
     OUT = ['genomic_feature_set']
 
     def get_interface(self, filename):

@@ -4,7 +4,7 @@ from sofia_.step import Target
 class RnaIterator(Target):
 
     EXT = {'.rna'}
-    FORMAT = 'rna'
+    FORMAT = 'rna_file'
     OUT = ['rna_structure_iterator']
 
     def get_interface(self, filename):

@@ -1,4 +1,6 @@
-from provided_resource import ProvidedResource
+import os
+
+from sofia_.entity import Entity
 
 
 class ResourceParser(object):
@@ -23,13 +25,16 @@ class ResourceParser(object):
         -r "/tmp/tmp.vcf:tmp:format=vcf"
         -r "tmp.vcf:tmp:format=vcf:x=x:y=y:chromosome_id=ucsc"
     """
+
+    def __init__(self, extensions):
+        self.extensions = extensions
     
     def parse_resources(self, resource_strings):
         """ Parse all resource strings in a list. """
         res = {}
         for resource_string in resource_strings:
             resource = self.parse_resource(resource_string)
-            res[resource.name] = resource
+            res[resource.alias] = resource
         return res
     
     def parse_resource(self, resource_string):
@@ -39,14 +44,25 @@ class ResourceParser(object):
         :return: ProvidedResource
         """
         parts = resource_string.split(':')
-        resource = parts[0]
-        name = None
-        attributes = {}
+        filename = parts[0]
+        alias = None
+        attributes = {'filename': filename}
         for part in parts[1:]:
             if '=' in part:
                 k, v = part.split('=', 1)
                 attributes[k] = v.split(',')[0] #TODO: allow multiple values
             else:
-                name = part
-        format = attributes.pop('format', None)
-        return ProvidedResource(resource, format, name, attributes)
+                alias = part
+
+        name = None
+        for key, value in self.extensions.iteritems():
+            if filename.endswith(key):
+                name = value
+        if name is None:
+            name = attributes.pop('entity', None)
+        if name is None:
+            raise ValueError('Resource {} has unknown entity'.format(filename))
+        if alias is None:
+            alias = os.path.basename(filename)
+        resources = {alias}
+        return Entity(name, resources, attributes, alias)
