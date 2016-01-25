@@ -4,6 +4,7 @@ from itertools import izip, product
 from operator import or_
 
 from sofia_.graph import Workflow
+from sofia_.step.converter import Converter as ConverterStep
 from sofia_.converter import Converter
 from sofia_.error_manager import ERROR_MANAGER
 from entity_solution_iterator import EntitySolutionIterator
@@ -39,12 +40,28 @@ class StepSolutionIterator(object):
         res = defaultdict(list)
         disjoint_solutions = [resolvers[entity] for entity in entities]
         for disjoint_solution in product(*disjoint_solutions):
+            disjoint_solution = list(disjoint_solution)
             ins = {e: deepcopy(s.step.outs[e]) for e, s in izip(entities, disjoint_solution)}
 
             converters = self.get_converters(ins)
             if converters is None:
                 continue
 
+            for i in xrange(len(entities)):
+                entity = entities[i]
+                if entity not in converters:
+                    continue
+                converter = converters[entity]
+                s = disjoint_solution[i]
+                s_ins = {entity: deepcopy(s.step.outs[entity])}
+                s_outs = deepcopy(s_ins)
+                for attribute, (fr, to) in converter.attributes.iteritems():
+                    s_outs[entity].attr[attribute] = to
+                converter_step = ConverterStep(s.resources, {entity: s.step.name}, ins=s_ins, outs=s_outs)
+                converter_step.register_converter(converter)
+                step = Workflow(converter_step)
+                step.join(disjoint_solution[i], s_ins[entity])
+                disjoint_solution[i] = step
             for entity, converter in converters.iteritems():
                 for attribute, (fr, to) in converter.attributes.iteritems():
                     ins[entity].attr[attribute] = to
@@ -53,10 +70,10 @@ class StepSolutionIterator(object):
                 continue
             resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
             dependencies = {e: s.step.name for e, s in izip(entities, disjoint_solution)}
-            step_instance = self.step(resources, dependencies, ins=ins, outs=outs, converters=converters)
+            step_instance = self.step(resources, dependencies, ins=ins, outs=outs)
             solution = Workflow(step_instance)
-            for e, s in izip(entities, disjoint_solution):
-                solution.join(s, s.step.outs[e])
+            for entity, s in izip(entities, disjoint_solution):
+                solution.join(s, s.step.outs[entity])
             res[len(resources - self.requested_resources)].append(solution)
         if len(res) > 0:
             for solution in res[min(res)]:

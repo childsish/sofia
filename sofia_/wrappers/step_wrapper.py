@@ -13,10 +13,10 @@ class StepWrapper(object):
     def __str__(self):
         return self.name
 
-    def __call__(self, resources=None, dependencies=None, ins=None, outs=None, converters={}):
+    def __call__(self, resources=None, dependencies=None, ins=None, outs=None):
         ins = self.ins if ins is None else ins
         outs = self.outs if outs is None else outs
-        return self.step_class(resources, dependencies, self.attr, ins, outs, converters, self.name)
+        return self.step_class(resources, dependencies, self.attr, ins, outs, self.name)
 
     def get_output(self, ins, requested_attr={}, entity_graph=None):
         attr = self.attr.copy()

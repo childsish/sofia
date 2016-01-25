@@ -10,8 +10,8 @@ class Resource(Step):
     EXT = {}
     FORMAT = None
 
-    def __init__(self, resources=None, dependencies=None, attr={}, ins=None, outs=None, converters={}, name=None):
-        super(Resource, self).__init__(resources, dependencies, attr, ins, outs, converters, name)
+    def __init__(self, resources=None, dependencies=None, attr={}, ins=None, outs=None, name=None):
+        super(Resource, self).__init__(resources, dependencies, attr, ins, outs, name)
         self.format = attr.get('name', self.FORMAT)
         self.interface = None
 
