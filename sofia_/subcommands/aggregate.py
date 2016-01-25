@@ -197,16 +197,19 @@ def aggregate(args):
 requested_entities = None
 solution = None
 entity_graph = None
+entities = None
 
 
 def init_worker(requested_entities_, solution_, entity_graph_):
     global requested_entities
     global solution
     global entity_graph
+    global entities
 
     requested_entities = requested_entities_
     solution = solution_
     entity_graph = entity_graph_
+    entities = {}
 
     solution.init()
 
@@ -217,6 +220,7 @@ def get_annotation(target):
     global requested_entities
     global solution
     global entity_graph
+    global entities
 
     for top_step in solution.step:
         solution.steps[top_step].reset(solution.steps)
@@ -225,7 +229,7 @@ def get_annotation(target):
     target_parser = solution.steps['target']
     target = [target] if len(target_parser.outs) == 1 else target
 
-    entities = {str(key): value for key, value in zip(target_parser.outs.itervalues(), target)}
+    entities.update({str(key): value for key, value in zip(target_parser.outs.itervalues(), target)})
     solution.steps['target'].calculated = True
 
     for top_step in solution.step:

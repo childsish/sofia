@@ -11,7 +11,7 @@ class Step(object):
     OUT = []
     PARAMS = []
     
-    def __init__(self, resources=None, dependencies=None, attr={}, ins=None, outs=None, converters={}, name=None):
+    def __init__(self, resources=None, dependencies=None, attr={}, ins=None, outs=None, name=None):
         # TODO: Consider equivalence of dependencies and ins
         self.changed = True
         self.calculated = False
@@ -21,7 +21,6 @@ class Step(object):
         self.ins = OrderedDict([(in_, Entity(in_)) for in_ in self.IN]) if ins is None else ins
         self.outs = OrderedDict([(out, Entity(out)) for out in self.OUT]) if outs is None else outs
         self.name = self._get_name(name)
-        self.converters = converters
     
     def __str__(self):
         """ Return the name of the step based on it's resources and
@@ -65,7 +64,7 @@ class Step(object):
             steps[step].generate(entities, steps, entity_graph)
             if steps[step].changed:
                 dependencies_changed = True
-        if not dependencies_changed and all(out in entities for out in self.outs):
+        if not dependencies_changed and all(str(out) in entities for out in self.outs.itervalues()):
             self.calculated = True
             self.changed = False
             return
@@ -75,17 +74,15 @@ class Step(object):
             for out_name, out_value in steps[step].outs.iteritems():
                 if entity_graph.is_equivalent(entity, out_name):
                     local_entities[entity] = entities[str(out_value)]
-        for entity, converter in self.converters.iteritems():
-            local_entities[entity] = None if local_entities[entity] is None else converter.convert(local_entities[entity])
 
         res = [self.calculate(**local_entities)] if len(self.outs) == 1 else\
             self.calculate(**local_entities)
         self.calculated = True
         self.changed = False
         for out, entity in zip(self.outs.itervalues(), res):
-            if out not in entities or entities[str(out)] is not entity:
+            if str(out) not in entities or entities[str(out)] is not entity:
                 self.changed = True
-            entities[str(out)] = entity
+                entities[str(out)] = entity
     
     def reset(self, steps):
         """ Resets the calculation status of this step and all dependencies
@@ -105,7 +102,7 @@ class Step(object):
         """ Return the name of the step based on it's resources and arguments. """
         name = [type(self).__name__ if name is None else name]
         if len(self.resources) != 0:
-            tmp = ','.join(resource.name for resource in self.resources if resource.name != 'target')
+            tmp = ','.join(resource.alias for resource in self.resources if resource.name != 'target')
             if len(tmp) > 0:
                 name.append('resource=' + tmp)
         if len(self.outs) != 0:
