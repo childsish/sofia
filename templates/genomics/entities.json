@@ -65,7 +65,9 @@
   },
   {
     "name": "genomic_feature",
+    "attributes": ["chromosome_id", "gene_id"],
     "has_a": [
+      { "name": "chromosome_id", "key": "chr", "type": "attr" },
       { "name": "gene_id", "key": "name", "type": "attr" }
     ],
     "description": "A model of transcribed DNA. This includes all alternative transcripts."
