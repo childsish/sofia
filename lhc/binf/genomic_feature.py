@@ -6,6 +6,7 @@ from lhc.collections.sorted_list import SortedList
 class GenomicFeature(Interval):
 
     def __init__(self, name, type=None, interval=None, data=None):
+        self._chr = None
         self.children = SortedList()
         if interval is None:
             super(GenomicFeature, self).__init__(None, None, None, data=data)
@@ -13,6 +14,16 @@ class GenomicFeature(Interval):
             super(GenomicFeature, self).__init__(interval.chr, interval.start, interval.stop, interval.strand, data=data)
         self.name = name
         self.type = type
+
+    @property
+    def chr(self):
+        return self._chr
+
+    @chr.setter
+    def chr(self, value):
+        self._chr = value
+        for child in self.children:
+            child.chr = value
 
     def __len__(self):
         if len(self.children) == 0:
