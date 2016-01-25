@@ -1,4 +1,3 @@
-from copy import deepcopy
 from iterator import GffEntryIterator, GffLineIterator
 
 
@@ -15,7 +14,7 @@ class IndexedGffFile(object):
     def get_features(self, gene_line):
         buffer_key = gene_line.attr['Name']
         if buffer_key in self.buffer:
-            return deepcopy(self.buffer[buffer_key])
+            return self.buffer[buffer_key]
 
         lines = self.index.fetch(gene_line.chr, gene_line.start, gene_line.stop)
         genes = GffEntryIterator.get_features(GffLineIterator.parse_line(line) for line in lines)
@@ -24,5 +23,5 @@ class IndexedGffFile(object):
                 if len(self.buffer) > self.max_buffer:
                     self.buffer.popitem()
                 self.buffer[buffer_key] = gene
-                return deepcopy(gene)
+                return gene
         raise KeyError('{}'.format(gene_line.attr['Name']))
