@@ -99,9 +99,12 @@ class GffEntryIterator(object):
         top_features = {}
         open_features = {}
         for i, line in enumerate(lines):
-            id = line.attr.get('ID', i)
+            id = line.attr.get('ID', str(i))
             ivl = Interval(line.chr, line.start, line.stop, line.strand)
-            feature = GenomicFeature(line.attr.get('Name', id), line.type, ivl, line.attr)
+            name = line.attr.get('transcript_id', id).split('.')[0] if line.type in {'mRNA', 'exon', 'transcript'} else\
+                line.attr.get('protein_id', id).split('.')[0] if line.type == 'CDS' else\
+                line.attr.get('Name', id)
+            feature = GenomicFeature(name, line.type, ivl, line.attr)
             if id in open_features:
                 feature.children = open_features[id].children
             elif id in top_features:
