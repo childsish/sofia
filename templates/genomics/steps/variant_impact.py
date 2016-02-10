@@ -7,16 +7,21 @@ try:
     class ProveanMap(object):
         def __init__(self, filename):
             fhndl = gzip.open(filename)
-            self.headers = fhndl.readline().split()
+            self.headers = {aa: i for i, aa in enumerate(fhndl.readline().split())}
+            self.headers['*'] = self.headers['Del']
             fhndl.close()
             self.index = pysam.TabixFile(filename)
 
-        def calculate(self, gene_id, amino_acid_variant):
+        def calculate(self, transcript_id, amino_acid_variant):
             pos = amino_acid_variant.pos
-            parts = list(self.index.fetch(gene_id, pos, pos + 1))[0].split()
+            parts = list(self.index.fetch(transcript_id, pos, pos + 1))[0].split()
             if len(parts) == 0:
                 return None
-            return [float(parts[self.headers.index(alt)]) for alt in amino_acid_variant.alt]
+            try:
+                res = [float(parts[self.headers[alt]]) for alt in amino_acid_variant.alt]
+            except Exception, e:
+                res = None
+            return res
 
 
     class ProveanMapStep(Resource):
@@ -30,11 +35,17 @@ try:
 
     class GetVariantImpact(Step):
 
-        IN = ['gene_id', 'amino_acid_variant', 'variant_impact_calculator']
+        IN = ['transcript_id', 'amino_acid_variant', 'variant_impact_calculator']
         OUT = ['variant_impact']
 
-        def calculate(self, gene_id, amino_acid_variant, variant_impact_calculator):
-            return variant_impact_calculator.calculate(gene_id, amino_acid_variant)
+        def calculate(self, transcript_id, amino_acid_variant, variant_impact_calculator):
+            if None in (transcript_id, amino_acid_variant, variant_impact_calculator):
+                return None
+            try:
+                res = variant_impact_calculator.calculate(transcript_id, amino_acid_variant)
+            except ValueError, e:
+                res = None
+            return res
 
 
 except ImportError:
