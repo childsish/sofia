@@ -104,7 +104,8 @@
   {
     "name": "major_transcript",
     "has_a": [
-      { "name": "chromosome_id", "key": "chr", "type": "attr" }
+      { "name": "chromosome_id", "key": "chr", "type": "attr" },
+      { "name": "transcript_id", "key": "name", "type": "attr" }
     ],
     "description": "The major transcript of a gene model. Currently defined as the transcript with the longest coding sequence."
   },

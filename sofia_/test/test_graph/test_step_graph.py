@@ -20,8 +20,8 @@ class TestStepGraph(unittest.TestCase):
         s3 = Workflow(Step(name='s3'))
 
         s2.add_resource('r1')
-        s2.join('e1', 's2', 's1', s1)
-        s3.join('e2', 's3', 's2', s2)
+        s2.join(s1, 'e1')
+        s3.join(s2, 'e2')
 
         self.assertEquals({'s1', 's2', 's3'}, set(s3.steps))
         self.assertEquals({'r1'}, s3.resources)

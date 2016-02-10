@@ -11,7 +11,7 @@ class TestConverter(unittest.TestCase):
         entity = TestObject(a={'x': 'id_0'}, b=1)
         path = [{'key': 'a', 'type': 'attr'}, {'key': 'x', 'type': 'item'}]
         id_map = {'id_0': 'id_1'}
-        converter = Converter(path, id_map)
+        converter = Converter(path=path, id_map=id_map)
 
         res = converter.convert(entity)
         self.assertEquals('id_1', res.a['x'])

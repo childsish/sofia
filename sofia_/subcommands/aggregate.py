@@ -235,7 +235,7 @@ def get_annotation(target):
     for top_step in solution.step:
         try:
             solution.steps[top_step].generate(entities, solution.steps, entity_graph)
-        except Exception:
+        except Exception, e:
             import sys
             import traceback
             traceback.print_exception(*sys.exc_info(), file=sys.stderr)
