@@ -2,6 +2,7 @@ import argparse
 import itertools
 import os
 import sys
+import time
 import multiprocessing
 
 from collections import defaultdict
@@ -30,7 +31,9 @@ class Aggregator(object):
 
         sys.stderr.write('    Resolving entities...\n')
 
+        start_time = time.time()
         solution, matching_entities = self.resolve_requested_entities(requested_entities, provided_resources, maps)
+        sys.stderr.write('\n    Workflow resolved in {} seconds.\n\n'.format(round(time.time() - start_time, 2)))
         if args.graph:
             self.stdout.write('{}\n\n'.format(solution))
             return
@@ -55,6 +58,17 @@ class Aggregator(object):
             row = [requested_entity.format(entity) for requested_entity, entity in zip(requested_entities, row)]
             self.stdout.write(template.format(*row))
             self.stdout.write('\n')
+
+        is_warning_header_written = False
+        for step in solution.steps.itervalues():
+            warnings = step.get_user_warnings()
+            if len(warnings) > 0:
+                if not is_warning_header_written:
+                    is_warning_header_written = True
+                    sys.stderr.write('\n    Warnings\n')
+                sys.stderr.write('      Step: {}\n        '.format(step))
+                sys.stderr.write('\n        '.join(warnings))
+                sys.stderr.write('\n')
 
         if args.processes > 1:
             pool.close()
@@ -215,8 +229,7 @@ def init_worker(requested_entities_, solution_, entity_graph_):
 
 
 def get_annotation(target):
-    """ Calculate the steps in this graph for each entity in the target
-    resource. """
+    """ Calculate the steps in this graph for each entity in the target resource. """
     global requested_entities
     global solution
     global entity_graph
