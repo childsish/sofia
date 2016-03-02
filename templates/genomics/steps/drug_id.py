@@ -33,8 +33,8 @@ class GenomicsOfDrugSensitivityInCancerByGene(Resource):
 
     def get_interface(self, filename):
         interface = {}
-        fhndl = open(filename)
-        fhndl.next()
+        fhndl = open(filename, 'rU')
+        line = fhndl.next()
         for line in fhndl:
             parts = line.rstrip('\r\n').split(',')
             genes = parts[0].split('///')
