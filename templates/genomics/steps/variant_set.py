@@ -18,7 +18,7 @@ class GetVariantByVariant(Step):
                 o.ref == variant.ref and o.alt == variant.alt]
         if len(hits) == 0:
             return None
-        return hits[0]
+        return hits
 
 
 class GetVariantIdByGenomicInterval(Step):
