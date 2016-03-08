@@ -23,9 +23,11 @@ class ResourceSolutionIterator(object):
     def _get_hits(self, resources):
         step = self.step.step_class
         if issubclass(step, Target):
-            return [resources['target']] if self.step.matches(resources['target']) else []
-        res = [resource for resource in resources.itervalues()
-               if resource.name != 'target' and self.step.matches(resource)]
+            for resource in resources:
+                if resource.alias == 'target' and self.step.matches(resource):
+                    return [resource]
+            return []
+        res = [resource for resource in resources if resource.name != 'target' and self.step.matches(resource)]
         return res
 
     def _init_step_graph(self, resource):
