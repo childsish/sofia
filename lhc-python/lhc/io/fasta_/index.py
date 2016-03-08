@@ -1,19 +1,16 @@
-import json
 import os
-
-from Bio import bgzf
-from lhc.io.txt_.index import FileIndex
 
 
 class IndexedFastaSet(object):
     def __init__(self, fname):
+        raise NotImplementedError('removed until bgzf can be re-implemented')
         self.fname = fname
         if not os.path.exists('{}.lci'.format(fname)):
             msg = 'Interval index missing. Try: "python -m lhc.io.fasta index {}".'.format(fname)
             raise OSError(msg)
-        self.fhndl = bgzf.open(fname)
+        #self.fhndl = bgzf.open(fname)
         fhndl = open('{}.lci'.format(fname))
-        self.index = FileIndex.init_from_state(json.load(fhndl))
+        #self.index = FileIndex.init_from_state(json.load(fhndl))
         fhndl.close()
 
         line = ''
