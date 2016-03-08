@@ -1,9 +1,5 @@
-__author__ = 'Liam Childs'
-
 import argparse
 import time
-
-from Bio.bgzf import BgzfWriter
 
 
 def compress(input, output, block_size=65536, block_delimiter='\n'):
@@ -49,6 +45,7 @@ def define_parser(parser):
 
 
 def init_compress(args):
+    raise NotImplementedError('removed until bgzf can be re-implemented')
     import sys
     input = sys.stdin if args.input is None else open(args.input)
     output = BgzfWriter(fileobj=sys.stdout) if args.output is None else BgzfWriter(args.output, 'wb')
