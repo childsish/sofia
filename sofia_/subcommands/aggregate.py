@@ -6,7 +6,7 @@ import time
 import multiprocessing
 
 from collections import defaultdict
-from common import parse_provided_resources, parse_requested_entities, get_program_directory
+from common import get_provided_entities, get_requested_entities, get_program_directory
 from sofia_.error_manager import ERROR_MANAGER
 from sofia_.graph import Workflow
 from sofia_.resolvers.entity_solution_iterator import EntitySolutionIterator
@@ -190,8 +190,10 @@ def aggregate(args):
 
     template_directory = os.path.join(get_program_directory(), 'templates', args.workflow_template)
 
-    provided_resources = parse_provided_resources(args, template_directory)
-    requested_entities = parse_requested_entities(args, provided_resources)
+    provided_resources = get_provided_entities(template_directory,
+                                               args.resources + ['{}:target'.format(args.input)],
+                                               args.resource_list)
+    requested_entities = get_requested_entities(args, provided_resources)
     if len(requested_entities) == 0:
         import sys
         sys.stderr.write('Error: No entities were requested. Please provide'
