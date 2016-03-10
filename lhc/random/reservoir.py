@@ -35,7 +35,7 @@ def get_parser():
 def define_parser(parser):
     parser.add_argument('input', nargs='?')
     parser.add_argument('k', type=int)
-    parser.add_argument('-c', '--comment', default='#')
+    parser.add_argument('-c', '--comment')
     parser.add_argument('-o', '--output')
     parser.add_argument('-s', '--seed')
     parser.set_defaults(func=reservoir_init)
@@ -49,12 +49,13 @@ def reservoir_init(args):
     random.seed(args.seed if args.seed else time.time())
 
     comments = []
-    line = input.next()
-    while True:
-        if not line.startswith(args.comment):
-            break
-        comments.append(line)
-        line = input.next()
+    line = next(input)
+    if args.comment is not None:
+        while True:
+            if not line.decode('utf-8').startswith(args.comment):
+                break
+            comments.append(line)
+            line = next(input)
 
     sample = reservoir(itertools.chain([line], input), args.k)
     input.close()
