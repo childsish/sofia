@@ -85,9 +85,7 @@ class Step(object):
                 entities[str(out)] = entity
     
     def reset(self, steps):
-        """ Resets the calculation status of this step and all dependencies
-        to False.
-        """
+        """ Resets the calculation status of this step and all dependencies to False. """
         self.calculated = False
         for step in self.dependencies.itervalues():
             steps[step].reset(steps)
@@ -97,6 +95,13 @@ class Step(object):
         for out in self.outs.itervalues():
             res.update(out.attr)
         return res
+
+    def get_user_warnings(self):
+        """ Called at the end to gather warnings for the user related to execution of the step.
+
+        :return: set of warnings
+        """
+        return frozenset()
     
     def _get_name(self, name=None):
         """ Return the name of the step based on it's resources and arguments. """

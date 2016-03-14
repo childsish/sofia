@@ -21,7 +21,7 @@ def _split_variant(variant):
     res = []
     alts = variant.alt.split(',')
     infos = _split_dict(variant.info, len(alts))
-    sampless = len(alts) * [None] if variant.samples is None else _split_samples(variant.samples, len(alts))
+    sampless = _split_samples(variant.samples, len(alts))
     tmp = list(variant)
     for alt, info, samples in zip(alts, infos, sampless):
         tmp[4] = alt
@@ -32,6 +32,8 @@ def _split_variant(variant):
 
 
 def _split_samples(samples, n):
+    if len(samples) == 0:
+        return n * [{}]
     split = []
     for sample in samples.itervalues():
         split.append(_split_dict(sample, n))

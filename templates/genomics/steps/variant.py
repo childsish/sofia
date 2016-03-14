@@ -4,6 +4,15 @@ from lhc.binf.sequence import revcmp
 from sofia_.step import Step
 
 
+class GetNumberOfVariants(Step):
+
+    IN = ['variant']
+    OUT = ['number_of_variants']
+
+    def calculate(self, variant):
+        return 0 if variant is None else len(variant)
+
+
 class GetPosition(Step):
 
     IN = ['chromosome_pos']

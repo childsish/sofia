@@ -1,2 +1,0 @@
-from provided_entity_parser import ResourceParser
-from requested_entity_parser import ProvidedEntityParser

@@ -66,26 +66,26 @@ SoFIA can also be used programatically. All output will be automatically printed
 
 ```python
 
-    from sofia_.parser.provided_resource import ProvidedResource
+    from sofia_.subcommands import get_provided_entities
     
-    provided_resources = {
-        'target': ProvidedResource('/absolute/path/to/target/file.extension', 'target')
-        'sequence': ProvidedResource('/absolute/path/to/sequence/file.fasta'),
-        'features': ProvidedResource('/absolute/path/to/feature/file.gtf')
-    }
+    provided_entities = get_provided_entities([
+        '/absolute/path/to/target/file.extension:target',
+        '/absolute/path/to/sequence/file.fasta',
+        '/absolute/path/to/feature/file.gtf'
+    ])
 ```
 
 2. Create requested entities
 
 ```python
 
-    from sofia_.parser.requested_entity import RequestedEntity
+    from sofia_.subcommands import get_requested_entities
     
-    requested_entities = [
-        RequestedEntity('gene_name'),
-        RequestedEntity('amino_acid_variant'),
-        RequestedEntity('variant_effect')
-    ]
+    requested_entities = get_requested_entities([
+        'gene_name',
+        'amino_acid_variant',
+        'variant_effect'
+    ])
 
 ```
 
@@ -96,7 +96,7 @@ SoFIA can also be used programatically. All output will be automatically printed
     from sofia_.template_factory import TemplateFactory
     
     template_factory = TemplateFactory('/absolute/path/to/template_directory')
-    template = template_factor.make(provided_resources, requested_entities)
+    template = template_factor.make(provided_entities, requested_entities)
     
 ```
 
@@ -109,7 +109,7 @@ SoFIA can also be used programatically. All output will be automatically printed
     
     Arguments = namedtuple('Arguments', ['header', 'template', 'processes', 'simultaneous_entries'])
     aggregator = Aggregator(template, 'template_directory')
-    aggregator.aggregate(requested_entities, provided_resources, Arguments(None, None, 1, None))
+    aggregator.aggregate(requested_entities, provided_entities, Arguments(None, None, 1, None))
      
 ```
 

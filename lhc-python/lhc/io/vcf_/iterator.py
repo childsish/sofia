@@ -9,7 +9,7 @@ class Variant(namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', '
     def __str__(self):
         res = [self.chr, str(self.pos + 1), self.id, self.ref, self.alt, str(self.qual), self.filter,
                ';'.join('{}={}'.format(k, v) for k, v in self.info.iteritems())]
-        format = sorted(reduce(or_, (set(sample) for sample in self.samples.itervalues())))
+        format = sorted(reduce(or_, (set(sample) for sample in self.samples.itervalues()), set()))
         if len(format) > 0:
             res.append(':'.join(format))
             for sample in self.samples.itervalues():
@@ -90,7 +90,7 @@ class VcfEntryIterator(VcfLineIterator):
         return self.parse_entry(super(VcfEntryIterator, self).next())
 
     def parse_entry(self, line):
-        samples = None if line.samples is None else\
+        samples = {} if line.samples is None else\
             self._parse_samples(line.format.split(':'), line.samples.split('\t'))
         return Variant(line.chr,
                        line.pos,

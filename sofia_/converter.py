@@ -1,4 +1,3 @@
-from copy import copy
 from itertools import izip
 
 
@@ -7,6 +6,8 @@ class Converter(object):
         self.attributes = {} if entity is None else {entity: (fr, to)}
         self.paths = [] if path is None else [path]
         self.id_maps = [] if id_map is None else [id_map]
+        self.ttl = 0
+        self.cnt = 0
 
     def __str__(self):
         return ','.join('{}:{}->{}'.format(e, f, t) for e, (f, t) in self.attributes.iteritems())
@@ -15,12 +16,13 @@ class Converter(object):
         return len(self.paths)
 
     def convert(self, entity):
-        # TODO: Track number of KeyErrors
+        self.ttl += 1
         try:
             for path, id_map in izip(self.paths, self.id_maps):
                 entity = self._convert(entity, path, id_map)
         except KeyError:
             return None
+        self.cnt += 1
         return entity
 
     def update(self, other):

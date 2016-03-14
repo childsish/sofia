@@ -1,6 +1,6 @@
 import imp
+import inspect
 import os
-import sys
 from collections import OrderedDict
 
 from step import Step, Resource, Target, Extractor
@@ -12,18 +12,17 @@ from graph.template import Template
 from graph.entity_graph import EntityGraph
 from entity import Entity
 from lhc.io.txt_ import FormatParser
-from subcommands.common import load_steps
 
 
 class TemplateFactory(object):
     def __init__(self, root):
         self.root = root
-        self.steps = load_steps(os.path.join(root, 'steps'))
-        self.recognised_formats = {step.FORMAT for step in self.steps if issubclass(step, Resource)}
+        self.steps = self.load_steps(os.path.join(root, 'steps'))
+        self.recognised_formats = {step.FORMAT for step in self.steps if inherits_from(step, 'Resource')}
 
-    def make(self, provided_resources, requested_entities=[]):
+    def make(self, provided_entities=[], requested_entities=[]):
         template = self.load_template()
-        for step in self.load_custom_steps(provided_resources):
+        for step in self.load_custom_steps(provided_entities):
             template.register_step(step)
         for entity in requested_entities:
             template.register_entity(entity.name)
@@ -42,49 +41,49 @@ class TemplateFactory(object):
         template.register_step(ResourceWrapper(Map))
         return template
 
-    def load_custom_steps(self, provided_resources):
+    def load_custom_steps(self, provided_entities):
         entity_registry = self.get_entity_registry()
         index_registry = self.get_index_registry()
 
         res = []
-        for name, resource in provided_resources.iteritems():
-            if resource.name is not None and resource.name not in self.recognised_formats:
-                entry_factory = entity_registry.parse(resource.name)
-                if resource.name == 'target':
+        for entity in provided_entities:
+            if entity.name is not None and entity.name not in self.recognised_formats:
+                entry_factory = entity_registry.parse(entity.name)
+                if entity.name == 'target':
                     outs = OrderedDict((out, Entity(out)) for out in entry_factory.type._fields) if entry_factory.name == 'Entry' else\
                         OrderedDict([(entry_factory.name, Entity(entry_factory.name))])
                     outs['target'] = Entity('target')
                     param = {
                         'entry': entry_factory,
-                        'skip': int(resource.attr.get('skip', 0))
+                        'skip': int(entity.attr.get('skip', 0))
                     }
-                    step = ResourceWrapper(TxtIterator, outs=outs, param=param, format=resource.name)
+                    step = ResourceWrapper(TxtIterator, outs=outs, param=param, format=entity.name)
                     res.append(step)
                 else:
-                    if 'index' not in resource.attr:
+                    if 'index' not in entity.attr:
                         import sys
                         sys.stderr.write('{} missing "index" attribute. '
-                                         'Custom resources must have these attributes'.format(resource.name))
+                                         'Custom resources must have these attributes'.format(entity.name))
                         sys.exit(1)
-                    index, index_key = index_registry.parse_definition(resource.attr['index'])
+                    index, index_key = index_registry.parse_definition(entity.attr['index'])
                     param = {
                         'entry': entry_factory,
                         'index': index,
                         'key': (lambda x: x[index_key]),
-                        'skip': int(resource.attr.get('skip', 0))
+                        'skip': int(entity.attr.get('skip', 0))
                     }
                     step = ResourceWrapper(TxtSet,
-                                           outs=OrderedDict([(resource.name, Entity(resource.name))]),
+                                           outs=OrderedDict([(entity.name, Entity(entity.name))]),
                                            param=param,
-                                           format=resource.name)
+                                           format=entity.name)
                     res.append(step)
-                    for in_ in resource.ins:
-                        ins = OrderedDict([(resource.name, Entity(resource.name)),
-                                           (in_, Entity(resource.ins[0]))])
+                    for in_ in entity.ins:
+                        ins = OrderedDict([(entity.name, Entity(entity.name)),
+                                           (in_, Entity(entity.ins[0]))])
                         outs = OrderedDict([(out, Entity(out)) for i, out in enumerate(entry_factory.type._fields)
                                            if i != index_key])
-                        step = StepWrapper(TxtAccessor, '{}[{}]'.format(resource.name, in_), ins=ins, outs=outs, attr={
-                            'set_name': resource.name,
+                        step = StepWrapper(TxtAccessor, '{}[{}]'.format(entity.name, in_), ins=ins, outs=outs, attr={
+                            'set_name': entity.name,
                             'key_name': in_
                         })
                         res.append(step)
@@ -134,15 +133,31 @@ class TemplateFactory(object):
             registry.register_type(k, v)
         return registry
 
-    def load_steps(self):
+    def load_steps(self, step_directory):
+        import os
+        import sys
+
+        format_error = 'Unable to import step {}. Parameter "format" is reserved and can not be used in attribute PARAMS.'
+
         steps = []
-        step_dir = os.path.join(self.root, 'steps')
-        sys.path.append(step_dir)
-        for fname in os.listdir(step_dir):
+        sys.path.append(step_directory)
+        for fname in os.listdir(step_directory):
             if fname.startswith('.') or not fname.endswith('.py'):
                 continue
-            module = imp.load_source(fname[:-3], os.path.join(step_dir, fname))
-            types = [type_ for type_ in module.__dict__.itervalues() if type(type_) == type]
-            print [(type_.__name__, issubclass(type_, Step), type_ not in {Step, Resource, Target}) for type_ in types]
-            steps.extend(type_ for type_ in types if issubclass(type_, Step) and type_ not in {Step, Resource, Target})
+            module_name, ext = os.path.splitext(fname)
+            module = imp.load_source(module_name, os.path.join(step_directory, fname))
+            child_classes = [child_class for child_class in module.__dict__.itervalues()
+                             if type(child_class) == type]
+            for child_class in child_classes:
+                if inherits_from(child_class, 'Step') and child_class.__name__ not in {'Step', 'Resource', 'Target'}:
+                    if 'format' in child_class.PARAMS:
+                        raise ImportError(format_error.format(child_class.__name__))
+                    steps.append(child_class)
         return steps
+
+
+def inherits_from(child, parent_name):
+    if inspect.isclass(child):
+        if parent_name in {c.__name__ for c in inspect.getmro(child)[1:]}:
+            return True
+    return False

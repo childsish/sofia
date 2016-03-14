@@ -1,11 +1,12 @@
+from __future__ import with_statement
+
 import imp
 import json
 import os
+import re
 
 from sofia_.entity import Entity
-from sofia_.parser.provided_entity_parser import ResourceParser
-from sofia_.parser.requested_entity_parser import ProvidedEntityParser
-
+from sofia_.entity_definition_parser import parse_entity_definition
 from sofia_.step import Step, Resource, Target
 
 
@@ -18,64 +19,103 @@ def load_resource(fname, parsers, format=None):
     raise TypeError('Unrecognised file format: {}'.format(os.path.basename(fname)))
 
 
-def parse_provided_resources(args, template_directory):
-    fhndl = open(os.path.join(template_directory, 'provided_resources.txt'))
-    provided_resource_definitions = [os.path.join(template_directory, 'data', line.strip())
-                                     for line in fhndl if line.strip() != '']
-    fhndl.close()
-
-    provided_resource_definitions.append('{}:target'.format(args.input))
-    if 'resource_list' in args and args.resource_list is not None:
-        provided_resource_definitions.extend(line.rstrip('\r\n') for line in open(args.resource_list))
-    if 'resources' in args:
-        provided_resource_definitions.extend(args.resources)
-
-    fhndl = open(os.path.join(template_directory, 'resource_entities.json'))
-    resources = json.load(fhndl)
-    fhndl.close()
+def get_extension_entity_map(template_directory):
+    with open(os.path.join(template_directory, 'resource_entities.json')) as fhndl:
+        resources = json.load(fhndl)
     extensions = {}
     for resource in resources:
         for extension in resource['extensions']:
             if extension in extensions:
                 raise KeyError('Extension "{}" defined multiple times.'.format(extension))
             extensions[extension] = resource['name']
-
-    parser = ResourceParser(extensions)
-    return parser.parse_resources(provided_resource_definitions)
+    return extensions
 
 
-def parse_requested_entities(args, provided_resources):
-    requested_entity_definitions = []
-    if 'entity_list' in args and args.entity_list is not None:
-        requested_entity_definitions.extend(line.rstrip('\r\n') for line in open(args.entity_list))
-    if 'entities' in args:
-        requested_entity_definitions.extend(args.entities)
-    parser = ProvidedEntityParser(provided_resources)
-    return parser.parse_entity_requests(requested_entity_definitions)
+def get_provided_entities(template_directory, definitions=[], definition_file=None):
+    definitions_ = []
+    with open(os.path.join(template_directory, 'provided_entities.txt')) as fhndl:
+        definitions_.extend(os.path.join(template_directory, 'data', line.rstrip('\r\n'))
+                           for line in fhndl if line.strip() != '')
+    if definition_file is not None:
+        with open(definition_file) as fhndl:
+            definitions_.extend(line.rstrip('\r\n') for line in fhndl)
+    if len(definitions) > 0:
+        definitions_.extend(definitions)
+
+    extensions = get_extension_entity_map(template_directory)
+    return [get_provided_entity(definition, extensions) for definition in definitions_]
+
+
+def get_provided_entity(definition, extensions):
+    type, alias, attributes = parse_entity_definition(definition)
+
+    if alias is None:
+        alias = os.path.basename(type)
+    if os.path.exists(type):
+        attributes['filename'] = type
+
+    if 'entity' in attributes:
+        type = attributes['entity']
+        del attributes['entity']
+    elif 'filename' in attributes:
+        type = get_type_by_extension(attributes['filename'], extensions)
+        if type is None:
+            raise ValueError('Provided entity {} has unknown extension or entity type is not explicitly defined'.format(alias))
+
+    return Entity(type, {alias}, alias=alias, attr=attributes)
+
+
+def get_type_by_extension(filename, extensions):
+    for extension in extensions:
+        if filename.endswith(extension):
+            return extensions[extension]
+    return None
+
+
+def get_requested_entities(args, provided_entities):
+    definitions = []
+    if args.entity_list is not None:
+        definitions.extend(line.rstrip('\r\n') for line in open(args.entity_list))
+    if args.entities is not None:
+        definitions.extend(args.entities)
+
+    return [get_requested_entity(definition) for definition in definitions]
+
+
+def get_requested_entity(definition):
+    REGX = re.compile(r'(?P<entity>[^[.:]+)(?P<getter>[^:]+)?')
+
+    type, alias, attributes = parse_entity_definition(definition)
+    match = REGX.match(type)
+    if match is None:
+        raise ValueError('Invalid entity definition: {}'.format(type))
+    type = match.group('entity')
+    getter = '' if match.group('getter') is None else match.group('getter')
+    return Entity(type, alias=alias, attr=attributes, getter=getter)
 
 
 def get_program_directory():
     return os.path.dirname(os.path.realpath(__file__)).rsplit(os.sep, 2)[0]
 
 
-def load_steps(plugin_dir):
+def load_steps(step_directory):
     import os
     import sys
 
     format_error = 'Unable to import step {}. Parameter "format" is reserved and can not be used in attribute PARAMS.'
 
-    plugins = []
-    sys.path.append(plugin_dir)
-    for fname in os.listdir(plugin_dir):
+    steps = []
+    sys.path.append(step_directory)
+    for fname in os.listdir(step_directory):
         if fname.startswith('.') or not fname.endswith('.py'):
             continue
         module_name, ext = os.path.splitext(fname)
-        module = imp.load_source(module_name, os.path.join(plugin_dir, fname))
+        module = imp.load_source(module_name, os.path.join(step_directory, fname))
         child_classes = [child_class for child_class in module.__dict__.itervalues()
                          if type(child_class) == type]
         for child_class in child_classes:
             if issubclass(child_class, Step) and child_class not in {Step, Resource, Target}:
                 if 'format' in child_class.PARAMS:
                     raise ImportError(format_error.format(child_class.__name__))
-                plugins.append(child_class)
-    return plugins
+                steps.append(child_class)
+    return steps

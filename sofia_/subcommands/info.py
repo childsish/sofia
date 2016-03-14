@@ -2,61 +2,55 @@ import argparse
 import os
 import sys
 
-from common import get_program_directory, parse_provided_resources, parse_requested_entities
+from common import get_program_directory, get_provided_entities, get_requested_entities
 from template_factory import TemplateFactory
 from textwrap import wrap
 
 
-def generate_graph(args):
-    if args.output is None:
-        args.output = sys.stdout
-    else:
-        args.output = open(args.output, 'w')
-    provided_resources = parse_provided_resources(args)
-    template_factory = TemplateFactory(os.path.join(get_program_directory(), 'templates', args.workflow_template))
-    template = template_factory.make(provided_resources)
-    args.output.write(str(template))
-    args.output.close()
+def generate_graph(workflow_template, output=sys.stdout):
+    template_directory = os.path.join(get_program_directory(), 'templates', workflow_template)
+    template_factory = TemplateFactory(template_directory)
+    template = template_factory.make()
+    output.write(str(template))
 
 
-def list_entities(args):
-    provided_resources = parse_provided_resources(args)
-    requested_entities = parse_requested_entities(args, provided_resources)
-    template_factory = TemplateFactory(os.path.join(get_program_directory(), 'templates', args.workflow_template))
-    template = template_factory.make(provided_resources, requested_entities)
+def list_entities(workflow_template, output=sys.stdout):
+    template_directory = os.path.join(get_program_directory(), 'templates', workflow_template)
+
+    template_factory = TemplateFactory(template_directory)
+    template = template_factory.make()
 
     for entity in sorted(template.entity_graph.entities.itervalues(), key=lambda x: x['name']):
-        args.output.write(entity['name'])
-        args.output.write('\n')
+        output.write(entity['name'])
+        output.write('\n')
         if 'description' in entity:
-            args.output.write('\n'.join(wrap(entity['description'], initial_indent='    ', subsequent_indent='    ')))
-            args.output.write('\n')
+            output.write('\n'.join(wrap(entity['description'], initial_indent='    ', subsequent_indent='    ')))
+            output.write('\n')
 
 
-def list_steps(args):
-    provided_resources = parse_provided_resources(args)
-    requested_entities = parse_requested_entities(args, provided_resources)
-    template_factory = TemplateFactory(os.path.join(get_program_directory(), 'templates', args.workflow_template))
-    template = template_factory.make(provided_resources, requested_entities)
-    
-    if args.step is None:
-        args.output.write('\nAvailable steps (template: {}):\n==================\n'.format(args.workflow_template))
+def list_steps(workflow_template, step=None, output=sys.stdout, verbose=False):
+    template_directory = os.path.join(get_program_directory(), 'templates', workflow_template)
+    template_factory = TemplateFactory(template_directory)
+    template = template_factory.make([])
+
+    if step is None:
+        output.write('\nAvailable steps (template: {}):\n==================\n'.format(workflow_template))
         for step in sorted(template.steps.itervalues(), key=lambda x: x.step_class.__name__):
-            list_step(step.step_class, args)
+            list_step(step.step_class, output, verbose)
     else:
-        list_step(template.steps[args.step].step_class, args)
+        list_step(template.steps[step].step_class, output, verbose)
 
 
-def list_step(step, args):
-    args.output.write('{}\n'.format(step.__name__))
-    if args.verbose:
+def list_step(step, output=sys.stdout, verbose=False):
+    output.write('{}\n'.format(step.__name__))
+    if verbose:
         if len(step.IN) > 0:
-            args.output.write(' Input:\n  {}\n'.format(', '.join(step.IN)))
+            output.write(' Input:\n  {}\n'.format(', '.join(step.IN)))
         if len(step.OUT) > 0:
-            args.output.write(' Output:\n  {}\n'.format(', '.join(step.OUT)))
+            output.write(' Output:\n  {}\n'.format(', '.join(step.OUT)))
         if step.__doc__ is not None:
-            args.output.write(' Description:\n  {}\n'.format(step.__doc__.strip()))
-        args.output.write('\n')
+            output.write(' Description:\n  {}\n'.format(step.__doc__.strip()))
+        output.write('\n')
 
 
 def main():
@@ -90,16 +84,7 @@ def define_parser(parser):
                               help='specify the target resource')
     graph_parser.add_argument('-w', '--workflow-template', default='genomics',
                               help='specify a workflow template (default: genomics).')
-    graph_parser.set_defaults(func=generate_graph)
-
-    steps_parser = subparsers.add_parser('steps')
-    steps_parser.add_argument('-s', '--step',
-                              help='list a specific step')
-    steps_parser.add_argument('-v', '--verbose', action='store_true',
-                              help='print out descriptions of each step')
-    steps_parser.add_argument('-w', '--workflow-template', default='genomics',
-                              help='specify a workflow template (default: genomics).')
-    steps_parser.set_defaults(func=list_steps)
+    graph_parser.set_defaults(func=info_graph_init)
 
     entity_parser = subparsers.add_parser('entity')
     entity_parser.add_argument('-e', '--entity',
@@ -108,10 +93,37 @@ def define_parser(parser):
                                help='print out descriptions of each entity')
     entity_parser.add_argument('-w', '--workflow-template', default='genomics',
                                help='specify a workflow template (default: genomics).')
-    entity_parser.set_defaults(func=list_entities)
+    entity_parser.set_defaults(func=info_entity_init)
+
+    steps_parser = subparsers.add_parser('steps')
+    steps_parser.add_argument('-s', '--step',
+                              help='list a specific step')
+    steps_parser.add_argument('-v', '--verbose', action='store_true',
+                              help='print out descriptions of each step')
+    steps_parser.add_argument('-w', '--workflow-template', default='genomics',
+                              help='specify a workflow template (default: genomics).')
+    steps_parser.set_defaults(func=info_steps_init)
 
     parser.add_argument('-o', '--output',
                         help='specify where to put output')
+
+
+def info_graph_init(args):
+    output = sys.stdout if args.output is None else open(args.output, 'w')
+    generate_graph(args.workflow_template, output)
+    output.close()
+
+
+def info_entity_init(args):
+    output = sys.stdout if args.output is None else open(args.output, 'w')
+    list_entities(args.workflow_template, output)
+    output.close()
+
+
+def info_steps_init(args):
+    output = sys.stdout if args.output is None else open(args.output, 'w')
+    list_steps(args.workflow_template, args.step, output, args.verbose)
+    output.close()
 
 
 if __name__ == '__main__':

@@ -25,6 +25,16 @@
     "description": "A set of genomic features"
   },
   {
+    "name": "maf_file",
+    "extensions": [".maf", ".maf.gz"],
+    "description": "A set of sequence variants"
+  },
+  {
+    "name": "prt_file",
+    "extensions": [".prt"],
+    "description": "A set of genetic codes"
+  },
+  {
     "name": "vcf_file",
     "extensions": [".vcf", ".vcf.gz"],
     "description": "A set of sequence variants"

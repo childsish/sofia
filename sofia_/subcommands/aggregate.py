@@ -2,10 +2,11 @@ import argparse
 import itertools
 import os
 import sys
+import time
 import multiprocessing
 
 from collections import defaultdict
-from common import parse_provided_resources, parse_requested_entities, get_program_directory
+from common import get_provided_entities, get_requested_entities, get_program_directory
 from sofia_.error_manager import ERROR_MANAGER
 from sofia_.graph import Workflow
 from sofia_.resolvers.entity_solution_iterator import EntitySolutionIterator
@@ -19,7 +20,7 @@ class Aggregator(object):
         self.workflow_template = workflow_template
         self.stdout = stdout
 
-    def aggregate(self, requested_entities, provided_resources, args, maps={}):
+    def aggregate(self, requested_entities, provided_entities, args, maps={}):
         def iter_target(target):
             params = {key: target.attr[key] for key in target.PARAMS if key in target.attr}
             target.init(**params)
@@ -30,7 +31,9 @@ class Aggregator(object):
 
         sys.stderr.write('    Resolving entities...\n')
 
-        solution, matching_entities = self.resolve_requested_entities(requested_entities, provided_resources, maps)
+        start_time = time.time()
+        solution, matching_entities = self.resolve_requested_entities(requested_entities, provided_entities, maps)
+        sys.stderr.write('\n    Workflow resolved in {} seconds.\n\n'.format(round(time.time() - start_time, 2)))
         if args.graph:
             self.stdout.write('{}\n\n'.format(solution))
             return
@@ -56,12 +59,23 @@ class Aggregator(object):
             self.stdout.write(template.format(*row))
             self.stdout.write('\n')
 
+        is_warning_header_written = False
+        for step in solution.steps.itervalues():
+            warnings = step.get_user_warnings()
+            if len(warnings) > 0:
+                if not is_warning_header_written:
+                    is_warning_header_written = True
+                    sys.stderr.write('\n    Warnings\n')
+                sys.stderr.write('      Step: {}\n        '.format(step))
+                sys.stderr.write('\n        '.join(warnings))
+                sys.stderr.write('\n')
+
         if args.processes > 1:
             pool.close()
             pool.join()
 
-    def resolve_requested_entities(self, requested_entities, provided_resources, maps):
-        solutions = [self.resolve_requested_entity(entity, provided_resources, maps) for entity in requested_entities]
+    def resolve_requested_entities(self, requested_entities, provided_entities, maps):
+        solutions = [self.resolve_requested_entity(entity, provided_entities, maps) for entity in requested_entities]
 
         combined_solution = Workflow()
         for solution in solutions:
@@ -71,7 +85,7 @@ class Aggregator(object):
         matching_entities = self.get_matching_entities(solutions, requested_entities)
         return combined_solution, matching_entities
 
-    def resolve_requested_entity(self, requested_entity, provided_resources, maps):
+    def resolve_requested_entity(self, requested_entity, provided_entities, maps):
         def satisfies_request(graph, requested_resources):
             return graph.resources.intersection(requested_resources) == requested_resources
 
@@ -79,10 +93,10 @@ class Aggregator(object):
         sys.stderr.write('     {} - '.format(requested_entity.name))
         solution_iterator = EntitySolutionIterator(requested_entity.name,
                                                    self.hyper_graph,
-                                                   provided_resources,
+                                                   provided_entities,
                                                    self.workflow_template,
                                                    maps,
-                                                   requested_entity.resources,)
+                                                   requested_entity.resources, )
         possible_graphs = list(solution_iterator)
         possible_graphs = [graph for graph in possible_graphs
                            if satisfies_request(graph, requested_entity.resources)]
@@ -176,8 +190,10 @@ def aggregate(args):
 
     template_directory = os.path.join(get_program_directory(), 'templates', args.workflow_template)
 
-    provided_resources = parse_provided_resources(args, template_directory)
-    requested_entities = parse_requested_entities(args, provided_resources)
+    provided_entities = get_provided_entities(template_directory,
+                                               args.resources + ['{}:target'.format(args.input)],
+                                               args.resource_list)
+    requested_entities = get_requested_entities(args, provided_entities)
     if len(requested_entities) == 0:
         import sys
         sys.stderr.write('Error: No entities were requested. Please provide'
@@ -185,12 +201,12 @@ def aggregate(args):
         sys.exit(1)
 
     template_factory = TemplateFactory(template_directory)
-    template = template_factory.make(provided_resources, requested_entities)
+    template = template_factory.make(provided_entities, requested_entities)
 
     stdout = sys.stdout if args.output is None else open(args.output, 'w')
     aggregator = Aggregator(template, args.workflow_template, stdout)
     maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
-    aggregator.aggregate(requested_entities, provided_resources, args, maps)
+    aggregator.aggregate(requested_entities, provided_entities, args, maps)
     stdout.close()
 
 
@@ -215,8 +231,7 @@ def init_worker(requested_entities_, solution_, entity_graph_):
 
 
 def get_annotation(target):
-    """ Calculate the steps in this graph for each entity in the target
-    resource. """
+    """ Calculate the steps in this graph for each entity in the target resource. """
     global requested_entities
     global solution
     global entity_graph
