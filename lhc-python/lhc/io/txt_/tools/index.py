@@ -1,12 +1,9 @@
-__author__ = 'Liam Childs'
-
 import argparse
 import gzip
 import time
 
 from ..entity_parser import EntityParser
 from lhc.indices.tracked_index import TrackedIndex, save_index
-from Bio import bgzf
 
 
 def index(input, output, format='s1', header='#', delimiter='\t', factor=1):
@@ -60,7 +57,8 @@ def define_parser(parser):
 
 
 def init_index(args):
-    input = bgzf.open(args.input, 'rb')
+    raise NotImplementedError('removed until bgzf can be re-implemented')
+    #input = bgzf.open(args.input, 'rb')
     output = gzip.open(args.input + '.lci', 'wb') if args.zip else open(args.input + '.lci', 'w')
     index(input, output, args.format, args.header, args.delimiter, args.compression_factor)
     input.close()

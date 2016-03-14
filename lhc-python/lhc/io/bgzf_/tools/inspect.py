@@ -1,15 +1,12 @@
-__author__ = 'Liam Childs'
-
 import argparse
-
-from Bio.bgzf import _load_bgzf_block
 
 
 def inspect(handle):
+    raise NotImplementedError('removed until bgzf can be re-implemented')
     data_start = 0
     i = 0
     while True:
-        block_length, data = _load_bgzf_block(handle)
+        #block_length, data = _load_bgzf_block(handle)
         data_len = len(data)
         print 'block {}'.format(i)
         print repr(data[:data.find('\n') + 1])
