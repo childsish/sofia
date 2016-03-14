@@ -11,12 +11,12 @@ from entity_solution_iterator import EntitySolutionIterator
 
 
 class StepSolutionIterator(object):
-    def __init__(self, step, graph, provided_resources, workflow_template, maps={}, requested_resources=set(), visited=None):
+    def __init__(self, step, graph, provided_entities, workflow_template, maps={}, requested_entities=set(), visited=None):
         self.step = step
         self.graph = graph
-        self.provided_resources = provided_resources
+        self.provided_entities = provided_entities
         self.maps = maps
-        self.requested_resources = requested_resources
+        self.requested_entities = requested_entities
         self.workflow_template = workflow_template
 
         self.visited = set() if visited is None else visited
@@ -29,10 +29,10 @@ class StepSolutionIterator(object):
         entities = sorted(self.graph.get_children(self.step.name))
         resolvers = {entity: EntitySolutionIterator(entity,
                                                     self.graph,
-                                                    self.provided_resources,
+                                                    self.provided_entities,
                                                     self.workflow_template,
                                                     self.maps,
-                                                    self.requested_resources,
+                                                    self.requested_entities,
                                                     self.visited)
                                   for entity in entities}
         resolvers = {entity: list(resolver) for entity, resolver in resolvers.iteritems()}
@@ -57,7 +57,7 @@ class StepSolutionIterator(object):
                 s_outs = deepcopy(s_ins)
                 for attribute, (fr, to) in converter.attributes.iteritems():
                     s_outs[entity].attr[attribute] = to
-                converter_step = ConverterStep(s.resources, {entity: s.step.name}, ins=s_ins, outs=s_outs)
+                converter_step = ConverterStep(s.entities, {entity: s.step.name}, ins=s_ins, outs=s_outs)
                 converter_step.register_converter(converter)
                 step = Workflow(converter_step)
                 step.join(disjoint_solution[i], s_ins[entity])
@@ -68,13 +68,13 @@ class StepSolutionIterator(object):
             outs = self.step.get_output(ins, entity_graph=self.graph.entity_graph)
             if outs is None:
                 continue
-            resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
+            entities = reduce(or_, (graph.entities for graph in disjoint_solution), set())
             dependencies = {e: s.step.name for e, s in izip(entities, disjoint_solution)}
-            step_instance = self.step(resources, dependencies, ins=ins, outs=outs)
+            step_instance = self.step(entities, dependencies, ins=ins, outs=outs)
             solution = Workflow(step_instance)
             for entity, s in izip(entities, disjoint_solution):
                 solution.join(s, s.step.outs[entity])
-            res[len(resources - self.requested_resources)].append(solution)
+            res[len(entities - self.requested_entities)].append(solution)
         if len(res) > 0:
             for solution in res[min(res)]:
                 yield solution
