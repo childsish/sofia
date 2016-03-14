@@ -24,6 +24,7 @@ class GetMajorTranscriptCodingSequence(Step):
     def init(self):
         self.buffer = {}
         self.max_buffer = 10
+        self.invalid = []
 
     def calculate(self, chromosome_sequence_set, major_transcript):
         if major_transcript is None:
@@ -35,13 +36,16 @@ class GetMajorTranscriptCodingSequence(Step):
 
         res = major_transcript.get_sub_seq(chromosome_sequence_set, types={'CDS'})
         if len(res) % 3 != 0:
-            warn('{} coding sequence length not a multiple of 3, possible mis-annotation'.format(major_transcript))
-            #return None
+            self.invalid.append(str(major_transcript))
 
         if len(self.buffer) > self.max_buffer:
             self.buffer.popitem()
         self.buffer[buffer_key] = res
         return res
+
+    def get_user_warnings(self):
+        return ['{} coding sequence length not a multiple of 3, possible mis-annotation'.format(invalid)
+                for invalid in self.invalid]
 
 
 class GetFivePrimeUtr(Step):

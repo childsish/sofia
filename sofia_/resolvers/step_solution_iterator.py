@@ -57,7 +57,7 @@ class StepSolutionIterator(object):
                 s_outs = deepcopy(s_ins)
                 for attribute, (fr, to) in converter.attributes.iteritems():
                     s_outs[entity].attr[attribute] = to
-                converter_step = ConverterStep(s.entities, {entity: s.step.name}, ins=s_ins, outs=s_outs)
+                converter_step = ConverterStep(s.resources, {entity: s.step.name}, ins=s_ins, outs=s_outs)
                 converter_step.register_converter(converter)
                 step = Workflow(converter_step)
                 step.join(disjoint_solution[i], s_ins[entity])
@@ -68,13 +68,13 @@ class StepSolutionIterator(object):
             outs = self.step.get_output(ins, entity_graph=self.graph.entity_graph)
             if outs is None:
                 continue
-            entities = reduce(or_, (graph.entities for graph in disjoint_solution), set())
+            resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
             dependencies = {e: s.step.name for e, s in izip(entities, disjoint_solution)}
-            step_instance = self.step(entities, dependencies, ins=ins, outs=outs)
+            step_instance = self.step(resources, dependencies, ins=ins, outs=outs)
             solution = Workflow(step_instance)
             for entity, s in izip(entities, disjoint_solution):
                 solution.join(s, s.step.outs[entity])
-            res[len(entities - self.requested_entities)].append(solution)
+            res[len(resources - self.requested_entities)].append(solution)
         if len(res) > 0:
             for solution in res[min(res)]:
                 yield solution
