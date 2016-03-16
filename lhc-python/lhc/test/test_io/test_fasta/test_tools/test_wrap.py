@@ -1,7 +1,7 @@
 import unittest
-
 from StringIO import StringIO
-from lhc.io.fasta_.wrap import wrap_input
+
+from lhc.io.fasta_.tools.wrap import wrap_input
 
 
 class TestWrap(unittest.TestCase):

@@ -1,5 +1,4 @@
 from collections import namedtuple
-from lhc.filetools.flexible_opener import open_flexibly
 
 
 class FastaEntry(namedtuple('FastaEntry', ('hdr', 'seq'))):
@@ -13,10 +12,10 @@ class FastaEntry(namedtuple('FastaEntry', ('hdr', 'seq'))):
 
 
 class FastaEntryIterator(object):
-    def __init__(self, fname, hdr_parser=None):
-        self.fname, self.fhndl = open_flexibly(fname)
+    def __init__(self, iterator, hdr_parser=None):
+        self.iterator = iterator
         self.hdr_parser = (lambda x: x) if hdr_parser is None else hdr_parser
-        self.line = self.fhndl.next()
+        self.line = self.iterator.next()
     
     def __iter__(self):
         return self
@@ -26,7 +25,7 @@ class FastaEntryIterator(object):
             raise StopIteration()
 
         seq = []
-        for line in self.fhndl:
+        for line in self.iterator:
             if line.startswith('>'):
                 hdr = self.hdr_parser(self.line[1:].strip())
                 self.line = line
@@ -37,8 +36,8 @@ class FastaEntryIterator(object):
         return FastaEntry(hdr, ''.join(seq))
 
     def close(self):
-        if hasattr(self.fhndl, 'close'):
-            self.fhndl.close()
+        if hasattr(self.iterator, 'close'):
+            self.iterator.close()
 
     def __del__(self):
         self.close()

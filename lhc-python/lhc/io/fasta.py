@@ -1,15 +1,14 @@
-__author__ = 'Liam Childs'
-
 if __name__ == '__main__' and __package__ is None:
-    import lhc.io
     __package__ = 'lhc.io'
 
-from .fasta_ import indexer, wrap
-from .fasta_.iterator import FastaEntryIterator
-from .txt_.tools import compress
-from ..binf.sequence import revcmp as rc
 from argparse import ArgumentParser
 from itertools import izip, product
+from .fasta_.index import IndexedFastaSet
+from .fasta_.iterator import FastaEntryIterator
+from .fasta_.set_ import FastaSet
+from .fasta_.tools import wrap
+from .txt_.tools import compress
+from ..binf.sequence import revcmp as rc
 
 
 def iter_entries(fname):
@@ -108,9 +107,6 @@ def get_parser():
     extract_parser.add_argument('header')
     extract_parser.add_argument('-o', '--output')
     extract_parser.set_defaults(func=lambda args: extract(args.input, args.header, args.output))
-
-    index_parser = subparsers.add_parser('index')
-    indexer.define_parser(index_parser)
 
     product_parser = subparsers.add_parser('product')
     product_parser.add_argument('input1', help='Input fasta (default: stdin).')

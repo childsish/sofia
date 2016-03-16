@@ -1,7 +1,7 @@
-from pkg_resources import resource_string
+import pkgutil
 
 
-class RedundantCode:
+class RedundantCode(object):
     BASES = set('actgu')
     REDUNDANT_BASES = set('bdhkmnrsvwy')
     AMINO_ACIDS = set('ACDEFGHIKLMNPQRSTVWY*.BZX')
@@ -9,13 +9,10 @@ class RedundantCode:
             'm': 'ac', 'r': 'ag', 'w': 'at',
             'k': 'gt', 'y': 'tc', 's': 'cg',
             'b': 'cgt', 'd': 'agt', 'h': 'act', 'v': 'acg', 'n': 'acgt'}
-    REV  = {'a': 'a', 'c': 'c', 'g': 'g', 't': 't', 'u': 'u',
+    REV =  {'a': 'a', 'c': 'c', 'g': 'g', 't': 't', 'u': 'u',
             'ac': 'm', 'ag': 'r', 'at': 'w',
             'gt': 'k', 'tc': 'y', 'cg': 's',
             'cgt': 'b', 'agt': 'd', 'act': 'h', 'acg': 'v', 'acgt': 'n'}
-    
-    def __init__(self):
-        pass
 
     def decode_codon(self, codon):
         codon = codon.lower()
@@ -48,7 +45,7 @@ class RedundantCode:
         return True
 
 
-class GeneticCode:
+class GeneticCode(object):
 
     NCODONS = 64
     REDUNDANT_CODE = RedundantCode()
@@ -128,7 +125,7 @@ class GeneticCode:
 class GeneticCodes:
     def __init__(self, fname=None):
         if fname is None:
-            data = resource_string(__name__, '../data/gc.prt')
+            data = pkgutil.get_data('lhc', 'data/gc.prt')
         else:
             infile = open(fname)
             data = infile.read()

@@ -1,7 +1,6 @@
 from collections import namedtuple
 from lhc.binf.genomic_feature import GenomicFeature
 from lhc.binf.genomic_coordinate import GenomicInterval as Interval
-from lhc.filetools.flexible_opener import open_flexibly
 
 
 GffLine = namedtuple('GffLine', ('chr', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attr'))
@@ -10,8 +9,8 @@ GenomicFeatureTracker = namedtuple('GenomicFeatureTracker', ('interval', 'lines'
 
 
 class GffLineIterator(object):
-    def __init__(self, fname):
-        self.fname, self.fhndl = open_flexibly(fname)
+    def __init__(self, iterator):
+        self.iterator = iterator
         self.line_no = 0
 
     def __del__(self):
@@ -22,15 +21,15 @@ class GffLineIterator(object):
 
     def next(self):
         while True:
-            line = self.parse_line(self.fhndl.next())
+            line = self.parse_line(self.iterator.next())
             self.line_no += 1
             if line.type != 'chromosome':
                 break
         return line
 
     def close(self):
-        if hasattr(self.fhndl, 'close'):
-            self.fhndl.close()
+        if hasattr(self.iterator, 'close'):
+            self.iterator.close()
 
     @staticmethod
     def parse_line(line):
