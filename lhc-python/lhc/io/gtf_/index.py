@@ -2,10 +2,10 @@ from iterator import GtfEntryIterator, GtfLineIterator
 
 
 class IndexedGtfFile(object):
-    def __init__(self, index):
+    def __init__(self, index, max_buffer=10):
         self.index = index
         self.buffer = {}
-        self.max_buffer = 10
+        self.max_buffer = max_buffer
 
     def fetch(self, chr, start, stop):
         lines = [GtfLineIterator.parse_line(line) for line in self.index.fetch(chr, start, stop)]
