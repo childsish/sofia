@@ -1,13 +1,12 @@
-__author__ = 'Liam Childs'
-
 if __name__ == '__main__' and __package__ is None:
     __package__ = 'lhc.io'
 
 from argparse import ArgumentParser
 from itertools import izip, product
-
-from lhc.io.fasta_.tools import wrap
+from .fasta_.index import IndexedFastaSet
 from .fasta_.iterator import FastaEntryIterator
+from .fasta_.set_ import FastaSet
+from .fasta_.tools import wrap
 from .txt_.tools import compress
 from ..binf.sequence import revcmp as rc
 
