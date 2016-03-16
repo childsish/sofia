@@ -1,12 +1,12 @@
 import gzip
 import os
+from warnings import warn
 
-from sofia_.step import Resource, Target
-from lhc.io.vcf_.tools.index import IndexedVcfFile
+from lhc.io.vcf_.index import IndexedVcfFile
 from lhc.io.vcf_.iterator import VcfEntryIterator
 from lhc.io.vcf_.set_ import VcfSet as VcfSetBase
 from lhc.io.vcf_.tools.split_alt import _split_variant
-from warnings import warn
+from sofia_.step import Resource, Target
 
 
 class VcfIterator(Target):
