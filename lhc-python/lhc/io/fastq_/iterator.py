@@ -1,5 +1,4 @@
 from collections import namedtuple
-from lhc.filetools.flexible_opener import open_flexibly
 from lhc.itertools.chunked_iterator import ChunkedIterator
 
 
@@ -9,9 +8,9 @@ class FastqEntry(namedtuple('FastqEntry', ('hdr', 'seq', 'qual_hdr', 'qual'))):
 
 
 class FastqEntryIterator(object):
-    def __init__(self, fname):
-        self.fname, self.fhndl = open_flexibly(fname)
-        self.it = ChunkedIterator(self.fhndl, 4)
+    def __init__(self, iterator):
+        self.iterator = iterator
+        self.it = ChunkedIterator(self.iterator, 4)
 
     def __iter__(self):
         return self
@@ -24,5 +23,5 @@ class FastqEntryIterator(object):
                           qual.strip())
 
     def __del__(self):
-        if hasattr(self.fhndl, 'close'):
-            self.fhndl.close()
+        if hasattr(self.iterator, 'close'):
+            self.iterator.close()
