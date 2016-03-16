@@ -1,7 +1,4 @@
-import os
-
 from sofia_.step import Resource
-#from lhc.io.fasta_.index import IndexedFastaSet
 from lhc.io.fasta_.iterator import FastaEntryIterator
 from lhc.io.fasta_.set_ import FastaSet
 from warnings import warn
@@ -15,11 +12,9 @@ class FastaChromosomeSequenceSet(Resource):
     
     def get_interface(self, filename):
         try:
-            from lhc.io.fasta_.pysam_ import PysamFastaSet
-            return PysamFastaSet(filename)
+            import pysam
+            return pysam.FastaFile(filename)
         except Exception, e:
             warn(e.message)
-        #if os.path.exists('{}.lci'.format(filename)):
-        #    return IndexedFastaSet(filename)
         warn('no index available for {}, loading whole file...'.format(filename))
         return FastaSet(FastaEntryIterator(filename))
