@@ -1,5 +1,3 @@
-__author__ = 'Liam Childs'
-
 import argparse
 import sys
 
@@ -26,7 +24,7 @@ def _split_variant(variant):
     for alt, info, samples in zip(alts, infos, sampless):
         tmp[4] = alt
         tmp[7] = info
-        tmp[8] = samples
+        tmp[9] = samples
         res.append(Variant(*tmp))
     return res
 

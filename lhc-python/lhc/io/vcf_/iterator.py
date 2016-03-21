@@ -1,20 +1,18 @@
-from collections import OrderedDict, namedtuple, defaultdict
-from operator import or_
+from collections import OrderedDict, namedtuple
 
 
-class Variant(namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'samples'))):
-    def __new__(cls, chr, pos, id, ref, alt, qual=None, filter=None, info=None, samples={}):
-        return super(Variant, cls).__new__(cls, chr, pos, id, ref, alt, qual, filter, info, samples)
+class Variant(namedtuple('Variant', ('chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'format', 'samples'))):
+    def __new__(cls, chr, pos, id, ref, alt, qual='', filter='', info='', format=[], samples={}):
+        return super(Variant, cls).__new__(cls, chr, pos, id, ref, alt, qual, filter, info, format, samples)
 
     def __str__(self):
         res = [self.chr, str(self.pos + 1), self.id, self.ref, self.alt, str(self.qual), self.filter,
                ';'.join('{}={}'.format(k, v) for k, v in self.info.iteritems())]
-        format = sorted(reduce(or_, (set(sample) for sample in self.samples.itervalues()), set()))
-        if len(format) > 0:
-            res.append(':'.join(format))
+        if self.format > 0:
+            res.append(':'.join(self.format))
             for sample in self.samples.itervalues():
                 res.append('.' if len(sample) == 0 else
-                           ':'.join(sample[f] for f in format))
+                           ':'.join(sample[f] for f in self.format))
         return '\t'.join(res)
 
 
@@ -90,17 +88,21 @@ class VcfEntryIterator(VcfLineIterator):
         return self.parse_entry(super(VcfEntryIterator, self).next())
 
     def parse_entry(self, line):
+        format = line.format.split(':')
         samples = {} if line.samples is None else\
-            self._parse_samples(line.format.split(':'), line.samples.split('\t'))
-        return Variant(line.chr,
-                       line.pos,
-                       line.id,
-                       line.ref,
-                       line.alt,
-                       self._parse_quality(line.qual),
-                       line.filter,
-                       self._parse_info(line.info),
-                       samples)
+            self._parse_samples(format, line.samples.split('\t'))
+        return Variant(
+            line.chr,
+            line.pos,
+            line.id,
+            line.ref,
+            line.alt,
+            self._parse_quality(line.qual),
+            line.filter,
+            self._parse_info(line.info),
+            format,
+            samples
+        )
 
     def _parse_samples(self, format, sample_data):
         res = {}
