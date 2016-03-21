@@ -50,4 +50,4 @@ try:
 
 except ImportError:
     import sys
-    sys.stderr.write('Unable to import pysam. PROVEAN variant impacts are unavailable.')
+    sys.stderr.write('Unable to import pysam. PROVEAN variant impacts are unavailable.\n')

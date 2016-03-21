@@ -62,4 +62,4 @@ try:
 
 except ImportError:
     import sys
-    sys.stderr.write('Unable to import pysam. MAF sets are unavailable.')
+    sys.stderr.write('Unable to import pysam. MAF sets are unavailable.\n')
