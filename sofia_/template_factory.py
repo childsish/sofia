@@ -48,7 +48,13 @@ class TemplateFactory(object):
         res = []
         for entity in provided_entities:
             if entity.name is not None and entity.name not in self.recognised_formats:
-                entry_factory = entity_registry.parse(entity.name)
+                try:
+                    entry_factory = entity_registry.parse(entity.name)
+                except KeyError, e:
+                    if e.message in {'/', '\\'}:
+                        raise IOError('[Errno 2] No such file or directory: {}'.format(entity.name))
+                    else:
+                        raise e
                 if entity.name == 'target':
                     outs = OrderedDict((out, Entity(out)) for out in entry_factory.type._fields) if entry_factory.name == 'Entry' else\
                         OrderedDict([(entry_factory.name, Entity(entry_factory.name))])
