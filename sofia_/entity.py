@@ -5,9 +5,9 @@ class Entity(object):
     """ An "entity" represents data that is processed by steps in a workflow.
         They can be considered nouns and the step can be considered verbs.
     """
-    def __init__(self, name, resources=frozenset(), attr=None, alias=None, getter=''):
+    def __init__(self, name, resources=None, attr=None, alias=None, getter=''):
         self.name = name
-        self.resources = resources
+        self.resources = set() if resources is None else resources
         self.attr = {} if attr is None else attr
         self.alias = name if alias is None else alias
         self.getter = '{' + getter + '}'
