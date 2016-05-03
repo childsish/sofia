@@ -50,9 +50,10 @@ class Aggregator(object):
         sys.stderr.write('\n    Aggregating information...\n\n')
         if args.header is None:
             self.stdout.write('\t'.join(entity.alias for entity in requested_entities))
+            self.stdout.write('\n')
         else:
-            self.stdout.write(args.header)
-        self.stdout.write('\n')
+            header = open(args.header).read() if os.path.exists(args.header) else args.header
+            self.stdout.write(header)
         template = '\t'.join(['{}'] * len(requested_entities)) if args.template is None else args.template
         for row in it:
             row = [requested_entity.format(entity) for requested_entity, entity in zip(requested_entities, row)]
@@ -201,7 +202,7 @@ def aggregate(args):
         sys.exit(1)
     target = {entity.alias: entity for entity in provided_entities}['target']
     for entity in requested_entities:
-        entity.resources = entity.resources | {target}
+        entity.resources.add(target)
 
     template_factory = TemplateFactory(template_directory)
     template = template_factory.make(provided_entities, requested_entities)

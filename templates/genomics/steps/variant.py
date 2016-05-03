@@ -4,6 +4,18 @@ from lhc.binf.sequence import revcmp
 from sofia_.step import Step
 
 
+class GetVariantSamples(Step):
+
+    IN = ['variant']
+    OUT = ['variant_samples']
+
+    def calculate(self, variant):
+        res = [':'.join(variant.format)]
+        for sample in variant.samples.itervalues():
+            res.append(':'.join(sample[key] for key in variant.format))
+        return '\t'.join(res)
+
+
 class GetNumberOfVariants(Step):
 
     IN = ['variant']
