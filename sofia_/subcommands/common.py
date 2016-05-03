@@ -34,7 +34,7 @@ def get_extension_entity_map(template_directory):
 def get_provided_entities(template_directory, definitions=[], definition_file=None):
     definitions_ = []
     with open(os.path.join(template_directory, 'provided_entities.txt')) as fhndl:
-        definitions_.extend(os.path.join(template_directory, 'data', line.rstrip('\r\n'))
+        definitions_.extend(os.path.join(template_directory, 'data', line.rstrip('\r\n')).split()
                            for line in fhndl if line.strip() != '')
     if definition_file is not None:
         with open(definition_file) as fhndl:
@@ -51,7 +51,7 @@ def get_provided_entity(definition, extensions):
 
     if alias is None:
         alias = os.path.basename(type)
-    if os.path.exists(type):
+    if os.path.exists(type) or '/' in type or '\\' in type:
         attributes['filename'] = type
 
     if 'entity' in attributes:

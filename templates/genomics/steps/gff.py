@@ -1,3 +1,4 @@
+import gzip
 import os
 
 from sofia_.step import Resource, Target
@@ -41,4 +42,6 @@ class GffSet(Resource):
             from lhc.io.txt_ import index
             return IndexedGffFile(index.IndexedFile(filename))
         warn('no index available for {}, loading whole file...'.format(filename))
-        return GffSetBase(GffEntryIterator(filename))
+        fileobj = gzip.open(filename) if filename.endswith('.gz') else\
+            open(filename)
+        return GffSetBase(GffEntryIterator(fileobj))

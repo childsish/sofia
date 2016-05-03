@@ -155,11 +155,11 @@ def get_parser():
 
 def define_parser(parser):
     add_arg = parser.add_argument
-    add_arg('input', metavar='TARGET',
+    add_arg('input', metavar='TARGET', nargs='+',
             help='the file to annotate')
     add_arg('-1', '--header',
             help='if specified use this header instead')
-    add_arg('-e', '--entities', nargs='+', default=[],
+    add_arg('-e', '--entities', nargs='+', default=[], action='append',
             help='request an entity')
     add_arg('-E', '--entity-list',
             help='a text file with a list of requested entities')
@@ -171,7 +171,7 @@ def define_parser(parser):
             help='direct output to named file (default: stdout)')
     add_arg('-p', '--processes', default=None, type=int,
             help='the number of processes to run in parallel')
-    add_arg('-r', '--resources', nargs='+', default=[],
+    add_arg('-r', '--resources', nargs='+', default=[], action='append',
             help='provide a resource')
     add_arg('-R', '--resource-list',
             help='a text file with a list of provided resources')
@@ -191,14 +191,17 @@ def aggregate(args):
     template_directory = os.path.join(get_program_directory(), 'templates', args.workflow_template)
 
     provided_entities = get_provided_entities(template_directory,
-                                               args.resources + ['{}:target'.format(args.input)],
-                                               args.resource_list)
+                                              args.resources + [args.input + ['target']],
+                                              args.resource_list)
     requested_entities = get_requested_entities(args, provided_entities)
     if len(requested_entities) == 0:
         import sys
         sys.stderr.write('Error: No entities were requested. Please provide'
                          'the names of the entities you wish to calculate.')
         sys.exit(1)
+    target = {entity.alias: entity for entity in provided_entities}['target']
+    for entity in requested_entities:
+        entity.resources = entity.resources | {target}
 
     template_factory = TemplateFactory(template_directory)
     template = template_factory.make(provided_entities, requested_entities)

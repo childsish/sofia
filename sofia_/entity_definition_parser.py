@@ -25,14 +25,13 @@ def parse_entity_definition(definition):
         -r "/tmp/tmp.vcf:tmp:entity=vcf"
         -r "tmp.vcf:tmp:format=vcf:x=x:y=y:chromosome_id=ucsc"
 
-    :param definition: string defining an entity
+    :param definition: tuple defining an entity
     :return: EntityDefinition with the variable part, name and attributes
     """
-    parts = definition.split(':')
-    type = parts[0]
+    type = definition[0]
     alias = None
     attributes = {}
-    for part in parts[1:]:
+    for part in definition[1:]:
         if '=' in part:
             key, value = part.split('=', 1)
             attributes[key] = value
