@@ -1,5 +1,3 @@
-__author__ = 'Liam Childs'
-
 from bisect import bisect_left, bisect_right
 from operator import add
 from lhc.interval import Interval
@@ -23,7 +21,8 @@ class TrackedIndex(object):
 
 class Track(object):
     def __init__(self, n):
-        self.points = []
+        self.starts = []
+        self.stops = []
         self.offsets = []
         self.n = n
 

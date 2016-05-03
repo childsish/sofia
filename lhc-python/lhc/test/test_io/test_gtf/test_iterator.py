@@ -1,5 +1,3 @@
-import os
-import tempfile
 import unittest
 
 from lhc.io.gtf_.iterator import GtfLineIterator, GtfEntryIterator
@@ -7,7 +5,6 @@ from lhc.io.gtf_.iterator import GtfLineIterator, GtfEntryIterator
 
 class TestGtfEntryIterator(unittest.TestCase):
     def setUp(self):
-        fhndl, self.fname = tempfile.mkstemp()
         self.lines = [
             'chr1\t.\tgene\t1000\t2000\t0\t+\t0\tgene_name "a"',
             'chr1\t.\ttranscript\t1000\t2000\t0\t+\t0\tgene_name "a";transcript_id "a.0"',
@@ -26,8 +23,6 @@ class TestGtfEntryIterator(unittest.TestCase):
             'chr2\t.\tCDS\t1330\t1600\t0\t-\t0\tgene_name "c";transcript_id "c.0"',
             'chr2\t.\tCDS\t1660\t1900\t0\t-\t0\tgene_name "c";transcript_id "c.0"'
         ]
-        os.write(fhndl, '\n'.join(self.lines))
-        os.close(fhndl)
 
     def test_parse_attributes(self):
         attr = GtfLineIterator.parse_attributes('gene_id "a"; transcript_id "a.0"; exon 1')
@@ -62,7 +57,7 @@ class TestGtfEntryIterator(unittest.TestCase):
         self.assertEquals(711, gene.children[0].get_rel_pos(1100))
 
     def test_iter_gtf(self):
-        it = GtfEntryIterator(self.fname)
+        it = GtfEntryIterator(iter(self.lines))
         
         gene = it.next()
         self.assertEquals('a', gene.name)
@@ -85,9 +80,6 @@ class TestGtfEntryIterator(unittest.TestCase):
         self.assertEquals(3, len(gene.children[0].children))
         
         self.assertRaises(StopIteration, it.next)
-    
-    def tearDown(self):
-        os.remove(self.fname)
 
 if __name__ == '__main__':
     import sys

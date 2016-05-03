@@ -4,16 +4,16 @@ import unittest
 try:
     import numpy as np
     from lhc.collections import nested_containment_list as ncl
-    skip = False
 except ImportError:
-    skip = True
+    np = None
+    ncl = None
 
 from tempfile import mkstemp
 
 from lhc.interval import Interval
 
 
-@unittest.skipIf(skip, 'could not import numpy')
+@unittest.skipIf(np is None or ncl is None, 'could not import numpy')
 class TestNestedContainmentList(unittest.TestCase):
     def setUp(self):
         self.hndl, self.fname = mkstemp()

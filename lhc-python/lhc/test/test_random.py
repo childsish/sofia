@@ -2,7 +2,7 @@
 import argparse
 import sys
 
-from .test_random import reservoir
+from lhc.random import reservoir
 
 
 def main():

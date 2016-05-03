@@ -8,6 +8,7 @@ from lhc.collections import MultiDimensionMap
 from lhc.interval import Interval
 
 
+@unittest.skip('obsolete and will be removed')
 class TestSet(unittest.TestCase):
     def setUp(self):
         self.data = [('1', '10', '20', 'a'),

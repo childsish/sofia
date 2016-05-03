@@ -1,5 +1,3 @@
-import os
-import tempfile
 import unittest
 
 from lhc.io.fasta_.iterator import FastaEntryIterator
@@ -8,19 +6,23 @@ from lhc.io.fasta_.iterator import FastaEntryIterator
 class TestFasta(unittest.TestCase):
     
     def setUp(self):
-        fhndl, self.fname = tempfile.mkstemp()
-        os.write(fhndl, '>a x\naaaaaaaaaa\nbbbbbbbbbb\ncccccccccc\ndddddddddd\neeeeeeeeee\n>b y\nffffffffff\ngggggggggg\nhhhhh')
-        os.close(fhndl)
+        self.lines = ['>a x\n',
+                      'aaaaaaaaaa\n',
+                      'bbbbbbbbbb\n',
+                      'cccccccccc\n',
+                      'dddddddddd\n',
+                      'eeeeeeeeee\n',
+                      '>b y\n',
+                      'ffffffffff\n',
+                      'gggggggggg\n',
+                      'hhhhh']
 
     def test_iterEntries(self):
-        it = FastaEntryIterator(self.fname)
+        it = FastaEntryIterator(iter(self.lines))
         
         self.assertEquals(tuple(it.next()), ('a x', 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee'))
         self.assertEquals(tuple(it.next()), ('b y', 'ffffffffffgggggggggghhhhh'))
         self.assertRaises(StopIteration, it.next)
-
-    def tearDown(self):
-        os.remove(self.fname)
 
 if __name__ == '__main__':
     import sys

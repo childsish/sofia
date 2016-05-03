@@ -18,6 +18,7 @@ class Iterator(object):
         iterator = self.iterator
         separator = self.separator
         formatter = self.formatter
+        line = iterator.next()
         while line != '':
             yield formatter(*line.strip('\r\n').split(separator))
             line = iterator.next()

@@ -5,26 +5,21 @@ import unittest
 from lhc.io.txt_ import Iterator
 
 
-class TestITerator(unittest.TestCase):
+@unittest.skip('obsolete and will be removed')
+class TestIterator(unittest.TestCase):
     def setUp(self):
-        self.comment = ['#version=1.0\n',
-                        '#date=010101\n']
-        self.header = 'chr\tstart\tstop\tgene\n'
-        self.data = ['chr1\t10\t20\ta\n',
-                     'chr1\t30\t60\tb\n',
-                     'chr1\t100\t110\tc\n',
-                     'chr2\t15\t30\td\n',
-                     'chr2\t40\t50\te\n',
-                     'chr3\t10\t110\tf\n']
+        self.lines = ['#version=1.0\n',
+                      '#date=010101\n',
+                      'chr\tstart\tstop\tgene\n',
+                      'chr1\t10\t20\ta\n',
+                      'chr1\t30\t60\tb\n',
+                      'chr1\t100\t110\tc\n',
+                      'chr2\t15\t30\td\n',
+                      'chr2\t40\t50\te\n',
+                      'chr3\t10\t110\tf\n']
 
     def test_iterator(self):
-        fhndl, fname = tempfile.mkstemp()
-        os.write(fhndl, ''.join(self.comment))
-        os.write(fhndl, ''.join(self.header))
-        os.write(fhndl, ''.join(self.data))
-        os.close(fhndl)
-
-        lines = list(Iterator(open(fname), has_header=True))
+        lines = list(Iterator(iter(self.lines), has_header=True))
 
         self.assertEquals(9, len(lines))
         self.assertEquals('comment', lines[0].type)

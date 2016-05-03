@@ -1,12 +1,10 @@
-__author__ = 'Liam Childs'
-
 import unittest
 
 from lhc.interval import Interval
 from lhc.collections.tracked_set import Track, univariate_overlap, multivariate_overlap, get_item
 
 
-class TestBgzfIndex(unittest.TestCase):
+class TestTrackedSetIndex(unittest.TestCase):
     def test_univariate_overlap(self):
         self.assertFalse(univariate_overlap(4, 5))
         self.assertTrue(univariate_overlap(5, 5))
@@ -35,8 +33,8 @@ class TestBgzfIndex(unittest.TestCase):
         self.assertTrue(multivariate_overlap(['chr1', Interval(0, 11)], ['chr1', Interval(10, 20)]))
         self.assertFalse(multivariate_overlap([Interval('chr1', 'chr2'), Interval(0, 10)],
                                               [Interval('chr3', 'chr4'), Interval(0, 10)]))
-        self.assertTrue(multivariate_overlap([Interval('chr1', 'chr2'), Interval(0, 10)],
-                                              [Interval('chr2', 'chr3'), Interval(0, 10)]))
+        self.assertTrue(multivariate_overlap([Interval('chr1', 'chr3'), Interval(0, 10)],
+                                              [Interval('chr2', 'chr4'), Interval(0, 10)]))
 
     def test_get_item(self):
         starts = ['chr1', 500]

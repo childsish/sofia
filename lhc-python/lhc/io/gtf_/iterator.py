@@ -1,4 +1,5 @@
 from collections import namedtuple
+from itertools import chain
 from lhc.binf.genomic_feature import GenomicFeature
 from lhc.binf.genomic_coordinate import GenomicInterval as Interval
 
@@ -11,8 +12,8 @@ GenomicFeatureTracker = namedtuple('GenomicFeatureTracker', ('interval', 'lines'
 class GtfLineIterator(object):
     def __init__(self, iterator):
         self.iterator = iterator
-        self.hdr = self.parse_header(self.iterator)
         self.line_no = 0
+        self.hdr = self.parse_header()
 
     def __del__(self):
         self.close()
@@ -32,16 +33,16 @@ class GtfLineIterator(object):
         if hasattr(self.iterator, 'close'):
             self.iterator.close()
 
-    @staticmethod
-    def parse_header(fhndl):
+    def parse_header(self):
         hdrs = []
-        while True:
-            pos = fhndl.tell()
-            line = fhndl.readline()
-            if not line.startswith('#'):
-                break
-            hdrs.append(line.strip())
-        fhndl.seek(pos)
+        line = self.iterator.next()
+        line_no = 1
+        while line.startswith('#'):
+            hdrs.append(line)
+            line = self.iterator.readline()
+            line_no += 1
+        self.line_no = line_no
+        self.iterator = chain([line], self.iterator)
         return hdrs
 
     @staticmethod

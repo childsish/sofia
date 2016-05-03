@@ -1,11 +1,10 @@
-__author__ = 'Liam Childs'
-
 import unittest
 
 from lhc.interval import Interval
 from lhc.indices.tracked_index import Track
 
 
+@unittest.skip('obsolete and will be removed')
 class TestEmptyTrackedIndex(unittest.TestCase):
     def test_get_cost_increase(self):
         track = Track(2)
@@ -20,6 +19,7 @@ class TestEmptyTrackedIndex(unittest.TestCase):
         self.assertEquals([[0, 0, 1]], track.offsets)
 
 
+@unittest.skip('obsolete and will be removed')
 class TestTrackIndex(unittest.TestCase):
     def setUp(self):
         self.track = Track(2)

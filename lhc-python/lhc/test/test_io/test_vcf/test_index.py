@@ -1,12 +1,17 @@
 import os
 import pkgutil
-import pysam
 import tempfile
 import unittest
 
 from lhc.io.vcf_.index import IndexedVcfFile
 
+try:
+    import pysam
+except ImportError:
+    pysam = None
 
+
+@unittest.skipIf(pysam is None, 'could not import pysam')
 class TestIndexedVcfFile(unittest.TestCase):
     def setUp(self):
         self.dirname = tempfile.mkdtemp()

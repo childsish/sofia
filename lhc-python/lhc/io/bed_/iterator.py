@@ -1,4 +1,5 @@
 from collections import namedtuple
+from itertools import chain
 from lhc.binf.genomic_coordinate import GenomicInterval as Interval
 
 
@@ -9,7 +10,8 @@ BedEntry = namedtuple('BedEntry', ('ivl', 'name', 'score'))
 class BedLineIterator(object):
     def __init__(self, iterator):
         self.iterator = iterator
-        self.hdrs, self.line_no = self.parse_headers(self.iterator)
+        self.line_no = 0
+        self.hdrs = self.parse_headers()
     
     def __del__(self):
         self.close()
@@ -31,19 +33,16 @@ class BedLineIterator(object):
         if hasattr(self.iterator, 'close'):
             self.iterator.close()
 
-    @staticmethod
-    def parse_headers(fhndl):
+    def parse_headers(self):
         hdrs = []
-        line_no = 0
-        while True:
-            fpos = fhndl.tell()
-            line = fhndl.readline()
-            if line[:5] not in ('brows', 'track'):
-                break
-            hdrs.append(line.strip())
+        line = self.iterator.next()
+        line_no = 1
+        while line[:5] in {'brows', 'track'}:
+            line = self.iterator.next()
             line_no += 1
-        fhndl.seek(fpos)
-        return hdrs, line_no
+        self.iterator = chain([line], self.iterator)
+        self.line_no = line_no
+        return hdrs
 
     @staticmethod
     def parse_line(line):

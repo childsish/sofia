@@ -1,5 +1,3 @@
-import os
-import tempfile
 import unittest
 
 from lhc.io.gtf_.iterator import GtfEntryIterator
@@ -8,7 +6,6 @@ from lhc.io.gtf_.set_ import GtfSet
 
 class TestGtfSet(unittest.TestCase):
     def setUp(self):
-        fhndl, self.fname = tempfile.mkstemp()
         self.lines = [
             'chr1\t.\tgene\t1000\t2000\t0\t+\t0\tgene_name "a"',
             'chr1\t.\ttranscript\t1000\t2000\t0\t+\t0\tgene_name "a";transcript_id "a.0"',
@@ -22,11 +19,9 @@ class TestGtfSet(unittest.TestCase):
             'chr1\t.\ttranscript\t5000\t6000\t0\t+\t0\tgene_name "b";transcript_id "b.0"',
             'chr1\t.\tCDS\t5100\t5900\t0\t+\t0\tgene_name "b";transcript_id "b.0"'
         ]
-        os.write(fhndl, '\n'.join(self.lines))
-        os.close(fhndl)
 
     def test_getItemByKey(self):
-        parser = GtfSet(GtfEntryIterator(self.fname))
+        parser = GtfSet(GtfEntryIterator(iter(self.lines)))
 
         gene = parser['a']
         self.assertEquals(gene.name, 'a')
@@ -43,7 +38,7 @@ class TestGtfSet(unittest.TestCase):
         self.assertEquals(len(gene.children[0].children), 1)
 
     def test_getItemInterval(self):
-        parser = GtfSet(GtfEntryIterator(self.fname))
+        parser = GtfSet(GtfEntryIterator(iter(self.lines)))
 
         genes = parser.fetch('chr1', 500, 1500)
         self.assertEquals(len(genes), 1)
