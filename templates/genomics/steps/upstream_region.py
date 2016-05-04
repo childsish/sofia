@@ -1,6 +1,6 @@
-from sofia_.step import Step
-
 from lhc.binf.genomic_coordinate import GenomicPosition
+
+from sofia import Step
 
 
 class GetUpstreamSequence(Step):

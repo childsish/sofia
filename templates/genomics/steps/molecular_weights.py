@@ -1,4 +1,4 @@
-from sofia_.step import Resource
+from sofia import Resource
 
 
 class MolecularWeights(Resource):

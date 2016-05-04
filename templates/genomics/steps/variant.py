@@ -1,7 +1,9 @@
 from collections import namedtuple
 from itertools import izip
+
 from lhc.binf.sequence import revcmp
-from sofia_.step import Step
+
+from sofia import Step
 
 
 class GetVariantSamples(Step):

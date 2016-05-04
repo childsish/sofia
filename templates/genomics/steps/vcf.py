@@ -6,7 +6,8 @@ from lhc.io.vcf_.index import IndexedVcfFile
 from lhc.io.vcf_.iterator import VcfEntryIterator
 from lhc.io.vcf_.set_ import VcfSet as VcfSetBase
 from lhc.io.vcf_.tools.split_alt import _split_variant
-from sofia_.step import Resource, Target
+
+from sofia import Resource, Target
 
 
 class VcfIterator(Target):

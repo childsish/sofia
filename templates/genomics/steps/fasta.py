@@ -1,7 +1,9 @@
-from sofia_.step import Resource
+from warnings import warn
+
 from lhc.io.fasta import FastaEntryIterator, FastaSet, IndexedFastaSet
 from lhc.io.fasta_.set_ import FastaSet
-from warnings import warn
+
+from sofia import Resource
 
 
 class FastaChromosomeSequenceSet(Resource):

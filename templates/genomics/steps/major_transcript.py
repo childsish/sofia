@@ -1,5 +1,4 @@
-from sofia_.step import Step
-from warnings import warn
+from sofia import Step
 
 
 class GetCodonSequenceLength(Step):

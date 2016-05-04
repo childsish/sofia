@@ -1,6 +1,6 @@
-from sofia_.step import Resource
-
 from lhc.io.cut import CodonUsageTable
+
+from sofia import Resource
 
 
 class ReadCodonUsageTable(Resource):

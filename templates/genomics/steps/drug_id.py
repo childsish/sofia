@@ -1,4 +1,4 @@
-from sofia_.step import Step, Resource
+from sofia import Step, Resource
 
 
 class DrugBankMap(Resource):

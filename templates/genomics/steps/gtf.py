@@ -1,10 +1,11 @@
 import os
+from warnings import warn
 
-from sofia_.step import Resource, Target
 from lhc.io.gtf_.index import IndexedGtfFile
 from lhc.io.gtf_.iterator import GtfEntryIterator
 from lhc.io.gtf_.set_ import GtfSet as GtfSetBase
-from warnings import warn
+
+from sofia import Resource, Target
 
 
 class GtfIterator(Target):

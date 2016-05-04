@@ -1,4 +1,4 @@
-from sofia_.step import Step
+from sofia import Step
 
 
 class GetIntervalByPosition(Step):

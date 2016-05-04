@@ -1,11 +1,12 @@
 import gzip
 import os
+from warnings import warn
 
-from sofia_.step import Resource, Target
 from lhc.io.gff_.index import IndexedGffFile
 from lhc.io.gff_.iterator import GffEntryIterator
 from lhc.io.gff_.set_ import GffSet as GffSetBase
-from warnings import warn
+
+from sofia import Resource, Target
 
 
 class GffIterator(Target):

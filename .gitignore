@@ -1,3 +1,6 @@
+sofia.egg-info
+build
+dist
 *.class
 *.pyc
 *.pyo
