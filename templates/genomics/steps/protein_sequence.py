@@ -2,7 +2,7 @@ from collections import Counter
 from itertools import islice, izip
 from warnings import warn
 
-from sofia import Step
+from sofia.step import Step
 
 
 class GetPest(Step):

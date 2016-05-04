@@ -1,4 +1,4 @@
-from sofia import Step
+from sofia.step import Step
 
 
 class GetHomopolymer(Step):

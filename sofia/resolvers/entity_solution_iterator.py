@@ -1,5 +1,5 @@
-from sofia import ERROR_MANAGER
-from sofia import Resource
+from sofia.error_manager import ERROR_MANAGER
+from sofia.step import Resource
 
 
 class EntitySolutionIterator(object):

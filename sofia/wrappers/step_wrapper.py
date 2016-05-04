@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from sofia import Entity
+from sofia.entity import Entity
 
 
 class StepWrapper(object):

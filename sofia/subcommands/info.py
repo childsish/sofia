@@ -3,7 +3,7 @@ import os
 import sys
 
 from common import get_program_directory, get_provided_entities, get_requested_entities
-from template_factory import TemplateFactory
+from sofia.template_factory import TemplateFactory
 from textwrap import wrap
 
 

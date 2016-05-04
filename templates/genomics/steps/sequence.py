@@ -1,6 +1,6 @@
 from lhc.binf.kmer import KmerCounter
 
-from sofia import Step
+from sofia.step import Step
 
 
 class GetCodingKmer(Step):

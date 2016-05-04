@@ -1,6 +1,6 @@
-from sofia import ERROR_MANAGER
-from sofia import Target
-from sofia import Workflow
+from sofia.error_manager import ERROR_MANAGER
+from sofia.step import Target
+from sofia.graph import Workflow
 
 
 class ResourceSolutionIterator(object):

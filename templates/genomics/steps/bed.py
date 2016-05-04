@@ -5,7 +5,7 @@ from lhc.io.bed_.index import IndexedBedFile
 from lhc.io.bed_.iterator import BedLineIterator
 from lhc.io.bed_.set_ import BedSet as BedSetBase
 
-from sofia import Resource, Target
+from sofia.step import Resource, Target
 
 
 class BedIterator(Target):

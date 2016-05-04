@@ -1,4 +1,4 @@
-from sofia import Target
+from sofia.step import Target
 
 
 class RnaIterator(Target):

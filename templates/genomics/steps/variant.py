@@ -3,7 +3,7 @@ from itertools import izip
 
 from lhc.binf.sequence import revcmp
 
-from sofia import Step
+from sofia.step import Step
 
 
 class GetVariantSamples(Step):

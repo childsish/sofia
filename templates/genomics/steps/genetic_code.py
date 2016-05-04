@@ -1,6 +1,6 @@
 from lhc.binf.genetic_code import GeneticCodes
 
-from sofia import Resource
+from sofia.step import Resource
 
 
 class GeneticCode(Resource):

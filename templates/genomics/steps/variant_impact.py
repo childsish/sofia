@@ -1,4 +1,4 @@
-from sofia import Step, Resource
+from sofia.step import Step, Resource
 
 try:
     import pysam

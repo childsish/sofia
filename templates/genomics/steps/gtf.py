@@ -5,7 +5,7 @@ from lhc.io.gtf_.index import IndexedGtfFile
 from lhc.io.gtf_.iterator import GtfEntryIterator
 from lhc.io.gtf_.set_ import GtfSet as GtfSetBase
 
-from sofia import Resource, Target
+from sofia.step import Resource, Target
 
 
 class GtfIterator(Target):

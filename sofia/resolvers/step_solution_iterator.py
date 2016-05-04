@@ -4,10 +4,10 @@ from itertools import izip, product
 from operator import or_
 
 from entity_solution_iterator import EntitySolutionIterator
-from sofia import Converter as ConverterStep
-from sofia import Converter
-from sofia import ERROR_MANAGER
-from sofia import Workflow
+from sofia.step.converter import Converter as ConverterStep
+from sofia.converter import Converter
+from sofia.error_manager import ERROR_MANAGER
+from sofia.graph import Workflow
 
 
 class StepSolutionIterator(object):

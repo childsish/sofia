@@ -1,10 +1,8 @@
-__author__ = 'Liam Childs'
-
 import gzip
 
 from lhc.io.gbk import GbkIterator as Iterator, GbkSequenceSet
 
-from sofia import Resource, Target
+from sofia.step import Resource, Target
 
 
 class GbkIterator(Target):

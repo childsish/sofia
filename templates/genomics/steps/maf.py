@@ -1,7 +1,7 @@
 from lhc.io.maf_.index import IndexedMafFile
 from lhc.io.vcf_.iterator import Variant
 
-from sofia import Resource, Step
+from sofia.step import Resource, Step
 
 try:
     import pysam

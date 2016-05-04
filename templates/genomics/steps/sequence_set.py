@@ -1,6 +1,6 @@
 from lhc.binf.sequence import revcmp
 
-from sofia import Step
+from sofia.step import Step
 
 
 class GetDownstream1000(Step):
