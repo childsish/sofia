@@ -1,10 +1,7 @@
 import gzip
-import os
-from warnings import warn
 
-from lhc.io.vcf_.index import IndexedVcfFile
+from lhc.collections.inorder_access_set import InOrderAccessSet
 from lhc.io.vcf_.iterator import VcfEntryIterator
-from lhc.io.vcf_.set_ import VcfSet as VcfSetBase
 from lhc.io.vcf_.tools.split_alt import _split_variant
 
 from sofia.step import Resource, Target
@@ -36,14 +33,5 @@ class VcfSet(Resource):
     OUT = ['variant_set']
     
     def get_interface(self, filename):
-        if os.path.exists('{}.tbi'.format(filename)):
-            try:
-                import pysam
-                return IndexedVcfFile(filename, pysam.TabixFile(filename))
-            except ImportError:
-                pass
-        if os.path.exists('{}.lci'.format(filename)):
-            from lhc.io.txt_ import index
-            return IndexedVcfFile(filename, index.IndexedFile(filename))
-        warn('no index available for {}, loading whole file...'.format(filename))
-        return VcfSetBase(VcfEntryIterator(filename))
+        fileobj = gzip.open(filename) if filename.endswith('.gz') else open(filename)
+        return InOrderAccessSet(VcfEntryIterator(fileobj))

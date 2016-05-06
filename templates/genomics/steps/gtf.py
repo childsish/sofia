@@ -1,9 +1,8 @@
-import os
-from warnings import warn
+import gzip
 
-from lhc.io.gtf_.index import IndexedGtfFile
+from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
+from lhc.interval import Interval
 from lhc.io.gtf_.iterator import GtfEntryIterator
-from lhc.io.gtf_.set_ import GtfSet as GtfSetBase
 
 from sofia.step import Resource, Target
 
@@ -35,14 +34,5 @@ class GtfSet(Resource):
     OUT = ['genomic_feature_set']
 
     def get_interface(self, filename):
-        if os.path.exists('{}.tbi'.format(filename)):
-            try:
-                import pysam
-                return IndexedGtfFile(pysam.TabixFile(filename))
-            except ImportError:
-                pass
-        if os.path.exists('{}.lci'.format(filename)):
-            from lhc.io.txt_ import index
-            return IndexedGtfFile(index.IndexedFile(filename))
-        warn('no index available for {}, loading whole file...'.format(filename))
-        return GtfSetBase(GtfEntryIterator(filename))
+        fileobj = gzip.open(filename) if filename.endswith('.gz') else open(filename)
+        return InOrderAccessIntervalSet(GtfEntryIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))

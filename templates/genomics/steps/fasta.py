@@ -1,9 +1,8 @@
-from warnings import warn
-
-from lhc.io.fasta import FastaEntryIterator, FastaSet, IndexedFastaSet
-from lhc.io.fasta_.set_ import FastaSet
+import gzip
 
 from sofia.step import Resource
+from lhc.io.fasta_.iterator import FastaIterator
+from lhc.io.fasta_.inorder_access_set import FastaInOrderAccessSet
 
 
 class FastaChromosomeSequenceSet(Resource):
@@ -13,10 +12,5 @@ class FastaChromosomeSequenceSet(Resource):
     OUT = ['chromosome_sequence_set']
     
     def get_interface(self, filename):
-        try:
-            import pysam
-            return IndexedFastaSet(pysam.FastaFile(filename))
-        except Exception, e:
-            warn(e.message)
-        warn('no index available for {}, loading whole file...'.format(filename))
-        return FastaSet(FastaEntryIterator(filename))
+        fileobj = gzip.open(filename) if filename.endswith('.gz') else open(filename)
+        return FastaInOrderAccessSet(iter(FastaIterator(fileobj)))

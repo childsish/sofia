@@ -1,10 +1,8 @@
 import gzip
-import os
-from warnings import warn
 
-from lhc.io.gff_.index import IndexedGffFile
+from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet as IntervalSet
+from lhc.interval import Interval
 from lhc.io.gff_.iterator import GffEntryIterator
-from lhc.io.gff_.set_ import GffSet as GffSetBase
 
 from sofia.step import Resource, Target
 
@@ -22,7 +20,7 @@ class GffIterator(Target):
         entry = self.interface.next()
         while entry.type != 'gene':
             entry = self.interface.next()
-        entry.name = entry.name.rsplit('.')[0]
+        entry.name = entry.name.rsplit('.', 1)[0]
         return entry
 
 
@@ -33,16 +31,6 @@ class GffSet(Resource):
     OUT = ['genomic_feature_set']
 
     def get_interface(self, filename):
-        if os.path.exists('{}.tbi'.format(filename)):
-            try:
-                import pysam
-                return IndexedGffFile(pysam.TabixFile(filename))
-            except ImportError:
-                pass
-        if os.path.exists('{}.lci'.format(filename)):
-            from lhc.io.txt_ import index
-            return IndexedGffFile(index.IndexedFile(filename))
-        warn('no index available for {}, loading whole file...'.format(filename))
         fileobj = gzip.open(filename) if filename.endswith('.gz') else\
             open(filename)
-        return GffSetBase(GffEntryIterator(fileobj))
+        return IntervalSet(GffEntryIterator(fileobj), key=lambda x: Interval((x.chr, x.start), (x.chr, x.stop)))
