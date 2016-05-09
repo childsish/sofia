@@ -15,5 +15,10 @@ setup(
     license='LICENSE.txt',
     description='Software for the Flexible Integration of Annotation',
     long_description=long_description,
-    install_requires=['lhc-python']
+    install_requires=['lhc-python'],
+    entry_points={
+        'console_scripts': [
+            'sofia = sofia.__main__:main'
+        ]
+    }
 )

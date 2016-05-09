@@ -1,4 +1,4 @@
-from lhc.io.txt_ import Iterator, Set
+from lhc.io.txt import Iterator, Set
 from resource import Target, Resource, Step
 
 

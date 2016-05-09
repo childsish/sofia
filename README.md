@@ -39,7 +39,7 @@ Running SoFIA
 
 SoFIA comes with a small toy example for you to familiarise yourself. Try running this example from the command line.
 
-`python sofia.py aggregate ./data/example/randome.vcf -e chromosome_id position gene_id amino_acid_variant variant_effect -r ./data/example/randome.gff ./data/example/randome.fasta`
+`python sofia.py aggregate ./data/example/randome.vcf -e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect -r ./data/example/randome.gff -r ./data/example/randome.fasta`
 
 The command line can be broken down into several parts:
 
