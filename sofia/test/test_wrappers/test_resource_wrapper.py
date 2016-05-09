@@ -2,8 +2,8 @@ import os
 import tempfile
 import unittest
 
-from sofia import Entity
-from sofia import ResourceWrapper
+from sofia.entity import Entity
+from sofia.wrappers.resource_wrapper import ResourceWrapper
 
 
 class SampleResource(ResourceWrapper):

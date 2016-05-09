@@ -1,7 +1,7 @@
 import unittest
 from collections import namedtuple
 
-from sofia import Converter
+from sofia.converter import Converter
 
 TestObject = namedtuple('TestObject', ('a', 'b'))
 

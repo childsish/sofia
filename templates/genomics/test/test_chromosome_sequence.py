@@ -1,10 +1,8 @@
-__author__ = 'Liam'
-
 import unittest
 
 from templates.genomics.steps.chromosome_sequence import GetHomopolymer
-from lhc.io.vcf_.iterator import Variant
-from lhc.io.fasta_.set_ import FastaSet
+from lhc.io.vcf.iterator import Variant
+from lhc.io.fasta.set_ import FastaSet
 
 
 class TestChromosomeSequence(unittest.TestCase):

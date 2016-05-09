@@ -1,6 +1,6 @@
 import unittest
 
-from sofia import Entity
+from sofia.entity import Entity
 
 
 class TestEntity(unittest.TestCase):
