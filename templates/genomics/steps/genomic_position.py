@@ -1,7 +1,3 @@
-from sofia_.step import Step
-from lhc.binf.genomic_coordinate import GenomicInterval
-
-
 #class ConvertPositionToInterval(Step):
 #
 #    IN = ['genomic_position']

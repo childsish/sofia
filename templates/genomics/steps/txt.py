@@ -1,6 +1,6 @@
-from sofia_.step import Resource, Target
-
 from collections import defaultdict
+
+from sofia.step import Resource
 
 
 class GenePathwayMap(Resource):

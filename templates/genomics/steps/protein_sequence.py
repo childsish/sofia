@@ -1,8 +1,8 @@
-from sofia_.step import Step
-
 from collections import Counter
 from itertools import islice, izip
 from warnings import warn
+
+from sofia.step import Step
 
 
 class GetPest(Step):

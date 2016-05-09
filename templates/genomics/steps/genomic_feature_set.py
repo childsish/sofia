@@ -1,5 +1,6 @@
 from collections import Counter
-from sofia_.step import Step
+
+from sofia.step import Step
 
 
 class GetGenomicFeatureByPosition(Step):

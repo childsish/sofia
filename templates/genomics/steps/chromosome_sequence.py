@@ -1,4 +1,4 @@
-from sofia_.step import Step
+from sofia.step import Step
 
 
 class GetHomopolymer(Step):
@@ -19,6 +19,6 @@ class GetHomopolymer(Step):
         seq = chromosome_sequence_set.fetch(variant.chr, pos, pos + 100)
 
         i = 0
-        while seq[i] == seq[0]:
+        while i < len(seq) and seq[i] == seq[0]:
             i += 1
         return seq[:i]

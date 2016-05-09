@@ -1,7 +1,6 @@
-from sofia_.step import Step
-
-from collections import Counter
 from lhc.binf.skew import Skew
+
+from sofia.step import Step
 
 
 class GetCodingSkew(Step):

@@ -1,10 +1,10 @@
-import os
+import gzip
 
-from sofia_.step import Resource, Target
-from lhc.io.bed_.index import IndexedBedFile
-from lhc.io.bed_.iterator import BedLineIterator
-from lhc.io.bed_.set_ import BedSet as BedSetBase
-from warnings import warn
+from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
+from lhc.interval import Interval
+from lhc.io.bed.iterator import BedLineIterator
+
+from sofia.step import Resource, Target
 
 
 class BedIterator(Target):
@@ -24,14 +24,5 @@ class BedSet(Resource):
     OUT = ['genomic_interval_set']
 
     def get_interface(self, filename):
-        if os.path.exists('{}.tbi'.format(filename)):
-            try:
-                import pysam
-                return IndexedBedFile(pysam.TabixFile(filename))
-            except ImportError:
-                pass
-        if os.path.exists('{}.lci'.format(filename)):
-            from lhc.io.txt_ import index
-            return IndexedBedFile(index.IndexedFile(filename))
-        warn('no index available for {}, loading whole file...'.format(filename))
-        return BedSetBase(BedLineIterator(filename))
+        fileobj = gzip.open(filename) if filename.endswith('.gz') else open(filename)
+        return InOrderAccessIntervalSet(BedLineIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))

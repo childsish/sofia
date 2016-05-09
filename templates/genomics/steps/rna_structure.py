@@ -1,5 +1,6 @@
 from lhc.binf.genomic_coordinate import GenomicPosition
-from sofia_.step import Step
+
+from sofia.step import Step
 
 
 class GetTranslationStartMinimumFreeEnergy(Step):

@@ -1,10 +1,11 @@
-from sofia_.step import Step
-from lhc.binf.kmer import KmerCounter
-
 from collections import defaultdict
 from functools import reduce
 from itertools import izip
 from operator import add, mul
+
+from lhc.binf.kmer import KmerCounter
+
+from sofia.step import Step
 
 
 class TranslateCodingSequence(Step):
