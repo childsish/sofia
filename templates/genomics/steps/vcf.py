@@ -1,8 +1,8 @@
 import gzip
 
 from lhc.collections.inorder_access_set import InOrderAccessSet
-from lhc.io.vcf_.iterator import VcfEntryIterator
-from lhc.io.vcf_.tools.split_alt import _split_variant
+from lhc.io.vcf.iterator import VcfEntryIterator
+from lhc.io.vcf.tools.split_alt import _split_variant
 
 from sofia.step import Resource, Target
 

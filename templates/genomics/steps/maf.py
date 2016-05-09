@@ -4,8 +4,8 @@ from sofia.step import Resource, Step
 
 from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
 from lhc.interval import Interval
-from lhc.io.maf_.iterator import MafIterator
-from lhc.io.vcf_.iterator import Variant
+from lhc.io.maf.iterator import MafIterator
+from lhc.io.vcf.iterator import Variant
 
 
 class MafSet(Resource):

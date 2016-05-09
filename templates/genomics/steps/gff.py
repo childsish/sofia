@@ -2,7 +2,7 @@ import gzip
 
 from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet as IntervalSet
 from lhc.interval import Interval
-from lhc.io.gff_.iterator import GffEntryIterator
+from lhc.io.gff.iterator import GffEntryIterator
 
 from sofia.step import Resource, Target
 

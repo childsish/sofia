@@ -1,8 +1,8 @@
 import gzip
 
 from sofia.step import Resource
-from lhc.io.fasta_.iterator import FastaIterator
-from lhc.io.fasta_.inorder_access_set import FastaInOrderAccessSet
+from lhc.io.fasta.iterator import FastaIterator
+from lhc.io.fasta.inorder_access_set import FastaInOrderAccessSet
 
 
 class FastaChromosomeSequenceSet(Resource):

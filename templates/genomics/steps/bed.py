@@ -2,7 +2,7 @@ import gzip
 
 from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
 from lhc.interval import Interval
-from lhc.io.bed_.iterator import BedLineIterator
+from lhc.io.bed.iterator import BedLineIterator
 
 from sofia.step import Resource, Target
 
