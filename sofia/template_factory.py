@@ -11,7 +11,7 @@ from wrappers.resource_wrapper import ResourceWrapper
 from graph.template import Template
 from graph.entity_graph import EntityGraph
 from entity import Entity
-from lhc.io.txt_ import FormatParser
+from lhc.io.txt import FormatParser
 
 
 class TemplateFactory(object):
