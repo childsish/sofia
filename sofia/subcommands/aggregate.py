@@ -1,4 +1,5 @@
 import argparse
+import imp
 import itertools
 import multiprocessing
 import os
@@ -190,6 +191,10 @@ def aggregate(args):
     sys.stderr.write('\n    SoFIA started...\n\n')
 
     template_directory = os.path.join(get_program_directory(), 'templates', args.workflow_template)
+    if not os.path.exists(template_directory):
+        file, template_directory, description = imp.find_module(args.workflow_template)
+        if file:
+            raise ImportError('not a package: %r', args.workflow_template)
 
     provided_entities = get_provided_entities(template_directory,
                                               args.resources + [args.input + ['target']],
@@ -200,8 +205,13 @@ def aggregate(args):
         sys.stderr.write('Error: No entities were requested. Please provide'
                          'the names of the entities you wish to calculate.')
         sys.exit(1)
-    target = {entity.alias: entity for entity in provided_entities}['target']
+    provided_entity_map = {entity.alias: entity for entity in provided_entities}
+    target = provided_entity_map['target']
     for entity in requested_entities:
+        if 'resource' in entity.attr:
+            entity.attr['resource'] = entity.attr['resource'].split(',')
+            for resource in entity.attr['resource']:
+                entity.resources.add(provided_entity_map[resource])
         entity.resources.add(target)
 
     template_factory = TemplateFactory(template_directory)
