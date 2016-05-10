@@ -12,45 +12,38 @@ There is a [Google Group][google-group] for discussions about SoFIA.
 Installation
 ------------
 
-### Dependencies
+SoFIA requires [Python 2.7][python] to be installed with the pip package management system. Pip should come with the latest Python.
 
-SoFIA requires [Python 2.7][python] to be installed.
-
-The framework of SoFIA has no dependencies on external libraries. However, the default workflow has 'soft' dependencies on the [htslib][htslib] and [pysam][pysam] libraries for indexing various file formats. If either of these libraries is not installed, then the framework will resort to reading in the entire file which will significantly slow down the framework. Currently htslib and pysam do not play well with Windows. If you only have access to a Windows machine, consider using virtualisation software like [VirtualBox][vbox] to run a Linux operating system like [Linux Mint][mint].
-
-### via Source
-
-As a Python program, SoFIA does not need to be compiled. As such, you can simply download the source and run it. However, you will have to repeat the steps when you want to update.
-
-1. Download and unzip the compressed version from GitHub:
-https://github.com/childsish/sofia/releases/latest
-2. Extract the file to desired installation directory
-3. (optional) Add the installation directory to the PATH environment variable.
-
-### via Git
-
-1. Change to desired installation directory
-2. To install `git clone https://github.com/childsish/sofia.git`
-3. (optional) Add the installation directory to the PATH environment variable.
-4. To update: `git pull`
+1. Open the command line with administrator priveleges (Powershell in Windows, Shell in Linux)
+2. Update pip:
+    Windows: `python -m pip install -U pip setuptools`
+    Linux: `pip install -U pip setuptools`
+3. Install SoFIA:
+    Windows: `python -m pip install sofia`
+    Linux: `pip install sofia`
 
 Running SoFIA
 -------------
 
-SoFIA comes with a small toy example for you to familiarise yourself. Try running this example from the command line.
+We provide example data to help familiarise yourself with SoFIA. To get the data, run:
 
-`python sofia.py aggregate ./data/example/randome.vcf -e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect -r ./data/example/randome.gff -r ./data/example/randome.fasta`
+`python -m sofia get http://childsish.github.io/static/sofia/example.tar.gz`
+
+To try the example, run:
+
+`python -m sofia aggregate ./example/data/randome.vcf -e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect -r ./example/data/randome.gff -r ./example/data/randome.fasta -o output.txt -p 1`
 
 The command line can be broken down into several parts:
 
-1. `python sofia.py aggregate` Run SoFIA in data aggregation mode.
+1. `python -m sofia` Call the SoFIA script.
+2. `aggregate` Run SoFIA in data aggregation mode.
 2. `./data/example/randome.vcf` Annotate a set of variants.
-3. `-e chromosome_id position gene_id amino_acid_variant variant_effect` Annotate each variant with the chromosome, position, gene name, amino acid variant and variant effect. 
-4. `-r ./data/example/randome.gff ./data/example/randome.fasta` Use a set of genes descriptions and chromosome sequences to provide the extra information needed to generate the requested entities.
+3. `-e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect` Annotate each variant with the chromosome, position, gene name, amino acid variant and variant effect. 
+4. `-r ./data/example/randome.gff -r ./data/example/randome.fasta` Use a set of genes descriptions and chromosome sequences to provide the extra information needed to generate the requested entities.
 
-To check if you got the correct output, pipe the output to a temporary file and run:
+The output will be placed in the current directory in the `output.txt` file. To check if you got the correct output, run:
 
-`diff ./data/example/output.txt <name of your temporary file>`
+`diff ./example/data/output.txt output.txt`
 
 ### Data download scripts
 
@@ -220,8 +213,6 @@ There are still many ways in which SoFIA can be improved. Here are some that I p
 Refer to the GitHub [issues][issues] page for upcoming improvements, to make suggestions and bug submissions.
 
 [python]: https://www.python.org/downloads/ "Download Python 2.7"
-[htslib]: http://www.htslib.org/ "Download htslib"
-[pysam]: https://code.google.com/p/pysam/ "Download pysam"
 [hgvs]: http://www.hgvs.org/mutnomen/ "Human Genome Variation Society"
 [so]: http://www.sequenceontology.org/ "The Sequence Ontology"
 [issues]: https://github.com/childsish/sofia/issues "To Do"
