@@ -3,7 +3,7 @@
 import argparse
 import sys
 
-from sofia.subcommands import aggregate, info
+from sofia.tools import aggregate, info, get
 
 
 def main():
@@ -18,6 +18,9 @@ def get_parser():
     
     aggregate_parser = subparsers.add_parser('aggregate')
     aggregate.define_parser(aggregate_parser)
+
+    get_parser_ = subparsers.add_parser('get')
+    get.define_parser(get_parser_)
     
     info_parser = subparsers.add_parser('info')
     info.define_parser(info_parser)
