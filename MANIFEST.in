@@ -1,0 +1,7 @@
+include LICENSE.txt README.md setup.py
+recursive-include data output.txt randome.fasta randome.gff randome.vcf
+recursive-include docs *.pdf
+recursive-include scripts *.sh
+recursive-include sofia *.py
+recursive-include templates *.py *.json *.txt
+recursive-include templates/*/data Emolwt.dat gc.prt
