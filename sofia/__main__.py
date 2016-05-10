@@ -3,7 +3,7 @@
 import argparse
 import sys
 
-from sofia.subcommands import aggregate, info
+from sofia.tools import aggregate, info
 
 
 def main():
