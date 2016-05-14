@@ -3,7 +3,7 @@ from sofia.step import Target
 from sofia.graph import Workflow
 
 
-class ResourceSolutionIterator(object):
+class ResourceResolver(object):
     def __init__(self, step, resources, workflow_template):
         self.step = step
         self.c_hit = 0

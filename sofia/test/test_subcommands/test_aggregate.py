@@ -1,5 +1,7 @@
 import unittest
 
+from sofia_.subcommands import aggregate
+
 
 class TestAggregate(unittest.TestCase):
     pass

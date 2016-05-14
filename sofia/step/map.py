@@ -1,8 +1,7 @@
 from step import Step
-from resource import Resource
 
 
-class Map(Resource):
+class Map(Step):
 
     OUT = ['map']
     FORMAT = 'map'

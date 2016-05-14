@@ -1,24 +1,26 @@
 import imp
 import inspect
+import json
 import os
-from collections import OrderedDict
 
-from step import Step, Resource, Target, Extractor
+from collections import OrderedDict
+from step import Extractor
 from step.txt import TxtSet, TxtIterator, TxtAccessor
 from step.map import GetIdById, Map
 from wrappers.step_wrapper import StepWrapper
-from wrappers.resource_wrapper import ResourceWrapper
+from operator import add
 from graph.template import Template
 from graph.entity_graph import EntityGraph
-from entity import Entity
-from lhc.io.txt import FormatParser
+from entity_type import EntityType
+from lhc.io.txt_ import FormatParser
 
 
 class TemplateFactory(object):
     def __init__(self, root):
         self.root = root
         self.steps = self.load_steps(os.path.join(root, 'steps'))
-        self.recognised_formats = {step.FORMAT for step in self.steps if inherits_from(step, 'Resource')}
+        with open(os.path.join(root, 'resource_entities.json')) as fhndl:
+            self.recognised_formats = {definition['name'] for definition in json.load(fhndl)}
 
     def make(self, provided_entities=[], requested_entities=[]):
         template = self.load_template()
@@ -33,12 +35,9 @@ class TemplateFactory(object):
         entity_graph = self.load_entity_graph()
         template = Template(entity_graph)
         for step in self.steps:
-            if issubclass(step, Resource):
-                template.register_step(ResourceWrapper(step))
-            else:
-                template.register_step(StepWrapper(step))
+            template.register_step(StepWrapper(step))
         template.register_step(StepWrapper(GetIdById))
-        template.register_step(ResourceWrapper(Map))
+        template.register_step(StepWrapper(Map))
         return template
 
     def load_custom_steps(self, provided_entities):
@@ -56,14 +55,14 @@ class TemplateFactory(object):
                     else:
                         raise e
                 if entity.name == 'target':
-                    outs = OrderedDict((out, Entity(out)) for out in entry_factory.type._fields) if entry_factory.name == 'Entry' else\
-                        OrderedDict([(entry_factory.name, Entity(entry_factory.name))])
-                    outs['target'] = Entity('target')
+                    outs = OrderedDict((out, EntityType(out)) for out in entry_factory.type._fields) if entry_factory.name == 'Entry' else\
+                        OrderedDict([(entry_factory.name, EntityType(entry_factory.name))])
+                    outs['target'] = EntityType('target')
                     param = {
                         'entry': entry_factory,
                         'skip': int(entity.attr.get('skip', 0))
                     }
-                    step = ResourceWrapper(TxtIterator, outs=outs, param=param, format=entity.name)
+                    step = StepWrapper(TxtIterator, outs=outs, param=param, format=entity.name)
                     res.append(step)
                 else:
                     if 'index' not in entity.attr:
@@ -78,16 +77,16 @@ class TemplateFactory(object):
                         'key': (lambda x: x[index_key]),
                         'skip': int(entity.attr.get('skip', 0))
                     }
-                    step = ResourceWrapper(TxtSet,
-                                           outs=OrderedDict([(entity.name, Entity(entity.name))]),
+                    step = StepWrapper(TxtSet,
+                                           outs=OrderedDict([(entity.name, EntityType(entity.name))]),
                                            param=param,
                                            format=entity.name)
                     res.append(step)
                     for in_ in entity.ins:
-                        ins = OrderedDict([(entity.name, Entity(entity.name)),
-                                           (in_, Entity(entity.ins[0]))])
-                        outs = OrderedDict([(out, Entity(out)) for i, out in enumerate(entry_factory.type._fields)
-                                           if i != index_key])
+                        ins = OrderedDict([(entity.name, EntityType(entity.name)),
+                                           (in_, EntityType(entity.ins[0]))])
+                        outs = OrderedDict([(out, EntityType(out)) for i, out in enumerate(entry_factory.type._fields)
+                                            if i != index_key])
                         step = StepWrapper(TxtAccessor, '{}[{}]'.format(entity.name, in_), ins=ins, outs=outs, attr={
                             'set_name': entity.name,
                             'key_name': in_

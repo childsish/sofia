@@ -1,5 +1,0 @@
-include LICENSE.txt README.md setup.py
-recursive-include docs *.pdf
-recursive-include sofia *.py
-recursive-include templates *.py *.json *.txt
-recursive-include templates/*/data Emolwt.dat gc.prt

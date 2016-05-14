@@ -1,7 +1,7 @@
 import json
 
+from sofia_.entity_type import EntityType
 from lhc.graph import Graph
-from sofia.entity import Entity
 
 
 class EntityGraph(object):
@@ -104,7 +104,7 @@ class EntityGraph(object):
                     continue
                 for name in self.attr[step['name']]:
                     attr[name] = None
-        return Entity(name, attr=attr)
+        return EntityType(name, attributes=attr)
 
     @classmethod
     def get_entity_name(cls, entity):

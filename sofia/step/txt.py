@@ -1,8 +1,8 @@
-from lhc.io.txt import Iterator, Set
-from resource import Target, Resource, Step
+from lhc.io.txt_ import Iterator, Set
+from resource import Step
 
 
-class TxtIterator(Target):
+class TxtIterator(Step):
 
     EXT = set()
     FORMAT = None
@@ -11,7 +11,7 @@ class TxtIterator(Target):
         self.parser = Iterator(self.get_filename(), entry, skip=skip)
 
 
-class TxtSet(Resource):
+class TxtSet(Step):
 
     EXT = set()
     FORMAT = None

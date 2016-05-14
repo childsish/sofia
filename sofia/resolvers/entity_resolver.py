@@ -2,7 +2,7 @@ from sofia.error_manager import ERROR_MANAGER
 from sofia.step import Resource
 
 
-class EntitySolutionIterator(object):
+class EntityResolver(object):
     def __init__(self, entity, graph, provided_entities, workflow_template, maps={}, requested_resources=set(), visited=None):
         self.entity = entity
         self.graph = graph
@@ -25,16 +25,16 @@ class EntitySolutionIterator(object):
                 continue
             step = self.graph.steps[step_name]
             if issubclass(step.step_class, Resource):
-                from resource_resolver import ResourceSolutionIterator
-                it = ResourceSolutionIterator(step, self.provided_entities, self.workflow_template)
+                from resource_resolver import ResourceResolver
+                it = ResourceResolver(step, self.provided_entities, self.workflow_template)
             else:
-                from step_resolver import StepSolutionIterator
-                it = StepSolutionIterator(step,
-                                          self.graph,
-                                          self.provided_entities,
-                                          self.workflow_template,
-                                          self.maps,
-                                          self.requested_resources,
-                                          set(self.visited))
+                from step_resolver import StepResolver
+                it = StepResolver(step,
+                                  self.graph,
+                                  self.provided_entities,
+                                  self.workflow_template,
+                                  self.maps,
+                                  self.requested_resources,
+                                  set(self.visited))
             for solution in it:
                 yield solution

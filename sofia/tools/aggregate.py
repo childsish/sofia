@@ -1,5 +1,4 @@
 import argparse
-import imp
 import itertools
 import multiprocessing
 import os
@@ -7,12 +6,13 @@ import sys
 import time
 from collections import defaultdict
 
-from common import get_provided_entities, get_requested_entities, get_program_directory
+from common import get_program_directory
 from sofia.attribute_map_factory import AttributeMapFactory
+from sofia.entity_type_parser import EntityTypeParser
 from sofia.error_manager import ERROR_MANAGER
-from sofia.resolvers.entity_resolver import EntitySolutionIterator
+from sofia.resolvers.entity_resolver import EntityResolver
 from sofia.template_factory import TemplateFactory
-from sofia.graph.workflow import Workflow
+from sofia.workflow.workflow import Workflow
 
 
 class Aggregator(object):
@@ -39,8 +39,19 @@ class Aggregator(object):
             self.stdout.write('{}\n\n'.format(solution))
             return
 
+        from sofia_.execution_engines.low_memory_engine import LowMemoryExecutionEngine
+        executor = LowMemoryExecutionEngine(solution)
+        for entity in provided_entities:
+            executor.resolve_entity(entity, list(entity.attributes['filename']))
+        executor.execute()
+
+        for fields in zip(*[executor.resolved_entities[entity] for entity in solution.heads]):
+            self.stdout.write('\t'.join('' if field is None else str(field) for field in fields))
+            self.stdout.write('\n')
+        sys.exit(1)
+
         pool_iterator = iter_target(solution.steps['target'])
-        initargs = [matching_entities, solution, self.hyper_graph.entity_graph]
+        initargs = [matching_entities, provided_entities, solution, self.hyper_graph.entity_graph]
         if args.processes == 1:
             init_worker(*initargs)
             it = itertools.imap(get_annotation, pool_iterator)
@@ -81,27 +92,25 @@ class Aggregator(object):
 
         combined_solution = Workflow()
         for solution in solutions:
-            combined_solution.join(solution)
-        combined_solution.step = {step_graph.step.name for step_graph in solutions}
+            combined_solution.add_entity_node(solution)
 
-        matching_entities = self.get_matching_entities(solutions, requested_entities)
-        return combined_solution, matching_entities
+        return combined_solution, [solution.head for solution in solutions]
 
     def resolve_requested_entity(self, requested_entity, provided_entities, maps):
         def satisfies_request(graph, requested_resources):
-            return graph.resources.intersection(requested_resources) == requested_resources
+            return graph.head.attributes['resource'].intersection(requested_resources) == requested_resources
 
         ERROR_MANAGER.reset()
         sys.stderr.write('     {} - '.format(requested_entity.name))
-        solution_iterator = EntitySolutionIterator(requested_entity.name,
-                                                   self.hyper_graph,
-                                                   provided_entities,
-                                                   self.workflow_template,
-                                                   maps,
-                                                   requested_entity.resources, )
+        solution_iterator = EntityResolver(requested_entity.name,
+                                           self.hyper_graph,
+                                           provided_entities,
+                                           self.workflow_template,
+                                           maps,
+                                           requested_entity.attributes['resource'])
         possible_graphs = list(solution_iterator)
         possible_graphs = [graph for graph in possible_graphs
-                           if satisfies_request(graph, requested_entity.resources)]
+                           if satisfies_request(graph, requested_entity.attributes['resource'])]
         if len(possible_graphs) == 0:
             sys.stderr.write('unable to resolve entity.\n\n')
             sys.stderr.write('     Possible reasons:\n     * ')
@@ -114,8 +123,8 @@ class Aggregator(object):
 
         matching_graphs = defaultdict(list)
         for graph in possible_graphs:
-            resources = frozenset([r.alias for r in graph.resources if not r.name == 'target'])
-            extra_resources = resources - {r.alias for r in requested_entity.resources}
+            resources = frozenset([r for r in graph.head.attributes['resource'] if not r == 'target'])
+            extra_resources = resources - requested_entity.attributes['resource']
             matching_graphs[len(extra_resources)].append((graph, extra_resources))
         count, matching_graphs = sorted(matching_graphs.iteritems())[0]
         unique = True
@@ -139,9 +148,6 @@ class Aggregator(object):
         sys.stderr.write(err)
         return matching_graph
 
-    def get_matching_entities(self, solutions, requested_entities):
-        return [solution.step.outs[entity.name] for solution, entity in zip(solutions, requested_entities)]
-
 
 def main():
     parser = get_parser()
@@ -157,11 +163,11 @@ def get_parser():
 
 def define_parser(parser):
     add_arg = parser.add_argument
-    add_arg('input', metavar='TARGET', nargs='+',
+    add_arg('input', metavar='TARGET',
             help='the file to annotate')
     add_arg('-1', '--header',
             help='if specified use this header instead')
-    add_arg('-e', '--entities', nargs='+', default=[], action='append',
+    add_arg('-e', '--entities', nargs='+', default=[],
             help='request an entity')
     add_arg('-E', '--entity-list',
             help='a text file with a list of requested entities')
@@ -173,7 +179,7 @@ def define_parser(parser):
             help='direct output to named file (default: stdout)')
     add_arg('-p', '--processes', default=None, type=int,
             help='the number of processes to run in parallel')
-    add_arg('-r', '--resources', nargs='+', default=[], action='append',
+    add_arg('-r', '--resources', nargs='+', default=[],
             help='provide a resource')
     add_arg('-R', '--resource-list',
             help='a text file with a list of provided resources')
@@ -191,28 +197,22 @@ def aggregate(args):
     sys.stderr.write('\n    SoFIA started...\n\n')
 
     template_directory = os.path.join(get_program_directory(), 'templates', args.workflow_template)
-    if not os.path.exists(template_directory):
-        file, template_directory, description = imp.find_module(args.workflow_template)
-        if file:
-            raise ImportError('not a package: %r', args.workflow_template)
+    parser = EntityTypeParser(template_directory)
 
-    provided_entities = get_provided_entities(template_directory,
-                                              args.resources + [args.input + ['target']],
-                                              args.resource_list)
-    requested_entities = get_requested_entities(args, provided_entities)
+    provided_entities = parser.get_provided_entities(
+        args.resources + ['{}:target'.format(args.input)],
+        args.resource_list
+    )
+    requested_entities = parser.get_requested_entities(args, provided_entities)
     if len(requested_entities) == 0:
         import sys
         sys.stderr.write('Error: No entities were requested. Please provide'
                          'the names of the entities you wish to calculate.')
         sys.exit(1)
-    provided_entity_map = {entity.alias: entity for entity in provided_entities}
-    target = provided_entity_map['target']
     for entity in requested_entities:
-        if 'resource' in entity.attr:
-            entity.attr['resource'] = entity.attr['resource'].split(',')
-            for resource in entity.attr['resource']:
-                entity.resources.add(provided_entity_map[resource])
-        entity.resources.add(target)
+        if 'resource' not in entity.attributes:
+            entity.attributes['resource'] = set()
+        entity.attributes['resource'].add('target')
 
     template_factory = TemplateFactory(template_directory)
     template = template_factory.make(provided_entities, requested_entities)
@@ -225,21 +225,24 @@ def aggregate(args):
 
 
 requested_entities = None
+provided_entities = None
 solution = None
 entity_graph = None
 entities = None
 
 
-def init_worker(requested_entities_, solution_, entity_graph_):
+def init_worker(requested_entities_, provided_entities_, solution_, entity_graph_):
     global requested_entities
+    global provided_entities
     global solution
     global entity_graph
     global entities
 
     requested_entities = requested_entities_
+    provided_entities = provided_entities_
     solution = solution_
     entity_graph = entity_graph_
-    entities = {}
+    entities = {entity_type.name: entity_type.attr['filename'] for entity_type in provided_entities}
 
     solution.init()
 

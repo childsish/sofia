@@ -1,14 +1,13 @@
 from collections import OrderedDict
-
-from sofia.entity import Entity
+from sofia_.entity_type import EntityType
 
 
 class StepWrapper(object):
     def __init__(self, step_class, name=None, ins=None, outs=None, attr={}):
         self.step_class = step_class
         self.name = step_class.__name__ if name is None else name
-        self.ins = OrderedDict([(in_, Entity(in_)) for in_ in step_class.IN]) if ins is None else ins
-        self.outs = OrderedDict([(out, Entity(out)) for out in step_class.OUT]) if outs is None else outs
+        self.ins = OrderedDict([(in_, EntityType(in_)) for in_ in step_class.IN]) if ins is None else ins
+        self.outs = OrderedDict([(out, EntityType(out)) for out in step_class.OUT]) if outs is None else outs
         self.attr = attr
 
     def __str__(self):

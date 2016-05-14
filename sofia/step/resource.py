@@ -1,8 +1,7 @@
 from collections import OrderedDict
 from operator import or_
-
-from sofia.entity import Entity
 from step import Step
+from sofia_.entity_type import EntityType
 
 
 class Resource(Step):
@@ -35,7 +34,7 @@ class Resource(Step):
         #TODO: Use entity_graph to properly construct out entities
         attr = ins['resource'].attr.copy() if len(ins) > 0 else {}
         resources = reduce(or_, (entity.resources for entity in ins.itervalues()), set())
-        return OrderedDict((out, Entity(out, resources, attr=attr)) for out in outs)
+        return OrderedDict((out, EntityType(out, resources, attributes=attr)) for out in outs)
 
 
 class Target(Resource):

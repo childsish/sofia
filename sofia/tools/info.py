@@ -2,9 +2,9 @@ import argparse
 import os
 import sys
 
-from common import get_program_directory, get_provided_entities, get_requested_entities
-from sofia.template_factory import TemplateFactory
+from common import get_program_directory
 from textwrap import wrap
+from sofia_.template_factory import TemplateFactory
 
 
 def generate_graph(workflow_template, output=sys.stdout):

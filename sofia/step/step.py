@@ -1,8 +1,9 @@
-from collections import OrderedDict
-from operator import or_
+import itertools
 
-from sofia.error_manager import ERROR_MANAGER
-from sofia.entity import Entity
+from collections import OrderedDict, defaultdict
+from sofia_.entity_type import EntityType
+from sofia_.error_manager import ERROR_MANAGER
+from operator import or_
 
 
 class Step(object):
@@ -14,20 +15,24 @@ class Step(object):
     
     def __init__(self, resources=None, dependencies=None, attr={}, ins=None, outs=None, name=None):
         # TODO: Consider equivalence of dependencies and ins
-        self.changed = True
-        self.calculated = False
         self.resources = set() if resources is None else resources
         self.dependencies = {} if dependencies is None else dependencies
         self.attr = attr
-        self.ins = OrderedDict([(in_, Entity(in_)) for in_ in self.IN]) if ins is None else ins
-        self.outs = OrderedDict([(out, Entity(out)) for out in self.OUT]) if outs is None else outs
+        self.ins = OrderedDict([(in_, EntityType(in_)) for in_ in self.IN]) if ins is None else ins
+        self.outs = OrderedDict([(out, EntityType(out)) for out in self.OUT]) if outs is None else outs
         self.name = self._get_name(name)
     
     def __str__(self):
         """ Return the name of the step based on it's resources and
         arguments. """
         return self.name
-    
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __hash__(self):
+        return hash(str(self))
+
     def init(self):
         """ Initialise the step.
 
@@ -35,62 +40,21 @@ class Step(object):
         from the command line.
         """
         pass
-    
+
+    def run(self, **kwargs):
+        raise NotImplementedError('You must override this function')
+
     def calculate(self, **kwargs):
         """Calculate this step
-        
+
         Assumes dependencies are already resolved. This function must be
         overridden when implementing new steps.
-        
+
         :param dict entities: currently calculated entities. The target is at
             entities['target'].
         """
         raise NotImplementedError('You must override this function')
-    
-    def generate(self, entities, steps, entity_graph):
-        """Generate a step
-        
-        This function resolves all dependencies and then calculates the
-        step.
-        
-        :param dict entities: currently calculated entities
-        :param steps: available steps
-        :type steps: dict of steps
-        """
-        if self.calculated:
-            return  # entities[name]
-        
-        dependencies_changed = False
-        for step in self.dependencies.itervalues():
-            steps[step].generate(entities, steps, entity_graph)
-            if steps[step].changed:
-                dependencies_changed = True
-        if not dependencies_changed and all(str(out) in entities for out in self.outs.itervalues()):
-            self.calculated = True
-            self.changed = False
-            return
-        
-        local_entities = {}
-        for entity, step in self.dependencies.iteritems():
-            for out_name, out_value in steps[step].outs.iteritems():
-                if entity_graph.is_equivalent(entity, out_name):
-                    local_entities[entity] = entities[str(out_value)]
 
-        res = [self.calculate(**local_entities)] if len(self.outs) == 1 else\
-            self.calculate(**local_entities)
-        self.calculated = True
-        self.changed = False
-        for out, entity in zip(self.outs.itervalues(), res):
-            if str(out) not in entities or entities[str(out)] is not entity:
-                self.changed = True
-                entities[str(out)] = entity
-    
-    def reset(self, steps):
-        """ Resets the calculation status of this step and all dependencies to False. """
-        self.calculated = False
-        for step in self.dependencies.itervalues():
-            steps[step].reset(steps)
-    
     def get_attributes(self):
         res = {}
         for out in self.outs.itervalues():
@@ -106,19 +70,13 @@ class Step(object):
     
     def _get_name(self, name=None):
         """ Return the name of the step based on it's resources and arguments. """
-        name = [type(self).__name__ if name is None else name]
-        if len(self.resources) != 0:
-            tmp = ','.join(resource.alias for resource in self.resources if resource.name != 'target')
-            if len(tmp) > 0:
-                name.append('resource=' + tmp)
-        if len(self.outs) != 0:
-            tmp = []
-            for entity in self.outs.itervalues():
-                tmp.extend((k, v) for k, v in entity.attr.iteritems() if v is not None)
-            tmp = ','.join('{}={}'.format(k, v) for k, v in tmp)
-            if len(tmp) > 0:
-                name.append(tmp)
-        return '\\n'.join(name)
+        res = [type(self).__name__ if name is None else name]
+        attributes = OrderedDict()
+        for out in self.outs.itervalues():
+            attributes.update(out.attributes)
+        for key, value in attributes.iteritems():
+            res.append('{}={}'.format(key, ','.join(value)))
+        return '\n'.join(res)
     
     @classmethod
     def get_output(cls, ins={}, outs={}, requested_attr={}, entity_graph=None):
@@ -132,9 +90,9 @@ class Step(object):
         if len(ins) == 0:
             return OrderedDict()
 
-        common_attributes = set.intersection(*[set(entity.attr) for entity in ins.itervalues()]) - {'resource', 'filename'}
+        common_attributes = set.intersection(*[set(entity.attributes) for entity in ins.itervalues()]) - {'resource', 'filename'}
         for name in common_attributes:
-            common_attr = {entity.attr[name] for entity in ins.itervalues()}
+            common_attr = reduce(or_, (entity.attributes[name] for entity in ins.itervalues()))
             if len(common_attr) > 1:
                 attributes = ', '.join('({}: {})'.format(k, v.attr[name]) for k, v in ins.iteritems())
                 ERROR_MANAGER.add_error('{} could not match {} attributes: {}'.format(cls.__name__, name, attributes))
@@ -160,7 +118,7 @@ class Step(object):
         # Yield the output entities
         out_attr = {}
         for entity in ins.itervalues():
-            out_attr.update(entity.attr)
+            out_attr.update(entity.attributes)
         remove = set()
         for attr in out_attr:
             if attr in in_descendents and attr not in out_descendents:
@@ -168,6 +126,6 @@ class Step(object):
         for attr in remove:
             del out_attr[attr]
 
-        resources = reduce(or_, (entity.resources for entity in ins.itervalues()), set())
-        outs = OrderedDict([(out, Entity(out, resources, attr=out_attr)) for out in outs])  # TODO: use an entity factory
+        out_attr['resource'] = reduce(or_, (entity.attributes['resource'] for entity in ins.itervalues()), set())
+        outs = OrderedDict([(out, EntityType(out, attributes=out_attr)) for out in outs])  # TODO: use an entity factory
         return outs

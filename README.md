@@ -16,22 +16,28 @@ SoFIA requires [Python 2.7][python] to be installed with the pip package managem
 
 1. Open the command line with administrator priveleges (Powershell in Windows, Shell in Linux)
 2. Update pip:
-    Windows: `python -m pip install -U pip setuptools`
-    Linux: `pip install -U pip setuptools`
+  * Windows: `python -m pip install -U pip setuptools`
+  * Linux: `pip install -U pip setuptools`
 3. Install SoFIA:
-    Windows: `python -m pip install sofia`
-    Linux: `pip install sofia`
+  * Windows: `python -m pip install sofia`
+  * Linux: `pip install sofia`
 
 Running SoFIA
 -------------
 
 We provide example data to help familiarise yourself with SoFIA. To get the data, run:
 
-`python -m sofia get http://childsish.github.io/static/sofia/example.tar.gz`
+```
+python -m sofia get http://childsish.github.io/static/sofia/example.tar.gz
+```
+
+This will create a directory wherever you run the command.
 
 To try the example, run:
 
-`python -m sofia aggregate ./example/data/randome.vcf -e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect -r ./example/data/randome.gff -r ./example/data/randome.fasta -o output.txt -p 1`
+```
+python -m sofia aggregate ./example/data/randome.vcf -e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect -r ./example/data/randome.gff -r ./example/data/randome.fasta -o output.txt -p 1
+```
 
 The command line can be broken down into several parts:
 
@@ -43,7 +49,9 @@ The command line can be broken down into several parts:
 
 The output will be placed in the current directory in the `output.txt` file. To check if you got the correct output, run:
 
-`diff ./example/data/output.txt output.txt`
+```
+diff ./example/data/output.txt output.txt
+```
 
 ### Data download scripts
 

@@ -3,14 +3,14 @@ from copy import deepcopy
 from itertools import izip, product
 from operator import or_
 
-from entity_resolver import EntitySolutionIterator
+from entity_resolver import EntityResolver
 from sofia.step.converter import Converter as ConverterStep
 from sofia.converter import Converter
 from sofia.error_manager import ERROR_MANAGER
 from sofia.graph import Workflow
 
 
-class StepSolutionIterator(object):
+class StepResolver(object):
     def __init__(self, step, graph, provided_entities, workflow_template, maps={}, requested_entities=set(), visited=None):
         self.step = step
         self.graph = graph
@@ -27,13 +27,13 @@ class StepSolutionIterator(object):
     
     def __iter__(self):
         entities = sorted(self.graph.get_children(self.step.name))
-        resolvers = {entity: EntitySolutionIterator(entity,
-                                                    self.graph,
-                                                    self.provided_entities,
-                                                    self.workflow_template,
-                                                    self.maps,
-                                                    self.requested_entities,
-                                                    self.visited)
+        resolvers = {entity: EntityResolver(entity,
+                                            self.graph,
+                                            self.provided_entities,
+                                            self.workflow_template,
+                                            self.maps,
+                                            self.requested_entities,
+                                            self.visited)
                                   for entity in entities}
         resolvers = {entity: list(resolver) for entity, resolver in resolvers.iteritems()}
 

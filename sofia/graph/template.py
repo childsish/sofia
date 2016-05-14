@@ -1,7 +1,11 @@
-from lhc.graph import HyperGraph
+from lhc.graph import NPartiteGraph
 
 
-class Template(HyperGraph):
+class Template(NPartiteGraph):
+
+    ENTITY_PARTITION = 0
+    STEP_PARTITION = 1
+
     """ A hyper graph of all the possible step calculation pathways. """
     def __init__(self, entity_graph):
         super(Template, self).__init__()
@@ -29,10 +33,10 @@ class Template(HyperGraph):
 
     @property
     def entities(self):
-        return self.vs
+        return self.partitions[self.ENTITY_PARTITION]
 
     def register_entity(self, entity):
-        self.add_vertex(entity)
+        self.add_vertex(entity, self.ENTITY_PARTITION)
         self.entity_graph.register_entity(entity)
 
     def register_step(self, step):
@@ -41,11 +45,14 @@ class Template(HyperGraph):
         :param step: The step to add to the graph.
         """
         self.steps[step.name] = step
+        self.add_vertex(step.name, self.STEP_PARTITION)
 
         for in_ in step.ins:
-            self.add_outward_edge(in_, step.name)
+            self.add_vertex(in_, self.ENTITY_PARTITION)
+            self.add_edge(in_, step.name)
             self.register_entity(in_)
 
         for out in step.outs:
-            self.add_inward_edge(out, step.name)
+            self.add_vertex(out, self.ENTITY_PARTITION)
+            self.add_edge(step.name, out)
             self.register_entity(out)
