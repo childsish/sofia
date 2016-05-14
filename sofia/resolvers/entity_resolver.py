@@ -25,10 +25,10 @@ class EntitySolutionIterator(object):
                 continue
             step = self.graph.steps[step_name]
             if issubclass(step.step_class, Resource):
-                from resource_solution_iterator import ResourceSolutionIterator
+                from resource_resolver import ResourceSolutionIterator
                 it = ResourceSolutionIterator(step, self.provided_entities, self.workflow_template)
             else:
-                from step_solution_iterator import StepSolutionIterator
+                from step_resolver import StepSolutionIterator
                 it = StepSolutionIterator(step,
                                           self.graph,
                                           self.provided_entities,

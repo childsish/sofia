@@ -10,7 +10,7 @@ from collections import defaultdict
 from common import get_provided_entities, get_requested_entities, get_program_directory
 from sofia.attribute_map_factory import AttributeMapFactory
 from sofia.error_manager import ERROR_MANAGER
-from sofia.resolvers.entity_solution_iterator import EntitySolutionIterator
+from sofia.resolvers.entity_resolver import EntitySolutionIterator
 from sofia.template_factory import TemplateFactory
 from sofia.graph.workflow import Workflow
 

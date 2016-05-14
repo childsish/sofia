@@ -3,7 +3,7 @@ from copy import deepcopy
 from itertools import izip, product
 from operator import or_
 
-from entity_solution_iterator import EntitySolutionIterator
+from entity_resolver import EntitySolutionIterator
 from sofia.step.converter import Converter as ConverterStep
 from sofia.converter import Converter
 from sofia.error_manager import ERROR_MANAGER
