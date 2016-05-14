@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from sofia_.subcommands import common
-from sofia_.step import Step
+from sofia.tools import common
+from sofia.step import Step
 
 
 class TestCommon(unittest.TestCase):

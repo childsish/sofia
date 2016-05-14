@@ -1,6 +1,6 @@
 import unittest
 
-from sofia_.subcommands import aggregate
+from sofia.tools import aggregate
 
 
 class TestAggregate(unittest.TestCase):

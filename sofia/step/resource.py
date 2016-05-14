@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from operator import or_
 from step import Step
-from sofia_.entity_type import EntityType
+from sofia.entity_type import EntityType
 
 
 class Resource(Step):

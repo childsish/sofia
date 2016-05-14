@@ -1,8 +1,8 @@
 import itertools
 
 from collections import OrderedDict, defaultdict
-from sofia_.entity_type import EntityType
-from sofia_.error_manager import ERROR_MANAGER
+from sofia.entity_type import EntityType
+from sofia.error_manager import ERROR_MANAGER
 from operator import or_
 
 

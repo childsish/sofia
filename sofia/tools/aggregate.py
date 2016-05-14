@@ -39,7 +39,7 @@ class Aggregator(object):
             self.stdout.write('{}\n\n'.format(solution))
             return
 
-        from sofia_.execution_engines.low_memory_engine import LowMemoryExecutionEngine
+        from sofia.execution_engines.low_memory_engine import LowMemoryExecutionEngine
         executor = LowMemoryExecutionEngine(solution)
         for entity in provided_entities:
             executor.resolve_entity(entity, list(entity.attributes['filename']))

@@ -1,7 +1,7 @@
 import imp
 import os
 
-from sofia_.step import Step
+from sofia.step import Step
 
 
 def load_resource(fname, parsers, format=None):

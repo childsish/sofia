@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from sofia_.entity_type import EntityType
+from sofia.entity_type import EntityType
 
 
 class StepWrapper(object):

@@ -4,7 +4,7 @@ import sys
 
 from common import get_program_directory
 from textwrap import wrap
-from sofia_.template_factory import TemplateFactory
+from sofia.template_factory import TemplateFactory
 
 
 def generate_graph(workflow_template, output=sys.stdout):

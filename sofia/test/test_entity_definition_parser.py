@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from sofia_.subcommands.common import get_provided_entity
+from sofia.tools.common import get_provided_entity
 
 
 class TestCommonSubcommands(unittest.TestCase):

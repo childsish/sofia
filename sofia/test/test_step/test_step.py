@@ -2,7 +2,7 @@ __author__ = 'Liam Childs'
 
 import unittest
 
-from sofia_.step import Step
+from sofia.step import Step
 
 
 class TestStep(unittest.TestCase):

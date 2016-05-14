@@ -52,3 +52,4 @@ class SimpleExecutionEngine(object):
         return res
 
     def get_input(self):
+        pass

@@ -1,12 +1,12 @@
 import os
 import unittest
 
-from sofia_.graph.entity_graph import EntityGraph
+from sofia.graph.entity_graph import EntityGraph
 
 
 class TestEntityGraph(unittest.TestCase):
     def setUp(self):
-        fname = os.path.join(__file__[:__file__.index('sofia_')], 'templates', 'genomics', 'entities.json')
+        fname = os.path.join(__file__[:__file__.index('sofia')], 'templates', 'genomics', 'entities.json')
         self.graph = EntityGraph(fname)
 
     def test_get_descendents_paths(self):
