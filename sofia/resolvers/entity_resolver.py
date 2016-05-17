@@ -1,5 +1,5 @@
 from sofia.error_manager import ERROR_MANAGER
-from sofia.step import Resource
+from sofia.workflow.entity_node import EntityNode
 
 
 class EntityResolver(object):
@@ -17,24 +17,29 @@ class EntityResolver(object):
         return self.entity
     
     def __iter__(self):
+        is_not_provided = True
+        for provided_entity in self.provided_entities:
+            if provided_entity.name == self.entity:
+                is_not_provided = False
+                yield EntityNode(provided_entity)
+
         step_names = self.graph.get_children(self.entity)
-        if len(step_names) == 0:
+        if len(step_names) == 0 and is_not_provided:
             ERROR_MANAGER.add_error('No steps produce {}'.format(self.entity))
+
+        from step_resolver import StepResolver
         for step_name in step_names:
             if step_name in self.visited:
                 continue
             step = self.graph.steps[step_name]
-            if issubclass(step.step_class, Resource):
-                from resource_resolver import ResourceResolver
-                it = ResourceResolver(step, self.provided_entities, self.workflow_template)
-            else:
-                from step_resolver import StepResolver
-                it = StepResolver(step,
-                                  self.graph,
-                                  self.provided_entities,
-                                  self.workflow_template,
-                                  self.maps,
-                                  self.requested_resources,
-                                  set(self.visited))
+            it = StepResolver(step,
+                              self.graph,
+                              self.provided_entities,
+                              self.workflow_template,
+                              self.maps,
+                              self.requested_resources,
+                              set(self.visited))
             for solution in it:
-                yield solution
+                res = EntityNode(solution.head.outs[self.entity])
+                res.add_step_node(solution)
+                yield res

@@ -12,7 +12,7 @@ from sofia.entity_type_parser import EntityTypeParser
 from sofia.error_manager import ERROR_MANAGER
 from sofia.resolvers.entity_resolver import EntityResolver
 from sofia.template_factory import TemplateFactory
-from sofia.workflow.workflow import Workflow
+from sofia.workflow.resolved_workflow import ResolvedWorkflow
 
 
 class Aggregator(object):
@@ -90,7 +90,7 @@ class Aggregator(object):
     def resolve_requested_entities(self, requested_entities, provided_entities, maps):
         solutions = [self.resolve_requested_entity(entity, provided_entities, maps) for entity in requested_entities]
 
-        combined_solution = Workflow()
+        combined_solution = ResolvedWorkflow()
         for solution in solutions:
             combined_solution.add_entity_node(solution)
 
@@ -163,11 +163,11 @@ def get_parser():
 
 def define_parser(parser):
     add_arg = parser.add_argument
-    add_arg('input', metavar='TARGET',
+    add_arg('input', metavar='TARGET', nargs='+',
             help='the file to annotate')
     add_arg('-1', '--header',
             help='if specified use this header instead')
-    add_arg('-e', '--entities', nargs='+', default=[],
+    add_arg('-e', '--entities', nargs='+', default=[], action='append',
             help='request an entity')
     add_arg('-E', '--entity-list',
             help='a text file with a list of requested entities')
@@ -179,7 +179,7 @@ def define_parser(parser):
             help='direct output to named file (default: stdout)')
     add_arg('-p', '--processes', default=None, type=int,
             help='the number of processes to run in parallel')
-    add_arg('-r', '--resources', nargs='+', default=[],
+    add_arg('-r', '--resources', nargs='+', default=[], action='append',
             help='provide a resource')
     add_arg('-R', '--resource-list',
             help='a text file with a list of provided resources')
@@ -200,7 +200,7 @@ def aggregate(args):
     parser = EntityTypeParser(template_directory)
 
     provided_entities = parser.get_provided_entities(
-        args.resources + ['{}:target'.format(args.input)],
+        args.resources + [args.input + ['target']],
         args.resource_list
     )
     requested_entities = parser.get_requested_entities(args, provided_entities)

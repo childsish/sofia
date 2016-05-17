@@ -1,5 +1,5 @@
-from lhc.io.txt_ import Iterator, Set
-from resource import Step
+from lhc.io.txt import Iterator, Set
+from step import Step
 
 
 class TxtIterator(Step):

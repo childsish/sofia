@@ -3,11 +3,12 @@ from copy import deepcopy
 from itertools import izip, product
 from operator import or_
 
-from entity_resolver import EntityResolver
+from sofia.workflow.step_node import StepNode
+from sofia.workflow.entity_node import EntityNode
 from sofia.step.converter import Converter as ConverterStep
 from sofia.converter import Converter
 from sofia.error_manager import ERROR_MANAGER
-from sofia.graph import Workflow
+from entity_resolver import EntityResolver
 
 
 class StepResolver(object):
@@ -24,6 +25,9 @@ class StepResolver(object):
 
     def __str__(self):
         return self.step.name
+
+    def __hash__(self):
+        return hash(str(self))
     
     def __iter__(self):
         entities = sorted(self.graph.get_children(self.step.name))
@@ -41,7 +45,7 @@ class StepResolver(object):
         disjoint_solutions = [resolvers[entity] for entity in entities]
         for disjoint_solution in product(*disjoint_solutions):
             disjoint_solution = list(disjoint_solution)
-            ins = {e: deepcopy(s.step.outs[e]) for e, s in izip(entities, disjoint_solution)}
+            ins = {e: s.head for e, s in izip(entities, disjoint_solution)}
 
             converters = self.get_converters(ins)
             if converters is None:
@@ -53,28 +57,30 @@ class StepResolver(object):
                     continue
                 converter = converters[entity]
                 s = disjoint_solution[i]
-                s_ins = {entity: deepcopy(s.step.outs[entity])}
+                s_ins = {entity: deepcopy(s.head)}
                 s_outs = deepcopy(s_ins)
                 for attribute, (fr, to) in converter.attributes.iteritems():
-                    s_outs[entity].attr[attribute] = to
-                converter_step = ConverterStep(s.resources, {entity: s.step.name}, ins=s_ins, outs=s_outs)
+                    s_outs[entity].attributes[attribute] = to
+                converter_step = ConverterStep(s.head.attributes['resource'], {entity: s.head.name}, ins=s_ins, outs=s_outs)
                 converter_step.register_converter(converter)
-                step = Workflow(converter_step)
-                step.join(disjoint_solution[i], s_ins[entity])
-                disjoint_solution[i] = step
+                step_node = StepNode(converter_step)
+                step_node.add_entity_node(disjoint_solution[i])
+                entity_node = EntityNode(s_outs[entity])
+                entity_node.add_step_node(step_node)
+                disjoint_solution[i] = entity_node
             for entity, converter in converters.iteritems():
                 for attribute, (fr, to) in converter.attributes.iteritems():
-                    ins[entity].attr[attribute] = to
+                    ins[entity].attributes[attribute] = {to}
             outs = self.step.get_output(ins, entity_graph=self.graph.entity_graph)
             if outs is None:
                 continue
-            resources = reduce(or_, (graph.resources for graph in disjoint_solution), set())
-            dependencies = {e: s.step.name for e, s in izip(entities, disjoint_solution)}
-            step_instance = self.step(resources, dependencies, ins=ins, outs=outs)
-            solution = Workflow(step_instance)
-            for entity, s in izip(entities, disjoint_solution):
-                solution.join(s, s.step.outs[entity])
-            res[len(resources - self.requested_entities)].append(solution)
+            resources = reduce(or_, (s.head.attributes['resource'] for s in disjoint_solution), set())  # TODO: make part of attribute resolution
+            dependencies = {e: s.head.name for e, s in izip(entities, disjoint_solution)}
+            step_instance = self.step(resources, dependencies, ins=ins, outs=outs)  # TODO: make part of attribute resolution
+            solution = StepNode(step_instance)
+            for s in disjoint_solution:
+                solution.add_entity_node(s)
+            res[len(resources - self.requested_entities)].append(solution)  # TODO: make part of attribute resolution
         if len(res) > 0:
             for solution in res[min(res)]:
                 yield solution
@@ -82,9 +88,10 @@ class StepResolver(object):
     def get_converters(self, ins):
         matching_attributes = defaultdict(lambda: defaultdict(set))
         for edge, entity in ins.iteritems():
-            for attribute_key, attribute_value in entity.attr.iteritems():
+            for attribute_key, attribute_value in entity.attributes.iteritems():
                 if attribute_key in {'resource', 'filename'}:
                     continue
+                attribute_value = list(attribute_value)[0]
                 matching_attributes[attribute_key][attribute_value].add(edge)
 
         converters = defaultdict(Converter)
@@ -97,7 +104,7 @@ class StepResolver(object):
             else:
                 for value in attribute_values:
                     if value not in self.maps[attribute_key].hdrs:
-                        ERROR_MANAGER.add_error('Converter for {} has can not convert {}'.format(attribute_key, value))
+                        ERROR_MANAGER.add_error('Converter for {} can not convert {}'.format(attribute_key, value))
                         return None
 
             edge_converters = self.convert_edge(attribute_key, attribute_values)

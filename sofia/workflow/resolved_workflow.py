@@ -1,9 +1,9 @@
 from lhc.graph import NPartiteGraph
 
 
-class Workflow(NPartiteGraph):
+class ResolvedWorkflow(NPartiteGraph):
     def __init__(self):
-        super(Workflow, self).__init__('Workflow')
+        super(ResolvedWorkflow, self).__init__('Workflow')
         self.heads = []
 
     def init(self):
