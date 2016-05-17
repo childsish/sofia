@@ -61,15 +61,14 @@ class EntityTypeParser(object):
         if definitions is None:
             definitions = []
 
-        definitions_ = []
         with open(os.path.join(self.template_directory, 'provided_entities.txt')) as fhndl:
-            definitions_.extend(os.path.join(self.template_directory, 'data', line.rstrip('\r\n')).split()
+            definitions.extend(os.path.join(self.template_directory, 'data', line.rstrip('\r\n')).split()
                                 for line in fhndl if line.strip() != '')
         if definition_file is not None:
             with open(definition_file) as fhndl:
-                definitions_.extend(line.rstrip('\r\n') for line in fhndl)
+                definitions.extend(line.rstrip('\r\n') for line in fhndl)
 
-        return [self.get_provided_entity(definition) for definition in definitions_]
+        return [self.get_provided_entity(definition) for definition in definitions]
 
     def get_provided_entity(self, definition):
         type, alias, attributes = self.parse_entity_type(definition)
