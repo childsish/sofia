@@ -13,6 +13,9 @@ class EntityType(object):
         res.extend('{}={}'.format(k, str(v) if isinstance(v, basestring) else ','.join(v)) for k, v in sorted(self.attributes.iteritems()))
         return '\n'.join(res)
 
+    def __repr__(self):
+        return repr(str(self))
+
     def __eq__(self, other):
         return str(self) == str(other)
 
