@@ -45,7 +45,7 @@ class StepResolver(object):
         disjoint_solutions = [resolvers[entity] for entity in entities]
         for disjoint_solution in product(*disjoint_solutions):
             disjoint_solution = list(disjoint_solution)
-            ins = {e: s.head for e, s in izip(entities, disjoint_solution)}
+            ins = {e: deepcopy(s.head) for e, s in izip(entities, disjoint_solution)}
 
             converters = self.get_converters(ins)
             if converters is None:
@@ -61,6 +61,7 @@ class StepResolver(object):
                 s_outs = deepcopy(s_ins)
                 for attribute, (fr, to) in converter.attributes.iteritems():
                     s_outs[entity].attributes[attribute] = to
+                    ins[entity].attributes[attribute] = {to}
                 converter_step = ConverterStep(s.head.attributes['resource'], {entity: s.head.name}, ins=s_ins, outs=s_outs)
                 converter_step.register_converter(converter)
                 step_node = StepNode(converter_step)
@@ -68,9 +69,6 @@ class StepResolver(object):
                 entity_node = EntityNode(s_outs[entity])
                 entity_node.add_step_node(step_node)
                 disjoint_solution[i] = entity_node
-            for entity, converter in converters.iteritems():
-                for attribute, (fr, to) in converter.attributes.iteritems():
-                    ins[entity].attributes[attribute] = {to}
             outs = self.step.get_output(ins, entity_graph=self.graph.entity_graph)
             if outs is None:
                 continue

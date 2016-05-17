@@ -27,6 +27,9 @@ class Step(object):
         arguments. """
         return self.name
 
+    def __repr__(self):
+        return type(self).__name__
+
     def __eq__(self, other):
         return self.name == other.name
 
