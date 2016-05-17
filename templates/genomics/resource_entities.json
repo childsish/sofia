@@ -30,6 +30,11 @@
     "description": "A set of sequence variants"
   },
   {
+    "name": "molecular_weight_file",
+    "extensions": [".dat"],
+    "description": "Molecular weights for amino acids"
+  },
+  {
     "name": "prt_file",
     "extensions": [".prt"],
     "description": "A set of genetic codes"

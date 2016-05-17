@@ -1,13 +1,12 @@
 from lhc.binf.genetic_code import GeneticCodes
 
-from sofia.step import Resource
+from sofia.step import Step
 
 
-class GeneticCode(Resource):
+class GeneticCode(Step):
 
-    EXT = ['.prt']
-    FORMAT = 'prt_file'
+    IN = ['prt_file']
     OUT = ['genetic_code']
 
-    def get_interface(self, filename, gc='Standard'):
-        return GeneticCodes(filename)[gc]
+    def run(self, prt_file):
+        yield GeneticCodes(prt_file)['Standard']

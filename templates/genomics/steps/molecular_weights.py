@@ -1,19 +1,17 @@
-from sofia.step import Resource
+from sofia.step import Step
 
 
-class MolecularWeights(Resource):
+class MolecularWeights(Step):
     """
     Reads in a set of molecular weights. The file of molecular weights can be obtained from
     http://emboss.sourceforge.net/.
     """
 
-    EXT = ['.dat', '.mol']
+    IN = ['molecular_weight_file']
     OUT = ['molecular_weight_set']
-    DEFAULT = 'Emolwt.dat'
-    FORMAT = 'molecular_weight_file'
 
-    def get_interface(self, filename):
-        infile = open(filename)
+    def run(self, molecular_weight_file):
+        infile = open(molecular_weight_file)
         data = infile.read()
         infile.close()
         interface = {}
@@ -22,4 +20,4 @@ class MolecularWeights(Resource):
                 continue
             parts = line.split()
             interface[parts[0]] = {'avg': float(parts[1]), 'mono': float(parts[2])}
-        return interface
+        yield interface

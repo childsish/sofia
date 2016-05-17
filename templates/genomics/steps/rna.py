@@ -1,21 +1,19 @@
-from sofia.step import Target
+from sofia.step import Step
 
 
-class RnaIterator(Target):
+class RnaIterator(Step):
 
-    EXT = {'.rna'}
-    FORMAT = 'rna_file'
+    IN = ['rna_file']
     OUT = ['rna_structure_iterator']
 
-    def get_interface(self, filename):
+    def run(self, rna_file):
         raise NotImplementedError
 
 
-class RnaSet(Target):
+class RnaSet(Step):
 
-    EXT = ['.rna']
-    TYPE = 'rna_structure'
+    IN = ['rna_structure']
     OUT = ['rna_structure_set']
 
-    def get_interface(self, filename):
+    def get_interface(self, rna_strcture):
         raise NotImplementedError

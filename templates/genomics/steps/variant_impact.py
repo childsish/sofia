@@ -2,7 +2,7 @@ import gzip
 
 from lhc.collections.inorder_access_set import InOrderAccessSet
 
-from sofia.step import Step, Resource
+from sofia.step import Step
 
 
 class ProveanMap(object):
@@ -25,15 +25,15 @@ class ProveanMap(object):
         return res
 
 
-class ProveanMapStep(Resource):
+class ProveanMapStep(Step):
 
-    FORMAT = 'provean_map'
+    IN = ['provean_map_file']
     OUT = ['variant_impact_calculator']
 
-    def get_interface(self, filename):
-        fileobj = gzip.open(filename) if filename.endswith('.gz') else filename
+    def run(self, provean_map_file):
+        fileobj = gzip.open(provean_map_file) if provean_map_file.endswith('.gz') else provean_map_file
         it = (line.split('\t') for line in fileobj)
-        return ProveanMap(filename, InOrderAccessSet(it, key=lambda x: (x[0], int(x[1]) - 1)))
+        return ProveanMap(provean_map_file, InOrderAccessSet(it, key=lambda x: (x[0], int(x[1]) - 1)))
 
 
 class GetVariantImpact(Step):

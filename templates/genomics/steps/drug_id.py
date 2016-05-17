@@ -1,7 +1,7 @@
-from sofia.step import Step, Resource
+from sofia.step import Step
 
 
-class DrugBankMap(Resource):
+class DrugBankMap(Step):
 
     FORMAT = 'drug_bank_map'
     OUT = ['drug_bank_map']
@@ -26,7 +26,7 @@ class GetDrugIdFromDrugBank(Step):
         return drug_bank_map[transcript_id] if transcript_id in drug_bank_map else None
 
 
-class GenomicsOfDrugSensitivityInCancerByGene(Resource):
+class GenomicsOfDrugSensitivityInCancerByGene(Step):
 
     FORMAT = 'gdsc_map'
     OUT = ['gdsc_by_gene']

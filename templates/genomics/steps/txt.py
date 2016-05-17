@@ -1,16 +1,15 @@
 from collections import defaultdict
 
-from sofia.step import Resource
+from sofia.step import Step
 
 
-class GenePathwayMap(Resource):
+class GenePathwayMap(Step):
 
-    EXT = {'.txt'}
-    FORMAT = 'gene_pathway_map'
+    IN = ['gene_pathway_map_file']
     OUT = ['gene_pathway_map']
 
-    def get_interface(self, filename):
-        fhndl = open(filename)
+    def run(self, gene_pathway_map_file):
+        fhndl = open(gene_pathway_map_file)
         fhndl.next()
         res = defaultdict(set)
         for line in fhndl:
@@ -20,14 +19,13 @@ class GenePathwayMap(Resource):
         return res
 
 
-class GeneGotermMap(Resource):
+class GeneGotermMap(Step):
 
-    EXT = {'.txt'}
-    FORMAT = 'txt_file'
+    IN = ['gene_goterm_map_file']
     OUT = ['gene_goterm_map']
 
-    def get_interface(self, filename):
-        fhndl = open(filename)
+    def run(self, gene_goterm_map_file):
+        fhndl = open(gene_goterm_map_file)
         fhndl.next()
         res = defaultdict(set)
         for line in fhndl:

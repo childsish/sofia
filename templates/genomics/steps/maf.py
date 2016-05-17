@@ -1,24 +1,24 @@
+from __future__ import with_statement
+
 import gzip
 
-from sofia.step import Resource, Step
-
+from sofia.step import Step
 from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
 from lhc.interval import Interval
 from lhc.io.maf.iterator import MafIterator
 from lhc.io.vcf.iterator import Variant
 
 
-class MafSet(Resource):
+class MafSet(Step):
     """A set of variants parsed from a .vcf file
     """
 
-    EXT = {'.maf', '.maf.gz'}
-    FORMAT = 'maf_file'
+    IN = ['maf_file']
     OUT = ['maf_set']
 
-    def get_interface(self, filename):
-        fileobj = gzip.open(filename) if filename.endswith('.gz') else open(filename)
-        return InOrderAccessIntervalSet(MafIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
+    def run(self, maf_file):
+        with gzip.open(maf_file) if maf_file.endswith('.gz') else open(maf_file) as fileobj:
+            yield InOrderAccessIntervalSet(MafIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
 
 
 class GetMafByVariant(Step):

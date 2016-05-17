@@ -1,9 +1,9 @@
 from lhc.io.cut import CodonUsageTable
 
-from sofia.step import Resource
+from sofia.step import Step
 
 
-class ReadCodonUsageTable(Resource):
+class ReadCodonUsageTable(Step):
 
     EXT = {'.cut'}
     FORMAT = 'cut_file'
