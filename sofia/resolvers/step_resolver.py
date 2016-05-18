@@ -38,7 +38,7 @@ class StepResolver(object):
                                             self.maps,
                                             self.requested_entities,
                                             self.visited)
-                                  for entity in entities}
+                     for entity in entities}
         resolvers = {entity: list(resolver) for entity, resolver in resolvers.iteritems()}
 
         res = defaultdict(list)
@@ -55,20 +55,12 @@ class StepResolver(object):
                 entity = entities[i]
                 if entity not in converters:
                     continue
-                converter = converters[entity]
-                s = disjoint_solution[i]
-                s_ins = {entity: deepcopy(s.head)}
-                s_outs = deepcopy(s_ins)
+                disjoint_solution[i] = self.get_converter_step(disjoint_solution[i], converters[entity])
+
+            for entity, converter in converters.iteritems():
                 for attribute, (fr, to) in converter.attributes.iteritems():
-                    s_outs[entity].attributes[attribute] = to
                     ins[entity].attributes[attribute] = {to}
-                converter_step = ConverterStep(s.head.attributes['resource'], {entity: s.head.name}, ins=s_ins, outs=s_outs)
-                converter_step.register_converter(converter)
-                step_node = StepNode(converter_step)
-                step_node.add_entity_node(disjoint_solution[i])
-                entity_node = EntityNode(s_outs[entity])
-                entity_node.add_step_node(step_node)
-                disjoint_solution[i] = entity_node
+
             outs = self.step.get_output(ins, entity_graph=self.graph.entity_graph)
             if outs is None:
                 continue
@@ -137,3 +129,19 @@ class StepResolver(object):
                 converters[entity].paths.append(path)
                 converters[entity].id_maps.append(self.maps[attribute_key].make(fr_value, to_value))
         return converters
+
+    def get_converter_step(self, entity_node, converter):
+        entity = entity_node.head.alias
+        ins = {entity: deepcopy(entity_node.head)}
+        outs = deepcopy(ins)
+        for attribute, (fr, to) in converter.attributes.iteritems():
+            outs[entity].attributes[attribute] = to
+        converter_step = ConverterStep(entity_node.head.attributes['resource'],
+                                       {entity: entity_node.head.name},
+                                       ins=ins, outs=outs)
+        converter_step.register_converter(converter)
+        step_node = StepNode(converter_step)
+        step_node.add_entity_node(entity_node)
+        entity_node = EntityNode(outs[entity])
+        entity_node.add_step_node(step_node)
+        return entity_node
