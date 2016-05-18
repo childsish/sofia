@@ -22,7 +22,7 @@ class GetDrugIdFromDrugBank(Step):
     IN = ['drug_bank_map', 'transcript_id']
     OUT = ['drug_id']
 
-    def calculate(self, drug_bank_map, transcript_id):
+    def run(self, drug_bank_map, transcript_id):
         return drug_bank_map[transcript_id] if transcript_id in drug_bank_map else None
 
 
@@ -49,5 +49,5 @@ class GetDrugIdFromGDSC(Step):
     IN = ['gdsc_by_gene', 'gene_id']
     OUT = ['drug_id']
 
-    def calculate(self, gdsc_by_gene, gene_id):
+    def run(self, gdsc_by_gene, gene_id):
         return gdsc_by_gene[gene_id] if gene_id in gdsc_by_gene else None

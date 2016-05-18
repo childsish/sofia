@@ -1,6 +1,4 @@
-import itertools
-
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from sofia.entity_type import EntityType
 from sofia.error_manager import ERROR_MANAGER
 from operator import or_
@@ -45,16 +43,14 @@ class Step(object):
         pass
 
     def run(self, **kwargs):
-        raise NotImplementedError('You must override this function')
-
-    def calculate(self, **kwargs):
-        """Calculate this step
+        """
+        Run this step
 
         Assumes dependencies are already resolved. This function must be
         overridden when implementing new steps.
 
-        :param dict entities: currently calculated entities. The target is at
-            entities['target'].
+        :param kwargs: arguments defined in class IN variable
+        :return: output of running the step
         """
         raise NotImplementedError('You must override this function')
 

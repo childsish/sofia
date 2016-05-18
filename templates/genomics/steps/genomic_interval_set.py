@@ -6,14 +6,11 @@ class GetIntervalByPosition(Step):
     IN = ['genomic_interval_set', 'genomic_position']
     OUT = ['genomic_interval']
 
-    def calculate(self, genomic_interval_set, genomic_position):
+    def run(self, genomic_interval_set, genomic_position):
         return genomic_interval_set.fetch(
             genomic_position.chr,
             genomic_position.pos,
             genomic_position.pos + 1)
-    
-    def format(self, genomic_interval):
-        return genomic_interval.name
 
 
 class GetBoundsProximity(Step):
@@ -21,7 +18,7 @@ class GetBoundsProximity(Step):
     IN = ['genomic_position', 'genomic_interval']
     OUT = ['bounds_proximity']
 
-    def calculate(self, genomic_position, genomic_interval):
+    def run(self, genomic_position, genomic_interval):
         if genomic_position is None or len(genomic_interval) == 0:
             return None
         ds = []

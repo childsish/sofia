@@ -12,7 +12,7 @@ class GetGenomicFeatureByPosition(Step):
         self.ttl = 0
         self.cnt = Counter()
 
-    def calculate(self, genomic_feature_set, genomic_position):
+    def run(self, genomic_feature_set, genomic_position):
         if genomic_position is None:
             return None
         #TODO: select correct gene (currently selecting largest)
@@ -49,7 +49,7 @@ class GetGenomicFeatureByInterval(Step):
     IN = ['genomic_feature_set', 'genomic_interval']
     OUT = ['genomic_feature']
 
-    def calculate(self, genomic_feature_set, genomic_interval):
+    def run(self, genomic_feature_set, genomic_interval):
         #TODO: select correct gene (currently selecting largest)
         features = genomic_feature_set.fetch(
             genomic_interval.chr,

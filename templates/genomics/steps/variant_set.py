@@ -6,7 +6,7 @@ class GetVariantByVariant(Step):
     IN = ['variant_set', 'variant']
     OUT = ['variant']
     
-    def calculate(self, variant_set, variant):
+    def run(self, variant_set, variant):
         #TODO: check matched variants
         if variant is None:
             return None
@@ -26,7 +26,7 @@ class GetVariantIdByGenomicInterval(Step):
     IN = ['variant_set', 'genomic_interval']
     OUT = ['variant_id']
 
-    def calculate(self, variant_set, genomic_interval):
+    def run(self, variant_set, genomic_interval):
         #TODO: check matched variants
         if genomic_interval is None:
             return None

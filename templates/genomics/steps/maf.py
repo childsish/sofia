@@ -26,7 +26,7 @@ class GetMafByVariant(Step):
     IN = ['maf_set', 'variant']
     OUT = ['maf']
 
-    def calculate(self, maf_set, variant):
+    def run(self, maf_set, variant):
         #TODO: check matched variants
         if variant is None:
             return None
@@ -46,7 +46,7 @@ class ConvertMafToVariant(Step):
     IN = ['maf']
     OUT = ['variant']
 
-    def calculate(self, maf):
+    def run(self, maf):
         if maf is None:
             return None
         if isinstance(maf, list):

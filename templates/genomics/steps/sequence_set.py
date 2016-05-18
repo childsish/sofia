@@ -11,7 +11,7 @@ class GetDownstream1000(Step):
     IN = ['chromosome_sequence_set', 'genomic_position', 'major_transcript']
     OUT = ['downstream_1000']
     
-    def calculate(self, chromosome_sequence_set, genomic_position, major_transcript):
+    def run(self, chromosome_sequence_set, genomic_position, major_transcript):
         if major_transcript is None:
             return None
         chr = genomic_position.chr

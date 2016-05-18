@@ -9,7 +9,7 @@ class GetMajorTranscriptFromGenomicFeature(Step):
     IN = ['genomic_feature']
     OUT = ['major_transcript']
 
-    def calculate(self, genomic_feature):
+    def run(self, genomic_feature):
         if genomic_feature is None or len(genomic_feature.children) == 0:
             return None
         transcripts = sorted(genomic_feature.children, key=self.get_transcript_length)
@@ -28,5 +28,5 @@ class GetMajorTranscriptFromGenomicFeature(Step):
 #    IN = ['genomic_interval']
 #    OUT = ['major_transcript']
 
-#    def calculate(self, genomic_interval):
+#    def run(self, genomic_interval):
 #        return genomic_interval

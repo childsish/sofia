@@ -9,7 +9,7 @@ class GetHomopolymer(Step):
     IN = ['variant', 'chromosome_sequence_set']
     OUT = ['homopolymer']
 
-    def calculate(self, variant, chromosome_sequence_set):
+    def run(self, variant, chromosome_sequence_set):
         ref = variant.ref
         alt = variant.alt
         i = 0

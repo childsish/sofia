@@ -11,7 +11,7 @@ class GetVariantSamples(Step):
     IN = ['variant']
     OUT = ['variant_samples']
 
-    def calculate(self, variant):
+    def run(self, variant):
         res = [':'.join(variant.format)]
         for sample in variant.samples.itervalues():
             res.append(':'.join(sample[key] for key in variant.format))
@@ -23,7 +23,7 @@ class GetNumberOfVariants(Step):
     IN = ['variant']
     OUT = ['number_of_variants']
 
-    def calculate(self, variant):
+    def run(self, variant):
         return 0 if variant is None else len(variant)
 
 
@@ -32,7 +32,7 @@ class GetPosition(Step):
     IN = ['chromosome_pos']
     OUT = ['position']
 
-    def calculate(self, chromosome_pos):
+    def run(self, chromosome_pos):
         return chromosome_pos + 1
 
 
@@ -41,7 +41,7 @@ class GetSubstitutionContext(Step):
     IN = ['variant', 'chromosome_sequence_set']
     OUT = ['substitution_context']
 
-    def calculate(self, variant, chromosome_sequence_set):
+    def run(self, variant, chromosome_sequence_set):
         context = chromosome_sequence_set[variant.chr][variant.pos - 1: variant.pos + 2]
         return context if variant.ref[0] in 'CT' else revcmp(context)
 
@@ -51,7 +51,7 @@ class GetSubstitutionType(Step):
     IN = ['variant']
     OUT = ['substitution_type']
 
-    def calculate(self, variant):
+    def run(self, variant):
         return '{}>{}'.format(variant.ref, variant.alt) if variant.ref[0] in 'CT' else '{}>{}'.format(revcmp(variant.ref), revcmp(variant.alt))
 
 
@@ -60,15 +60,15 @@ class GetVariantAlleleFrequency(Step):
     IN = ['variant']
     OUT = ['variant_allele_frequency']
 
-    def calculate(self, variant):
+    def run(self, variant):
         if variant is None:
             return None
-        no_calculate = 'AF' in variant.info or\
+        no_run = 'AF' in variant.info or\
             (hasattr(variant, 'samples') and\
                 any('AF' in sample for sample in variant.samples))
         if hasattr(variant, 'samples'):
             res = {}
-            if no_calculate:
+            if no_run:
                 for name, sample in variant.samples.iteritems():
                     if sample != '.':
                         res[name] = float(sample['AF'])
@@ -79,7 +79,7 @@ class GetVariantAlleleFrequency(Step):
                         ro = float(sample['RO'])
                         res[name] = ao / (ao + ro)
             return res
-        if no_calculate:
+        if no_run:
             return float(variant.info['AF'])
         ao = float(variant.info['AO'])
         ro = float(variant.info['RO'])
@@ -95,7 +95,7 @@ class GetVariantEffect(Step):
     IN = ['major_transcript', 'variant', 'coding_variant', 'amino_acid_variant']
     OUT = ['variant_effect']
     
-    def calculate(self, major_transcript, variant, coding_variant, amino_acid_variant):
+    def run(self, major_transcript, variant, coding_variant, amino_acid_variant):
         #TODO: Improve intron detection
         if major_transcript is None:
             return ['intergenic_variant']
@@ -162,7 +162,7 @@ class GetCodingVariant(Step):
     IN = ['major_transcript', 'variant']
     OUT = ['coding_variant']
     
-    def calculate(self, major_transcript, variant):
+    def run(self, major_transcript, variant):
         if major_transcript is None:
             return None
         ref = variant.ref
@@ -193,7 +193,7 @@ class GetCodonVariant(Step):
     OUT = ['codon_variant']
     BUFFER = 1000
     
-    def calculate(self, coding_variant, coding_sequence, downstream_1000):
+    def run(self, coding_variant, coding_sequence, downstream_1000):
         if coding_variant is None or coding_sequence is None:
             return None
         pos = coding_variant.pos
@@ -278,7 +278,7 @@ class GetAminoAcidVariant(Step):
         self.abbreviations = self.ABBREVIATIONS if use_3code[0].lower() == 't'\
             else {name: name for name in self.ABBREVIATIONS}
 
-    def calculate(self, codon_variant, genetic_code):
+    def run(self, codon_variant, genetic_code):
         if codon_variant is None:
             return None
         alts = [None if alt is None else genetic_code.translate(alt) for alt in codon_variant.alt]

@@ -23,7 +23,7 @@ class GetTranslationStartMinimumFreeEnergy(Step):
         self.offset = offset
         self.fold = RNA.fold if type == 'mfe' else RNA.pf_fold
 
-    def calculate(self, major_transcript, chromosome_sequence_set):
+    def run(self, major_transcript, chromosome_sequence_set):
         if major_transcript is None:
             return None
         offset = 50
@@ -55,7 +55,7 @@ class GetTranslationStartMinimumFreeEnergy2(Step):
         self.offset = offset
         self.fold = RNA.fold if type == 'mfe' else RNA.pf_fold
 
-    def calculate(self, genomic_interval, chromosome_sequence_set):
+    def run(self, genomic_interval, chromosome_sequence_set):
         if genomic_interval is None:
             return None
         offset = 50
@@ -75,7 +75,7 @@ class GetStructuralFeatures(Step):
     IN = ['rna_secondary_structure']
     OUT = ['hairpin_loop', 'multiloop', 'internal_loop', 'bulge', 'stem', 'branch', 'bridge']
 
-    def calculate(self, rna_secondary_structure):
+    def run(self, rna_secondary_structure):
         hloops = []
         mloops = []
         iloops = []

@@ -23,7 +23,7 @@ class GetPest(Step):
         self.thr = thr
         self.mono = 'mono' if mono else 'avg'
 
-    def calculate(self, protein_sequence, molecular_weight_set):
+    def run(self, protein_sequence, molecular_weight_set):
         if protein_sequence is None:
             return None
         protein_sequence = protein_sequence.rstrip('*')
@@ -71,7 +71,7 @@ class GetNumberOfPestSequences(Step):
     IN = ['pest_sequences']
     OUT = ['number_of_pest_sequences']
 
-    def calculate(self, pest_sequences):
+    def run(self, pest_sequences):
         if pest_sequences is None:
             return None
         return len(pest_sequences)
@@ -82,7 +82,7 @@ class GetAveragePestSequenceLength(Step):
     IN = ['pest_sequences']
     OUT = ['average_pest_sequence_length']
 
-    def calculate(self, pest_sequences):
+    def run(self, pest_sequences):
         if pest_sequences is None or len(pest_sequences) == 0:
             return None
         return sum(len(seq) for seq in pest_sequences) / float(len(pest_sequences))
@@ -93,7 +93,7 @@ class GetAminoAcidFrequency(Step):
     IN = ['protein_sequence']
     OUT = ['amino_acid_frequency']
 
-    def calculate(self, protein_sequence):
+    def run(self, protein_sequence):
         if protein_sequence is None:
             return None
         return Counter(protein_sequence)

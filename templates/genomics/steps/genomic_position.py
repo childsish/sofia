@@ -3,5 +3,5 @@
 #    IN = ['genomic_position']
 #    OUT = ['genomic_interval']
 #
-#    def calculate(self, genomic_position):
+#    def run(self, genomic_position):
 #        return GenomicInterval(genomic_position.chr, genomic_position.pos, genomic_position.pos + 1)

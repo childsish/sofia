@@ -13,7 +13,7 @@ class ProveanMap(object):
         fhndl.close()
         self.index = index
 
-    def calculate(self, transcript_id, amino_acid_variant):
+    def run(self, transcript_id, amino_acid_variant):
         pos = amino_acid_variant.pos
         parts = list(self.index.fetch(transcript_id, pos, pos + 1))[0].split()
         if len(parts) == 0:
@@ -41,11 +41,11 @@ class GetVariantImpact(Step):
     IN = ['transcript_id', 'amino_acid_variant', 'variant_impact_calculator']
     OUT = ['variant_impact']
 
-    def calculate(self, transcript_id, amino_acid_variant, variant_impact_calculator):
+    def run(self, transcript_id, amino_acid_variant, variant_impact_calculator):
         if None in (transcript_id, amino_acid_variant, variant_impact_calculator):
             return None
         try:
-            res = variant_impact_calculator.calculate(transcript_id, amino_acid_variant)
+            res = variant_impact_calculator.run(transcript_id, amino_acid_variant)
         except ValueError, e:
             res = None
         return res
