@@ -17,6 +17,18 @@ class VcfIterator(Step):
             for entry in VcfEntryIterator(fileobj):
                 yield entry
 
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
+
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'variant': set()
+        }
+
 
 class VcfSet(Step):
 
@@ -26,3 +38,15 @@ class VcfSet(Step):
     def run(self, vcf_file):
         with gzip.open(vcf_file) if vcf_file.endswith('.gz') else open(vcf_file) as fileobj:
             yield InOrderAccessSet(VcfEntryIterator(fileobj))
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
+
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'variant_set': set()
+        }

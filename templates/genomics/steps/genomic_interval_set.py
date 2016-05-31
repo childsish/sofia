@@ -12,6 +12,18 @@ class GetIntervalByPosition(Step):
             genomic_position.pos,
             genomic_position.pos + 1)
 
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'sync': cls.resolve_out_sync
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        return {
+            'genomic_interval': ins['genomic_position']
+        }
+
 
 class GetBoundsProximity(Step):
 

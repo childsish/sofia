@@ -46,6 +46,18 @@ class GetMajorTranscriptCodingSequence(Step):
         return ['{} coding sequence length not a multiple of 3, possible mis-annotation'.format(invalid)
                 for invalid in self.invalid]
 
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'sync': cls.resolve_out_sync
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        return {
+            'coding_sequence': ins['major_transcript']
+        }
+
 
 class GetFivePrimeUtr(Step):
     """

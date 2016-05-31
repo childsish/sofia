@@ -34,6 +34,18 @@ class GetGenomicFeatureByPosition(Step):
         res.name = res.name.rsplit('.')[0]
         return res
 
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'sync': cls.resolve_out_sync
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        return {
+            'genomic_feature': ins['genomic_position']
+        }
+
     def get_user_warnings(self):
         res = set()
         for error, cnt in self.cnt.iteritems():

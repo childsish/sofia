@@ -10,3 +10,15 @@ class GeneticCode(Step):
 
     def run(self, prt_file):
         yield GeneticCodes(prt_file)['Standard']
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
+
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'genetic_code': set()
+        }

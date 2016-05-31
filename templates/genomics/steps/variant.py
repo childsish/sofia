@@ -284,3 +284,15 @@ class GetAminoAcidVariant(Step):
         alts = [None if alt is None else genetic_code.translate(alt) for alt in codon_variant.alt]
         fs = [None if fs_ is None else fs_ / 3 for fs_ in codon_variant.fs]
         return AminoAcidVariant(codon_variant.pos / 3, genetic_code.translate(codon_variant.ref), alts, fs)
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'sync': cls.resolve_out_sync
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        return {
+            'amino_acid_variant': ins['codon_variant']
+        }

@@ -20,6 +20,18 @@ class GtfIterator(Step):
                     entry.name = entry.name.rsplit('.')[0]
                     yield entry
 
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
+
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'genomic_feature': set()
+        }
+
 
 class GtfSet(Step):
 
@@ -29,3 +41,15 @@ class GtfSet(Step):
     def get_interface(self, gtf_file):
         with gzip.open(gtf_file) if gtf_file.endswith('.gz') else open(gtf_file) as fileobj:
             yield InOrderAccessIntervalSet(GtfEntryIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
+
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'genomic_feature_set': set()
+        }

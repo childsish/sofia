@@ -3,10 +3,10 @@ from sofia.step import Step
 
 class GetVariantByVariant(Step):
     
-    IN = ['variant_set', 'variant']
+    IN = ['variant', 'variant_set']
     OUT = ['variant']
     
-    def run(self, variant_set, variant):
+    def run(self, variant, variant_set):
         #TODO: check matched variants
         if variant is None:
             return None
@@ -19,6 +19,18 @@ class GetVariantByVariant(Step):
         if len(hits) == 0:
             return None
         return hits
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'sync': cls.resolve_out_sync
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        return {
+            'variant': ins['variant']
+        }
 
 
 class GetVariantIdByGenomicInterval(Step):
