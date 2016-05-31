@@ -41,7 +41,7 @@ class StepResolver(object):
             try:
                 step_node = self.factory.make(disjoint_solution)
             except ValueError, e:
-                ERROR_MANAGER.add_error(e.message)
+                ERROR_MANAGER.add_error(e.message, self.step.name)
                 continue
             resources = reduce(or_, (partial_solution.head.attributes['resource'] for partial_solution in disjoint_solution), set())
             res[len(resources - set(self.requested_entities))].append(step_node)

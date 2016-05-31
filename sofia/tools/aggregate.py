@@ -84,9 +84,13 @@ class Aggregator(object):
                            if satisfies_request(graph, requested_entity.attributes['resource'])]
         if len(possible_graphs) == 0:
             sys.stderr.write('unable to resolve entity.\n\n')
-            sys.stderr.write('     Possible reasons:\n     * ')
-            sys.stderr.write('\n     * '.join(sorted(ERROR_MANAGER.errors)))
-            sys.stderr.write('\n')
+            sys.stderr.write('     Possible reasons:\n')
+            for error, names in sorted(ERROR_MANAGER.errors.iteritems()):
+                sys.stderr.write('     * {}\n'.format(error))
+                if len(names - {''}) > 0:
+                    sys.stderr.write('       ')
+                    sys.stderr.write('\n       '.join(names))
+                    sys.stderr.write('\n')
             sys.exit(1)
         elif len(possible_graphs) == 1:
             sys.stderr.write('unique solution found\n')
