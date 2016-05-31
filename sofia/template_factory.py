@@ -2,27 +2,33 @@ import imp
 import inspect
 import json
 import os
+import sys
 
-from collections import OrderedDict
-from step import Extractor
+from collections import OrderedDict, defaultdict
+from step import Step, Extractor
 from step.txt import TxtSet, TxtIterator, TxtAccessor
 from step.map import GetIdById, Map
 from wrappers.step_wrapper import StepWrapper
-from operator import add
 from graph.template import Template
 from graph.entity_graph import EntityGraph
 from entity_type import EntityType
-from lhc.io.txt_ import FormatParser
+from lhc.io.txt import FormatParser
+from resolvers import AttributeResolver
 
 
 class TemplateFactory(object):
     def __init__(self, root):
         self.root = root
+        self.entity_graph = self.load_entity_graph(os.path.join(self.root, 'entities.json'))
         self.steps = self.load_steps(os.path.join(root, 'steps'))
+        self.attributes = self.load_attributes(os.path.join(root, 'attributes'))
         with open(os.path.join(root, 'resource_entities.json')) as fhndl:
             self.recognised_formats = {definition['name'] for definition in json.load(fhndl)}
 
-    def make(self, provided_entities=[], requested_entities=[]):
+    def make(self, provided_entities=None, requested_entities=None):
+        provided_entities = [] if provided_entities is None else provided_entities
+        requested_entities = [] if requested_entities is None else requested_entities
+
         template = self.load_template()
         for step in self.load_custom_steps(provided_entities):
             template.register_step(step)
@@ -32,12 +38,13 @@ class TemplateFactory(object):
         return template
 
     def load_template(self):
-        entity_graph = self.load_entity_graph()
-        template = Template(entity_graph)
+        template = Template(self.entity_graph)
         for step in self.steps:
             template.register_step(StepWrapper(step))
         template.register_step(StepWrapper(GetIdById))
         template.register_step(StepWrapper(Map))
+        for attribute in self.attributes:
+            template.register_attribute(attribute)
         return template
 
     def load_custom_steps(self, provided_entities):
@@ -120,8 +127,8 @@ class TemplateFactory(object):
             template.register_step(extractor)
         return template
 
-    def load_entity_graph(self):
-        return EntityGraph(os.path.join(self.root, 'entities.json'))
+    def load_entity_graph(self, filename):
+        return EntityGraph(filename)
 
     def get_index_registry(self):
         return
@@ -139,26 +146,34 @@ class TemplateFactory(object):
         return registry
 
     def load_steps(self, step_directory):
-        import os
-        import sys
+        steps = self.load_plugins(step_directory, Step)
+        for step in steps:
+            if 'format' in step.PARAMS:
+                msg = 'Unable to import step {}. Parameter "format" is reserved and can not be used in attribute PARAMS.'
+                raise ImportError(msg.format(step.__name__))
+        return steps
 
-        format_error = 'Unable to import step {}. Parameter "format" is reserved and can not be used in attribute PARAMS.'
+    def load_attributes(self, attribute_directory):
+        return self.load_plugins(attribute_directory, AttributeResolver)
 
-        steps = []
-        sys.path.append(step_directory)
-        for fname in os.listdir(step_directory):
+    def load_plugins(self, plugin_directory, plugin_class, exclude=None):
+        if exclude is None:
+            exclude = {plugin_class}
+        else:
+            exclude |= {plugin_class}
+
+        plugins = []
+        sys.path.append(plugin_directory)
+        for fname in os.listdir(plugin_directory):
             if fname.startswith('.') or not fname.endswith('.py'):
                 continue
             module_name, ext = os.path.splitext(fname)
-            module = imp.load_source(module_name, os.path.join(step_directory, fname))
-            child_classes = [child_class for child_class in module.__dict__.itervalues()
-                             if type(child_class) == type]
+            module = imp.load_source(module_name, os.path.join(plugin_directory, fname))
+            child_classes = [child_class for child_class in module.__dict__.itervalues() if type(child_class) == type]
             for child_class in child_classes:
-                if inherits_from(child_class, 'Step') and child_class.__name__ not in {'Step', 'Resource', 'Target'}:
-                    if 'format' in child_class.PARAMS:
-                        raise ImportError(format_error.format(child_class.__name__))
-                    steps.append(child_class)
-        return steps
+                if issubclass(child_class, plugin_class) and child_class not in exclude:
+                    plugins.append(child_class)
+        return plugins
 
 
 def inherits_from(child, parent_name):

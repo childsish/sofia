@@ -1,11 +1,14 @@
 from lhc.graph import NPartiteGraph
+from sofia.graph import Template
 
 
 class StepNode(NPartiteGraph):
-    def __init__(self, step):
+    def __init__(self, step, out_attributes):
         super(StepNode, self).__init__(type(step).__name__)
+
         self.head = step
-        self.add_vertex(step, 1)
+        self.add_vertex(step, Template.STEP_PARTITION)
+        self.out_attributes = out_attributes
 
     def add_entity_node(self, entity_node):
         self.update(entity_node)

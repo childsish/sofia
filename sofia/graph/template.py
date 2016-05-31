@@ -11,6 +11,7 @@ class Template(NPartiteGraph):
         super(Template, self).__init__()
         self.steps = dict()
         self.entity_graph = entity_graph
+        self.attributes = []
 
     def __str__(self):
         """ Convert to string
@@ -56,3 +57,6 @@ class Template(NPartiteGraph):
             self.add_vertex(out, self.ENTITY_PARTITION)
             self.add_edge(step.name, out)
             self.register_entity(out)
+
+    def register_attribute(self, attribute):
+        self.attributes.append(attribute)

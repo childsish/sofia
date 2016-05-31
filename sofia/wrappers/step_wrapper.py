@@ -13,6 +13,9 @@ class StepWrapper(object):
     def __str__(self):
         return self.name
 
+    def __repr__(self):
+        return self.name
+
     def __call__(self, resources=None, dependencies=None, ins=None, outs=None):
         ins = self.ins if ins is None else ins
         outs = self.outs if outs is None else outs

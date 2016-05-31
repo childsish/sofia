@@ -1,11 +1,9 @@
 import argparse
-import itertools
-import multiprocessing
 import os
 import sys
 import time
-from collections import defaultdict
 
+from collections import defaultdict
 from common import get_program_directory
 from sofia.attribute_map_factory import AttributeMapFactory
 from sofia.entity_type_parser import EntityTypeParser
@@ -16,48 +14,21 @@ from sofia.workflow.resolved_workflow import ResolvedWorkflow
 
 
 class Aggregator(object):
-    def __init__(self, hyper_graph, workflow_template, stdout=sys.stdout):
-        self.hyper_graph = hyper_graph
+    def __init__(self, template, workflow_template, stdout=sys.stdout):
+        self.template = template
         self.workflow_template = workflow_template
         self.stdout = stdout
 
-    def aggregate(self, requested_entities, provided_entities, args, maps={}):
-        def iter_target(target):
-            params = {key: target.attr[key] for key in target.PARAMS if key in target.attr}
-            target.init(**params)
-            line_no = 1
-            while True:
-                yield target.calculate(), line_no
-                line_no += 1
+    def aggregate(self, requested_entities, provided_entities, args, maps=None):
+        maps = {} if maps is None else maps
 
-        sys.stderr.write('    Resolving entities...\n')
-
+        sys.stderr.write('    Resolving worklow...\n')
         start_time = time.time()
         solution, matching_entities = self.resolve_requested_entities(requested_entities, provided_entities, maps)
         sys.stderr.write('\n    Workflow resolved in {} seconds.\n\n'.format(round(time.time() - start_time, 2)))
         if args.graph:
             self.stdout.write('{}\n\n'.format(solution))
             return
-
-        from sofia.execution_engines.low_memory_engine import LowMemoryExecutionEngine
-        executor = LowMemoryExecutionEngine(solution)
-        for entity in provided_entities:
-            executor.resolve_entity(entity, list(entity.attributes['filename']))
-        executor.execute()
-
-        for fields in zip(*[executor.resolved_entities[entity] for entity in solution.heads]):
-            self.stdout.write('\t'.join('' if field is None else str(field) for field in fields))
-            self.stdout.write('\n')
-        sys.exit(1)
-
-        pool_iterator = iter_target(solution.steps['target'])
-        initargs = [matching_entities, provided_entities, solution, self.hyper_graph.entity_graph]
-        if args.processes == 1:
-            init_worker(*initargs)
-            it = itertools.imap(get_annotation, pool_iterator)
-        else:
-            pool = multiprocessing.Pool(args.processes, initializer=init_worker, initargs=initargs)
-            it = pool.imap(get_annotation, pool_iterator, args.simultaneous_entries)
 
         sys.stderr.write('\n    Aggregating information...\n\n')
         if args.header is None:
@@ -66,10 +37,15 @@ class Aggregator(object):
         else:
             header = open(args.header).read() if os.path.exists(args.header) else args.header
             self.stdout.write(header)
+
+        from sofia.execution_engines.simple_engine import SimpleExecutionEngine
+        executor = SimpleExecutionEngine(solution)
+        for entity in provided_entities:
+            executor.resolve_entity(entity, list(entity.attributes['filename']))
+        executor.execute()
         template = '\t'.join(['{}'] * len(requested_entities)) if args.template is None else args.template
-        for row in it:
-            row = [requested_entity.format(entity) for requested_entity, entity in zip(requested_entities, row)]
-            self.stdout.write(template.format(*row))
+        for fields in zip(*[executor.resolved_entities[entity] for entity in solution.heads]):
+            self.stdout.write(template.format('' if field is None else str(field) for field in fields))
             self.stdout.write('\n')
 
         is_warning_header_written = False
@@ -82,10 +58,6 @@ class Aggregator(object):
                 sys.stderr.write('      Step: {}\n        '.format(step))
                 sys.stderr.write('\n        '.join(warnings))
                 sys.stderr.write('\n')
-
-        if args.processes > 1:
-            pool.close()
-            pool.join()
 
     def resolve_requested_entities(self, requested_entities, provided_entities, maps):
         solutions = [self.resolve_requested_entity(entity, provided_entities, maps) for entity in requested_entities]
@@ -103,9 +75,8 @@ class Aggregator(object):
         ERROR_MANAGER.reset()
         sys.stderr.write('     {} - '.format(requested_entity.name))
         solution_iterator = EntityResolver(requested_entity.name,
-                                           self.hyper_graph,
+                                           self.template,
                                            provided_entities,
-                                           self.workflow_template,
                                            maps,
                                            requested_entity.attributes['resource'])
         possible_graphs = list(solution_iterator)
@@ -203,6 +174,10 @@ def aggregate(args):
         args.resources + [args.input + ['target']],
         args.resource_list
     )
+    for entity in provided_entities:
+        if 'sync' not in entity.attributes:
+            entity.attributes['sync'] = {entity.alias}
+
     requested_entities = parser.get_requested_entities(args, provided_entities)
     if len(requested_entities) == 0:
         import sys
@@ -222,60 +197,6 @@ def aggregate(args):
     maps = {k: AttributeMapFactory(v) for k, v in (map.split('=', 1) for map in args.maps)}
     aggregator.aggregate(requested_entities, provided_entities, args, maps)
     stdout.close()
-
-
-requested_entities = None
-provided_entities = None
-solution = None
-entity_graph = None
-entities = None
-
-
-def init_worker(requested_entities_, provided_entities_, solution_, entity_graph_):
-    global requested_entities
-    global provided_entities
-    global solution
-    global entity_graph
-    global entities
-
-    requested_entities = requested_entities_
-    provided_entities = provided_entities_
-    solution = solution_
-    entity_graph = entity_graph_
-    entities = {entity_type.name: entity_type.attr['filename'] for entity_type in provided_entities}
-
-    solution.init()
-
-
-def get_annotation(target):
-    """ Calculate the steps in this graph for each entity in the target resource. """
-    global requested_entities
-    global solution
-    global entity_graph
-    global entities
-
-    for top_step in solution.step:
-        solution.steps[top_step].reset(solution.steps)
-
-    target, line_no = target
-    target_parser = solution.steps['target']
-    target = [target] if len(target_parser.outs) == 1 else target
-
-    entities.update({str(key): value for key, value in zip(target_parser.outs.itervalues(), target)})
-    solution.steps['target'].calculated = True
-
-    for top_step in solution.step:
-        try:
-            solution.steps[top_step].generate(entities, solution.steps, entity_graph)
-        except Exception, e:
-            import sys
-            import traceback
-            traceback.print_exception(*sys.exc_info(), file=sys.stderr)
-            sys.stderr.write('Error processing entry on line {}\n'.format(solution.steps['target'].interface.line_no))
-            #sys.exit(1)
-
-    row = [entities.get(str(entity), '') for entity in requested_entities]
-    return row
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -1,15 +1,36 @@
 from collections import OrderedDict
 from sofia.entity_type import EntityType
-from sofia.error_manager import ERROR_MANAGER
-from operator import or_
 
 
 class Step(object):
-    """ A step that can be calculated from resources and other steps. """
+    """
+    A step that can be calculated from resources and other steps. Primarily concerned with execution of the step. Not
+    concerned with attributes etc...
+    """
     
     IN = []
     OUT = []
     PARAMS = []
+
+    def run(self, **kwargs):
+        """
+        Run this step
+
+        Assumes dependencies are already resolved. This function must be
+        overridden when implementing new steps.
+
+        :param kwargs: arguments defined in class IN variable
+        :return: output of running the step
+        """
+        raise NotImplementedError('You must override this function')
+
+    @classmethod
+    def get_in_resolvers(cls):
+        return {}
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {}
     
     def __init__(self, resources=None, dependencies=None, attr={}, ins=None, outs=None, name=None):
         # TODO: Consider equivalence of dependencies and ins
@@ -42,18 +63,6 @@ class Step(object):
         """
         pass
 
-    def run(self, **kwargs):
-        """
-        Run this step
-
-        Assumes dependencies are already resolved. This function must be
-        overridden when implementing new steps.
-
-        :param kwargs: arguments defined in class IN variable
-        :return: output of running the step
-        """
-        raise NotImplementedError('You must override this function')
-
     def get_attributes(self):
         res = {}
         for out in self.outs.itervalues():
@@ -66,7 +75,7 @@ class Step(object):
         :return: set of warnings
         """
         return frozenset()
-    
+
     def _get_name(self, name=None):
         """ Return the name of the step based on it's resources and arguments. """
         res = [type(self).__name__ if name is None else name]
@@ -76,55 +85,3 @@ class Step(object):
         for key, value in attributes.iteritems():
             res.append('{}={}'.format(key, ','.join(value)))
         return '\n'.join(res)
-    
-    @classmethod
-    def get_output(cls, ins={}, outs={}, requested_attr={}, entity_graph=None):
-        """ Determine the attributes of the outputs
-
-        Given the provided and requested attributes, determine the output
-        attributes.
-        """
-        #TODO use the entity graph to return proper entities with attributes
-        # Check that input entity attributes match
-        if len(ins) == 0:
-            return OrderedDict()
-
-        common_attributes = set.intersection(*[set(entity.attributes) for entity in ins.itervalues()]) - {'resource', 'filename'}
-        for name in common_attributes:
-            common_attr = reduce(or_, (entity.attributes[name] for entity in ins.itervalues()))
-            if len(common_attr) > 1:
-                attributes = ', '.join('({}: {})'.format(k, v.attr[name]) for k, v in ins.iteritems())
-                ERROR_MANAGER.add_error('{} could not match {} attributes: {}'.format(cls.__name__, name, attributes))
-                return None
-
-        # Determine attributes to remove
-        # FIXME: Make this per output entity rather than for all.
-        in_descendents = set(ins)
-        in_equivalents = reduce(or_, (entity_graph.get_equivalent_ancestors(entity) for entity in ins))
-        for entity in in_equivalents:
-            paths = entity_graph.get_descendent_paths(entity)
-            for path in paths:
-                for step in path:
-                    in_descendents.update(entity_graph.get_equivalent_ancestors(step['name']))
-        out_descendents = set(outs)
-        out_equivalents = reduce(or_, (entity_graph.get_equivalent_ancestors(entity) for entity in outs))
-        for entity in out_equivalents:
-            paths = entity_graph.get_descendent_paths(entity)
-            for path in paths:
-                for step in path:
-                    out_descendents.update(entity_graph.get_equivalent_ancestors(step['name']))
-        
-        # Yield the output entities
-        out_attr = {}
-        for entity in ins.itervalues():
-            out_attr.update(entity.attributes)
-        remove = set()
-        for attr in out_attr:
-            if attr in in_descendents and attr not in out_descendents:
-                remove.add(attr)
-        for attr in remove:
-            del out_attr[attr]
-
-        out_attr['resource'] = reduce(or_, (entity.attributes['resource'] for entity in ins.itervalues()), set())
-        outs = OrderedDict([(out, EntityType(out, attributes=out_attr)) for out in outs])  # TODO: use an entity factory
-        return outs
