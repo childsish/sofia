@@ -1,7 +1,7 @@
 import json
 
 from entity_set import EntitySet
-from sofia.entity_definition_parser import EntityDefinitionParser
+from sofia.workflow_template.entity_definition_parser import EntityDefinitionParser
 
 
 def load_entity_set(filename):

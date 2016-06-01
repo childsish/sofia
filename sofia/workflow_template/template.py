@@ -1,6 +1,7 @@
 from entity_set import EntitySet
 from lhc.graph import NPartiteGraph
 from sofia.step import Extractor, Converter
+from sofia.workflow_template.entity_definition_parser import EntityDefinitionParser
 
 
 class Template(NPartiteGraph):
@@ -14,12 +15,14 @@ class Template(NPartiteGraph):
     STEP_PARTITION = 1
 
     """ A hyper graph of all the possible step calculation pathways. """
-    def __init__(self, entities=None, steps=None, attributes=None):
+    def __init__(self, entities=None, steps=None, attributes=None, parser=None):
         super(Template, self).__init__()
+        self.provided_entities = {}
+
         self.entities = EntitySet() if entities is None else entities
         self.steps = {} if steps is None else steps
         self.attributes = {} if attributes is None else attributes
-        self.provided_entities = {}
+        self.parser = EntityDefinitionParser({}) if parser is None else parser
 
         self.register_entities(entities)
         self.register_steps(steps)
@@ -75,3 +78,12 @@ class Template(NPartiteGraph):
         if entity.alias in self.provided_entities:
             raise ValueError('an entity with the alias {} is already provided'.format(entity.alias))
         self.provided_entities[entity.alias] = entity
+
+    def update(self, other):
+        super(Template, self).update(other)
+
+        self.provided_entities.update(other.provided_entites)
+        self.entities.update(other.entities)
+        self.steps.update(other.steps)
+        self.attributes.update(other.attributes)
+        self.parser.update(other.parser)

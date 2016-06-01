@@ -14,7 +14,7 @@ def load_template(root):
     steps.update(get_extractors(entities))
     attributes = load_attributes(os.path.join(root, 'attributes'))
 
-    template = Template(entities=entities, steps=steps, attributes=attributes)
+    template = Template(entities=entities, steps=steps, attributes=attributes, parser=parser)
     for entity in provided_entities:
         template.provide_entity(entity)
     return template
