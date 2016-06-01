@@ -2,7 +2,7 @@ from collections import OrderedDict
 from sofia.entity_type import EntityType
 
 
-class StepWrapper(object):
+class ConcreteStep(object):
     def __init__(self, step_class, name=None, ins=None, outs=None, attr={}):
         self.step = None
         self.step_class = step_class

@@ -7,7 +7,7 @@ import sys
 from graph.entity_graph import EntityGraph
 from graph.template import Template
 from resolvers import AttributeResolver
-from sofia.step import StepWrapper
+from sofia.step import ConcreteStep
 from step import Step, Extractor
 
 
@@ -35,7 +35,7 @@ class TemplateFactory(object):
     def load_template(self):
         template = Template(self.entity_graph)
         for step in self.steps:
-            template.register_step(StepWrapper(step))
+            template.register_step(ConcreteStep(step))
         for attribute in self.attributes:
             template.register_attribute(attribute)
         return template
@@ -58,11 +58,11 @@ class TemplateFactory(object):
                                                                   entity_graph.get_entity_name(out)))
 
         for (in_, out), (path, name) in extractors.iteritems():
-            extractor = StepWrapper(Extractor,
-                                    name,
-                                    ins={in_: entity_graph.create_entity(in_)},
-                                    outs={out: entity_graph.create_entity(out)},
-                                    attr={'path': path})
+            extractor = ConcreteStep(Extractor,
+                                     name,
+                                     ins={in_: entity_graph.create_entity(in_)},
+                                     outs={out: entity_graph.create_entity(out)},
+                                     attr={'path': path})
             template.register_step(extractor)
         return template
 
