@@ -3,17 +3,17 @@ import inspect
 import json
 import os
 import sys
+from collections import OrderedDict
 
-from collections import OrderedDict, defaultdict
-from step import Step, Extractor
-from step.txt import TxtSet, TxtIterator, TxtAccessor
-from step.map import GetIdById, Map
-from wrappers.step_wrapper import StepWrapper
-from graph.template import Template
-from graph.entity_graph import EntityGraph
 from entity_type import EntityType
+from graph.entity_graph import EntityGraph
+from graph.template import Template
 from lhc.io.txt import FormatParser
 from resolvers import AttributeResolver
+from sofia.step import StepWrapper
+from step import Step, Extractor
+from step.map import GetIdById, Map
+from step.txt import TxtSet, TxtIterator, TxtAccessor
 
 
 class TemplateFactory(object):
