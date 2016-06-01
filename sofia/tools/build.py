@@ -32,7 +32,7 @@ def define_parser(parser):
     add_arg('input', nargs='*',
             help='template directory(ies)')
     add_arg('-o', '--output',
-            help='direct output to named file (default: stdout)')
+            help='output to named .sft file (default: stdout)')
     add_arg('-p', '--pickled', action='store_true',
             help='output pickled template')
     parser.set_defaults(func=build_init)
@@ -40,10 +40,14 @@ def define_parser(parser):
 
 def build_init(args):
     input = get_input(args.input)
-    output = sys.stdout if args.output is None else open(args.output, 'wb' if args.pickled else 'w')
+    output = sys.stdout
+    if args.output is not None:
+        filename = args.output + ('' if args.output.endswith('.sft') else '.sft')
+        mode = 'wb' if args.pickled else 'w'
+        output = open(filename, mode)
     template = build(input)
     if args.pickled:
-        cPickle.dump(template, output)
+        cPickle.dump(template, output, protocol=cPickle.HIGHEST_PROTOCOL)
     else:
         output.write(str(template))
     output.close()
