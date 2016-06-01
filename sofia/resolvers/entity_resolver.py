@@ -4,10 +4,9 @@ from sofia.entity_type import EntityType
 
 
 class EntityResolver(object):
-    def __init__(self, entity_type, template, provided_entities, maps={}, requested_resources=set(), visited=None):
+    def __init__(self, entity_type, template, maps={}, requested_resources=set(), visited=None):
         self.entity_type = entity_type
         self.template = template
-        self.provided_entities = provided_entities
         self.maps = maps
         self.requested_resources = requested_resources
 
@@ -18,7 +17,7 @@ class EntityResolver(object):
     
     def __iter__(self):
         is_not_provided = True
-        for provided_entity in self.provided_entities:
+        for provided_entity in self.template.provided_entities.itervalues():
             if provided_entity.name == self.entity_type:
                 is_not_provided = False
                 yield EntityNode(provided_entity)
@@ -34,7 +33,6 @@ class EntityResolver(object):
             step = self.template.steps[step_name]
             it = StepResolver(step,
                               self.template,
-                              self.provided_entities,
                               self.maps,
                               self.requested_resources,
                               set(self.visited))

@@ -7,11 +7,10 @@ from sofia.error_manager import ERROR_MANAGER
 
 
 class StepResolver(object):
-    def __init__(self, step, template, provided_entities, maps={}, requested_entities=set(), visited=None):
+    def __init__(self, step, template, maps={}, requested_entities=set(), visited=None):
         self.step = step
-        self.factory = StepNodeFactory(step, [attribute(attribute.ATTRIBUTE, template.entity_graph, step, maps) for attribute in template.attributes])
+        self.factory = StepNodeFactory(step, [attribute(attribute.ATTRIBUTE, template.entities, step, maps) for attribute in template.attributes.itervalues()])
         self.template = template
-        self.provided_entities = provided_entities
         self.maps = maps
         self.requested_entities = requested_entities
 
@@ -28,7 +27,6 @@ class StepResolver(object):
         entities = sorted(self.template.get_children(self.step.name))
         resolvers = {entity: EntityResolver(entity,
                                             self.template,
-                                            self.provided_entities,
                                             self.maps,
                                             self.requested_entities,
                                             self.visited)
