@@ -97,13 +97,13 @@ class EntityGraph(object):
         return equivalents
 
     def create_entity(self, name):
-        attr = {attr: None for attr in self.attr.get(name, [])}
+        attr = {attr: set() for attr in self.attr.get(name, [])}
         for path in self.get_descendent_paths(name):
             for step in path:
                 if step['name'] not in self.attr:
                     continue
                 for name in self.attr[step['name']]:
-                    attr[name] = None
+                    attr[name] = set()
         return EntityType(name, attributes=attr)
 
     @classmethod
