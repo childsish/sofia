@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import cPickle
 
 from sofia.template_factory import TemplateFactory
 
@@ -32,6 +33,8 @@ def define_parser(parser):
             help='template directory(ies)')
     add_arg('-o', '--output',
             help='direct output to named file (default: stdout)')
+    add_arg('-p', '--pickled', action='store_true',
+            help='output pickled template')
     parser.set_defaults(func=build_init)
 
 
@@ -50,9 +53,12 @@ def build_init(args):
                 raise ValueError('{} does not exist'.format(directory))
             input.append(directory)
 
-    output = sys.stdout if args.output is None else open(args.output, 'w')
+    output = sys.stdout if args.output is None else open(args.output, 'wb')
     template = build(input)
-    output.write(str(template))
+    if args.pickled:
+        cPickle.dump(template, output)
+    else:
+        output.write(str(template))
     output.close()
 
 if __name__ == '__main__':
