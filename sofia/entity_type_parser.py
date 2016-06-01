@@ -1,14 +1,7 @@
-from __future__ import with_statement
-
-import json
 import os
 import re
 
-from collections import namedtuple
 from entity_type import EntityType
-
-
-EntityDefinition = namedtuple('EntityDefinition', ('type', 'alias', 'attributes'))
 
 
 class EntityTypeParser(object):
@@ -35,79 +28,33 @@ class EntityTypeParser(object):
 
     REGX = re.compile(r'(?P<entity>[^[.:]+)(?P<format_string>[^:]+)?')
 
-    def __init__(self, template_directory):
-        self.template_directory = template_directory
-        self.extensions = self.get_extension_entity_map()
+    def __init__(self, extensions):
+        self.extensions = extensions
 
-    def get_requested_entities(self, args, provided_entities):
-        definitions = []
-        if args.entity_list is not None:
-            definitions.extend(line.rstrip('\r\n') for line in open(args.entity_list))
-        if args.entities is not None:
-            definitions.extend(args.entities)
-
-        return [self.get_requested_entity(definition) for definition in definitions]
-
-    def get_requested_entity(self, definition):
-        type, alias, attributes = self.parse_entity_type(definition)
+    def parse_requested_entity(self, definition):
+        type, alias, attributes = self.parse_definition(definition)
         match = self.REGX.match(type)
         if match is None:
             raise ValueError('Invalid entity definition: {}'.format(type))
-        type = match.group('entity')
-        format_string = '' if match.group('format_string') is None else match.group('format_string')
-        return EntityType(type, alias=alias, attributes=attributes, format_string=format_string)
+        type, format_string = match.groups('')
+        return EntityType(type, attributes=attributes, alias=alias, format_string=format_string)
 
-    def get_provided_entities(self, definitions=None, definition_file=None):
-        if definitions is None:
-            definitions = []
-
-        with open(os.path.join(self.template_directory, 'provided_entities.txt')) as fhndl:
-            definitions.extend(os.path.join(self.template_directory, 'data', line.rstrip('\r\n')).split()
-                                for line in fhndl if line.strip() != '')
-        if definition_file is not None:
-            with open(definition_file) as fhndl:
-                definitions.extend(line.rstrip('\r\n') for line in fhndl)
-
-        return [self.get_provided_entity(definition) for definition in definitions]
-
-    def get_provided_entity(self, definition):
-        type, alias, attributes = self.parse_entity_type(definition)
-
+    def parse_provided_entity(self, definition):
+        filename, alias, attributes = self.parse_definition(definition)
+        type = self.get_type_by_extension(filename)
+        attributes['filename'] = filename
         if alias is None:
-            alias = os.path.basename(type)
-        if os.path.exists(type):
-            attributes['filename'] = {type}
-
-        if 'entity' in attributes:
-            type = list(attributes['entity'])[0]
-            del attributes['entity']
-        elif 'filename' in attributes:
-            type = self.get_type_by_extension(list(attributes['filename'])[0])
-            if type is None:
-                msg = 'Provided entity {} has unknown extension or entity type is not explicitly defined'
-                raise ValueError(msg.format(alias))
-
+            alias = os.path.basename(filename)
         attributes['resource'] = {alias}
-        return EntityType(type, alias=alias, attributes=attributes)
+        return EntityType(type, attributes=attributes, alias=alias)
 
-    def get_extension_entity_map(self):
-        with open(os.path.join(self.template_directory, 'resource_entities.json')) as fhndl:
-            resources = json.load(fhndl)
-        extensions = {}
-        for resource in resources:
-            for extension in resource['extensions']:
-                if extension in extensions:
-                    raise KeyError('Extension "{}" defined multiple times.'.format(extension))
-                extensions[extension] = resource['name']
-        return extensions
+    def parse_definition(self, definition):
+        """
+        Parse the basic structure of both provided and requested entities
 
-    def get_type_by_extension(self, filename):
-        for extension in self.extensions:
-            if filename.endswith(extension):
-                return self.extensions[extension]
-        return None
-
-    def parse_entity_type(self, definition):
+        :param definition: string encoding an entity
+        :return: tuple of entity type, alias and attributes
+        """
         type = definition[0]
         alias = None
         attributes = {}
@@ -118,5 +65,11 @@ class EntityTypeParser(object):
             elif alias is None:
                 alias = part
             else:
-                raise ValueError('entity name already used: {}'.format(part))
-        return EntityDefinition(type, alias, attributes)
+                raise ValueError('entity name already defined: {}'.format(part))
+        return type, alias, attributes
+
+    def get_type_by_extension(self, filename):
+        for extension in self.extensions:
+            if filename.endswith(extension):
+                return self.extensions[extension]
+        return None
