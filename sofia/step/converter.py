@@ -1,10 +1,7 @@
-from step import Step
+from concrete_step import ConcreteStep
 
 
-class Convert(Step):
-    def __str__(self):
-        return str(self.converter)
-
+class Converter(ConcreteStep):
     def register_converter(self, converter):
         self.converter = converter
 
@@ -15,3 +12,6 @@ class Convert(Step):
     def get_user_warnings(self):
         frq = round(self.converter.cnt / float(self.converter.ttl), 3)
         return {'{}% of identifiers were converted.'.format(frq * 100)} if frq < 1 else {}
+
+    def init(self, **kwargs):
+        return

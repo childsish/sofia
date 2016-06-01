@@ -1,36 +1,16 @@
-import json
-
 from sofia.entity_type import EntityType
 from lhc.graph import Graph
 
 
 class EntityGraph(object):
-    def __init__(self, fname=None):
-        self.entities = {}
+    def __init__(self, entities):
+        self.entities = entities
         self.has_a = Graph()
         self.is_a = Graph()
         self.attr = {}
 
-        if fname is not None:
-            self.load_file(fname)
-
-    def load_file(self, fname):
-        fhndl = open(fname)
-        entities = json.load(fhndl)
-        fhndl.close()
-
-        self.entities = {entity['name']: entity for entity in entities}
-        for entity in self.entities.itervalues():
-            entity['has_a'] = {child['name']: child for child in entity.get('has_a', [])}
-
-        for entity in self.entities.itervalues():
-            self.has_a.add_vertex(entity['name'])
-            for child in entity.get('has_a', []):
-                self.has_a.add_edge(entity['name'], child)
-            if 'is_a' in entity:
-                self.is_a.add_edge(entity['is_a'], entity['name'])
-            if 'attributes' in entity:
-                self.attr[entity['name']] = entity['attributes']
+    def __iter__(self):
+        return self.entities.iterkeys()
 
     def __contains__(self, item):
         return item in self.entities

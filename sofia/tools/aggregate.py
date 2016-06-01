@@ -2,14 +2,14 @@ import argparse
 import os
 import sys
 import time
-
 from collections import defaultdict
+
 from common import get_program_directory
 from sofia.attribute_map_factory import AttributeMapFactory
 from sofia.entity_type_parser import EntityTypeParser
 from sofia.error_manager import ERROR_MANAGER
+from sofia.workflow_template import load_template
 from sofia.resolvers.entity_resolver import EntityResolver
-from sofia.template_factory import TemplateFactory
 from sofia.workflow.resolved_workflow import ResolvedWorkflow
 
 

@@ -1,5 +1,5 @@
 from lhc.graph import NPartiteGraph
-from sofia.graph import Template
+from sofia.workflow_template import Template
 
 
 class StepNode(NPartiteGraph):

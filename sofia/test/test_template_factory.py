@@ -1,8 +1,7 @@
 import os
 import unittest
 
-from sofia.step import Step, Resource
-from sofia.template_factory import TemplateFactory, inherits_from
+from sofia.workflow_template.load_template import TemplateFactory, inherits_from
 
 
 class TestTemplateFactory(unittest.TestCase):

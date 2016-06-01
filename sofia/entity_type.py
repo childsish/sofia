@@ -1,6 +1,7 @@
 class EntityType(object):
-    """ An "entity" represents data that is processed by steps in a workflow.
-        They can be considered nouns and the step can be considered verbs.
+    """
+    An "entity" represents data that is processed by steps in a workflow. They can be considered nouns and the step can
+    be considered verbs.
     """
     def __init__(self, name, attributes=None, alias=None, format_string=''):
         self.name = name

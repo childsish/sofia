@@ -60,7 +60,8 @@
   },
   {
     "name": "genetic_code",
-    "description": "The genetic code for a given organism"
+    "description": "The genetic code for a given organism",
+    "default": "gc.prt genetic_code"
   },
   {
     "name": "genomic_feature",
@@ -110,7 +111,8 @@
   },
   {
     "name": "molecular_weight_set",
-    "description": "A set of molecular weights used to calculate various other features"
+    "description": "A set of molecular weights used to calculate various other features",
+    "default": "Emolwt.dat molecular_weights"
   },
   {
     "name": "pest_sequences",
@@ -172,5 +174,50 @@
     "name": "variant_set",
     "attributes": ["chromosome_id"],
     "description": "A set of sequence variants. The attributes of the chromosome_id can be set. eg. VCF"
+  },
+    {
+    "name": "bed_file",
+    "description": "A set of genomic features",
+    "extensions": [".bed", ".bed.gz"]
+  },
+  {
+    "name": "fasta_file",
+    "description": "A set of sequences",
+    "extensions": [".fasta", ".fasta.gz", ".fa", ".fa.gz"]
+  },
+  {
+    "name": "gbk_file",
+    "description": "A set of genbank entries",
+    "extensions": [".gbk", ".gbk.gz"]
+  },
+  {
+    "name": "gff_file",
+    "description": "A set of genomic features",
+    "extensions": [".gff", ".gff.gz", ".gff3", ".gff3.gz"]
+  },
+  {
+    "name": "gtf_file",
+    "description": "A set of genomic features",
+    "extensions": [".gtf", ".gtf.gz"]
+  },
+  {
+    "name": "maf_file",
+    "description": "A set of sequence variants",
+    "extensions": [".maf", ".maf.gz"]
+  },
+  {
+    "name": "molecular_weight_file",
+    "description": "Molecular weights for amino acids",
+    "extensions": [".dat"]
+  },
+  {
+    "name": "prt_file",
+    "description": "A set of genetic codes",
+    "extensions": [".prt"]
+  },
+  {
+    "name": "vcf_file",
+    "description": "A set of sequence variants",
+    "extensions": [".vcf", ".vcf.gz"]
   }
 ]

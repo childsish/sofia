@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from sofia.graph.entity_graph import EntityGraph
+from sofia.workflow_template.entity_graph import EntityGraph
 
 
 class TestEntityGraph(unittest.TestCase):

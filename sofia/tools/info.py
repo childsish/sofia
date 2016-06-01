@@ -1,10 +1,10 @@
 import argparse
 import os
 import sys
+from textwrap import wrap
 
 from common import get_program_directory
-from textwrap import wrap
-from sofia.template_factory import TemplateFactory
+from sofia.workflow_template import load_template
 
 
 def generate_graph(workflow_template, output=sys.stdout):

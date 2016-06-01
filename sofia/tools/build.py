@@ -1,18 +1,16 @@
 import argparse
+import cPickle
 import os
 import sys
-import cPickle
 
-from sofia.template_factory import TemplateFactory
+from sofia.workflow_template import load_template
 
 
 def build(template_directories):
-    template_factory = TemplateFactory()
-    for directory in template_directories:
-        if not os.path.exists(directory):
-            raise ValueError('{} does not exist'.format(directory))
-        template_factory.add_root(directory)
-    return template_factory.make()
+    template = load_template(template_directories[0])
+    for directory in template_directories[1:]:
+        template.update(load_template(directory))
+    return template
 
 
 def main():

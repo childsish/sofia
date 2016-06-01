@@ -3,7 +3,7 @@ __author__ = 'Liam Childs'
 import unittest
 
 from sofia.step import Step
-from sofia.graph import Workflow
+from sofia.workflow_template import Workflow
 
 
 class TestStepGraph(unittest.TestCase):

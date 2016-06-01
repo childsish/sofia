@@ -11,7 +11,7 @@ setup(
     author='Liam H. Childs',
     author_email='liam.h.childs@gmail.com',
     packages=find_packages(exclude=['test']),
-    package_data={'templates': ['genomics/*.json', 'genomics/*.txt', 'genomics/data/*']},
+    package_data={'templates': ['genomics/*.json', 'genomics/entities/*']},
     url='https://github.com/childsish/sofia',
     license='LICENSE.txt',
     description='Software for the Flexible Integration of Annotation',

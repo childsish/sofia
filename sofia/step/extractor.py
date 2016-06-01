@@ -1,5 +1,5 @@
 from step import Step
-from sofia.graph.entity_graph import EntityGraph
+from sofia.workflow_template.entity_graph import EntityGraph
 
 
 class Extractor(Step):
