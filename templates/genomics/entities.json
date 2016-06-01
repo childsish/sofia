@@ -55,7 +55,6 @@
   },
   {
     "name": "gene_id",
-    "is_a": "id",
     "attributes": ["gene_id"],
     "description": "A gene identifier."
   },

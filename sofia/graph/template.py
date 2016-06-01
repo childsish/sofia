@@ -19,6 +19,8 @@ class Template(NPartiteGraph):
         :return: A string representing the graph in Graphviz format.
         """
         res = ['digraph {} {{'.format(self.name)]
+        for entity in sorted(self.partitions[self.ENTITY_PARTITION]):
+            res.append('    "{}" [shape=box];'.format(entity))
         for e, v in sorted(self.graph.es.iteritems()):
             res.append('    "{}" -> "{}";'.format(v.fr, v.to))
         for entity in self.entity_graph.entities.itervalues():
@@ -27,8 +29,6 @@ class Template(NPartiteGraph):
             if 'has_a' in entity:
                 for has_a in entity['has_a']:
                     res.append('    "{}" -> "{}" [color=blue,type=dotted,label="has_a"]'.format(entity['name'], has_a))
-        for v in sorted(self.vs):
-            res.append('    "{}" [shape=box];'.format(v))
         res.append('}')
         return '\n'.join(res)
 

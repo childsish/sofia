@@ -12,6 +12,9 @@ class Step(object):
     OUT = []
     PARAMS = []
 
+    def __init__(self, **kwargs):
+        pass
+
     def run(self, **kwargs):
         """
         Run this step
@@ -31,15 +34,6 @@ class Step(object):
     @classmethod
     def get_out_resolvers(cls):
         return {}
-    
-    def __init__(self, resources=None, dependencies=None, attr={}, ins=None, outs=None, name=None):
-        # TODO: Consider equivalence of dependencies and ins
-        self.resources = set() if resources is None else resources
-        self.dependencies = {} if dependencies is None else dependencies
-        self.attr = attr
-        self.ins = OrderedDict([(in_, EntityType(in_)) for in_ in self.IN]) if ins is None else ins
-        self.outs = OrderedDict([(out, EntityType(out)) for out in self.OUT]) if outs is None else outs
-        self.name = self._get_name(name)
     
     def __str__(self):
         """ Return the name of the step based on it's resources and

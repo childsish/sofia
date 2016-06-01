@@ -1,6 +1,5 @@
 import imp
 import inspect
-import json
 import os
 import sys
 
@@ -12,33 +11,26 @@ from step import Step, Extractor
 
 
 class TemplateFactory(object):
-    def __init__(self, root):
-        self.root = root
-        self.entity_graph = self.load_entity_graph(os.path.join(self.root, 'entities.json'))
-        self.steps = self.load_steps(os.path.join(root, 'steps'))
-        self.attributes = self.load_attributes(os.path.join(root, 'attributes'))
-        with open(os.path.join(root, 'resource_entities.json')) as fhndl:
-            self.recognised_formats = {definition['name'] for definition in json.load(fhndl)}
+    def __init__(self):
+        self.roots = []
+        self.entity_graph = EntityGraph()
+        self.steps = {}
+        self.attributes = {}
+        self.recognised_formats = set()
 
-    def make(self, provided_entities=None, requested_entities=None):
-        provided_entities = [] if provided_entities is None else provided_entities
-        requested_entities = [] if requested_entities is None else requested_entities
+    def add_root(self, root):
+        self.roots.append(root)
+        self.entity_graph.update(self.load_entity_graph(os.path.join(root, 'entities.json')))
+        self.steps.update(self.load_steps(os.path.join(root, 'steps')))
+        self.attributes.update(self.load_attributes(os.path.join(root, 'attributes')))
 
-        template = self.load_template()
-        for entity in provided_entities:
-            template.register_entity(entity.name)
-        for entity in requested_entities:
-            template.register_entity(entity.name)
-        template = self.add_extractors(template)
-        return template
-
-    def load_template(self):
+    def make(self):
         template = Template(self.entity_graph)
-        for step in self.steps:
+        for step in self.steps.itervalues():
             template.register_step(ConcreteStep(step))
-        for attribute in self.attributes:
+        for attribute in self.attributes.itervalues():
             template.register_attribute(attribute)
-        return template
+        return self.add_extractors(template)
 
     def add_extractors(self, template):
         entity_graph = template.entity_graph
@@ -58,11 +50,7 @@ class TemplateFactory(object):
                                                                   entity_graph.get_entity_name(out)))
 
         for (in_, out), (path, name) in extractors.iteritems():
-            extractor = ConcreteStep(Extractor,
-                                     name,
-                                     ins={in_: entity_graph.create_entity(in_)},
-                                     outs={out: entity_graph.create_entity(out)},
-                                     attr={'path': path})
+            extractor = ConcreteStep(Extractor, name, [in_], [out], {'path': path})
             template.register_step(extractor)
         return template
 
@@ -75,10 +63,11 @@ class TemplateFactory(object):
             if 'format' in step.PARAMS:
                 msg = 'Unable to import step {}. Parameter "format" is reserved and can not be used in attribute PARAMS.'
                 raise ImportError(msg.format(step.__name__))
-        return steps
+        return {step.__name__: step for step in steps}
 
     def load_attributes(self, attribute_directory):
-        return self.load_plugins(attribute_directory, AttributeResolver)
+        attributes = self.load_plugins(attribute_directory, AttributeResolver)
+        return {attribute.ATTRIBUTE: attribute for attribute in attributes}
 
     def load_plugins(self, plugin_directory, plugin_class, exclude=None):
         if exclude is None:

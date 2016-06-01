@@ -5,7 +5,16 @@ from lhc.graph import Graph
 
 
 class EntityGraph(object):
-    def __init__(self, fname):
+    def __init__(self, fname=None):
+        self.entities = {}
+        self.has_a = Graph()
+        self.is_a = Graph()
+        self.attr = {}
+
+        if fname is not None:
+            self.load_file(fname)
+
+    def load_file(self, fname):
         fhndl = open(fname)
         entities = json.load(fhndl)
         fhndl.close()
@@ -14,9 +23,6 @@ class EntityGraph(object):
         for entity in self.entities.itervalues():
             entity['has_a'] = {child['name']: child for child in entity.get('has_a', [])}
 
-        self.has_a = Graph()
-        self.is_a = Graph()
-        self.attr = {}
         for entity in self.entities.itervalues():
             self.has_a.add_vertex(entity['name'])
             for child in entity.get('has_a', []):
@@ -105,6 +111,12 @@ class EntityGraph(object):
                 for name in self.attr[step['name']]:
                     attr[name] = set()
         return EntityType(name, attributes=attr)
+
+    def update(self, other):
+        self.entities.update(other.entities)
+        self.has_a.update(other.has_a)
+        self.is_a.update(other.is_a)
+        self.attr.update(other.attr)
 
     @classmethod
     def get_entity_name(cls, entity):
