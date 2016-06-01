@@ -12,8 +12,6 @@ from lhc.io.txt import FormatParser
 from resolvers import AttributeResolver
 from sofia.step import StepWrapper
 from step import Step, Extractor
-from step.map import GetIdById, Map
-from step.txt import TxtSet, TxtIterator, TxtAccessor
 
 
 class TemplateFactory(object):
@@ -41,8 +39,6 @@ class TemplateFactory(object):
         template = Template(self.entity_graph)
         for step in self.steps:
             template.register_step(StepWrapper(step))
-        template.register_step(StepWrapper(GetIdById))
-        template.register_step(StepWrapper(Map))
         for attribute in self.attributes:
             template.register_attribute(attribute)
         return template
