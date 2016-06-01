@@ -3,12 +3,9 @@ import inspect
 import json
 import os
 import sys
-from collections import OrderedDict
 
-from entity_type import EntityType
 from graph.entity_graph import EntityGraph
 from graph.template import Template
-from lhc.io.txt import FormatParser
 from resolvers import AttributeResolver
 from sofia.step import StepWrapper
 from step import Step, Extractor
@@ -28,8 +25,8 @@ class TemplateFactory(object):
         requested_entities = [] if requested_entities is None else requested_entities
 
         template = self.load_template()
-        for step in self.load_custom_steps(provided_entities):
-            template.register_step(step)
+        for entity in provided_entities:
+            template.register_entity(entity.name)
         for entity in requested_entities:
             template.register_entity(entity.name)
         template = self.add_extractors(template)
@@ -42,60 +39,6 @@ class TemplateFactory(object):
         for attribute in self.attributes:
             template.register_attribute(attribute)
         return template
-
-    def load_custom_steps(self, provided_entities):
-        entity_registry = self.get_entity_registry()
-        index_registry = self.get_index_registry()
-
-        res = []
-        for entity in provided_entities:
-            if entity.name is not None and entity.name not in self.recognised_formats:
-                try:
-                    entry_factory = entity_registry.parse(entity.name)
-                except KeyError, e:
-                    if e.message in {'/', '\\'}:
-                        raise IOError('[Errno 2] No such file or directory: {}'.format(entity.name))
-                    else:
-                        raise e
-                if entity.name == 'target':
-                    outs = OrderedDict((out, EntityType(out)) for out in entry_factory.type._fields) if entry_factory.name == 'Entry' else\
-                        OrderedDict([(entry_factory.name, EntityType(entry_factory.name))])
-                    outs['target'] = EntityType('target')
-                    param = {
-                        'entry': entry_factory,
-                        'skip': int(entity.attr.get('skip', 0))
-                    }
-                    step = StepWrapper(TxtIterator, outs=outs, param=param, format=entity.name)
-                    res.append(step)
-                else:
-                    if 'index' not in entity.attr:
-                        import sys
-                        sys.stderr.write('{} missing "index" attribute. '
-                                         'Custom resources must have these attributes'.format(entity.name))
-                        sys.exit(1)
-                    index, index_key = index_registry.parse_definition(entity.attr['index'])
-                    param = {
-                        'entry': entry_factory,
-                        'index': index,
-                        'key': (lambda x: x[index_key]),
-                        'skip': int(entity.attr.get('skip', 0))
-                    }
-                    step = StepWrapper(TxtSet,
-                                           outs=OrderedDict([(entity.name, EntityType(entity.name))]),
-                                           param=param,
-                                           format=entity.name)
-                    res.append(step)
-                    for in_ in entity.ins:
-                        ins = OrderedDict([(entity.name, EntityType(entity.name)),
-                                           (in_, EntityType(entity.ins[0]))])
-                        outs = OrderedDict([(out, EntityType(out)) for i, out in enumerate(entry_factory.type._fields)
-                                            if i != index_key])
-                        step = StepWrapper(TxtAccessor, '{}[{}]'.format(entity.name, in_), ins=ins, outs=outs, attr={
-                            'set_name': entity.name,
-                            'key_name': in_
-                        })
-                        res.append(step)
-        return res
 
     def add_extractors(self, template):
         entity_graph = template.entity_graph
@@ -125,21 +68,6 @@ class TemplateFactory(object):
 
     def load_entity_graph(self, filename):
         return EntityGraph(filename)
-
-    def get_index_registry(self):
-        return
-        #registry = IndexParser()
-        #path = os.path.join(self.root, 'index_registry.py')
-        #for k, v in imp.load_source('index_registry', path).INDEX_REGISTRY.iteritems():
-        #    registry.register_index(k, v)
-        #return registry
-
-    def get_entity_registry(self):
-        registry = FormatParser()
-        path = os.path.join(self.root, 'entity_registry.py')
-        for k, v in imp.load_source('entity_registry', path).ENTITY_REGISTRY.iteritems():
-            registry.register_type(k, v)
-        return registry
 
     def load_steps(self, step_directory):
         steps = self.load_plugins(step_directory, Step)
