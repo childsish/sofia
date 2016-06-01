@@ -3,6 +3,11 @@ from sofia.entity_type import EntityType
 
 
 class ConcreteStep(object):
+    """
+    A concrete step has two main roles. 1) Wrap a user-defined step so the IN and OUT class members are available to the template
+    factory as .ins and .outs when making the template. 2) Allow custom steps to be created like the extractors and
+    converters.
+    """
     def __init__(self, step_class, name=None, ins=None, outs=None, attr={}):
         self.step = None
         self.step_class = step_class
