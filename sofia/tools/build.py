@@ -53,7 +53,7 @@ def build_init(args):
                 raise ValueError('{} does not exist'.format(directory))
             input.append(directory)
 
-    output = sys.stdout if args.output is None else open(args.output, 'wb')
+    output = sys.stdout if args.output is None else open(args.output, 'wb' if args.pickled else 'w')
     template = build(input)
     if args.pickled:
         cPickle.dump(template, output)
