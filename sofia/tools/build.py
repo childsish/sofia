@@ -39,20 +39,7 @@ def define_parser(parser):
 
 
 def build_init(args):
-    program_directory = os.path.dirname(os.path.realpath(__file__)).rsplit(os.sep, 2)[0]
-    input = []
-    if len(args.input) == 0:
-        input.append(os.path.join(program_directory, 'templates', 'genomics'))
-    else:
-        for directory in args.input:
-            if os.path.exists(directory):
-                pass
-            elif os.path.exists(os.path.join(program_directory, 'templates', directory)):
-                directory = os.path.join(program_directory, 'templates', directory)
-            else:
-                raise ValueError('{} does not exist'.format(directory))
-            input.append(directory)
-
+    input = get_input(args.input)
     output = sys.stdout if args.output is None else open(args.output, 'wb' if args.pickled else 'w')
     template = build(input)
     if args.pickled:
@@ -60,6 +47,23 @@ def build_init(args):
     else:
         output.write(str(template))
     output.close()
+
+
+def get_input(args_input):
+    program_directory = os.path.dirname(os.path.realpath(__file__)).rsplit(os.sep, 2)[0]
+    input = []
+    if len(args_input) == 0:
+        input.append(os.path.join(program_directory, 'templates', 'genomics'))
+    else:
+        for directory in args_input:
+            if os.path.exists(directory):
+                pass
+            elif os.path.exists(os.path.join(program_directory, 'templates', directory)):
+                directory = os.path.join(program_directory, 'templates', directory)
+            else:
+                raise ValueError('{} does not exist'.format(directory))
+            input.append(directory)
+    return input
 
 if __name__ == '__main__':
     sys.exit(main())
