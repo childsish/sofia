@@ -1,4 +1,4 @@
-from entity_graph import EntityGraph
+from entity_set import EntitySet
 from lhc.graph import NPartiteGraph
 from sofia.step import Extractor, Converter
 
@@ -16,9 +16,10 @@ class Template(NPartiteGraph):
     """ A hyper graph of all the possible step calculation pathways. """
     def __init__(self, entities=None, steps=None, attributes=None):
         super(Template, self).__init__()
-        self.entities = EntityGraph() if entities is None else entities
+        self.entities = EntitySet() if entities is None else entities
         self.steps = {} if steps is None else steps
         self.attributes = {} if attributes is None else attributes
+        self.provided_entities = {}
 
         self.register_entities(entities)
         self.register_steps(steps)
@@ -48,8 +49,10 @@ class Template(NPartiteGraph):
         return '\n'.join(res)
 
     def register_entities(self, entities):
-        for entity in entities:
-            self.add_vertex(entity, self.ENTITY_PARTITION)
+        provided = {}
+        for entity in entities.entities.itervalues():
+            self.add_vertex(entity['name'], self.ENTITY_PARTITION)
+        return provided
 
     def register_steps(self, steps):
         for step in steps.itervalues():
@@ -67,3 +70,8 @@ class Template(NPartiteGraph):
 
     def register_attribute(self, attributes):
         pass
+
+    def provide_entity(self, entity):
+        if entity.alias in self.provided_entities:
+            raise ValueError('an entity with the alias {} is already provided'.format(entity.alias))
+        self.provided_entities[entity.alias] = entity

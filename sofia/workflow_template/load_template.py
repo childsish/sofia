@@ -1,42 +1,23 @@
 import imp
-import json
 import os
 import sys
 
-from entity_graph import EntityGraph
 from template import Template
+from load_entity_set import load_entity_set
 from sofia.resolvers import AttributeResolver
 from sofia.step import Step, Extractor, ConcreteStep
 
 
 def load_template(root):
-    entities = load_entities(os.path.join(root, 'entities.json'))
+    entities, parser, provided_entities = load_entity_set(os.path.join(root, 'entities.json'))
     steps = load_steps(os.path.join(root, 'steps'))
     steps.update(get_extractors(entities))
     attributes = load_attributes(os.path.join(root, 'attributes'))
 
     template = Template(entities=entities, steps=steps, attributes=attributes)
+    for entity in provided_entities:
+        template.provide_entity(entity)
     return template
-
-
-def load_entities(filename):
-    with open(filename) as fileobj:
-        entities = json.load(fileobj)
-
-    entities = {entity['name']: entity for entity in entities}
-    for entity in entities.itervalues():
-        entity['has_a'] = {child['name']: child for child in entity.get('has_a', [])}
-    graph = EntityGraph(entities)
-
-    for entity in entities.itervalues():
-        graph.has_a.add_vertex(entity['name'])
-        for child in entity.get('has_a', []):
-            graph.has_a.add_edge(entity['name'], child)
-        if 'is_a' in entity:
-            graph.is_a.add_edge(entity['is_a'], entity['name'])
-        if 'attributes' in entity:
-            graph.attr[entity['name']] = entity['attributes']
-    return graph
 
 
 def load_steps(step_directory):
@@ -76,14 +57,17 @@ def load_plugins(plugin_directory, plugin_class, exclude=None):
 def get_extractors(entities):
     extractors = {}
     for in_ in entities:
+        in_ = in_['name']
         for path in entities.get_descendent_paths(in_):
             out = path[-1]['name']
-            extractors[(in_, out)] = (path, 'Get{}From{}'.format(entities.get_entity_name(out),
-                                                                 entities.get_entity_name(in_)))
+            extractors[(in_, out)] = (path, 'Get{}From{}'.format(capitalise_name(out), capitalise_name(in_)))
         for out in entities.get_equivalent_ancestors(in_) - {in_}:
-            extractors[(in_, out)] = ([], 'Cast{}To{}'.format(entities.get_entity_name(in_),
-                                                              entities.get_entity_name(out)))
+            extractors[(in_, out)] = ([], 'Cast{}To{}'.format(capitalise_name(in_), capitalise_name(out)))
     res = {}
     for (in_, out), (path, name) in extractors.iteritems():
         res[name] = ConcreteStep(Extractor, name, [in_], [out], {'path': path})
     return res
+
+
+def capitalise_name(name):
+    return ''.join(part.capitalize() for part in name.split('_')).replace('*', '')

@@ -1,16 +1,15 @@
-from sofia.entity_type import EntityType
 from lhc.graph import Graph
 
 
-class EntityGraph(object):
+class EntitySet(object):
     def __init__(self, entities):
-        self.entities = entities
         self.has_a = Graph()
         self.is_a = Graph()
-        self.attr = {}
+
+        self.entities = entities
 
     def __iter__(self):
-        return self.entities.iterkeys()
+        return self.entities.itervalues()
 
     def __contains__(self, item):
         return item in self.entities
@@ -82,25 +81,10 @@ class EntityGraph(object):
             parents = self.is_a.get_parents(entity)
         return equivalents
 
-    def create_entity(self, name):
-        attr = {attr: set() for attr in self.attr.get(name, [])}
-        for path in self.get_descendent_paths(name):
-            for step in path:
-                if step['name'] not in self.attr:
-                    continue
-                for name in self.attr[step['name']]:
-                    attr[name] = set()
-        return EntityType(name, attributes=attr)
-
     def update(self, other):
         self.entities.update(other.entities)
         self.has_a.update(other.has_a)
         self.is_a.update(other.is_a)
-        self.attr.update(other.attr)
-
-    @classmethod
-    def get_entity_name(cls, entity):
-        return ''.join(part.capitalize() for part in entity.split('_')).replace('*', '')
 
     @staticmethod
     def get_descendent(entity, path):

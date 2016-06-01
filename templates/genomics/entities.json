@@ -61,7 +61,7 @@
   {
     "name": "genetic_code",
     "description": "The genetic code for a given organism",
-    "default": "gc.prt genetic_code"
+    "provided": ["gc.prt genetic_code"]
   },
   {
     "name": "genomic_feature",
@@ -112,7 +112,7 @@
   {
     "name": "molecular_weight_set",
     "description": "A set of molecular weights used to calculate various other features",
-    "default": "Emolwt.dat molecular_weights"
+    "provided": ["Emolwt.dat molecular_weights"]
   },
   {
     "name": "pest_sequences",

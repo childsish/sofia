@@ -4,7 +4,7 @@ import re
 from entity_type import EntityType
 
 
-class EntityTypeParser(object):
+class EntityDefinitionParser(object):
     """ A parser for resources on the command line and from resource files.
 
     The resource string takes the form of:
