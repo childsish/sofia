@@ -11,4 +11,7 @@ class StepWrapper(object):
         self.step.init()
 
     def run(self, **kwargs):
-        return self.step.run(**kwargs)
+        res = self.step.run(**kwargs)
+        if len(self.outs) == 1:
+            return [res]
+        return [[value] for value in res]
