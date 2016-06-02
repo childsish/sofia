@@ -16,14 +16,14 @@ class EntityResolver(object):
         return self.entity_type
     
     def __iter__(self):
-        is_not_provided = True
+        is_provided = False
         for provided_entity in self.template.provided_entities.itervalues():
             if provided_entity.name == self.entity_type:
-                is_not_provided = False
+                is_provided = True
                 yield EntityNode(provided_entity)
 
         step_names = self.template.get_children(self.entity_type)
-        if len(step_names) == 0 and is_not_provided:
+        if len(step_names) == 0 and not is_provided:
             ERROR_MANAGER.add_error('No steps produce {}'.format(self.entity_type))
 
         from step_resolver import StepResolver

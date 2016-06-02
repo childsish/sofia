@@ -33,7 +33,7 @@ def resolve_requested_entity(template, entity, maps=None):
 
     ERROR_MANAGER.reset()
     sys.stderr.write('     {} - '.format(entity.name))
-    solution_iterator = EntityResolver(entity.name, template, maps)
+    solution_iterator = EntityResolver(entity.name, template, maps, requested_resources=entity.attributes['resource'])
     possible_graphs = list(solution_iterator)
     possible_graphs = [graph for graph in possible_graphs
                        if satisfies_request(graph, entity.attributes['resource'])]
@@ -149,7 +149,7 @@ def resolve_init(args):
     if args.pickled:
         cPickle.dump(workflow, output, protocol=cPickle.HIGHEST_PROTOCOL)
     else:
-        output.write(str(template))
+        output.write(str(workflow))
     output.close()
 
 if __name__ == '__main__':
