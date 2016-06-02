@@ -274,7 +274,7 @@ class GetAminoAcidVariant(Step):
         'V': 'Val', 'W': 'Trp', 'X':   'X', 'Y': 'Tyr', 'Z': 'Glx', '*': '*'
     }
     
-    def init(self, use_3code='f'):
+    def __init__(self, use_3code='f'):
         self.abbreviations = self.ABBREVIATIONS if use_3code[0].lower() == 't'\
             else {name: name for name in self.ABBREVIATIONS}
 

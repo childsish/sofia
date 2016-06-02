@@ -20,7 +20,7 @@ class GetMajorTranscriptCodingSequence(Step):
     IN = ['chromosome_sequence_set', 'major_transcript']
     OUT = ['coding_sequence']
 
-    def init(self):
+    def __init__(self):
         self.buffer = {}
         self.max_buffer = 10
         self.invalid = []

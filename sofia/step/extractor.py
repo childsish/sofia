@@ -6,7 +6,7 @@ class Extractor(Step):
 
     PARAMS = ['path']
 
-    def init(self, path=[]):
+    def __init__(self, path=[]):
         self.path = path
 
     def run(self, **kwargs):

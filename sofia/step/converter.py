@@ -2,6 +2,13 @@ from step import Step
 
 
 class Converter(Step):
+    def __init__(self, entity=None, fr=None, to=None, path=None, id_map=None):
+        self.attributes = {} if entity is None else {entity: (fr, to)}
+        self.path = [] if path is None else path
+        self.id_map = [] if id_map is None else id_map
+        self.ttl = 0
+        self.cnt = 0
+
     def run(self, **kwargs):
         entity = kwargs[self.outs.keys()[0]]
 
@@ -40,10 +47,3 @@ class Converter(Step):
     def get_user_warnings(self):
         frq = round(self.cnt / float(self.ttl), 3)
         return {'{}% of identifiers were converted.'.format(frq * 100)} if frq < 1 else {}
-
-    def init(self, entity=None, fr=None, to=None, path=None, id_map=None):
-        self.attributes = {} if entity is None else {entity: (fr, to)}
-        self.path = [] if path is None else path
-        self.id_map = [] if id_map is None else id_map
-        self.ttl = 0
-        self.cnt = 0

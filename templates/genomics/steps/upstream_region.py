@@ -12,7 +12,7 @@ class GetUpstreamSequence(Step):
     OUT = ['upstream_sequence']
     PARAMS = ['offset']
 
-    def init(self, offset=1000):
+    def __init__(self, offset=1000):
         self.offset = offset
 
     def run(self, major_transcript, chromosome_sequence_set):
@@ -31,7 +31,7 @@ class GetUpstreamSequence2(Step):
     OUT = ['upstream_sequence']
     PARAMS = ['offset']
 
-    def init(self, offset=1000):
+    def __init__(self, offset=1000):
         self.offset = offset
 
     def run(self, genomic_interval, chromosome_sequence_set):

@@ -8,7 +8,7 @@ class GetGenomicFeatureByPosition(Step):
     IN = ['genomic_feature_set', 'genomic_position']
     OUT = ['genomic_feature']
 
-    def init(self):
+    def __init__(self):
         self.ttl = 0
         self.cnt = Counter()
 

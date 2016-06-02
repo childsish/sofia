@@ -18,7 +18,7 @@ class GetPest(Step):
     POSITIVE = set('RHK')
     REQUIRED = ('P', 'DE', 'ST')
     
-    def init(self, win=12, thr=5, mono=False):
+    def __init__(self, win=12, thr=5, mono=False):
         self.win = win
         self.thr = thr
         self.mono = 'mono' if mono else 'avg'

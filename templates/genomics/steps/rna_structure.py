@@ -12,7 +12,7 @@ class GetTranslationStartMinimumFreeEnergy(Step):
     OUT = ['translation_start_mfe']
     PARAMS = ['offset', 'type']
 
-    def init(self, offset=50, type='mfe'):
+    def __init__(self, offset=50, type='mfe'):
         """ Initialise the step
 
         :param offset: the range upstream and downstream to fold
@@ -44,7 +44,7 @@ class GetTranslationStartMinimumFreeEnergy2(Step):
     OUT = ['translation_start_mfe']
     PARAMS = ['offset', 'type']
 
-    def init(self, offset=50, type='mfe'):
+    def __init__(self, offset=50, type='mfe'):
         """ Initialise the step
 
         :param offset: the range upstream and downstream to fold
