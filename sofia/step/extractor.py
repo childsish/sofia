@@ -10,7 +10,7 @@ class Extractor(Step):
         self.path = path
 
     def run(self, **kwargs):
-        entity = kwargs[list(self.ins)[0]]
+        entity = kwargs.values()[0]
         if entity is None:
             return [None]
         return [EntitySet.get_descendent(entity, self.path)]
