@@ -16,6 +16,7 @@ def load_template(root):
 
     template = Template(entities=entities, steps=steps, attributes=attributes, parser=parser)
     for entity in provided_entities:
+        entity.attributes['filename'] = {os.path.join(root, 'data', list(entity.attributes['filename'])[0])}
         template.provide_entity(entity)
     return template
 
