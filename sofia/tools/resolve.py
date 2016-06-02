@@ -22,7 +22,7 @@ def resolve(template, requested_entities, provided_entities=None, maps=None):
     maps = {} if maps is None else maps
 
     if any(not entity.name.endswith('_file') for entity in requested_entities):
-        ins = [entity.name for entity in requested_entities if entity.name.endswith('_file')]
+        ins = [entity.name for entity in requested_entities if not entity.name.endswith('_file')]
         output_step = ConcreteStep(Writer, ins=ins, outs=['txt_file'])
         step_node = StepNode(output_step, {})
 
@@ -39,7 +39,7 @@ def resolve(template, requested_entities, provided_entities=None, maps=None):
         entity_node.add_step_node(step_node)
         partial_solutions.append(entity_node)
 
-    solution = ResolvedWorkflow()
+    solution = ResolvedWorkflow(template.provided_entities)
     for partial_solution in partial_solutions:
         solution.add_entity_node(partial_solution)
     return solution
