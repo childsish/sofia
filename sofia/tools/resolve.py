@@ -23,7 +23,7 @@ def resolve(template, requested_entities, provided_entities=None, maps=None):
 
     if any(not entity.name.endswith('_file') for entity in requested_entities):
         ins = [entity.name for entity in requested_entities if not entity.name.endswith('_file')]
-        output_step = ConcreteStep(Writer, ins=ins, outs=['txt_file'])
+        output_step = ConcreteStep(Writer, ins=ins, outs=['txt_file'], params={'entities': ins})
         step_node = StepNode(output_step, {})
 
     partial_solutions = []
