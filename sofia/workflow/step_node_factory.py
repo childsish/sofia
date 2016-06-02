@@ -26,7 +26,7 @@ class StepNodeFactory(object):
         return res
 
     def resolve_ins(self, entity_nodes):
-        attributes = reduce(or_, (set(entity_node.head.attributes) for entity_node in entity_nodes))
+        attributes = reduce(or_, (set(entity_node.head.attributes) for entity_node in entity_nodes), set())
         for attribute in attributes:
             if attribute in self.in_resolvers:
                 entity_nodes = self.in_resolvers[attribute](entity_nodes)

@@ -1,5 +1,5 @@
 from step import Step
-from sofia.workflow_template.entity_graph import EntityGraph
+from sofia.workflow_template.entity_set import EntitySet
 
 
 class Extractor(Step):
@@ -13,4 +13,4 @@ class Extractor(Step):
         entity = kwargs[list(self.ins)[0]]
         if entity is None:
             return [None]
-        return [EntityGraph.get_descendent(entity, self.path)]
+        return [EntitySet.get_descendent(entity, self.path)]
