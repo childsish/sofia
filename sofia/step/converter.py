@@ -2,19 +2,18 @@ from step import Step
 
 
 class Converter(Step):
-    def __init__(self, entity=None, fr=None, to=None, path=None, id_map=None):
-        self.attributes = {} if entity is None else {entity: (fr, to)}
+    def __init__(self, map_file, fr, to, path=None):
+        self.map = self.load_map_file(map_file, fr, to)
         self.path = [] if path is None else path
-        self.id_map = [] if id_map is None else id_map
         self.ttl = 0
         self.cnt = 0
 
     def run(self, **kwargs):
-        entity = kwargs[self.outs.keys()[0]]
+        entity = kwargs.values()[0]
 
         self.ttl += 1
         try:
-            entity = self._convert(entity, self.path, self.id_map)
+            entity = self._convert(entity, self.path, self.map)
         except KeyError:
             entity = None
             self.cnt += 1
@@ -47,3 +46,11 @@ class Converter(Step):
     def get_user_warnings(self):
         frq = round(self.cnt / float(self.ttl), 3)
         return {'{}% of identifiers were converted.'.format(frq * 100)} if frq < 1 else {}
+
+    def load_map_file(self, filename, fr, to):
+        with open(filename) as fileobj:
+            hdrs = fileobj.readline().strip().split('\t')
+            fr_idx = hdrs.index(fr)
+            to_idx = hdrs.index(to)
+            map = {parts[fr_idx].strip(): parts[to_idx].strip() for parts in (line.split('\t') for line in fileobj)}
+        return map
