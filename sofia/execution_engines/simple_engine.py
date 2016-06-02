@@ -1,17 +1,18 @@
-from collections import defaultdict
+from itertools import izip
+from sofia.workflow_template import Template
+
 
 class SimpleExecutionEngine(object):
-    def __init__(self, workflow):
+    def __init__(self):
         self.resolved_entities = {}
-        self.workflow = workflow
-        self.unresolved_steps = list(self.workflow.partitions[1])
+        self.unresolved_steps = []
 
-    def execute(self):
-        self.workflow.init()
-        for step in self.workflow.partitions[1]:
-            params = {key: step.attr[key] for key in step.PARAMS if key in step.attr}
-            step.init(**params)
-        while self.output_pending():
+    def execute(self, workflow):
+        self.resolved_entities = {entity: list(entity.attributes['filename']) for entity in workflow.provided_entities}
+        self.unresolved_steps = list(workflow.partitions[Template.STEP_PARTITION])
+
+        workflow.init()
+        while self.output_pending(workflow):
             step = self.get_next_step()
             output = self.execute_step(step)
             self.resolved_entities.update(output)
@@ -19,37 +20,39 @@ class SimpleExecutionEngine(object):
     def resolve_entity(self, entity, value):
         self.resolved_entities[entity] = value
 
-    def output_pending(self):
-        return not all(head in self.resolved_entities for head in self.workflow.heads)
+    def output_pending(self, workflow):
+        return not all(head in self.resolved_entities for head in workflow.heads)
 
     def get_next_step(self):
         for step in self.unresolved_steps:
-            if all(child in self.resolved_entities for child in step.ins.itervalues()):
+            if all(child in self.resolved_entities for child in step.ins):
                 return step
         raise NotImplementedError('unexpected end in workflow execution')
 
     def execute_step(self, step):
-        kwargs = {input.name: self.resolved_entities[input] for input in step.ins.itervalues()}
-        output = self.prepare(step, kwargs)
+        """
+        Execute the named step. Also control the multiplicity of input and output entities
+
+        :param step: step to prepare input for
+        :param kwargs: input to be prepared
+        :return: dict of output by entity type
+        """
+        keys = [in_.name for in_ in step.ins]
+        input_entity_types = step.ins
+        input_length, input_entities = self.get_input_entities(input_entity_types)
+        output_entity_types = step.outs
+        output_entities = {entity_type: [] for entity_type in output_entity_types}
+        for values in izip(*input_entities):
+            kwargs = dict(zip(keys, values))
+            output = step.run(**kwargs)
+            for entity_type, value in zip(output_entity_types, output):
+                output_entities[entity_type].extend(value)
         self.unresolved_steps.remove(step)
-        return output
+        return output_entities
 
-    def prepare(self, step, kwargs):
-        lengths = defaultdict(set)
-        for key, value in kwargs.iteritems():
-            lengths[len(value)].add(key)
-        if len(lengths) > 2:
+    def get_input_entities(self, entity_types):
+        entities = [self.resolved_entities[entity_type] for entity_type in entity_types]
+        lengths = {len(entities_) for entities_ in entities}
+        if len(lengths) > 1:
             raise ValueError('unable to handle inputs of different lengths')
-        res = {entity: [] for entity in step.outs.itervalues()}
-        for i in xrange(max(lengths)):
-            args = {key: value[i % len(value)] for key, value in kwargs.iteritems()}
-            values = list(step.run(**args))
-            if len(step.outs) == 1:
-                res[step.outs.values()[0]].extend(values)
-            else:
-                for entity, value in zip(step.outs.itervalues(), values):
-                    res[entity].extend(value)
-        return res
-
-    def get_input(self):
-        pass
+        return list(lengths)[0], entities

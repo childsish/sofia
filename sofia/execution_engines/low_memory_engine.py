@@ -32,7 +32,23 @@ class LowMemoryExecutionEngine(object):
         raise NotImplementedError('unexpected end in workflow execution')
 
     def execute_step(self, step):
-        args = {input.name: self.resolved_entities[input] for input in step.ins.itervalues()}
-        output = dict(islice(step.prepare(**args), self.max_entities))
+        kwargs = {input.name: self.resolved_entities[input] for input in step.ins.itervalues()}
+        output = self.prepare(step, kwargs)
+        if len(output) == 0:
+            self.unresolved_steps.remove(step)
         self.resolved_entities.update(output)
-        self.unresolved_steps.remove(step)
+
+    def prepare(self, step, kwargs):
+        lengths = {len(value) for value in kwargs.itervalues()}
+        if len(lengths - {1}) > 1:
+            raise ValueError('unable to handle inputs of different lengths')
+        res = {entity: [] for entity in step.outs.itervalues()}
+        for i in xrange(max(lengths)):
+            args = {key: value[i % len(value)] for key, value in kwargs.iteritems()}
+            values = list(islice(step.run(**args), self.max_entities))
+            if len(step.outs) == 1:
+                res[step.outs.values()[0]].extend(values)
+            else:
+                for entity, value in zip(step.outs.itervalues(), values):
+                    res[entity].extend(value)
+        return res

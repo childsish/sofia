@@ -3,7 +3,7 @@
 import argparse
 import sys
 
-from sofia.tools import aggregate, info, get, build, resolve
+from sofia.tools import aggregate, info, get, build, resolve, execute
 
 
 def main():
@@ -23,6 +23,9 @@ def get_parser():
 
     build_parser = subparsers.add_parser('build')
     build.define_parser(build_parser)
+
+    execute_parser = subparsers.add_parser('execute')
+    execute.define_parser(execute_parser)
 
     get_parser_ = subparsers.add_parser('get')
     get.define_parser(get_parser_)
