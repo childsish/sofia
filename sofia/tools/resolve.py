@@ -6,9 +6,11 @@ import sys
 
 from build import build, get_input
 from collections import defaultdict
-from sofia.workflow import ResolvedWorkflow
+from sofia.workflow import ResolvedWorkflow, EntityNode, StepNode
 from sofia.error_manager import ERROR_MANAGER
 from sofia.resolvers import EntityResolver
+from sofia.step import ConcreteStep, Writer
+from sofia.entity_type import EntityType
 
 
 def resolve(template, requested_entities, provided_entities=None, maps=None):
@@ -19,9 +21,27 @@ def resolve(template, requested_entities, provided_entities=None, maps=None):
         template.provide_entity(entity)
     maps = {} if maps is None else maps
 
-    solution = ResolvedWorkflow()
+    if any(not entity.name.endswith('_file') for entity in requested_entities):
+        ins = [entity.name for entity in requested_entities if entity.name.endswith('_file')]
+        output_step = ConcreteStep(Writer, ins=ins, outs=['txt_file'])
+        step_node = StepNode(output_step, {})
+
+    partial_solutions = []
     for entity in requested_entities:
-        solution.add_entity_node(resolve_requested_entity(template, entity, maps))
+        partial_solution = resolve_requested_entity(template, entity, maps)
+        if entity.name.endswith('_file'):
+            partial_solutions.append(partial_solution)
+        else:
+            step_node.add_entity_node(partial_solution)
+
+    if any(not entity.name.endswith('_file') for entity in requested_entities):
+        entity_node = EntityNode(EntityType('txt_file'))
+        entity_node.add_step_node(step_node)
+        partial_solutions.append(entity_node)
+
+    solution = ResolvedWorkflow()
+    for partial_solution in partial_solutions:
+        solution.add_entity_node(partial_solution)
     return solution
 
 
