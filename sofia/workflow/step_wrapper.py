@@ -11,4 +11,4 @@ class StepWrapper(object):
         self.step.init()
 
     def run(self, **kwargs):
-        self.step.run(**kwargs)
+        return self.step.run(**kwargs)
