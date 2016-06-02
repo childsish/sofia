@@ -17,7 +17,7 @@ class EntityResolver(object):
     
     def __iter__(self):
         is_provided = False
-        for provided_entity in self.template.provided_entities.itervalues():
+        for provided_entity in self.template.provided_entities:
             if provided_entity.name == self.entity_type:
                 is_provided = True
                 yield EntityNode(provided_entity)

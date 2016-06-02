@@ -17,7 +17,7 @@ class Template(NPartiteGraph):
     """ A hyper graph of all the possible step calculation pathways. """
     def __init__(self, entities=None, steps=None, attributes=None, parser=None):
         super(Template, self).__init__()
-        self.provided_entities = {}
+        self.provided_entities = set()
 
         self.entities = EntitySet() if entities is None else entities
         self.steps = {} if steps is None else steps
@@ -79,7 +79,7 @@ class Template(NPartiteGraph):
             raise ValueError('an entity with the alias {} is already provided'.format(entity.alias))
         if 'sync' not in entity.attributes:
             entity.attributes['sync'] = {entity.alias}
-        self.provided_entities[entity.alias] = entity
+        self.provided_entities.add(entity)
 
     def update(self, other):
         super(Template, self).update(other)
