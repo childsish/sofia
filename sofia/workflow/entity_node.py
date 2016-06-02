@@ -8,6 +8,7 @@ class EntityNode(NPartiteGraph):
         self.head = entity
         self.add_vertex(entity, Template.ENTITY_PARTITION)
 
-    def add_step_node(self, step_node):
-        self.update(step_node)
-        self.add_edge(step_node.head, self.head)
+    def add_step_node(self, node):
+        self.update(node)
+        self.add_edge(node.head, self.head)
+        node.head.outs.append(self.head)
