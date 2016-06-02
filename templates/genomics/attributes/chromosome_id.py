@@ -29,6 +29,9 @@ class ChromosomeIdResolver(AttributeResolver):
                 res.append(in_)
                 continue
             fr = list(in_entity_type.attributes[self.attribute])[0]
+            if fr == to:
+                res.append(in_)
+                continue
 
             name = 'Convert{}To{}'.format(fr.capitalize(), to.capitalize())
             params = {
