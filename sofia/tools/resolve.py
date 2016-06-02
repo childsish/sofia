@@ -142,7 +142,7 @@ def resolve_init(args):
 
     output = sys.stdout
     if args.output is not None:
-        filename = args.output + ('' if args.output.endswith('.sft') else '.sft')
+        filename = args.output + ('' if args.output.endswith('.sfw') else '.sfw')
         mode = 'wb' if args.pickled else 'w'
         output = open(filename, mode)
     workflow = resolve(template, requested_entities, provided_entities, maps)
