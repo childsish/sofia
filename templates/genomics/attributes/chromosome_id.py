@@ -35,11 +35,10 @@ class ChromosomeIdResolver(AttributeResolver):
 
             name = 'Convert{}To{}'.format(fr.capitalize(), to.capitalize())
             params = {
-                 'entity': 'chromosome_id',
+                 'map_file': self.id_maps['chromosome_id'],
                  'fr': fr,
                  'to': to,
-                 'path': path,
-                 'id_map': self.id_maps['chromosome_id']
+                 'path': path
              }
             convert_step = ConcreteStep(Converter, name, [in_entity_type.name], [in_entity_type.name], params)
             out_attributes = copy(in_.head.attributes)
