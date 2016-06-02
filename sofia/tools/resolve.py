@@ -8,7 +8,7 @@ from build import build, get_input
 from collections import defaultdict
 from sofia.workflow import ResolvedWorkflow
 from sofia.error_manager import ERROR_MANAGER
-from sofia.resolvers import EntityResolver, StepResolver
+from sofia.resolvers import EntityResolver
 
 
 def resolve(template, requested_entities, provided_entities=None, maps=None):
@@ -17,7 +17,7 @@ def resolve(template, requested_entities, provided_entities=None, maps=None):
     provided_entities = [] if provided_entities is None else provided_entities
     for entity in provided_entities:
         template.provide_entity(entity)
-    maps = [] if maps is None else maps
+    maps = {} if maps is None else maps
 
     solution = ResolvedWorkflow()
     for entity in requested_entities:
@@ -29,7 +29,7 @@ def resolve_requested_entity(template, entity, maps=None):
     def satisfies_request(graph, requested_resources):
         return graph.head.attributes['resource'].intersection(requested_resources) == requested_resources
 
-    maps = [] if maps is None else maps
+    maps = {} if maps is None else maps
 
     ERROR_MANAGER.reset()
     sys.stderr.write('     {} - '.format(entity.name))
@@ -132,6 +132,8 @@ def resolve_init(args):
         with open(args.entity_list) as fileobj:
             requested_entities.extend(template.parser.parse_requested_entity(line.split()) for line in fileobj)
 
+    maps = {arg.split('=')[0]: arg.split('=')[1] for arg in args.maps}
+
     if args.target is not None:
         for entity in requested_entities:
             if 'resource' not in entity.attributes:
@@ -143,7 +145,7 @@ def resolve_init(args):
         filename = args.output + ('' if args.output.endswith('.sft') else '.sft')
         mode = 'wb' if args.pickled else 'w'
         output = open(filename, mode)
-    workflow = resolve(template, requested_entities, provided_entities)
+    workflow = resolve(template, requested_entities, provided_entities, maps)
     if args.pickled:
         cPickle.dump(workflow, output, protocol=cPickle.HIGHEST_PROTOCOL)
     else:
