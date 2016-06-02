@@ -30,6 +30,8 @@ class GetDownstream1000(Step):
 
     @classmethod
     def resolve_out_sync(cls, ins):
+        if ins['genomic_position'] != ins['major_transcript']:
+            raise ValueError('unable to resolve sync stream')
         return {
             'downstream_1000': ins['genomic_position']
         }
