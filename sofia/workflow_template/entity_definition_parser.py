@@ -42,7 +42,7 @@ class EntityDefinitionParser(object):
     def parse_provided_entity(self, definition):
         filename, alias, attributes = self.parse_definition(definition)
         type = self.get_type_by_extension(filename)
-        attributes['filename'] = filename
+        attributes['filename'] = {filename}
         if alias is None:
             alias = os.path.basename(filename)
         attributes['resource'] = {alias}

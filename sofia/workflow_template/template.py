@@ -78,7 +78,7 @@ class Template(NPartiteGraph):
         if entity.alias in self.provided_entities:
             raise ValueError('an entity with the alias {} is already provided'.format(entity.alias))
         if 'sync' not in entity.attributes:
-            entity.attributes['sync'] = entity.alias
+            entity.attributes['sync'] = {entity.alias}
         self.provided_entities[entity.alias] = entity
 
     def update(self, other):
