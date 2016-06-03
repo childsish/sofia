@@ -7,12 +7,12 @@ from sofia.error_manager import ERROR_MANAGER
 
 
 class StepResolver(object):
-    def __init__(self, step, template, maps={}, requested_entities=set(), visited=None):
+    def __init__(self, step, template, maps={}, requested_resources=set(), visited=None):
         self.step = step
         self.factory = StepNodeFactory(step, [attribute(attribute.ATTRIBUTE, template.entities, step, maps) for attribute in template.attributes.itervalues()])
         self.template = template
         self.maps = maps
-        self.requested_entities = requested_entities
+        self.requested_resources = requested_resources
 
         self.visited = set() if visited is None else visited
         self.visited.add(step.name)
@@ -28,7 +28,7 @@ class StepResolver(object):
         resolvers = {entity: EntityResolver(entity,
                                             self.template,
                                             self.maps,
-                                            self.requested_entities,
+                                            self.requested_resources,
                                             self.visited)
                      for entity in entities}
         resolvers = {entity: list(resolver) for entity, resolver in resolvers.iteritems()}
@@ -42,7 +42,7 @@ class StepResolver(object):
                 ERROR_MANAGER.add_error(e.message, self.step.name)
                 continue
             resources = reduce(or_, (partial_solution.head.attributes['resource'] for partial_solution in disjoint_solution), set())
-            res[len(resources - set(self.requested_entities))].append(step_node)
+            res[len(resources - set(self.requested_resources))].append(step_node)
         if len(res) > 0:
             for solution in res[min(res)]:
                 yield solution
