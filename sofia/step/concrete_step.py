@@ -22,3 +22,6 @@ class ConcreteStep(object):
 
     def run(self, **kwargs):
         return self.step.run(**kwargs)
+
+    def finalise(self):
+        return self.step.finalise()

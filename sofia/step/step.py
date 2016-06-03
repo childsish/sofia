@@ -18,7 +18,12 @@ class Step(object):
         :param kwargs: arguments defined in class IN variable
         :return: output of running the step
         """
-        raise NotImplementedError('You must override this function')
+        return
+        yield  # allows the generator to return nothing
+
+    def finalise(self):
+        return
+        yield  # allows the generator to return nothing
 
     @classmethod
     def get_in_resolvers(cls):
