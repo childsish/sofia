@@ -10,18 +10,18 @@ class EntityType(object):
         self.format_string = '{' + format_string + '}'
 
     def __str__(self):
-        res = [self.alias]
+        res = [self.name if self.name == self.alias else '{} ({})'.format(self.alias, self.name)]
         res.extend('{}={}'.format(k, str(v) if isinstance(v, basestring) else ','.join(v)) for k, v in sorted(self.attributes.iteritems()))
         return '\\n'.join(res)
 
     def __repr__(self):
         return repr(str(self))
 
-    def __eq__(self, other):
-        return str(self) == str(other)
-
     def __hash__(self):
         return hash(str(self))
+
+    def __eq__(self, other):
+        return str(self) == str(other)
 
     def format(self, entity):
         try:
