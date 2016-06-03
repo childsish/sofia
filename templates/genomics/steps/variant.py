@@ -165,6 +165,7 @@ class GetCodingVariant(Step):
     def run(self, major_transcript, variant):
         if major_transcript is None:
             yield None
+            raise StopIteration()
         ref = variant.ref
         pos = variant.pos
         try:
@@ -173,8 +174,10 @@ class GetCodingVariant(Step):
                 else major_transcript.get_rel_pos(pos + len(ref) - 1, types={'CDS'})
         except IndexError:
             yield None
+            raise StopIteration()
         except ValueError:
             yield None
+            raise StopIteration()
         alt = variant.alt.split(',')
         if major_transcript.strand == '-':
             ref = revcmp(ref)
@@ -196,6 +199,7 @@ class GetCodonVariant(Step):
     def run(self, coding_variant, coding_sequence, downstream_1000):
         if coding_variant is None or coding_sequence is None:
             yield None
+            raise StopIteration()
         pos = coding_variant.pos
         ref = coding_variant.ref
         if len(ref) == 1:
@@ -281,6 +285,7 @@ class GetAminoAcidVariant(Step):
     def run(self, codon_variant, genetic_code):
         if codon_variant is None:
             yield None
+            raise StopIteration()
         alts = [None if alt is None else genetic_code.translate(alt) for alt in codon_variant.alt]
         fs = [None if fs_ is None else fs_ / 3 for fs_ in codon_variant.fs]
         yield AminoAcidVariant(codon_variant.pos / 3, genetic_code.translate(codon_variant.ref), alts, fs)
