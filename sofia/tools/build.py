@@ -13,6 +13,14 @@ def build(template_directories):
     return template
 
 
+def test(template):
+    import inspect
+
+    for step in template.steps.itervalues():
+        if not inspect.isgeneratorfunction(step.step_class.run):
+            sys.stderr.write('{} is not a generator\n'.format(step.step_class.__name__))
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -33,6 +41,8 @@ def define_parser(parser):
             help='output to named .sft file (default: stdout)')
     add_arg('-p', '--pickled', action='store_true',
             help='output pickled template')
+    add_arg('-t', '--test', action='store_true',
+            help='run tests on template')
     parser.set_defaults(func=build_init)
 
 
@@ -44,10 +54,13 @@ def build_init(args):
         mode = 'wb' if args.pickled else 'w'
         output = open(filename, mode)
     template = build(input)
-    if args.pickled:
-        cPickle.dump(template, output, protocol=cPickle.HIGHEST_PROTOCOL)
+    if args.test:
+        test(template)
     else:
-        output.write(str(template))
+        if args.pickled:
+            cPickle.dump(template, output, protocol=cPickle.HIGHEST_PROTOCOL)
+        else:
+            output.write(str(template))
     output.close()
 
 
