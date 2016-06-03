@@ -21,3 +21,9 @@ class StepWrapper(object):
         if len(self.outs) == 1:
             return [res]
         return [[value] for value in res]
+
+    def finalise(self):
+        res = self.step.finalise()
+        if len(self.outs) == 1:
+            return [res]
+        return [[value] for value in res]
