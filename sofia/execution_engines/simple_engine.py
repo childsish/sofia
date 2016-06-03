@@ -1,4 +1,4 @@
-from itertools import izip
+from itertools import izip_longest
 from sofia.workflow_template import Template
 
 
@@ -42,7 +42,7 @@ class SimpleExecutionEngine(object):
         input_length, input_entities = self.get_input_entities(input_entity_types)
         output_entity_types = step.outs
         output_entities = {entity_type: [] for entity_type in output_entity_types}
-        for values in izip(*input_entities):
+        for values in izip_longest(*input_entities):
             kwargs = dict(zip(keys, values))
             output = step.run(**kwargs)
             for entity_type, value in zip(output_entity_types, output):
@@ -53,6 +53,6 @@ class SimpleExecutionEngine(object):
     def get_input_entities(self, entity_types):
         entities = [self.resolved_entities[entity_type] for entity_type in entity_types]
         lengths = {len(entities_) for entities_ in entities}
-        if len(lengths) > 1:
+        if len(lengths - {1}) > 1:
             raise ValueError('unable to handle inputs of different lengths')
         return list(lengths)[0], entities
