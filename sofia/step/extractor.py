@@ -6,11 +6,11 @@ class Extractor(Step):
 
     PARAMS = ['path']
 
-    def __init__(self, path=[]):
-        self.path = path
+    def __init__(self, path=None):
+        self.path = [] if path is None else path
 
     def run(self, **kwargs):
         entity = kwargs.values()[0]
         if entity is None:
-            return [None]
-        return [EntitySet.get_descendent(entity, self.path)]
+            yield None
+        yield EntitySet.get_descendent(entity, self.path)

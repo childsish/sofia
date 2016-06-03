@@ -17,7 +17,7 @@ class Converter(Step):
         except KeyError:
             entity = None
             self.cnt += 1
-        return entity
+        yield entity
 
     def _convert(self, entity, path, id_map):
         if len(path) == 0:
