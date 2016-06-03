@@ -33,7 +33,7 @@ class ChromosomeIdResolver(AttributeResolver):
                 res.append(in_)
                 continue
 
-            name = 'Convert{}To{}'.format(fr.capitalize(), to.capitalize())
+            name = 'Convert{}s{}To{}'.format(capitalise_name(in_entity_type.name), fr.capitalize(), to.capitalize())
             params = {
                  'map_file': self.id_maps['chromosome_id'],
                  'fr': fr,
@@ -66,3 +66,7 @@ class ChromosomeIdResolver(AttributeResolver):
             if 'chromosome_id' in {step['name'] for step in path}:
                 return path
         return None
+
+
+def capitalise_name(name):
+    return ''.join(part.capitalize() for part in name.split('_')).replace('*', '')
