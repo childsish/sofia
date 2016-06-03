@@ -17,21 +17,20 @@ class GetGenomicFeatureByPosition(Step):
             yield None
         #TODO: select correct gene (currently selecting largest)
         self.ttl += 1
+        res = None
         try:
             features = genomic_feature_set.fetch(
                 genomic_position.chr,
                 genomic_position.pos,
                 genomic_position.pos + 1)
+            if features is not None and len(features) == 0:
+                res = sorted(features, key=len)[-1]
+                res.name = res.name.rsplit('.')[0]
         except Exception, e:
             if e.message.startswith('could not create iterator for region'):
                 self.cnt['could not create iterator for region ...'] += 1
             else:
                 self.cnt[e.message] += 1
-            yield None
-        if features is None or len(features) == 0:
-            yield None
-        res = sorted(features, key=len)[-1]
-        res.name = res.name.rsplit('.')[0]
         yield res
 
     @classmethod

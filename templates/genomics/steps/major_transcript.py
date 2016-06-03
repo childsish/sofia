@@ -28,10 +28,12 @@ class GetMajorTranscriptCodingSequence(Step):
     def run(self, chromosome_sequence_set, major_transcript):
         if major_transcript is None:
             yield None
+            raise StopIteration()
 
         buffer_key = (id(chromosome_sequence_set), id(major_transcript))
         if buffer_key in self.buffer:
             yield self.buffer[buffer_key]
+            raise StopIteration()
 
         res = major_transcript.get_sub_seq(chromosome_sequence_set, types={'CDS'})
         if len(res) % 3 != 0:

@@ -14,6 +14,7 @@ class GetDownstream1000(Step):
     def run(self, chromosome_sequence_set, genomic_position, major_transcript):
         if major_transcript is None:
             yield None
+            raise StopIteration()
         chr = genomic_position.chr
         pos = genomic_position.pos
         strand = major_transcript.strand

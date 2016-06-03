@@ -11,6 +11,5 @@ class Extractor(Step):
 
     def run(self, **kwargs):
         entity = kwargs.values()[0]
-        if entity is None:
-            yield None
-        yield EntitySet.get_descendent(entity, self.path)
+        res = None if entity is None else EntitySet.get_descendent(entity, self.path)
+        yield res

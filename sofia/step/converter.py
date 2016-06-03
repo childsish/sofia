@@ -10,6 +10,9 @@ class Converter(Step):
 
     def run(self, **kwargs):
         entity = kwargs.values()[0]
+        if entity is None:
+            yield None
+            raise StopIteration()
 
         self.ttl += 1
         try:

@@ -8,9 +8,6 @@ class Step(object):
     OUT = []
     PARAMS = []
 
-    def __init__(self, **kwargs):
-        pass
-
     def run(self, **kwargs):
         """
         Run this step
