@@ -13,8 +13,8 @@ class GetCodingSkew(Step):
 
     def run(self, coding_sequence):
         if coding_sequence is None:
-            return None
-        return Skew(coding_sequence)
+            yield None
+        yield Skew(coding_sequence)
 
 
 class GetUTR5Skew(Step):
@@ -24,8 +24,8 @@ class GetUTR5Skew(Step):
 
     def run(self, five_prime_utr):
         if five_prime_utr is None:
-            return None
-        return Skew(five_prime_utr)
+            yield None
+        yield Skew(five_prime_utr)
 
 
 class GetUTR3Skew(Step):
@@ -35,5 +35,5 @@ class GetUTR3Skew(Step):
 
     def run(self, three_prime_utr):
         if three_prime_utr is None:
-            return None
-        return Skew(three_prime_utr)
+            yield None
+        yield Skew(three_prime_utr)

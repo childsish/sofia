@@ -17,12 +17,12 @@ class ProveanMap(object):
         pos = amino_acid_variant.pos
         parts = list(self.index.fetch(transcript_id, pos, pos + 1))[0].split()
         if len(parts) == 0:
-            return None
+            yield None
         try:
             res = [float(parts[self.headers[alt]]) for alt in amino_acid_variant.alt]
         except Exception, e:
             res = None
-        return res
+        yield res
 
 
 class ProveanMapStep(Step):
@@ -33,7 +33,7 @@ class ProveanMapStep(Step):
     def run(self, provean_map_file):
         fileobj = gzip.open(provean_map_file) if provean_map_file.endswith('.gz') else provean_map_file
         it = (line.split('\t') for line in fileobj)
-        return ProveanMap(provean_map_file, InOrderAccessSet(it, key=lambda x: (x[0], int(x[1]) - 1)))
+        yield ProveanMap(provean_map_file, InOrderAccessSet(it, key=lambda x: (x[0], int(x[1]) - 1)))
 
 
 class GetVariantImpact(Step):
@@ -43,9 +43,9 @@ class GetVariantImpact(Step):
 
     def run(self, transcript_id, amino_acid_variant, variant_impact_calculator):
         if None in (transcript_id, amino_acid_variant, variant_impact_calculator):
-            return None
+            yield None
         try:
             res = variant_impact_calculator.run(transcript_id, amino_acid_variant)
         except ValueError, e:
             res = None
-        return res
+        yield res

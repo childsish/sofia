@@ -19,7 +19,7 @@ class GetUpstreamSequence(Step):
         ivl = major_transcript.ivl
         start_pos = GenomicPosition(ivl.chr, ivl.get_5p(), ivl.strand)
         upstream_pos = start_pos.get_offset(-self.offset)
-        return start_pos.get_interval(upstream_pos).get_sub_seq(chromosome_sequence_set)
+        yield start_pos.get_interval(upstream_pos).get_sub_seq(chromosome_sequence_set)
 
 
 class GetUpstreamSequence2(Step):
@@ -38,7 +38,7 @@ class GetUpstreamSequence2(Step):
         ivl = genomic_interval
         start_pos = GenomicPosition(ivl.chr, ivl.get_5p(), ivl.strand)
         upstream_pos = start_pos.get_offset(-self.offset)
-        return start_pos.get_interval(upstream_pos).get_sub_seq(chromosome_sequence_set)
+        yield start_pos.get_interval(upstream_pos).get_sub_seq(chromosome_sequence_set)
 
 
 class GetUpstreamORFs(Step):
@@ -58,7 +58,7 @@ class GetUpstreamORFs(Step):
             for j in xrange(i, len(upstream_sequence), 3):
                 if upstream_sequence[j:j + 3] in stops:
                     res.append(upstream_sequence[i:j + 3])
-        return res
+        yield res
 
 
 class GetNumberOfUpstreamORFs(Step):
@@ -67,4 +67,4 @@ class GetNumberOfUpstreamORFs(Step):
     OUT = ['number_of_upstream_orfs']
 
     def run(self, upstream_orfs):
-        return len(upstream_orfs)
+        yield len(upstream_orfs)

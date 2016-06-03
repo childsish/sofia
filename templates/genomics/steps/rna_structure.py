@@ -25,14 +25,14 @@ class GetTranslationStartMinimumFreeEnergy(Step):
 
     def run(self, major_transcript, chromosome_sequence_set):
         if major_transcript is None:
-            return None
+            yield None
         offset = 50
         start_position = GenomicPosition(major_transcript.chr,
                                          major_transcript.get_5p(),
                                          major_transcript.strand)
         interval = start_position.get_offset(-offset).get_interval(start_position.get_offset(50))
         seq = interval.get_sub_seq(chromosome_sequence_set)
-        return self.fold(seq)[1]
+        yield self.fold(seq)[1]
 
 
 class GetTranslationStartMinimumFreeEnergy2(Step):
@@ -57,14 +57,14 @@ class GetTranslationStartMinimumFreeEnergy2(Step):
 
     def run(self, genomic_interval, chromosome_sequence_set):
         if genomic_interval is None:
-            return None
+            yield None
         offset = 50
         start_position = GenomicPosition(genomic_interval.chr,
                                          genomic_interval.get_5p(),
                                          genomic_interval.strand)
         interval = start_position.get_offset(-offset).get_interval(start_position.get_offset(50))
         seq = interval.get_sub_seq(chromosome_sequence_set)
-        return self.fold(seq)[1]
+        yield self.fold(seq)[1]
 
 
 class GetStructuralFeatures(Step):
@@ -122,4 +122,4 @@ class GetStructuralFeatures(Step):
         bridges.append(len(dots))
         stems.append(c_stem)
 
-        return hloops, mloops, iloops, bulges, stems, branches, bridges
+        yield hloops, mloops, iloops, bulges, stems, branches, bridges

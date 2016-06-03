@@ -6,7 +6,7 @@ class DrugBankMap(Step):
     FORMAT = 'drug_bank_map'
     OUT = ['drug_bank_map']
 
-    def get_interface(self, filename):
+    def run(self, filename):
         interface = {}
         fhndl = open(filename)
         fhndl.next()
@@ -14,7 +14,7 @@ class DrugBankMap(Step):
             parts = line.rstrip('\r\n').split(',')
             interface[parts[0]] = [part.strip() for part in parts[12].split(';')]
         fhndl.close()
-        return interface
+        yield interface
 
 
 class GetDrugIdFromDrugBank(Step):
@@ -23,7 +23,7 @@ class GetDrugIdFromDrugBank(Step):
     OUT = ['drug_id']
 
     def run(self, drug_bank_map, transcript_id):
-        return drug_bank_map[transcript_id] if transcript_id in drug_bank_map else None
+        yield drug_bank_map[transcript_id] if transcript_id in drug_bank_map else None
 
 
 class GenomicsOfDrugSensitivityInCancerByGene(Step):
@@ -31,7 +31,7 @@ class GenomicsOfDrugSensitivityInCancerByGene(Step):
     FORMAT = 'gdsc_map'
     OUT = ['gdsc_by_gene']
 
-    def get_interface(self, filename):
+    def run(self, filename):
         interface = {}
         fhndl = open(filename, 'rU')
         line = fhndl.next()
@@ -41,7 +41,7 @@ class GenomicsOfDrugSensitivityInCancerByGene(Step):
             for gene in genes:
                 interface[gene.strip()] = parts[2]
         fhndl.close()
-        return interface
+        yield interface
 
 
 class GetDrugIdFromGDSC(Step):
@@ -50,4 +50,4 @@ class GetDrugIdFromGDSC(Step):
     OUT = ['drug_id']
 
     def run(self, gdsc_by_gene, gene_id):
-        return gdsc_by_gene[gene_id] if gene_id in gdsc_by_gene else None
+        yield gdsc_by_gene[gene_id] if gene_id in gdsc_by_gene else None

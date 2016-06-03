@@ -38,7 +38,7 @@ class GtfSet(Step):
     IN = ['gtf_file']
     OUT = ['genomic_feature_set']
 
-    def get_interface(self, gtf_file):
+    def run(self, gtf_file):
         with gzip.open(gtf_file) if gtf_file.endswith('.gz') else open(gtf_file) as fileobj:
             yield InOrderAccessIntervalSet(GtfEntryIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
 

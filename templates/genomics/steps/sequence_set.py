@@ -13,14 +13,14 @@ class GetDownstream1000(Step):
     
     def run(self, chromosome_sequence_set, genomic_position, major_transcript):
         if major_transcript is None:
-            return None
+            yield None
         chr = genomic_position.chr
         pos = genomic_position.pos
         strand = major_transcript.strand
         start = pos if strand == '+' else pos - 1000
         stop = pos if strand == '-' else pos + 1000
         seq = chromosome_sequence_set.fetch(chr, start, stop)
-        return seq if strand == '+' else revcmp(seq)
+        yield seq if strand == '+' else revcmp(seq)
 
     @classmethod
     def get_out_resolvers(cls):

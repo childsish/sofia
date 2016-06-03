@@ -15,5 +15,5 @@ class RnaSet(Step):
     IN = ['rna_structure']
     OUT = ['rna_structure_set']
 
-    def get_interface(self, rna_strcture):
+    def run(self, rna_structure):
         raise NotImplementedError

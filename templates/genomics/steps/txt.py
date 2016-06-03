@@ -16,7 +16,7 @@ class GenePathwayMap(Step):
             gene_id, pathway_id = line.strip('\r\n').split('\t', 1)
             res[gene_id].add(pathway_id)
         fhndl.close()
-        return res
+        yield res
 
 
 class GeneGotermMap(Step):
@@ -32,4 +32,4 @@ class GeneGotermMap(Step):
             parts = [part.strip() for part in line.split('\t')]
             res[parts[0]].add((parts[1], parts[2]))
         fhndl.close()
-        return res
+        yield res

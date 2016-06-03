@@ -10,8 +10,8 @@ class GetCodingKmer(Step):
 
     def run(self, coding_sequence):
         if coding_sequence is None:
-            return None
-        return KmerCounter(coding_sequence)
+            yield None
+        yield KmerCounter(coding_sequence)
 
 
 class GetUTR5Kmer(Step):
@@ -21,8 +21,8 @@ class GetUTR5Kmer(Step):
 
     def run(self, five_prime_utr):
         if five_prime_utr is None:
-            return None
-        return KmerCounter(five_prime_utr)
+            yield None
+        yield KmerCounter(five_prime_utr)
 
 
 class GetUTR3Kmer(Step):
@@ -32,8 +32,8 @@ class GetUTR3Kmer(Step):
 
     def run(self, three_prime_utr):
         if three_prime_utr is None:
-            return None
-        return KmerCounter(three_prime_utr)
+            yield None
+        yield KmerCounter(three_prime_utr)
 
 
 class GetProteinKmer(Step):
@@ -43,5 +43,5 @@ class GetProteinKmer(Step):
 
     def run(self, protein_sequence):
         if protein_sequence is None:
-            return None
-        return KmerCounter(protein_sequence)
+            yield None
+        yield KmerCounter(protein_sequence)

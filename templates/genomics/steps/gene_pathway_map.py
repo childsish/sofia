@@ -7,4 +7,4 @@ class GetPathwayByGene(Step):
     OUT = ['pathway_id']
     
     def run(self, gene_id, gene_pathway_map):
-        return gene_pathway_map[gene_id]
+        yield gene_pathway_map[gene_id]

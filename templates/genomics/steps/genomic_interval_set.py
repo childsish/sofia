@@ -7,7 +7,7 @@ class GetIntervalByPosition(Step):
     OUT = ['genomic_interval']
 
     def run(self, genomic_interval_set, genomic_position):
-        return genomic_interval_set.fetch(
+        yield genomic_interval_set.fetch(
             genomic_position.chr,
             genomic_position.pos,
             genomic_position.pos + 1)
@@ -32,7 +32,7 @@ class GetBoundsProximity(Step):
 
     def run(self, genomic_position, genomic_interval):
         if genomic_position is None or len(genomic_interval) == 0:
-            return None
+            yield None
         ds = []
         if isinstance(genomic_interval, list):
             for interval in genomic_interval:
@@ -42,4 +42,4 @@ class GetBoundsProximity(Step):
             ds.append((genomic_position.pos - genomic_interval.start, '5p'))
             ds.append((genomic_position.pos - genomic_interval.stop, '3p'))
         d = sorted(ds, key=lambda x:abs(x[0]))[0]
-        return '{}{:+d}'.format(d[1], d[0])
+        yield '{}{:+d}'.format(d[1], d[0])

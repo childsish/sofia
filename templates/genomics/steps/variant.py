@@ -15,7 +15,7 @@ class GetVariantSamples(Step):
         res = [':'.join(variant.format)]
         for sample in variant.samples.itervalues():
             res.append(':'.join(sample[key] for key in variant.format))
-        return '\t'.join(res)
+        yield '\t'.join(res)
 
 
 class GetNumberOfVariants(Step):
@@ -24,7 +24,7 @@ class GetNumberOfVariants(Step):
     OUT = ['number_of_variants']
 
     def run(self, variant):
-        return 0 if variant is None else len(variant)
+        yield 0 if variant is None else len(variant)
 
 
 class GetPosition(Step):
@@ -33,7 +33,7 @@ class GetPosition(Step):
     OUT = ['position']
 
     def run(self, chromosome_pos):
-        return chromosome_pos + 1
+        yield chromosome_pos + 1
 
 
 class GetSubstitutionContext(Step):
@@ -43,7 +43,7 @@ class GetSubstitutionContext(Step):
 
     def run(self, variant, chromosome_sequence_set):
         context = chromosome_sequence_set[variant.chr][variant.pos - 1: variant.pos + 2]
-        return context if variant.ref[0] in 'CT' else revcmp(context)
+        yield context if variant.ref[0] in 'CT' else revcmp(context)
 
 
 class GetSubstitutionType(Step):
@@ -52,7 +52,7 @@ class GetSubstitutionType(Step):
     OUT = ['substitution_type']
 
     def run(self, variant):
-        return '{}>{}'.format(variant.ref, variant.alt) if variant.ref[0] in 'CT' else '{}>{}'.format(revcmp(variant.ref), revcmp(variant.alt))
+        yield '{}>{}'.format(variant.ref, variant.alt) if variant.ref[0] in 'CT' else '{}>{}'.format(revcmp(variant.ref), revcmp(variant.alt))
 
 
 class GetVariantAlleleFrequency(Step):
@@ -62,7 +62,7 @@ class GetVariantAlleleFrequency(Step):
 
     def run(self, variant):
         if variant is None:
-            return None
+            yield None
         no_run = 'AF' in variant.info or\
             (hasattr(variant, 'samples') and\
                 any('AF' in sample for sample in variant.samples))
@@ -78,12 +78,12 @@ class GetVariantAlleleFrequency(Step):
                         ao = float(sample['AO'])
                         ro = float(sample['RO'])
                         res[name] = ao / (ao + ro)
-            return res
+            yield res
         if no_run:
-            return float(variant.info['AF'])
+            yield float(variant.info['AF'])
         ao = float(variant.info['AO'])
         ro = float(variant.info['RO'])
-        return ao / (ao + ro)
+        yield ao / (ao + ro)
 
 
 class GetVariantEffect(Step):
@@ -98,9 +98,9 @@ class GetVariantEffect(Step):
     def run(self, major_transcript, variant, coding_variant, amino_acid_variant):
         #TODO: Improve intron detection
         if major_transcript is None:
-            return ['intergenic_variant']
+            yield ['intergenic_variant']
         elif coding_variant is None:
-            return ['intron_variant']
+            yield ['intron_variant']
         res = []
         for na_alt, aa_alt, fs in izip(variant.alt.split(','), amino_acid_variant.alt, amino_acid_variant.fs):
             if fs is None:
@@ -115,7 +115,7 @@ class GetVariantEffect(Step):
                     res.append('inframe_deletion')
                 else:
                     res.append('frameshift_truncation')
-        return res
+        yield res
 
     def _get_amino_acid_type(self, pos, ref, alt):
         if ref == alt:
@@ -164,7 +164,7 @@ class GetCodingVariant(Step):
     
     def run(self, major_transcript, variant):
         if major_transcript is None:
-            return None
+            yield None
         ref = variant.ref
         pos = variant.pos
         try:
@@ -172,14 +172,14 @@ class GetCodingVariant(Step):
                 if major_transcript.strand == '+'\
                 else major_transcript.get_rel_pos(pos + len(ref) - 1, types={'CDS'})
         except IndexError:
-            return None
+            yield None
         except ValueError:
-            return None
+            yield None
         alt = variant.alt.split(',')
         if major_transcript.strand == '-':
             ref = revcmp(ref)
             alt = map(revcmp, alt)
-        return CodingVariant(coding_position, ref, alt)
+        yield CodingVariant(coding_position, ref, alt)
 
 
 class CodonVariant(namedtuple('CodonVariant', ('pos', 'ref', 'alt', 'fs'))):
@@ -195,7 +195,7 @@ class GetCodonVariant(Step):
     
     def run(self, coding_variant, coding_sequence, downstream_1000):
         if coding_variant is None or coding_sequence is None:
-            return None
+            yield None
         pos = coding_variant.pos
         ref = coding_variant.ref
         if len(ref) == 1:
@@ -221,7 +221,7 @@ class GetCodonVariant(Step):
                     fs_pos += 3
             fs.append(fs_pos)
         ref_codon = coding_sequence[pos - fr:pos + len(ref) + to]
-        return CodonVariant(pos - fr, ref_codon, alts, fs)
+        yield CodonVariant(pos - fr, ref_codon, alts, fs)
 
 
 class AminoAcidVariant(namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'))):
@@ -280,10 +280,10 @@ class GetAminoAcidVariant(Step):
 
     def run(self, codon_variant, genetic_code):
         if codon_variant is None:
-            return None
+            yield None
         alts = [None if alt is None else genetic_code.translate(alt) for alt in codon_variant.alt]
         fs = [None if fs_ is None else fs_ / 3 for fs_ in codon_variant.fs]
-        return AminoAcidVariant(codon_variant.pos / 3, genetic_code.translate(codon_variant.ref), alts, fs)
+        yield AminoAcidVariant(codon_variant.pos / 3, genetic_code.translate(codon_variant.ref), alts, fs)
 
     @classmethod
     def get_out_resolvers(cls):

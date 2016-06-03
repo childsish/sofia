@@ -5,9 +5,8 @@ from sofia.step import Step
 
 class ReadCodonUsageTable(Step):
 
-    EXT = {'.cut'}
-    FORMAT = 'cut_file'
+    IN = ['cut_file']
     OUT = ['codon_usage']
 
-    def get_interface(self, filename):
-        self.parser = CodonUsageTable(filename)
+    def run(self, cut_file):
+        yield CodonUsageTable(cut_file)

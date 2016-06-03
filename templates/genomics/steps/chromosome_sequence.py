@@ -21,4 +21,4 @@ class GetHomopolymer(Step):
         i = 0
         while i < len(seq) and seq[i] == seq[0]:
             i += 1
-        return seq[:i]
+        yield seq[:i]

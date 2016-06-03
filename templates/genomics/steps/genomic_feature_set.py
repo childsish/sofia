@@ -14,7 +14,7 @@ class GetGenomicFeatureByPosition(Step):
 
     def run(self, genomic_feature_set, genomic_position):
         if genomic_position is None:
-            return None
+            yield None
         #TODO: select correct gene (currently selecting largest)
         self.ttl += 1
         try:
@@ -27,12 +27,12 @@ class GetGenomicFeatureByPosition(Step):
                 self.cnt['could not create iterator for region ...'] += 1
             else:
                 self.cnt[e.message] += 1
-            return None
+            yield None
         if features is None or len(features) == 0:
-            return None
+            yield None
         res = sorted(features, key=len)[-1]
         res.name = res.name.rsplit('.')[0]
-        return res
+        yield res
 
     @classmethod
     def get_out_resolvers(cls):
@@ -68,7 +68,7 @@ class GetGenomicFeatureByInterval(Step):
             genomic_interval.start,
             genomic_interval.stop)
         if features is None or len(features) == 0:
-            return None
+            yield None
         res = sorted(features, key=len)[-1]
         res.name = res.name.rsplit('.')[0]
-        return res
+        yield res

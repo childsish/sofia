@@ -25,12 +25,12 @@ class GetPest(Step):
 
     def run(self, protein_sequence, molecular_weight_set):
         if protein_sequence is None:
-            return None
+            yield None
         protein_sequence = protein_sequence.rstrip('*')
         if '*' in protein_sequence:
             warn('protein sequence terminates early')
-            return None
-        return list(self.iter_pest(protein_sequence, molecular_weight_set))
+            yield None
+        yield list(self.iter_pest(protein_sequence, molecular_weight_set))
 
     def iter_pest(self, seq, molwts):
         """ Algorithm copied from EMBOSS:
@@ -73,8 +73,8 @@ class GetNumberOfPestSequences(Step):
 
     def run(self, pest_sequences):
         if pest_sequences is None:
-            return None
-        return len(pest_sequences)
+            yield None
+        yield len(pest_sequences)
 
 
 class GetAveragePestSequenceLength(Step):
@@ -84,8 +84,8 @@ class GetAveragePestSequenceLength(Step):
 
     def run(self, pest_sequences):
         if pest_sequences is None or len(pest_sequences) == 0:
-            return None
-        return sum(len(seq) for seq in pest_sequences) / float(len(pest_sequences))
+            yield None
+        yield sum(len(seq) for seq in pest_sequences) / float(len(pest_sequences))
 
 
 class GetAminoAcidFrequency(Step):
@@ -95,5 +95,5 @@ class GetAminoAcidFrequency(Step):
 
     def run(self, protein_sequence):
         if protein_sequence is None:
-            return None
-        return Counter(protein_sequence)
+            yield None
+        yield Counter(protein_sequence)

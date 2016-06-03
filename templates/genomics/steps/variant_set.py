@@ -9,16 +9,16 @@ class GetVariantByVariant(Step):
     def run(self, variant, variant_set):
         #TODO: check matched variants
         if variant is None:
-            return None
+            yield None
         try:
             overlap = variant_set.fetch(variant.chr, variant.pos, variant.pos + 1)
         except ValueError:
-            return None
+            yield None
         hits = [o for o in overlap if o.pos == variant.pos and
                 o.ref == variant.ref and o.alt == variant.alt]
         if len(hits) == 0:
-            return None
-        return hits
+            yield None
+        yield hits
 
     @classmethod
     def get_out_resolvers(cls):
@@ -41,9 +41,9 @@ class GetVariantIdByGenomicInterval(Step):
     def run(self, variant_set, genomic_interval):
         #TODO: check matched variants
         if genomic_interval is None:
-            return None
+            yield None
         try:
             hits = variant_set.fetch(genomic_interval.chr, genomic_interval.start, genomic_interval.stop)
         except ValueError, e:
-            return None
-        return ','.join(hit.id for hit in hits)
+            yield None
+        yield ','.join(hit.id for hit in hits)

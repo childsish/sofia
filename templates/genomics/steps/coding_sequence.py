@@ -18,8 +18,8 @@ class TranslateCodingSequence(Step):
 
     def run(self, coding_sequence, genetic_code):
         if coding_sequence is None:
-            return None
-        return genetic_code.translate(coding_sequence)
+            yield None
+        yield genetic_code.translate(coding_sequence)
 
 
 class GetCodonUsage(Step):
@@ -32,8 +32,8 @@ class GetCodonUsage(Step):
 
     def run(self, coding_sequence):
         if coding_sequence is None:
-            return None
-        return KmerCounter(coding_sequence, k=3, step=3)
+            yield None
+        yield KmerCounter(coding_sequence, k=3, step=3)
 
 
 class GetRelativeSynonymousCodonUsage(Step):
@@ -47,7 +47,7 @@ class GetRelativeSynonymousCodonUsage(Step):
 
     def run(self, codon_usage, genetic_code):
         if codon_usage is None:
-            return None, None
+            yield None, None
         rscu = {}
         w = {}
         for aa in genetic_code.AMINO_ACIDS:
@@ -63,7 +63,7 @@ class GetRelativeSynonymousCodonUsage(Step):
             for cdn, rscu_, w_ in izip(cdns, rscus, ws):
                 rscu[cdn] = rscu_
                 w[cdn] = w_
-        return rscu, w
+        yield rscu, w
 
 
 class GetCodonAdaptationIndex(Step):
@@ -76,7 +76,7 @@ class GetCodonAdaptationIndex(Step):
 
     def run(self, coding_sequence, relative_codon_adaptiveness):
         if coding_sequence is None or len(coding_sequence) == 0:
-            return None
+            yield None
         cai = []
         for i in xrange(0, len(coding_sequence), 3):
             cdn = coding_sequence[i:i+3].lower()
@@ -86,7 +86,7 @@ class GetCodonAdaptationIndex(Step):
             #    continue
             if cdn not in ['atg', 'tgg', 'taa', 'tga', 'tag'] and cdn in relative_codon_adaptiveness:
                 cai.append(relative_codon_adaptiveness[cdn])
-        return geometric_mean(cai)
+        yield geometric_mean(cai)
 
 
 class GetEffectiveNumberOfCodons(Step):
@@ -99,7 +99,7 @@ class GetEffectiveNumberOfCodons(Step):
 
     def run(self, codon_usage, genetic_code):
         if codon_usage is None:
-            return None
+            yield None
         fs = {aa: self.run_f(codon_usage, genetic_code[aa])
               for aa in genetic_code.AMINO_ACIDS}
         fams = defaultdict(list)
@@ -108,7 +108,7 @@ class GetEffectiveNumberOfCodons(Step):
                 fams[len(genetic_code[aa])].append(fs[aa])
         nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / arithmetic_mean(fam_Fs)
                  for sz, fam_Fs in fams.iteritems())
-        return nc
+        yield nc
 
     def run_f(self, cut, fam):
         n = float(sum(cut[cdn] for cdn in fam))

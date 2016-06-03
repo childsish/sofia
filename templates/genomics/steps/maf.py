@@ -29,16 +29,16 @@ class GetMafByVariant(Step):
     def run(self, maf_set, variant):
         #TODO: check matched variants
         if variant is None:
-            return None
+            yield None
         try:
             overlap = maf_set.fetch(variant.chr, variant.pos, variant.pos + 1)
         except ValueError:
-            return None
+            yield None
         hits = [o for o in overlap if o.start_position == variant.pos and
                 o.reference_allele == variant.ref and variant.alt in {o.tumour_seq_allele1, o.tumour_seq_allele2}]
         if len(hits) == 0:
-            return None
-        return hits
+            yield None
+        yield hits
 
 
 class ConvertMafToVariant(Step):
@@ -48,9 +48,9 @@ class ConvertMafToVariant(Step):
 
     def run(self, maf):
         if maf is None:
-            return None
+            yield None
         if isinstance(maf, list):
-            return [
+            yield [
                 Variant(m.chromosome,
                         m.start_position,
                         '.', m.reference_allele,
@@ -58,7 +58,7 @@ class ConvertMafToVariant(Step):
                         m.score,
                         '.')
                 for m in maf]
-        return Variant(maf.chromosome,
+        yield Variant(maf.chromosome,
                        maf.start_position,
                        '.', maf.reference_allele,
                        ','.join({maf.tumour_seq_allele1, maf.tumour_seq_allele2} - {maf.reference_allele}),

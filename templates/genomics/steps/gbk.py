@@ -22,6 +22,6 @@ class GbkSet(Step):
     IN = ['gbk_file']
     OUT = ['chromosome_sequence_set']
 
-    def get_interface(self, gbk_file):
+    def run(self, gbk_file):
         with gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file) as fileobj:
-            return GbkSequenceSet(fileobj)
+            yield GbkSequenceSet(fileobj)
