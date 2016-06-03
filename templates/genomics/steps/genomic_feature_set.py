@@ -15,6 +15,7 @@ class GetGenomicFeatureByPosition(Step):
     def run(self, genomic_feature_set, genomic_position):
         if genomic_position is None:
             yield None
+            raise StopIteration()
         #TODO: select correct gene (currently selecting largest)
         self.ttl += 1
         res = None
@@ -23,7 +24,7 @@ class GetGenomicFeatureByPosition(Step):
                 genomic_position.chr,
                 genomic_position.pos,
                 genomic_position.pos + 1)
-            if features is not None and len(features) == 0:
+            if features is not None and len(features) > 0:
                 res = sorted(features, key=len)[-1]
                 res.name = res.name.rsplit('.')[0]
         except Exception, e:
