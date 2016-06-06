@@ -1,5 +1,7 @@
-from lhc.binf.sequence import revcmp
+import gzip
 
+from lhc.binf.sequence import revcmp
+from lhc.io.fasta import FastaIterator, FastaInOrderAccessSet
 from sofia.step import Step
 
 
@@ -8,10 +10,16 @@ class GetDownstream1000(Step):
     Get the sequence from the given genomic position to 1000 nucleotides downstream.
     """
 
-    IN = ['chromosome_sequence_set', 'genomic_position', 'major_transcript']
+    IN = ['fasta_file', 'genomic_position', 'major_transcript']
     OUT = ['downstream_1000']
+
+    def __init__(self):
+        self.fasta_set = None
     
-    def run(self, chromosome_sequence_set, genomic_position, major_transcript):
+    def run(self, fasta_file, genomic_position, major_transcript):
+        if self.fasta_set is None:
+            fileobj = gzip.open(fasta_file) if fasta_file.endswith('.gz') else open(fasta_file)
+            self.fasta_set = FastaInOrderAccessSet(iter(FastaIterator(fileobj)))
         if major_transcript is None:
             yield None
             raise StopIteration()
@@ -20,7 +28,7 @@ class GetDownstream1000(Step):
         strand = major_transcript.strand
         start = pos if strand == '+' else pos - 1000
         stop = pos if strand == '-' else pos + 1000
-        seq = chromosome_sequence_set.fetch(chr, start, stop)
+        seq = self.fasta_set.fetch(chr, start, stop)
         yield seq if strand == '+' else revcmp(seq)
 
     @classmethod
