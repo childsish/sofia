@@ -12,10 +12,13 @@ class VcfIterator(Step):
     IN = ['vcf_file']
     OUT = ['variant']
 
+    def __init__(self):
+        self.fileobj = None
+
     def run(self, vcf_file):
-        with gzip.open(vcf_file) if vcf_file.endswith('.gz') else open(vcf_file) as fileobj:
-            for entry in VcfEntryIterator(fileobj):
-                yield entry
+        self.fileobj = gzip.open(vcf_file) if vcf_file.endswith('.gz') else open(vcf_file)
+        for entry in VcfEntryIterator(self.fileobj):
+            yield entry
 
     @classmethod
     def get_out_resolvers(cls):
@@ -34,10 +37,13 @@ class VcfSet(Step):
 
     IN = ['vcf_file']
     OUT = ['variant_set']
+
+    def __init__(self):
+        self.fileobj = None
     
     def run(self, vcf_file):
-        with gzip.open(vcf_file) if vcf_file.endswith('.gz') else open(vcf_file) as fileobj:
-            yield InOrderAccessSet(VcfEntryIterator(fileobj))
+        self.fileobj = gzip.open(vcf_file) if vcf_file.endswith('.gz') else open(vcf_file)
+        yield InOrderAccessSet(VcfEntryIterator(self.fileobj))
 
     @classmethod
     def get_out_resolvers(cls):

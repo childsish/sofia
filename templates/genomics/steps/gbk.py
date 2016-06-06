@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 import gzip
 
 from lhc.io.gbk import GbkIterator as Iterator, GbkSequenceSet
@@ -11,10 +9,13 @@ class GbkIterator(Step):
     IN = ['gbk_file']
     OUT = ['genomic_interval']
 
+    def __init__(self):
+        self.fileobj = None
+
     def run(self, gbk_file):
-        with gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file) as fileobj:
-            for entry in Iterator(fileobj):
-                yield entry
+        self.fileobj = gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file)
+        for entry in Iterator(self.fileobj):
+            yield entry
 
 
 class GbkSet(Step):
@@ -22,6 +23,9 @@ class GbkSet(Step):
     IN = ['gbk_file']
     OUT = ['chromosome_sequence_set']
 
+    def __init__(self):
+        self.fileobj = None
+
     def run(self, gbk_file):
-        with gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file) as fileobj:
-            yield GbkSequenceSet(fileobj)
+        self.fileobj = gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file)
+        yield GbkSequenceSet(self.fileobj)
