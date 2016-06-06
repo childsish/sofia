@@ -27,9 +27,6 @@ class SimpleExecutionEngine(object):
                 sys.stderr.write('\n '.join(warnings))
                 sys.stderr.write('\n')
 
-    def resolve_entity(self, entity, value):
-        self.resolved_entities[entity] = value
-
     def output_pending(self, workflow):
         return not all(head in self.resolved_entities for head in workflow.heads)
 
