@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 import gzip
 
 from sofia.step import Step
@@ -11,10 +9,13 @@ class FastaChromosomeSequenceSet(Step):
 
     IN = ['fasta_file']
     OUT = ['chromosome_sequence_set']
+
+    def __init__(self):
+        self.fileobj = None
     
     def run(self, fasta_file):
-        with gzip.open(fasta_file) if fasta_file.endswith('.gz') else open(fasta_file) as fileobj:
-            yield FastaInOrderAccessSet(iter(FastaIterator(fileobj)))
+        self.fileobj = gzip.open(fasta_file) if fasta_file.endswith('.gz') else open(fasta_file)
+        yield FastaInOrderAccessSet(iter(FastaIterator(self.fileobj)))
 
     @classmethod
     def get_out_resolvers(cls):
