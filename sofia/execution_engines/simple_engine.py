@@ -1,6 +1,7 @@
 import sys
 
-from itertools import izip, repeat
+from collections import defaultdict
+from itertools import repeat, izip
 from sofia.workflow_template import Template
 
 
@@ -34,7 +35,7 @@ class SimpleExecutionEngine(object):
         for step in self.unresolved_steps:
             if all(child in self.entities for child in step.ins):
                 return step
-        raise NotImplementedError('unexpected end in workflow execution')
+        raise RuntimeError('only unresolved steps without inputs remaining')
 
     def execute_step(self, step):
         """
@@ -44,20 +45,16 @@ class SimpleExecutionEngine(object):
         :param kwargs: input to be prepared
         :return: dict of output by entity type
         """
-        keys = [in_.name for in_ in step.ins]
-        input_entities = self.get_input_entities(step.ins)
-        output_entity_types = step.outs
-        output_entities = {entity_type: [] for entity_type in output_entity_types}
-        for values in izip(*input_entities):
-            kwargs = dict(zip(keys, values))
-            output = step.run(**kwargs)
-            for entity_type, value in zip(output_entity_types, output):
-                output_entities[entity_type].extend(value)
-        output = step.finalise()
-        for entity_type, value in zip(output_entity_types, output):
-            output_entities[entity_type].extend(value)
+        inputs = self.get_input_entities(step.ins)
+        outputs = defaultdict(list)
+        for output in step.run(inputs):
+            for k, v in output.iteritems():
+                outputs[k].extend(v)
+        for output in step.finalise():
+            for k, v in output.iteritems():
+                outputs[k].extend(v)
         self.unresolved_steps.remove(step)
-        return output_entities
+        return outputs
 
     def get_input_entities(self, entity_types):
         entities = [self.entities[entity_type] for entity_type in entity_types]
@@ -69,4 +66,4 @@ class SimpleExecutionEngine(object):
             for i in xrange(len(entities)):
                 if lengths[i] == 1:
                     entities[i] = repeat(entities[i][0], n)
-        return entities
+        return izip(*entities)
