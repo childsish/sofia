@@ -6,18 +6,18 @@ from sofia.workflow_template import Template
 
 class SimpleExecutionEngine(object):
     def __init__(self):
-        self.resolved_entities = {}
+        self.entities = {}
         self.unresolved_steps = []
 
     def execute(self, workflow):
-        self.resolved_entities = {entity: list(entity.attributes['filename']) for entity in workflow.provided_entities}
+        self.entities = {entity: list(entity.attributes['filename']) for entity in workflow.provided_entities}
         self.unresolved_steps = list(workflow.partitions[Template.STEP_PARTITION])
 
         workflow.init()
         while self.output_pending(workflow):
             step = self.get_next_step()
             output = self.execute_step(step)
-            self.resolved_entities.update(output)
+            self.entities.update(output)
 
         for step in workflow.partitions[Template.STEP_PARTITION]:
             warnings = step.get_user_warnings()
@@ -28,11 +28,11 @@ class SimpleExecutionEngine(object):
                 sys.stderr.write('\n')
 
     def output_pending(self, workflow):
-        return not all(head in self.resolved_entities for head in workflow.heads)
+        return not all(head in self.entities for head in workflow.heads)
 
     def get_next_step(self):
         for step in self.unresolved_steps:
-            if all(child in self.resolved_entities for child in step.ins):
+            if all(child in self.entities for child in step.ins):
                 return step
         raise NotImplementedError('unexpected end in workflow execution')
 
@@ -60,7 +60,7 @@ class SimpleExecutionEngine(object):
         return output_entities
 
     def get_input_entities(self, entity_types):
-        entities = [self.resolved_entities[entity_type] for entity_type in entity_types]
+        entities = [self.entities[entity_type] for entity_type in entity_types]
         lengths = [len(entity) for entity in entities]
         if len(set(lengths) - {1}) > 1:
             raise ValueError('unable to handle inputs of different lengths')
