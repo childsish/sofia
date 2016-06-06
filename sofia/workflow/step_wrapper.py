@@ -27,3 +27,6 @@ class StepWrapper(object):
         if len(self.outs) == 1:
             return [res]
         return [[value] for value in res]
+
+    def get_user_warnings(self):
+        return self.step.get_user_warnings()

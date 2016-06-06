@@ -25,3 +25,6 @@ class ConcreteStep(object):
 
     def finalise(self):
         return self.step.finalise()
+
+    def get_user_warnings(self):
+        return self.step.get_user_warnings()

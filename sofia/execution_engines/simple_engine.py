@@ -1,3 +1,5 @@
+import sys
+
 from itertools import izip, repeat
 from sofia.workflow_template import Template
 
@@ -16,7 +18,14 @@ class SimpleExecutionEngine(object):
             step = self.get_next_step()
             output = self.execute_step(step)
             self.resolved_entities.update(output)
-        pass
+
+        for step in workflow.partitions[Template.STEP_PARTITION]:
+            warnings = step.get_user_warnings()
+            if len(warnings) > 0:
+                sys.stderr.write(str(step))
+                sys.stderr.write('\n ')
+                sys.stderr.write('\n '.join(warnings))
+                sys.stderr.write('\n')
 
     def resolve_entity(self, entity, value):
         self.resolved_entities[entity] = value
