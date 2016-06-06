@@ -1,5 +1,4 @@
-from itertools import product, izip
-from operator import or_
+from itertools import izip, repeat
 from sofia.workflow_template import Template
 
 
@@ -40,11 +39,10 @@ class SimpleExecutionEngine(object):
         :return: dict of output by entity type
         """
         keys = [in_.name for in_ in step.ins]
-        input_entity_types = step.ins
-        input_length, input_entities = self.get_input_entities(input_entity_types)
+        input_entities = self.get_input_entities(step.ins)
         output_entity_types = step.outs
         output_entities = {entity_type: [] for entity_type in output_entity_types}
-        for values in input_entities:
+        for values in izip(*input_entities):
             kwargs = dict(zip(keys, values))
             output = step.run(**kwargs)
             for entity_type, value in zip(output_entity_types, output):
@@ -57,10 +55,12 @@ class SimpleExecutionEngine(object):
 
     def get_input_entities(self, entity_types):
         entities = [self.resolved_entities[entity_type] for entity_type in entity_types]
-        sync_types = reduce(or_, (entity.attributes['sync'] for entity in entity_types))
-
-        lengths = {len(entities_) for entities_ in entities}
-        if len(lengths - {1}) > 1:
+        lengths = [len(entity) for entity in entities]
+        if len(set(lengths) - {1}) > 1:
             raise ValueError('unable to handle inputs of different lengths')
-        entities = izip(*entities) if len(sync_types) == 1 else product(*entities)
-        return list(lengths)[0], entities
+        n = max(lengths)
+        if n > 1:
+            for i in xrange(len(entities)):
+                if lengths[i] == 1:
+                    entities[i] = repeat(entities[i][0], n)
+        return entities
