@@ -1,4 +1,6 @@
+from collections import Counter
 from step import Step
+from copy import copy
 
 
 class Converter(Step):
@@ -6,10 +8,10 @@ class Converter(Step):
         self.map = self.load_map_file(map_file, fr, to)
         self.path = [] if path is None else path
         self.ttl = 0
-        self.cnt = 0
+        self.cnt = Counter()
 
     def run(self, **kwargs):
-        entity = kwargs.values()[0]
+        entity = copy(kwargs.values()[0])
         if entity is None:
             yield None
             raise StopIteration()
@@ -17,8 +19,8 @@ class Converter(Step):
         self.ttl += 1
         try:
             entity = self._convert(entity, self.path, self.map)
-            self.cnt += 1
-        except KeyError:
+        except KeyError, e:
+            self.cnt[e.message] += 1
             entity = None
         yield entity
 
@@ -47,8 +49,8 @@ class Converter(Step):
         return entity
 
     def get_user_warnings(self):
-        frq = round(self.cnt / float(self.ttl), 3)
-        return {'{}% of identifiers were converted.'.format(frq * 100)} if frq < 1 else {}
+        frqs = {msg: round(cnt / float(self.ttl), 3) for msg, cnt in self.cnt.iteritems()}
+        return {'{}% of conversions produced error {}'.format(frq * 100, msg) for msg, frq in frqs.iteritems()}
 
     def load_map_file(self, filename, fr, to):
         with open(filename) as fileobj:
