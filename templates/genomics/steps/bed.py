@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 import gzip
 
 from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
@@ -14,9 +12,9 @@ class BedIterator(Step):
     OUT = ['genomic_interval']
     
     def run(self, bed_file):
-        with gzip.open(bed_file) if bed_file.endswith('.gz') else open(bed_file) as fileobj:
-            for line in BedLineIterator(fileobj):
-                yield line
+        fileobj = gzip.open(bed_file) if bed_file.endswith('.gz') else open(bed_file)
+        for line in BedLineIterator(fileobj):
+            yield line
 
 
 class BedSet(Step):
@@ -25,5 +23,5 @@ class BedSet(Step):
     OUT = ['genomic_interval_set']
 
     def run(self, bed_file):
-        with gzip.open(bed_file) if bed_file.endswith('.gz') else open(bed_file) as fileobj:
-            yield InOrderAccessIntervalSet(BedLineIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
+        fileobj = gzip.open(bed_file) if bed_file.endswith('.gz') else open(bed_file)
+        yield InOrderAccessIntervalSet(BedLineIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
