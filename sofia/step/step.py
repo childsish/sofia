@@ -22,6 +22,11 @@ class Step(object):
         yield  # allows the generator to return nothing
 
     def finalise(self):
+        """
+        Finalise the step. This function is a generator for the output entities that can only be produced when it is
+        known that the input stream has ended (eg. an output file).
+        :return:
+        """
         return
         yield  # allows the generator to return nothing
 

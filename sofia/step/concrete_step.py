@@ -1,9 +1,14 @@
+from collections import namedtuple
+
+
 class ConcreteStep(object):
     """
-    A concrete step has two main roles.
+    A concrete step acts as the interface between user-defined steps and the template building engine. It can also be
+    subclassed to create dynamically specialised steps. A concrete step has three main roles.
      1) Wrap a user-defined step so the IN and OUT class members are available to the template factory as .ins and .outs
         when making the template.
-     2) Allow generic steps to be dynamically specialised like the extractors and converters.
+     2) Wrap the output of a user-defined step in a tuple.
+     3) Allow generic steps to be dynamically specialised like the extractors and converters.
     """
     def __init__(self, step_class, name=None, ins=None, outs=None, params=None):
         self.step = None
@@ -14,14 +19,30 @@ class ConcreteStep(object):
         self.outs = step_class.OUT if outs is None else outs
         self.params = {} if params is None else params
 
+        self.constructor = namedtuple('Output', self.outs)
+
     def __str__(self):
         return self.name
 
     def init(self):
+        """
+        Instantiate and initialise the step.
+        :return:
+        """
         self.step = self.step_class(**self.params)
 
     def run(self, **kwargs):
-        return self.step.run(**kwargs)
+        """
+        Run the step and wrap the output in a named tuple.
+        :param kwargs: keyword arguments for the step
+        :return: named tuple of output entities
+        """
+        if len(self.outs) == 1:
+            for item in self.step.run(**kwargs):
+                yield self.constructor(item)
+        else:
+            for item in self.step.run(**kwargs):
+                yield self.constructor(*item)
 
     def finalise(self):
         return self.step.finalise()
