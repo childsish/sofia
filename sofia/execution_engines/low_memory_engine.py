@@ -1,54 +1,75 @@
-from itertools import islice
+import sys
+
+from sofia.workflow_template import Template
+from buffer import Buffer
 
 
 class LowMemoryExecutionEngine(object):
-    def __init__(self, workflow, max_entities=10):
-        self.resolved_entities = {}
-        self.workflow = workflow
+    def __init__(self, max_entities=100):
+        if max_entities == 1:
+            raise ValueError('Well done. You did it. You broke the algorithm. Congratulations, I hope you are happy now.')
         self.max_entities = max_entities
-        self.unresolved_steps = list(self.workflow.partitions[1])
 
-    def execute(self):
-        self.workflow.init()
-        for step in self.workflow.partitions[1]:
-            params = {key: step.attr[key] for key in step.PARAMS if key in step.attr}
-            step.init(**params)
-        while self.output_pending():
-            step = self.get_next_step()
-            self.execute_step(step)
+    def execute(self, workflow):
+        steps = workflow.partitions[Template.STEP_PARTITION]
+        inputs = {step: Buffer(step.ins, self.max_entities) for step in steps}
+        outputs = {step: Buffer(step.outs, self.max_entities) for step in steps}
+        states = {step: None for step in steps}
 
-    def resolve_entity(self, entity, value):
-        self.resolved_entities[entity] = value
+        for entity in workflow.provided_entities:
+            for consumer in workflow.get_parents(entity):
+                inputs[consumer].write(entity, entity.attributes['filename'])
 
-    def output_pending(self):
-        return not all(head in self.resolved_entities for head in self.workflow.heads)
+        workflow.init()
+        while any(inputs[step].is_readable() or states[step] is not None for step in steps):
+            self.tick(workflow, inputs, outputs, states)
+            self.tock(workflow, inputs, outputs)
 
-    def get_next_step(self):
-        for step in self.unresolved_steps:
-            if any(len(self.resolved_entities[child]) >= self.max_entities for child in step.outs.itervalues() if child in self.resolved_entities):
+    def tick(self, workflow, inputs, outputs, states):
+        """
+        Resolve all necessary actions for the steps
+        :param workflow: resolved workflow
+        :param inputs: input buffers
+        :param outputs: output buffers
+        :param states: step states
+        :return:
+        """
+        for step in workflow.partitions[Template.STEP_PARTITION]:
+            if not outputs[step].is_writable(step.outs):
                 continue
-            if all(child in self.resolved_entities for child in step.ins.itervalues()):
-                return step
-        raise NotImplementedError('unexpected end in workflow execution')
+            elif states[step] is not None:
+                try:
+                    entities = states[step].next()
+                    for key, values in entities.iteritems():
+                        outputs[step].write(key, values)
+                    sys.stderr.write(' {} output {}\n'.format(step, ', '.join(e.name for e in entities)))
+                except StopIteration:
+                    states[step] = None
+                    if step.not_finalised:
+                        states[step] = step.finalise()
+            elif inputs[step].is_readable():
+                sys.stderr.write('{} consumed {}\n'.format(step, ', '.join(e.name for e in step.ins)))
+                states[step] = step.run(zip(*inputs[step].read()), self.max_entities)
 
-    def execute_step(self, step):
-        kwargs = {input.name: self.resolved_entities[input] for input in step.ins.itervalues()}
-        output = self.prepare(step, kwargs)
-        if len(output) == 0:
-            self.unresolved_steps.remove(step)
-        self.resolved_entities.update(output)
-
-    def prepare(self, step, kwargs):
-        lengths = {len(value) for value in kwargs.itervalues()}
-        if len(lengths - {1}) > 1:
-            raise ValueError('unable to handle inputs of different lengths')
-        res = {entity: [] for entity in step.outs.itervalues()}
-        for i in xrange(max(lengths)):
-            args = {key: value[i % len(value)] for key, value in kwargs.iteritems()}
-            values = list(islice(step.run(**args), self.max_entities))
-            if len(step.outs) == 1:
-                res[step.outs.values()[0]].extend(values)
-            else:
-                for entity, value in zip(step.outs.itervalues(), values):
-                    res[entity].extend(value)
-        return res
+    def tock(self, workflow, inputs, outputs):
+        """
+        Resolve all necessary actions for the entities
+        :param workflow: resolved workflow
+        :param inputs: input buffers
+        :param outputs: output buffers
+        :return:
+        """
+        for entity in workflow.partitions[Template.ENTITY_PARTITION]:
+            producers = workflow.get_children(entity)
+            if len(producers) == 0:
+                continue
+            assert len(producers) == 1
+            buffer = outputs[list(producers)[0]]
+            if not buffer.is_readable():
+                continue
+            consumers = workflow.get_parents(entity)
+            if any(not inputs[consumer].is_writable([entity]) for consumer in consumers):
+                continue
+            for consumer in consumers:
+                inputs[consumer].write(entity, buffer.items[entity])
+            buffer.items[entity] = []
