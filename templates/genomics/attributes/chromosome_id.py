@@ -10,6 +10,8 @@ class ChromosomeIdResolver(AttributeResolver):
     ATTRIBUTE = 'chromosome_id'
 
     def resolve_in(self, ins):
+        if len(ins) < 2:
+            return ins
         if all('chromosome_id' not in self.entity_graph.has_a.get_descendants(in_.head.name) for in_ in ins):
             return ins
         in_attributes = [in_.head.attributes[self.attribute] for in_ in ins]
