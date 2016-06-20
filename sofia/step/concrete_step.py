@@ -45,7 +45,12 @@ class ConcreteStep(object):
                 yield self.constructor(*item)
 
     def finalise(self):
-        return self.step.finalise()
+        if len(self.outs) == 1:
+            for item in self.step.finalise():
+                yield self.constructor(item)
+        else:
+            for item in self.step.finalise():
+                yield self.constructor(*item)
 
     def get_user_warnings(self):
         return self.step.get_user_warnings()
