@@ -10,7 +10,6 @@ class StepWrapper(object):
         self.outs = []
 
         self.step = step
-        self.not_finalises = True
 
     @property
     def name(self):

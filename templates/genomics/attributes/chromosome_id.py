@@ -10,9 +10,11 @@ class ChromosomeIdResolver(AttributeResolver):
     ATTRIBUTE = 'chromosome_id'
 
     def resolve_in(self, ins):
-        if len(ins) < 2:
-            return ins
-        if all('chromosome_id' not in self.entity_graph.has_a.get_descendants(in_.head.name) for in_ in ins):
+        ttl = 0
+        for in_ in ins:
+            in_ = in_.head.name
+            ttl += 'chromosome_id' in self.entity_graph.entities[in_]['attributes'] or 'chromosome_id' in self.entity_graph.has_a.get_descendants(in_)
+        if ttl < 2:
             return ins
         in_attributes = [in_.head.attributes[self.attribute] for in_ in ins]
         if len(reduce(or_, in_attributes)) < 2:
@@ -54,8 +56,8 @@ class ChromosomeIdResolver(AttributeResolver):
         return res
 
     def get_to(self, ins):
-        tos = reduce(or_, (in_.head.attributes[self.attribute] for in_ in ins
-                           if 'chromosome_id' not in self.entity_graph.has_a.get_descendants(in_.head.name)), set())
+        tos = reduce(or_, (in_.head.attributes[self.attribute] for in_ in ins if
+                           'chromosome_id' not in self.entity_graph.has_a.get_descendants(in_.head.name)), set())
         if len(tos) == 0:
             tos = ins[0].head.attributes[self.attribute]
         elif len(tos) > 1:

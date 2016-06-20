@@ -8,14 +8,13 @@ def load_entity_set(filename):
     with open(filename) as fileobj:
         entity_definitions = json.load(fileobj)
 
-    entities = EntitySet({definition['name']: definition for definition in entity_definitions})
+    entities = EntitySet()
     for definition in entity_definitions:
-        if 'has_a' in definition:
-            definition['has_a'] = {child['name']: child for child in definition['has_a']}
-            for child in definition['has_a']:
-                entities.has_a.add_edge(definition['name'], child)
-        if 'is_a' in definition:
-            entities.is_a.add_edge(definition['is_a'], definition['name'])
+        entities.register_entity(definition['name'],
+                                 definition.get('description', None),
+                                 {child['name']: child for child in definition.get('has_a', [])},
+                                 definition.get('is_a', None),
+                                 definition.get('attributes', None))
 
     extensions = {}
     for definition in entity_definitions:

@@ -2,11 +2,10 @@ from lhc.graph import Graph
 
 
 class EntitySet(object):
-    def __init__(self, entities):
+    def __init__(self):
         self.has_a = Graph()
         self.is_a = Graph()
-
-        self.entities = entities
+        self.entities = {}
 
     def __iter__(self):
         return self.entities.itervalues()
@@ -14,16 +13,21 @@ class EntitySet(object):
     def __contains__(self, item):
         return item in self.entities
 
-    def register_entity(self, name, description=None, has_a=None, is_a=None):
+    def register_entity(self, name, description=None, has_a=None, is_a=None, attributes=None):
         if name in self.entities:
             return
-        entity = {'name': name}
-        if description is not None:
-            entity['description'] = description
+        entity = {
+            'name': name,
+            'description': '' if description is None else description,
+            'attributes': set() if attributes is None else set(attributes)
+        }
         if has_a is not None:
             entity['has_a'] = has_a
+            for to in has_a:
+                self.has_a.add_edge(name, to)
         if is_a is not None:
             entity['is_a'] = is_a
+            self.is_a.add_edge(is_a, name)
         self.entities[name] = entity
 
     def is_equivalent(self, a, b):
@@ -64,22 +68,14 @@ class EntitySet(object):
         return None
 
     def get_equivalent_descendents(self, entity):
-        equivalents = {entity}
-        children = self.is_a.get_children(entity)
-        while len(children) > 0:
-            entity = list(children)[0]
-            equivalents.add(entity)
-            children = self.is_a.get_children(entity)
-        return equivalents
+        if entity in self.is_a:
+            return self.is_a.get_descendants(entity)
+        return {entity}
 
     def get_equivalent_ancestors(self, entity):
-        equivalents = {entity}
-        parents = self.is_a.get_parents(entity)
-        while len(parents) > 0:
-            entity = list(parents)[0]
-            equivalents.add(entity)
-            parents = self.is_a.get_parents(entity)
-        return equivalents
+        if entity in self.is_a:
+            return self.is_a.get_ancestors(entity)
+        return {entity}
 
     def update(self, other):
         self.entities.update(other.entities)
