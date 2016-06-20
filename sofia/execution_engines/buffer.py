@@ -24,7 +24,6 @@ class Buffer(object):
             input = self.items[key][:self.n]
             inputs.append(input)
             lengths.append(len(input))
-            self.items[key] = self.items[key][self.n:]
         if len(set(lengths) - {1}) > 1:
             raise ValueError('unable to handle inputs of different lengths')
         n = max(lengths)
@@ -35,8 +34,13 @@ class Buffer(object):
                     self.frozen.add(self.keys[i])
                 elif self.keys[i] in self.frozen:
                     self.frozen.remove(self.keys[i])
+
+                if self.keys[i] not in self.frozen:
+                    self.items[key] = self.items[key][self.n:]
         else:
             self.frozen = set()
+            for key in self.keys:
+                self.items[key] = self.items[key][self.n:]
         return inputs
 
     def write(self, key, values):
