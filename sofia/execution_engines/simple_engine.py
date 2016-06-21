@@ -45,7 +45,7 @@ class SimpleExecutionEngine(object):
         :param kwargs: input to be prepared
         :return: dict of output by entity type
         """
-        inputs = self.get_input_entities(step.ins)
+        inputs = self.get_inputs(step.ins)
         outputs = defaultdict(list)
         for output in step.run(inputs):
             for k, v in output.iteritems():
@@ -56,7 +56,7 @@ class SimpleExecutionEngine(object):
         self.unresolved_steps.remove(step)
         return outputs
 
-    def get_input_entities(self, entity_types):
+    def get_inputs(self, entity_types):
         entities = [self.entities[entity_type] for entity_type in entity_types]
         lengths = [len(entity) for entity in entities]
         if len(set(lengths) - {1}) > 1:
