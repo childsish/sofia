@@ -36,7 +36,7 @@ class Buffer(object):
                     self.frozen.remove(self.keys[i])
 
                 if self.keys[i] not in self.frozen:
-                    self.items[key] = self.items[key][self.n:]
+                    self.items[self.keys[i]] = self.items[self.keys[i]][self.n:]
         else:
             self.frozen = set()
             for key in self.keys:
