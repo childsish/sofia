@@ -1,5 +1,6 @@
 import sys
 
+from operator import or_
 from sofia.workflow_template import Template
 from buffer import Buffer
 
@@ -13,63 +14,64 @@ class LowMemoryExecutionEngine(object):
     def execute(self, workflow):
         steps = workflow.partitions[Template.STEP_PARTITION]
         inputs = {step: Buffer(step.ins, self.max_entities) for step in steps}
-        outputs = {step: Buffer(step.outs, self.max_entities) for step in steps}
-        states = {step: None for step in steps}
+        status = {step: 'active' for step in steps}
+        exhausted = set()
 
         for entity in workflow.provided_entities:
+            if entity not in workflow.graph:
+                continue
+            exhausted.add(entity)
             for consumer in workflow.get_parents(entity):
                 inputs[consumer].write(entity, entity.attributes['filename'])
 
         workflow.init()
-        while any(inputs[step].is_readable() or states[step] is not None for step in steps):
-            self.tick(workflow, inputs, outputs, states)
-            self.tock(workflow, inputs, outputs)
+        stack = []
+        for step in steps:
+            if inputs[step].is_readable():
+                stack.append((step, step.run(zip(*inputs[step].read()), self.max_entities)))
+        while len(stack) > 0:
+            step, state = stack.pop(0)
+            if self.is_frozen(step, inputs, workflow):
+                status[step] = 'finalised'
+                continue
+            elif not self.can_run(step, inputs, workflow):
+                stack.append((step, state))
+                continue
+            try:
+                entities = state.next()
+                for entity, values in entities.iteritems():
+                    for consumer in workflow.get_parents(entity):
+                        inputs[consumer].write(entity, values)
+                        if inputs[consumer].is_readable():
+                            stack.append((consumer, consumer.run(zip(*inputs[consumer].read()), self.max_entities)))
+                stack.append((step, state))
+            except StopIteration:
+                if status[step] == 'active' and all(in_ in exhausted for in_ in step.ins):
+                    stack.append((step, step.finalise()))
+                    status[step] = 'finalising'
+                elif status[step] == 'finalising':
+                    for out in step.outs:
+                        exhausted.add(out)
+                    status[step] = 'finalised'
+                    self.finalise_siblings(step, inputs, workflow, status)
 
-    def tick(self, workflow, inputs, outputs, states):
-        """
-        Resolve all necessary actions for the steps
-        :param workflow: resolved workflow
-        :param inputs: input buffers
-        :param outputs: output buffers
-        :param states: step states
-        :return:
-        """
-        for step in workflow.partitions[Template.STEP_PARTITION]:
-            if not outputs[step].is_writable(step.outs):
-                continue
-            elif states[step] is not None:
-                try:
-                    entities = states[step].next()
-                    for key, values in entities.iteritems():
-                        outputs[step].write(key, values)
-                    sys.stderr.write(' {} output {}\n'.format(step, ', '.join(e.name for e in entities)))
-                except StopIteration:
-                    states[step] = None
-                    if step.not_finalised:
-                        states[step] = step.finalise()
-            elif inputs[step].is_readable():
-                sys.stderr.write('{} consumed {}\n'.format(step, ', '.join(e.name for e in step.ins)))
-                states[step] = step.run(zip(*inputs[step].read()), self.max_entities)
+    def is_frozen(self, step, inputs, workflow):
+        consumers = reduce(or_, (workflow.get_parents(entity) for entity in workflow.get_parents(step))) - {step}
+        for consumer in consumers:
+            if any(out in inputs[consumer].frozen for out in step.outs):
+                return True
+        return False
 
-    def tock(self, workflow, inputs, outputs):
-        """
-        Resolve all necessary actions for the entities
-        :param workflow: resolved workflow
-        :param inputs: input buffers
-        :param outputs: output buffers
-        :return:
-        """
-        for entity in workflow.partitions[Template.ENTITY_PARTITION]:
-            producers = workflow.get_children(entity)
-            if len(producers) == 0:
-                continue
-            assert len(producers) == 1
-            buffer = outputs[list(producers)[0]]
-            if not buffer.is_readable():
-                continue
-            consumers = workflow.get_parents(entity)
-            if any(not inputs[consumer].is_writable([entity]) for consumer in consumers):
-                continue
-            for consumer in consumers:
-                inputs[consumer].write(entity, buffer.items[entity])
-            buffer.items[entity] = []
+    def can_run(self, step, inputs, workflow):
+        for out in step.outs:
+            for consumer in workflow.get_parents(out):
+                if not inputs[consumer].is_writable([out]):
+                    return False
+        return True
+
+    def finalise_siblings(self, step, inputs, workflow, status):
+        siblings = reduce(or_, (workflow.get_children(entity) for entity in workflow.get_parents(step))) - {step}
+        for sibling in siblings:
+            outs = workflow.get_parents(sibling)
+            if all(entity in inputs[sibling].frozen for entity in workflow.get_parents(sibling)):
+                status[sibling] = 'finalised'
