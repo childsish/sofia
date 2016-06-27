@@ -10,11 +10,13 @@ class GetMajorTranscriptFromGenomicFeature(Step):
     OUT = ['major_transcript']
 
     def run(self, genomic_feature):
-        res = None
-        if genomic_feature is not None and len(genomic_feature.children) > 0:
-            transcripts = sorted(genomic_feature.children, key=self.get_transcript_length)
-            res = transcripts[-1]
-        yield res
+        for feature in genomic_feature:
+            res = None
+            if feature is not None and len(feature.children) > 0:
+                transcripts = sorted(feature.children, key=self.get_transcript_length)
+                res = transcripts[-1]
+            yield res
+        del genomic_feature[:]
 
     @staticmethod
     def get_transcript_length(transcript):

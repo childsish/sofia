@@ -17,9 +17,12 @@ class TranslateCodingSequence(Step):
     OUT = ['protein_sequence']
 
     def run(self, coding_sequence, genetic_code):
-        if coding_sequence is None:
-            yield None
-        yield genetic_code.translate(coding_sequence)
+        genetic_code = genetic_code[0]
+        for sequence in coding_sequence:
+            if sequence is None:
+                yield None
+            yield genetic_code.translate(sequence)
+        del coding_sequence[:]
 
 
 class GetCodonUsage(Step):
@@ -31,9 +34,11 @@ class GetCodonUsage(Step):
     OUT = ['codon_usage']
 
     def run(self, coding_sequence):
-        if coding_sequence is None:
-            yield None
-        yield KmerCounter(coding_sequence, k=3, step=3)
+        for sequence in coding_sequence:
+            if sequence is None:
+                yield None
+            yield KmerCounter(sequence, k=3, step=3)
+        del coding_sequence[:]
 
 
 class GetRelativeSynonymousCodonUsage(Step):
@@ -46,24 +51,27 @@ class GetRelativeSynonymousCodonUsage(Step):
     OUT = ['relative_synonymous_codon_usage', 'relative_codon_adaptiveness']
 
     def run(self, codon_usage, genetic_code):
-        if codon_usage is None:
-            yield None, None
-        rscu = {}
-        w = {}
-        for aa in genetic_code.AMINO_ACIDS:
-            cdns = genetic_code.get_codons(aa)
-            usgs = [codon_usage[cdn] for cdn in cdns]
-            ttl_usg = sum(usgs) / float(len(usgs))
-            if ttl_usg == 0:
-                rscus = len(usgs) * [0]
-                ws = len(usgs) * [0]
-            else:
-                rscus = [usg / ttl_usg for usg in usgs]
-                ws = [usg / float(max(usgs)) for usg in usgs]
-            for cdn, rscu_, w_ in izip(cdns, rscus, ws):
-                rscu[cdn] = rscu_
-                w[cdn] = w_
-        yield rscu, w
+        genetic_code = genetic_code[0]
+        for usage in codon_usage:
+            if usage is None:
+                yield None, None
+            rscu = {}
+            w = {}
+            for aa in genetic_code.AMINO_ACIDS:
+                cdns = genetic_code.get_codons(aa)
+                usgs = [usage[cdn] for cdn in cdns]
+                ttl_usg = sum(usgs) / float(len(usgs))
+                if ttl_usg == 0:
+                    rscus = len(usgs) * [0]
+                    ws = len(usgs) * [0]
+                else:
+                    rscus = [usg / ttl_usg for usg in usgs]
+                    ws = [usg / float(max(usgs)) for usg in usgs]
+                for cdn, rscu_, w_ in izip(cdns, rscus, ws):
+                    rscu[cdn] = rscu_
+                    w[cdn] = w_
+            yield rscu, w
+        del codon_usage[:]
 
 
 class GetCodonAdaptationIndex(Step):
@@ -75,18 +83,21 @@ class GetCodonAdaptationIndex(Step):
     OUT = ['codon_adaptation_index']
 
     def run(self, coding_sequence, relative_codon_adaptiveness):
-        if coding_sequence is None or len(coding_sequence) == 0:
-            yield None
-        cai = []
-        for i in xrange(0, len(coding_sequence), 3):
-            cdn = coding_sequence[i:i+3].lower()
-            #red = set(cdn) & RedundantCode.REDUNDANT_BASES
-            #if len(red) > 0:
-            #    warnings.warn('Redundant bases "%s" encountered in codon. Codon "%s" has been ignored.'%(','.join(sorted(red)), cdn))
-            #    continue
-            if cdn not in ['atg', 'tgg', 'taa', 'tga', 'tag'] and cdn in relative_codon_adaptiveness:
-                cai.append(relative_codon_adaptiveness[cdn])
-        yield geometric_mean(cai)
+        for sequence, adaptiveness in zip(coding_sequence, relative_codon_adaptiveness):
+            if sequence is None or len(sequence) == 0:
+                yield None
+            cai = []
+            for i in xrange(0, len(sequence), 3):
+                cdn = sequence[i:i+3].lower()
+                #red = set(cdn) & RedundantCode.REDUNDANT_BASES
+                #if len(red) > 0:
+                #    warnings.warn('Redundant bases "%s" encountered in codon. Codon "%s" has been ignored.'%(','.join(sorted(red)), cdn))
+                #    continue
+                if cdn not in ['atg', 'tgg', 'taa', 'tga', 'tag'] and cdn in adaptiveness:
+                    cai.append(adaptiveness[cdn])
+            yield geometric_mean(cai)
+        del coding_sequence[:]
+        del relative_codon_adaptiveness[:]
 
 
 class GetEffectiveNumberOfCodons(Step):
@@ -98,17 +109,20 @@ class GetEffectiveNumberOfCodons(Step):
     OUT = ['effective_number_of_codons']
 
     def run(self, codon_usage, genetic_code):
-        if codon_usage is None:
-            yield None
-        fs = {aa: self.run_f(codon_usage, genetic_code[aa])
-              for aa in genetic_code.AMINO_ACIDS}
-        fams = defaultdict(list)
-        for aa in genetic_code.AMINO_ACIDS:
-            if fs[aa] is not None:  # Assume missing aa have the mean F
-                fams[len(genetic_code[aa])].append(fs[aa])
-        nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / arithmetic_mean(fam_Fs)
-                 for sz, fam_Fs in fams.iteritems())
-        yield nc
+        genetic_code = genetic_code[0]
+        for usage in codon_usage:
+            if usage is None:
+                yield None
+            fs = {aa: self.run_f(usage, genetic_code[aa])
+                  for aa in genetic_code.AMINO_ACIDS}
+            fams = defaultdict(list)
+            for aa in genetic_code.AMINO_ACIDS:
+                if fs[aa] is not None:  # Assume missing aa have the mean F
+                    fams[len(genetic_code[aa])].append(fs[aa])
+            nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / arithmetic_mean(fam_Fs)
+                     for sz, fam_Fs in fams.iteritems())
+            yield nc
+        del codon_usage[:]
 
     def run_f(self, cut, fam):
         n = float(sum(cut[cdn] for cdn in fam))

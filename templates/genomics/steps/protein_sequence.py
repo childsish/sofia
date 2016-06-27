@@ -24,13 +24,16 @@ class GetPest(Step):
         self.mono = 'mono' if mono else 'avg'
 
     def run(self, protein_sequence, molecular_weight_set):
-        if protein_sequence is None:
-            yield None
-        protein_sequence = protein_sequence.rstrip('*')
-        if '*' in protein_sequence:
-            warn('protein sequence terminates early')
-            yield None
-        yield list(self.iter_pest(protein_sequence, molecular_weight_set))
+        molecular_weight_set = molecular_weight_set[0]
+        for sequence in protein_sequence:
+            if sequence is None:
+                yield None
+            sequence = sequence.rstrip('*')
+            if '*' in sequence:
+                warn('protein sequence terminates early')
+                yield None
+            yield list(self.iter_pest(sequence, molecular_weight_set))
+        del protein_sequence[:]
 
     def iter_pest(self, seq, molwts):
         """ Algorithm copied from EMBOSS:
@@ -72,9 +75,9 @@ class GetNumberOfPestSequences(Step):
     OUT = ['number_of_pest_sequences']
 
     def run(self, pest_sequences):
-        if pest_sequences is None:
-            yield None
-        yield len(pest_sequences)
+        for sequences in pest_sequences:
+            yield None if sequences is None else len(sequences)
+        del pest_sequences[:]
 
 
 class GetAveragePestSequenceLength(Step):
@@ -83,9 +86,11 @@ class GetAveragePestSequenceLength(Step):
     OUT = ['average_pest_sequence_length']
 
     def run(self, pest_sequences):
-        if pest_sequences is None or len(pest_sequences) == 0:
-            yield None
-        yield sum(len(seq) for seq in pest_sequences) / float(len(pest_sequences))
+        for sequences in pest_sequences:
+            if sequences is None or len(sequences) == 0:
+                yield None
+            yield sum(len(seq) for seq in sequences) / float(len(sequences))
+        del pest_sequences[:]
 
 
 class GetAminoAcidFrequency(Step):
@@ -94,6 +99,6 @@ class GetAminoAcidFrequency(Step):
     OUT = ['amino_acid_frequency']
 
     def run(self, protein_sequence):
-        if protein_sequence is None:
-            yield None
-        yield Counter(protein_sequence)
+        for sequence in protein_sequence:
+            yield None if sequence is None else Counter(sequence)
+        del protein_sequence[:]

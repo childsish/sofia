@@ -11,7 +11,7 @@ class MolecularWeights(Step):
     OUT = ['molecular_weight_set']
 
     def run(self, molecular_weight_file):
-        infile = open(molecular_weight_file)
+        infile = open(molecular_weight_file.pop())
         data = infile.read()
         infile.close()
         interface = {}

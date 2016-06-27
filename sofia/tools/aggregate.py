@@ -6,9 +6,7 @@ from collections import defaultdict
 
 from common import get_program_directory
 from sofia.attribute_map_factory import AttributeMapFactory
-from sofia.entity_type_parser import EntityTypeParser
 from sofia.error_manager import ERROR_MANAGER
-from sofia.workflow_template import load_template
 from sofia.resolvers.entity_resolver import EntityResolver
 from sofia.workflow.resolved_workflow import ResolvedWorkflow
 
@@ -44,7 +42,7 @@ class Aggregator(object):
             executor.resolve_entity(entity, list(entity.attributes['filename']))
         executor.execute()
         template = '\t'.join(['{}'] * len(requested_entities)) if args.template is None else args.template
-        for fields in zip(*[executor.resolved_entities[entity] for entity in solution.heads]):
+        for fields in zip(*[executor.entities[entity] for entity in solution.heads]):
             self.stdout.write(template.format('' if field is None else str(field) for field in fields))
             self.stdout.write('\n')
 

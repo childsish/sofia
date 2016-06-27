@@ -11,12 +11,10 @@ class GtfIterator(Step):
     IN = ['gtf_file']
     OUT = ['genomic_feature']
 
-    def __init__(self):
-        self.fileobj = None
-
     def run(self, gtf_file):
-        self.fileobj = gzip.open(gtf_file) if gtf_file.endswith('.gz') else open(gtf_file)
-        for entry in GtfEntryIterator(self.fileobj):
+        gtf_file = gtf_file.pop()
+        fileobj = gzip.open(gtf_file) if gtf_file.endswith('.gz') else open(gtf_file)
+        for entry in GtfEntryIterator(fileobj):
             if entry.type == 'gene':
                 entry.name = entry.name.rsplit('.')[0]
                 yield entry
@@ -39,12 +37,10 @@ class GtfSet(Step):
     IN = ['gtf_file']
     OUT = ['genomic_feature_set']
 
-    def __init__(self):
-        self.fileobj = None
-
     def run(self, gtf_file):
-        self.fileobj = gzip.open(gtf_file) if gtf_file.endswith('.gz') else open(gtf_file)
-        yield InOrderAccessIntervalSet(GtfEntryIterator(self.fileobj),
+        gtf_file = gtf_file.pop()
+        fileobj = gzip.open(gtf_file) if gtf_file.endswith('.gz') else open(gtf_file)
+        yield InOrderAccessIntervalSet(GtfEntryIterator(fileobj),
                                        key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
 
     @classmethod

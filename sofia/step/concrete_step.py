@@ -37,20 +37,10 @@ class ConcreteStep(object):
         :param kwargs: keyword arguments for the step
         :return: named tuple of output entities
         """
-        if len(self.outs) == 1:
-            for item in self.step.run(**kwargs):
-                yield self.constructor(item)
-        else:
-            for item in self.step.run(**kwargs):
-                yield self.constructor(*item)
+        return self.step.run(**kwargs)
 
     def finalise(self):
-        if len(self.outs) == 1:
-            for item in self.step.finalise():
-                yield self.constructor(item)
-        else:
-            for item in self.step.finalise():
-                yield self.constructor(*item)
+        return self.step.finalise()
 
     def get_user_warnings(self):
         return self.step.get_user_warnings()

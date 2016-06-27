@@ -3,12 +3,13 @@ from sofia.step import Step
 
 class DrugBankMap(Step):
 
-    FORMAT = 'drug_bank_map'
+    IN = ['drug_bank_map_file']
     OUT = ['drug_bank_map']
 
-    def run(self, filename):
+    def run(self, drug_bank_map_file):
+        drug_bank_map_file = drug_bank_map_file.pop()
         interface = {}
-        fhndl = open(filename)
+        fhndl = open(drug_bank_map_file)
         fhndl.next()
         for line in fhndl:
             parts = line.rstrip('\r\n').split(',')
@@ -23,17 +24,21 @@ class GetDrugIdFromDrugBank(Step):
     OUT = ['drug_id']
 
     def run(self, drug_bank_map, transcript_id):
-        yield drug_bank_map[transcript_id] if transcript_id in drug_bank_map else None
+        drug_bank_map = drug_bank_map[0]
+        for id_ in transcript_id:
+            yield drug_bank_map.get(id_, None)
+        del transcript_id[:]
 
 
 class GenomicsOfDrugSensitivityInCancerByGene(Step):
 
-    FORMAT = 'gdsc_map'
+    IN = ['gdsc_map_file']
     OUT = ['gdsc_by_gene']
 
-    def run(self, filename):
+    def run(self, gdsc_map_file):
+        gdsc_map_file = gdsc_map_file.pop()
         interface = {}
-        fhndl = open(filename, 'rU')
+        fhndl = open(gdsc_map_file, 'rU')
         line = fhndl.next()
         for line in fhndl:
             parts = line.rstrip('\r\n').split(',')
@@ -50,4 +55,7 @@ class GetDrugIdFromGDSC(Step):
     OUT = ['drug_id']
 
     def run(self, gdsc_by_gene, gene_id):
-        yield gdsc_by_gene[gene_id] if gene_id in gdsc_by_gene else None
+        gdsc_by_gene = gdsc_by_gene[0]
+        for id_ in gene_id:
+            yield gdsc_by_gene.get(id_, None)
+        del gene_id[:]
