@@ -11,12 +11,10 @@ class GffIterator(Step):
     IN = ['gff_file']
     OUT = ['genomic_feature']
 
-    def __init__(self):
-        self.fileobj = None
-
     def run(self, gff_file):
-        self.fileobj = gzip.open(gff_file) if gff_file.endswith('.gz') else open(gff_file)
-        for entry in GffEntryIterator(self.fileobj):
+        gff_file = gff_file.pop()
+        fileobj = gzip.open(gff_file) if gff_file.endswith('.gz') else open(gff_file)
+        for entry in GffEntryIterator(fileobj):
             yield entry
 
     @classmethod
@@ -37,12 +35,10 @@ class GffSet(Step):
     IN = ['gff_file']
     OUT = ['genomic_feature_set']
 
-    def __init__(self):
-        self.fileobj = None
-
     def run(self, gff_file):
-        self.fileobj = gzip.open(gff_file) if gff_file.endswith('.gz') else open(gff_file)
-        yield IntervalSet(GffEntryIterator(self.fileobj), key=lambda x: Interval((x.chr, x.start), (x.chr, x.stop)))
+        gff_file = gff_file.pop()
+        fileobj = gzip.open(gff_file) if gff_file.endswith('.gz') else open(gff_file)
+        yield IntervalSet(GffEntryIterator(fileobj), key=lambda x: Interval((x.chr, x.start), (x.chr, x.stop)))
 
     @classmethod
     def get_out_resolvers(cls):

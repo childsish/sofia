@@ -11,7 +11,11 @@ class Writer(Step):
         self.output = output
 
     def run(self, **kwargs):
-        self.output.write(self.format.format(**kwargs))
+        keys = kwargs.keys()
+        for values in zip(*kwargs.values()):
+            self.output.write(self.format.format(**dict(zip(keys, values))))
+        for k in kwargs:
+            del kwargs[k][:]
         return
         yield  # allows the generator to return nothing
 

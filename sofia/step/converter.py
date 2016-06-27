@@ -11,18 +11,20 @@ class Converter(Step):
         self.cnt = Counter()
 
     def run(self, **kwargs):
-        entity = copy(kwargs.values()[0])
-        if entity is None:
-            yield None
-            raise StopIteration()
+        entities = copy(kwargs.values()[0])
+        for entity in entities:
+            if entity is None:
+                yield None
+                raise StopIteration()
 
-        self.ttl += 1
-        try:
-            entity = self._convert(entity, self.path, self.map)
-        except KeyError, e:
-            self.cnt[e.message] += 1
-            entity = None
-        yield entity
+            self.ttl += 1
+            try:
+                entity = self._convert(entity, self.path, self.map)
+            except KeyError, e:
+                self.cnt[e.message] += 1
+                entity = None
+            yield entity
+        del kwargs.values()[0][:]
 
     def _convert(self, entity, path, id_map):
         if len(path) == 0:

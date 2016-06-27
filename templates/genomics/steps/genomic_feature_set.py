@@ -13,26 +13,29 @@ class GetGenomicFeatureByPosition(Step):
         self.cnt = Counter()
 
     def run(self, genomic_feature_set, genomic_position):
-        if genomic_position is None:
-            yield None
-            raise StopIteration()
-        #TODO: select correct gene (currently selecting largest)
-        self.ttl += 1
-        res = None
-        try:
-            features = genomic_feature_set.fetch(
-                genomic_position.chr,
-                genomic_position.pos,
-                genomic_position.pos + 1)
-            if features is not None and len(features) > 0:
-                res = sorted(features, key=len)[-1]
-                res.name = res.name.rsplit('.')[0]
-        except Exception, e:
-            if e.message.startswith('could not create iterator for region'):
-                self.cnt['could not create iterator for region ...'] += 1
-            else:
-                self.cnt[e.message] += 1
-        yield res
+        genomic_feature_set = genomic_feature_set[0]
+        for position in genomic_position:
+            if position is None:
+                yield None
+                raise StopIteration()
+            #TODO: select correct gene (currently selecting largest)
+            self.ttl += 1
+            res = None
+            try:
+                features = genomic_feature_set.fetch(
+                    position.chr,
+                    position.pos,
+                    position.pos + 1)
+                if features is not None and len(features) > 0:
+                    res = sorted(features, key=len)[-1]
+                    res.name = res.name.rsplit('.')[0]
+            except Exception, e:
+                if e.message.startswith('could not create iterator for region'):
+                    self.cnt['could not create iterator for region ...'] += 1
+                else:
+                    self.cnt[e.message] += 1
+            yield res
+        del genomic_position[:]
 
     @classmethod
     def get_out_resolvers(cls):
@@ -62,13 +65,16 @@ class GetGenomicFeatureByInterval(Step):
     OUT = ['genomic_feature']
 
     def run(self, genomic_feature_set, genomic_interval):
+        genomic_feature_set = genomic_feature_set[0]
         #TODO: select correct gene (currently selecting largest)
-        features = genomic_feature_set.fetch(
-            genomic_interval.chr,
-            genomic_interval.start,
-            genomic_interval.stop)
-        if features is None or len(features) == 0:
-            yield None
-        res = sorted(features, key=len)[-1]
-        res.name = res.name.rsplit('.')[0]
-        yield res
+        for interval in genomic_interval:
+            features = genomic_feature_set.fetch(
+                interval.chr,
+                interval.start,
+                interval.stop)
+            if features is None or len(features) == 0:
+                yield None
+            res = sorted(features, key=len)[-1]
+            res.name = res.name.rsplit('.')[0]
+            yield res
+        del genomic_interval[:]

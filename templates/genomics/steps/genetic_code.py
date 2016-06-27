@@ -9,6 +9,7 @@ class GeneticCode(Step):
     OUT = ['genetic_code']
 
     def run(self, prt_file):
+        prt_file = prt_file.pop()
         yield GeneticCodes(prt_file)['Standard']
 
     @classmethod

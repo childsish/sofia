@@ -17,6 +17,7 @@ class MafSet(Step):
     OUT = ['maf_set']
 
     def run(self, maf_file):
+        maf_file = maf_file.pop()
         with gzip.open(maf_file) if maf_file.endswith('.gz') else open(maf_file) as fileobj:
             yield InOrderAccessIntervalSet(MafIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
 
@@ -27,18 +28,21 @@ class GetMafByVariant(Step):
     OUT = ['maf']
 
     def run(self, maf_set, variant):
-        #TODO: check matched variants
-        if variant is None:
-            yield None
-        try:
-            overlap = maf_set.fetch(variant.chr, variant.pos, variant.pos + 1)
-        except ValueError:
-            yield None
-        hits = [o for o in overlap if o.start_position == variant.pos and
-                o.reference_allele == variant.ref and variant.alt in {o.tumour_seq_allele1, o.tumour_seq_allele2}]
-        if len(hits) == 0:
-            yield None
-        yield hits
+        maf_set = maf_set[0]
+        for variant_ in variant:
+            #TODO: check matched variants
+            if variant_ is None:
+                yield None
+            try:
+                overlap = maf_set.fetch(variant_.chr, variant_.pos, variant_.pos + 1)
+            except ValueError:
+                yield None
+            hits = [o for o in overlap if o.start_position == variant_.pos and
+                    o.reference_allele == variant_.ref and variant_.alt in {o.tumour_seq_allele1, o.tumour_seq_allele2}]
+            if len(hits) == 0:
+                yield None
+            yield hits
+        del variant[:]
 
 
 class ConvertMafToVariant(Step):
@@ -47,20 +51,22 @@ class ConvertMafToVariant(Step):
     OUT = ['variant']
 
     def run(self, maf):
-        if maf is None:
-            yield None
-        if isinstance(maf, list):
-            yield [
-                Variant(m.chromosome,
-                        m.start_position,
-                        '.', m.reference_allele,
-                        ','.join({m.tumour_seq_allele1, m.tumour_seq_allele2} - {m.reference_allele}),
-                        m.score,
-                        '.')
-                for m in maf]
-        yield Variant(maf.chromosome,
-                       maf.start_position,
-                       '.', maf.reference_allele,
-                       ','.join({maf.tumour_seq_allele1, maf.tumour_seq_allele2} - {maf.reference_allele}),
-                       maf.score,
-                       '.')
+        for maf_ in maf:
+            if maf_ is None:
+                yield None
+            if isinstance(maf_, list):
+                yield [
+                    Variant(m.chromosome,
+                            m.start_position,
+                            '.', m.reference_allele,
+                            ','.join({m.tumour_seq_allele1, m.tumour_seq_allele2} - {m.reference_allele}),
+                            m.score,
+                            '.')
+                    for m in maf_]
+            yield Variant(maf_.chromosome,
+                          maf_.start_position,
+                          '.', maf_.reference_allele,
+                          ','.join({maf_.tumour_seq_allele1, maf_.tumour_seq_allele2} - {maf_.reference_allele}),
+                          maf_.score,
+                          '.')
+        del maf[:]

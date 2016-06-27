@@ -27,34 +27,24 @@ class StepWrapper(object):
     def init(self):
         self.step.init()
 
-    def run(self, inputs, n=None):
-        in_keys = [in_.name for in_ in self.ins]
-        outputs = []
-        if n is None:
-            for input in inputs:
-                outputs.extend(self.step.run(**dict(zip(in_keys, input))))
-        else:
-            for input in inputs:
-                state = self.step.run(**dict(zip(in_keys, input)))
-                outputs.extend(islice(state, n - len(outputs)))
-                while len(outputs) == n:
-                    yield dict(zip(self.outs, zip(*outputs)))
-                    outputs = list(islice(state, n))
-        if len(outputs) > 0:
-            yield dict(zip(self.outs, zip(*outputs)))
+    def run(self, inputs, n):
+        keys = [in_.name for in_ in self.ins]
+        inputs = dict(zip(keys, inputs))
+        for output in self._loop_state(self.step.run(**inputs), n):
+            yield output
 
-    def finalise(self, n=None):
-        outputs = []
-        if n is None:
-            outputs.extend(self.step.finalise())
-        else:
-            state = self.step.finalise()
-            outputs.extend(islice(state, n - len(outputs)))
-            while len(outputs) == n:
-                yield dict(zip(self.outs, zip(*outputs)))
-                outputs = list(islice(state, n))
-        if len(outputs) > 0:
-            yield dict(zip(self.outs, zip(*outputs)))
+    def finalise(self, n):
+        for output in self._loop_state(self.step.finalise(), n):
+            yield output
+
+    def _loop_state(self, state, n):
+        outputs = list(islice(state, n))
+        while len(outputs) > 0:
+            if len(self.step.outs) > 1:
+                yield dict(zip(self.outs, outputs))
+            else:
+                yield {self.outs[0]: outputs}
+            outputs = list(islice(state, n))
 
     def get_user_warnings(self):
         return self.step.get_user_warnings()

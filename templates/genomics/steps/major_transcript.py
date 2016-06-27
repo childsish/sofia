@@ -7,9 +7,9 @@ class GetCodonSequenceLength(Step):
     OUT = ['major_transcript_length']
 
     def run(self, major_transcript):
-        if major_transcript is None:
-            yield None
-        yield len(major_transcript)
+        for transcript in major_transcript:
+            yield None if transcript is None else len(transcript)
+        del major_transcript[:]
 
 
 class GetMajorTranscriptCodingSequence(Step):
@@ -26,23 +26,26 @@ class GetMajorTranscriptCodingSequence(Step):
         self.invalid = []
 
     def run(self, chromosome_sequence_set, major_transcript):
-        if major_transcript is None:
-            yield None
-            raise StopIteration()
+        chromosome_sequence_set = chromosome_sequence_set[0]
+        for transcript in major_transcript:
+            if transcript is None:
+                yield None
+                continue
 
-        buffer_key = (id(chromosome_sequence_set), id(major_transcript))
-        if buffer_key in self.buffer:
-            yield self.buffer[buffer_key]
-            raise StopIteration()
+            buffer_key = (id(chromosome_sequence_set), id(transcript))
+            if buffer_key in self.buffer:
+                yield self.buffer[buffer_key]
+                continue
 
-        res = major_transcript.get_sub_seq(chromosome_sequence_set, types={'CDS'})
-        if len(res) % 3 != 0:
-            self.invalid.append(str(major_transcript))
+            res = transcript.get_sub_seq(chromosome_sequence_set, types={'CDS'})
+            if len(res) % 3 != 0:
+                self.invalid.append(str(transcript))
 
-        if len(self.buffer) > self.max_buffer:
-            self.buffer.popitem()
-        self.buffer[buffer_key] = res
-        yield res
+            if len(self.buffer) > self.max_buffer:
+                self.buffer.popitem()
+            self.buffer[buffer_key] = res
+            yield res
+        del major_transcript[:]
 
     def get_user_warnings(self):
         return ['{} coding sequence length not a multiple of 3, possible mis-annotation'.format(invalid)
@@ -70,9 +73,10 @@ class GetFivePrimeUtr(Step):
     OUT = ['five_prime_utr']
 
     def run(self, chromosome_sequence_set, major_transcript):
-        if major_transcript is None:
-            yield None
-        yield major_transcript.get_sub_seq(chromosome_sequence_set, type="5'UTR5")
+        chromosome_sequence_set = chromosome_sequence_set[0]
+        for transcript in major_transcript:
+            yield None if transcript is None else transcript.get_sub_seq(chromosome_sequence_set, type="5'UTR5")
+        del major_transcript[:]
 
 
 class GetThreePrimeUtr(Step):
@@ -84,6 +88,7 @@ class GetThreePrimeUtr(Step):
     OUT = ['three_prime_utr']
 
     def run(self, chromosome_sequence_set, major_transcript):
-        if major_transcript is None:
-            yield None
-        yield major_transcript.get_sub_seq(chromosome_sequence_set, type="3'UTR")
+        chromosome_sequence_set = chromosome_sequence_set[0]
+        for transcript in major_transcript:
+            yield None if transcript is None else transcript.get_sub_seq(chromosome_sequence_set, type="3'UTR")
+        del major_transcript[:]

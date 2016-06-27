@@ -9,6 +9,7 @@ class GenePathwayMap(Step):
     OUT = ['gene_pathway_map']
 
     def run(self, gene_pathway_map_file):
+        gene_pathway_map_file = gene_pathway_map_file.pop()
         fhndl = open(gene_pathway_map_file)
         fhndl.next()
         res = defaultdict(set)
@@ -25,6 +26,7 @@ class GeneGotermMap(Step):
     OUT = ['gene_goterm_map']
 
     def run(self, gene_goterm_map_file):
+        gene_goterm_map_file = gene_goterm_map_file.pop()
         fhndl = open(gene_goterm_map_file)
         fhndl.next()
         res = defaultdict(set)

@@ -14,15 +14,18 @@ class ProveanMap(object):
         self.index = index
 
     def run(self, transcript_id, amino_acid_variant):
-        pos = amino_acid_variant.pos
-        parts = list(self.index.fetch(transcript_id, pos, pos + 1))[0].split()
-        if len(parts) == 0:
-            yield None
-        try:
-            res = [float(parts[self.headers[alt]]) for alt in amino_acid_variant.alt]
-        except Exception, e:
-            res = None
-        yield res
+        for id_, variant in zip(transcript_id, amino_acid_variant):
+            pos = variant.pos
+            parts = list(self.index.fetch(id_, pos, pos + 1))[0].split()
+            if len(parts) == 0:
+                yield None
+            try:
+                res = [float(parts[self.headers[alt]]) for alt in variant.alt]
+            except Exception, e:
+                res = None
+            yield res
+        del transcript_id[:]
+        del amino_acid_variant[:]
 
 
 class ProveanMapStep(Step):
@@ -31,6 +34,7 @@ class ProveanMapStep(Step):
     OUT = ['variant_impact_calculator']
 
     def run(self, provean_map_file):
+        provean_map_file = provean_map_file.pop()
         fileobj = gzip.open(provean_map_file) if provean_map_file.endswith('.gz') else provean_map_file
         it = (line.split('\t') for line in fileobj)
         yield ProveanMap(provean_map_file, InOrderAccessSet(it, key=lambda x: (x[0], int(x[1]) - 1)))
@@ -42,10 +46,14 @@ class GetVariantImpact(Step):
     OUT = ['variant_impact']
 
     def run(self, transcript_id, amino_acid_variant, variant_impact_calculator):
-        if None in (transcript_id, amino_acid_variant, variant_impact_calculator):
-            yield None
-        try:
-            res = variant_impact_calculator.run(transcript_id, amino_acid_variant)
-        except ValueError, e:
-            res = None
-        yield res
+        variant_impact_calculator = variant_impact_calculator[0]
+        for id_, variant in zip(transcript_id, amino_acid_variant):
+            if None in (id_, variant):
+                yield None
+            try:
+                res = variant_impact_calculator.run(id_, variant)
+            except ValueError:
+                res = None
+            yield res
+        del transcript_id[:]
+        del amino_acid_variant[:]
