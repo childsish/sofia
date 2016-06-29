@@ -37,7 +37,11 @@ class ProveanMapStep(Step):
         provean_map_file = provean_map_file.pop()
         fileobj = gzip.open(provean_map_file) if provean_map_file.endswith('.gz') else provean_map_file
         it = (line.split('\t') for line in fileobj)
-        yield ProveanMap(provean_map_file, InOrderAccessSet(it, key=lambda x: (x[0], int(x[1]) - 1)))
+        yield ProveanMap(provean_map_file, InOrderAccessSet(it, key=provean_key))
+
+
+def provean_key(line):
+    return line[0], int(line[1]) - 1
 
 
 class GetVariantImpact(Step):

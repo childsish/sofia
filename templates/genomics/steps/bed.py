@@ -26,4 +26,8 @@ class BedSet(Step):
     def run(self, bed_file):
         bed_file = bed_file.pop()
         fileobj = gzip.open(bed_file) if bed_file.endswith('.gz') else open(bed_file)
-        yield InOrderAccessIntervalSet(BedLineIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
+        yield InOrderAccessIntervalSet(BedLineIterator(fileobj), key=bed_key)
+
+
+def bed_key(line):
+    return Interval((line.chr, line.start), (line.chr, line.stop))

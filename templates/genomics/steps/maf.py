@@ -19,7 +19,11 @@ class MafSet(Step):
     def run(self, maf_file):
         maf_file = maf_file.pop()
         with gzip.open(maf_file) if maf_file.endswith('.gz') else open(maf_file) as fileobj:
-            yield InOrderAccessIntervalSet(MafIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
+            yield InOrderAccessIntervalSet(MafIterator(fileobj), key=maf_key)
+
+
+def maf_key(line):
+    return Interval((line.chr, line.start), (line.chr, line.stop))
 
 
 class GetMafByVariant(Step):

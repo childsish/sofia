@@ -40,8 +40,7 @@ class GtfSet(Step):
     def run(self, gtf_file):
         gtf_file = gtf_file.pop()
         fileobj = gzip.open(gtf_file) if gtf_file.endswith('.gz') else open(gtf_file)
-        yield InOrderAccessIntervalSet(GtfEntryIterator(fileobj),
-                                       key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
+        yield InOrderAccessIntervalSet(GtfEntryIterator(fileobj), key=gff_key)
 
     @classmethod
     def get_out_resolvers(cls):
@@ -54,3 +53,7 @@ class GtfSet(Step):
         return {
             'genomic_feature_set': set()
         }
+
+
+def gff_key(line):
+    return Interval((line.chr, line.start), (line.chr, line.stop))
