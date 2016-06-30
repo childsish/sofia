@@ -1,6 +1,3 @@
-from collections import namedtuple
-
-
 class ConcreteStep(object):
     """
     A concrete step acts as the interface between user-defined steps and the template building engine. It can also be
@@ -18,8 +15,6 @@ class ConcreteStep(object):
         self.ins = step_class.IN if ins is None else ins
         self.outs = step_class.OUT if outs is None else outs
         self.params = {} if params is None else params
-
-        self.constructor = namedtuple('Output', self.outs)
 
     def __str__(self):
         return self.name
