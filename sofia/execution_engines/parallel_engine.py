@@ -57,7 +57,7 @@ class ParallelExecutionEngine(object):
                     if self.can_next(producer, inputs, workflow, status):
                         sys.stderr.write('master sending "next" to {}\n'.format(producer))
                         to_worker.send(('next', {'step': producer}))
-                    elif status[producer] == 'stopped':
+                    elif producer in status and status[producer] == 'stopped':
                         exhausted[data['step']] |= (producer.outs & data['step'].ins)
             elif message == 'finalising':
                 status[data['step']] = 'finalising'
@@ -75,6 +75,8 @@ class ParallelExecutionEngine(object):
                     to_worker.send(('finalise', data['step']))
                 elif status[data['step']] == 'finalising':
                     pass
+                else:
+                    raise ValueError('{} has invalid status {}'.format(data['step'], status[data['step']]))
                 status[data['step']] = 'stopped'
             elif message == 'stopped':
                 stopped += 1
@@ -122,7 +124,7 @@ class ParallelExecutionEngine(object):
         :param status:
         :return:
         """
-        if step in status and status[step] not in {'running', 'finalising'}:
+        if not (step in status and status[step] in {'running', 'finalising'}):
             return False
         for out in step.outs:
             if not all(inputs[consumer].is_writable(out) for consumer in workflow.get_parents(out)):
