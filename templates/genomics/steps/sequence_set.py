@@ -24,7 +24,7 @@ class GetDownstream1000(Step):
                 self.fasta_set = FastaInOrderAccessSet(fileobj)
             if transcript is None:
                 yield None
-                raise StopIteration()
+                continue
             chr = position.chr
             pos = position.pos
             strand = transcript.strand
