@@ -1,7 +1,7 @@
 import gzip
 
 from lhc.binf.sequence import revcmp
-from lhc.io.fasta import FastaIterator, FastaInOrderAccessSet
+from lhc.io.fasta import FastaInOrderAccessSet
 from sofia.step import Step
 
 
@@ -21,7 +21,7 @@ class GetDownstream1000(Step):
         for position, transcript in zip(genomic_position, major_transcript):
             if self.fasta_set is None:
                 fileobj = gzip.open(fasta_file) if fasta_file.endswith('.gz') else open(fasta_file)
-                self.fasta_set = FastaInOrderAccessSet(iter(FastaIterator(fileobj)))
+                self.fasta_set = FastaInOrderAccessSet(fileobj)
             if transcript is None:
                 yield None
                 raise StopIteration()
