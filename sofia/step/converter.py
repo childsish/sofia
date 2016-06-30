@@ -15,7 +15,7 @@ class Converter(Step):
         for entity in entities:
             if entity is None:
                 yield None
-                raise StopIteration()
+                continue
 
             self.ttl += 1
             try:
