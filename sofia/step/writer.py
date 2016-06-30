@@ -21,3 +21,11 @@ class Writer(Step):
 
     def finalise(self):
         yield self.output
+
+    def __getstate__(self):
+        return self.entities, self.format, 'stdout' if self.output is sys.stdout else self.output
+
+    def __setstate__(self, state):
+        self.entities = state[0]
+        self.format = state[1]
+        self.output = sys.stdout if state[2] == 'stdout' else state[2]

@@ -56,12 +56,14 @@ class ParallelExecutionEngine(object):
                 for producer in self.get_producers(data['step'], workflow):
                     if self.can_next(producer, inputs, workflow, status):
                         sys.stderr.write('master sending "next" to {}\n'.format(producer))
+                        status[producer] += 'pending'
                         to_worker.send(('next', {'step': producer}))
                     elif producer in status and status[producer] == 'stopped':
                         exhausted[data['step']] |= (producer.outs & data['step'].ins)
             elif message == 'finalising':
                 status[data['step']] = 'finalising'
             elif message == 'data':
+                status[data['step']] = status[data['step']][:-7]
                 consumers = reduce(or_, (workflow.get_parents(out) for out in data['data']))
                 for consumer in consumers:
                     for entity in set(consumer.ins) & set(data['data'].iterkeys()):
@@ -70,9 +72,11 @@ class ParallelExecutionEngine(object):
                         sys.stderr.write('master sending "run" to {}\n'.format(consumer))
                         to_worker.send(('run', {'step': consumer, 'input': inputs[consumer].read()}))
             elif message == 'stop':
-                if status[data['step']] == 'running' and self.can_finalise(data['step'], exhausted, status):
-                    sys.stderr.write('master sending "finalise" to {}\n'.format(data['step']))
-                    to_worker.send(('finalise', data['step']))
+                status[data['step']] = status[data['step']][:-7]
+                if status[data['step']] == 'running':
+                    if self.can_finalise(data['step'], exhausted, status):
+                        sys.stderr.write('master sending "finalise" to {}\n'.format(data['step']))
+                        to_worker.send(('finalise', {'step': data['step']}))
                 elif status[data['step']] == 'finalising':
                     pass
                 else:
@@ -113,7 +117,7 @@ class ParallelExecutionEngine(object):
         :param exhausted:
         :return:
         """
-        return status[step] == 'running' and all(in_ in exhausted[step] for in_ in step.ins)
+        return step in status and step in exhausted and status[step] == 'running' and all(in_ in exhausted[step] for in_ in step.ins)
 
     def can_next(self, step, inputs, workflow, status):
         """
