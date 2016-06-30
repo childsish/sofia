@@ -9,8 +9,15 @@ class GetHomopolymer(Step):
     IN = ['variant', 'chromosome_sequence_set']
     OUT = ['homopolymer']
 
+    def consume_input(self, input):
+        copy = {
+            'variant': input['variant'][:],
+            'chromosome_sequence_set': input['chromosome_sequence_set'][0]
+        }
+        del input['variant'][:]
+        return copy
+
     def run(self, variant, chromosome_sequence_set):
-        chromosome_sequence_set = chromosome_sequence_set[0]
         for variant_ in variant:
             ref = variant_.ref
             alt = variant_.alt
@@ -24,4 +31,3 @@ class GetHomopolymer(Step):
             while i < len(seq) and seq[i] == seq[0]:
                 i += 1
             yield seq[:i]
-        del variant[:]

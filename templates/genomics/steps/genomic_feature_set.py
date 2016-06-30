@@ -12,8 +12,15 @@ class GetGenomicFeatureByPosition(Step):
         self.ttl = 0
         self.cnt = Counter()
 
+    def consume_input(self, input):
+        copy = {
+            'genomic_feature_set': input['genomic_feature_set'][0],
+            'genomic_position': input['genomic_position'][:]
+        }
+        del input['genomic_position'][:]
+        return copy
+
     def run(self, genomic_feature_set, genomic_position):
-        genomic_feature_set = genomic_feature_set[0]
         for position in genomic_position:
             if position is None:
                 yield None
@@ -35,7 +42,6 @@ class GetGenomicFeatureByPosition(Step):
                 else:
                     self.cnt[e.message] += 1
             yield res
-        del genomic_position[:]
 
     @classmethod
     def get_out_resolvers(cls):
@@ -64,8 +70,15 @@ class GetGenomicFeatureByInterval(Step):
     IN = ['genomic_feature_set', 'genomic_interval']
     OUT = ['genomic_feature']
 
+    def consume_input(self, input):
+        copy = {
+            'genomic_feature_set': input['genomic_feature_set'][0],
+            'genomic_interval': input['genomic_interval'][:]
+        }
+        del input['genomic_interval'][:]
+        return copy
+
     def run(self, genomic_feature_set, genomic_interval):
-        genomic_feature_set = genomic_feature_set[0]
         #TODO: select correct gene (currently selecting largest)
         for interval in genomic_interval:
             features = genomic_feature_set.fetch(
@@ -77,4 +90,3 @@ class GetGenomicFeatureByInterval(Step):
             res = sorted(features, key=len)[-1]
             res.name = res.name.rsplit('.')[0]
             yield res
-        del genomic_interval[:]

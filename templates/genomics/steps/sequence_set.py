@@ -15,9 +15,18 @@ class GetDownstream1000(Step):
 
     def __init__(self):
         self.fasta_set = None
+
+    def consume_input(self, input):
+        copy = {
+            'fasta_file': input['fasta_file'][0],
+            'genomic_position': input['genomic_position'][:],
+            'major_transcript': input['major_transcript'][:]
+        }
+        del input['genomic_position'][:]
+        del input['major_transcript'][:]
+        return copy
     
     def run(self, fasta_file, genomic_position, major_transcript):
-        fasta_file = fasta_file[0]
         for position, transcript in zip(genomic_position, major_transcript):
             if self.fasta_set is None:
                 fileobj = gzip.open(fasta_file) if fasta_file.endswith('.gz') else open(fasta_file)
@@ -32,8 +41,6 @@ class GetDownstream1000(Step):
             stop = pos if strand == '-' else pos + 1000
             seq = self.fasta_set.fetch(chr, start, stop)
             yield seq if strand == '+' else revcmp(seq)
-        del genomic_position[:]
-        del major_transcript[:]
 
     @classmethod
     def get_out_resolvers(cls):

@@ -16,13 +16,19 @@ class TranslateCodingSequence(Step):
     IN = ['coding_sequence', 'genetic_code']
     OUT = ['protein_sequence']
 
+    def consume_input(self, input):
+        copy = {
+            'coding_sequence': input['coding_sequence'][:],
+            'genetic_code': input['genetic_code'][0]
+        }
+        del input['coding_sequence'][:]
+        return copy
+
     def run(self, coding_sequence, genetic_code):
-        genetic_code = genetic_code[0]
         for sequence in coding_sequence:
             if sequence is None:
                 yield None
             yield genetic_code.translate(sequence)
-        del coding_sequence[:]
 
 
 class GetCodonUsage(Step):
@@ -38,7 +44,6 @@ class GetCodonUsage(Step):
             if sequence is None:
                 yield None
             yield KmerCounter(sequence, k=3, step=3)
-        del coding_sequence[:]
 
 
 class GetRelativeSynonymousCodonUsage(Step):
@@ -50,8 +55,15 @@ class GetRelativeSynonymousCodonUsage(Step):
     IN = ['codon_usage', 'genetic_code']
     OUT = ['relative_synonymous_codon_usage', 'relative_codon_adaptiveness']
 
+    def consume_input(self, input):
+        copy = {
+            'codon_usage': input['codon_usage'][:],
+            'genetic_code': input['genetic_code'][0]
+        }
+        del input['codon_usage'][:]
+        return copy
+
     def run(self, codon_usage, genetic_code):
-        genetic_code = genetic_code[0]
         for usage in codon_usage:
             if usage is None:
                 yield None, None
@@ -71,7 +83,6 @@ class GetRelativeSynonymousCodonUsage(Step):
                     rscu[cdn] = rscu_
                     w[cdn] = w_
             yield rscu, w
-        del codon_usage[:]
 
 
 class GetCodonAdaptationIndex(Step):
@@ -96,8 +107,6 @@ class GetCodonAdaptationIndex(Step):
                 if cdn not in ['atg', 'tgg', 'taa', 'tga', 'tag'] and cdn in adaptiveness:
                     cai.append(adaptiveness[cdn])
             yield geometric_mean(cai)
-        del coding_sequence[:]
-        del relative_codon_adaptiveness[:]
 
 
 class GetEffectiveNumberOfCodons(Step):
@@ -108,8 +117,15 @@ class GetEffectiveNumberOfCodons(Step):
     IN = ['codon_usage', 'genetic_code']
     OUT = ['effective_number_of_codons']
 
+    def consume_input(self, input):
+        copy = {
+            'codon_usage': input['codon_usage'][:],
+            'genetic_code': input['genetic_code'][0]
+        }
+        del input['codon_usage'][:]
+        return copy
+
     def run(self, codon_usage, genetic_code):
-        genetic_code = genetic_code[0]
         for usage in codon_usage:
             if usage is None:
                 yield None
@@ -122,7 +138,6 @@ class GetEffectiveNumberOfCodons(Step):
             nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / arithmetic_mean(fam_Fs)
                      for sz, fam_Fs in fams.iteritems())
             yield nc
-        del codon_usage[:]
 
     def run_f(self, cut, fam):
         n = float(sum(cut[cdn] for cdn in fam))

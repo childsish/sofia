@@ -5,10 +5,17 @@ class GetVariantByVariant(Step):
     
     IN = ['variant', 'variant_set']
     OUT = ['variant']
+
+    def consume_input(self, input):
+        copy = {
+            'variant_set': input['variant_set'][0],
+            'variant': input['variant'][:]
+        }
+        del input['variant'][:]
+        return copy
     
     def run(self, variant, variant_set):
         #TODO: check matched variants
-        variant_set = variant_set[0]
         for variant_ in variant:
             if variant_ is None:
                 yield None
@@ -21,7 +28,6 @@ class GetVariantByVariant(Step):
             if len(hits) == 0:
                 yield None
             yield hits
-        del variant[:]
 
     @classmethod
     def get_out_resolvers(cls):
@@ -41,9 +47,16 @@ class GetVariantIdByGenomicInterval(Step):
     IN = ['variant_set', 'genomic_interval']
     OUT = ['variant_id']
 
+    def consume_input(self, input):
+        copy = {
+            'variant_set': input['variant_set'][0],
+            'genomic_interval': input['genomic_interval'][:]
+        }
+        del input['genomic_interval'][:]
+        return copy
+
     def run(self, variant_set, genomic_interval):
         #TODO: check matched variants
-        variant_set = variant_set[0]
         for interval in genomic_interval:
             if interval is None:
                 yield None
@@ -52,4 +65,3 @@ class GetVariantIdByGenomicInterval(Step):
             except ValueError, e:
                 yield None
             yield ','.join(hit.id for hit in hits)
-        del genomic_interval[:]

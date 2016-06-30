@@ -23,8 +23,15 @@ class GetPest(Step):
         self.thr = thr
         self.mono = 'mono' if mono else 'avg'
 
+    def consume_input(self, input):
+        copy = {
+            'molecular_weight_set': input['molecular_weight_set'][0],
+            'protein_sequence': input['protein_sequence'][:]
+        }
+        del input['protein_sequence'][:]
+        return copy
+
     def run(self, protein_sequence, molecular_weight_set):
-        molecular_weight_set = molecular_weight_set[0]
         for sequence in protein_sequence:
             if sequence is None:
                 yield None
@@ -33,7 +40,6 @@ class GetPest(Step):
                 warn('protein sequence terminates early')
                 yield None
             yield list(self.iter_pest(sequence, molecular_weight_set))
-        del protein_sequence[:]
 
     def iter_pest(self, seq, molwts):
         """ Algorithm copied from EMBOSS:
@@ -77,7 +83,6 @@ class GetNumberOfPestSequences(Step):
     def run(self, pest_sequences):
         for sequences in pest_sequences:
             yield None if sequences is None else len(sequences)
-        del pest_sequences[:]
 
 
 class GetAveragePestSequenceLength(Step):
@@ -90,7 +95,6 @@ class GetAveragePestSequenceLength(Step):
             if sequences is None or len(sequences) == 0:
                 yield None
             yield sum(len(seq) for seq in sequences) / float(len(sequences))
-        del pest_sequences[:]
 
 
 class GetAminoAcidFrequency(Step):
@@ -101,4 +105,3 @@ class GetAminoAcidFrequency(Step):
     def run(self, protein_sequence):
         for sequence in protein_sequence:
             yield None if sequence is None else Counter(sequence)
-        del protein_sequence[:]

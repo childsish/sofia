@@ -12,6 +12,14 @@ class GetTranslationStartMinimumFreeEnergy(Step):
     OUT = ['translation_start_mfe']
     PARAMS = ['offset', 'type']
 
+    def consume_input(self, input):
+        copy = {
+            'chromosome_sequence_set': input['chromosome_sequence_set'][0],
+            'major_transcript': input['major_transcript'][:]
+        }
+        del input['major_transcript'][:]
+        return copy
+
     def __init__(self, offset=50, type='mfe'):
         """ Initialise the step
 
@@ -24,7 +32,6 @@ class GetTranslationStartMinimumFreeEnergy(Step):
         self.fold = RNA.fold if type == 'mfe' else RNA.pf_fold
 
     def run(self, major_transcript, chromosome_sequence_set):
-        chromosome_sequence_set = chromosome_sequence_set[0]
         for transcript in major_transcript:
             if transcript is None:
                 yield None
@@ -35,7 +42,6 @@ class GetTranslationStartMinimumFreeEnergy(Step):
             interval = start_position.get_offset(-offset).get_interval(start_position.get_offset(50))
             seq = interval.get_sub_seq(chromosome_sequence_set)
             yield self.fold(seq)[1]
-        del major_transcript[:]
 
 
 class GetTranslationStartMinimumFreeEnergy2(Step):
@@ -58,8 +64,15 @@ class GetTranslationStartMinimumFreeEnergy2(Step):
         self.offset = offset
         self.fold = RNA.fold if type == 'mfe' else RNA.pf_fold
 
+    def consume_input(self, input):
+        copy = {
+            'chromosome_sequence_set': input['chromosome_sequence_set'][0],
+            'genomic_interval': input['genomic_interval'][:]
+        }
+        del input['genomic_interval'][:]
+        return copy
+
     def run(self, genomic_interval, chromosome_sequence_set):
-        chromosome_sequence_set = chromosome_sequence_set[0]
         for interval in genomic_interval:
             if interval is None:
                 yield None
@@ -70,7 +83,6 @@ class GetTranslationStartMinimumFreeEnergy2(Step):
             interval = start_position.get_offset(-offset).get_interval(start_position.get_offset(50))
             seq = interval.get_sub_seq(chromosome_sequence_set)
             yield self.fold(seq)[1]
-        del genomic_interval[:]
 
 
 class GetStructuralFeatures(Step):
@@ -130,4 +142,3 @@ class GetStructuralFeatures(Step):
             stems.append(c_stem)
 
             yield hloops, mloops, iloops, bulges, stems, branches, bridges
-        del rna_secondary_structure[:]

@@ -24,8 +24,6 @@ class ProveanMap(object):
             except Exception, e:
                 res = None
             yield res
-        del transcript_id[:]
-        del amino_acid_variant[:]
 
 
 class ProveanMapStep(Step):
@@ -34,7 +32,7 @@ class ProveanMapStep(Step):
     OUT = ['variant_impact_calculator']
 
     def run(self, provean_map_file):
-        provean_map_file = provean_map_file.pop()
+        provean_map_file = provean_map_file[0]
         fileobj = gzip.open(provean_map_file) if provean_map_file.endswith('.gz') else provean_map_file
         it = (line.split('\t') for line in fileobj)
         yield ProveanMap(provean_map_file, InOrderAccessSet(it, key=provean_key))
@@ -49,8 +47,17 @@ class GetVariantImpact(Step):
     IN = ['transcript_id', 'amino_acid_variant', 'variant_impact_calculator']
     OUT = ['variant_impact']
 
+    def consume_input(self, input):
+        copy = {
+            'variant_impact_calculator': input['variant_impact_calculator'][0],
+            'transcript_id': input['transcript_id'][:],
+            'amino_acid_variant': input['amino_acid_variant'][:]
+        }
+        del input['transcript_id'][:]
+        del input['amino_acid_variant'][:]
+        return copy
+
     def run(self, transcript_id, amino_acid_variant, variant_impact_calculator):
-        variant_impact_calculator = variant_impact_calculator[0]
         for id_, variant in zip(transcript_id, amino_acid_variant):
             if None in (id_, variant):
                 yield None
@@ -59,5 +66,3 @@ class GetVariantImpact(Step):
             except ValueError:
                 res = None
             yield res
-        del transcript_id[:]
-        del amino_acid_variant[:]

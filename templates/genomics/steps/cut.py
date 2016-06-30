@@ -9,4 +9,4 @@ class ReadCodonUsageTable(Step):
     OUT = ['codon_usage']
 
     def run(self, cut_file):
-        yield CodonUsageTable(cut_file.pop())
+        yield CodonUsageTable(cut_file[0])

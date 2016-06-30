@@ -10,7 +10,7 @@ class GbkIterator(Step):
     OUT = ['genomic_interval']
 
     def run(self, gbk_file):
-        gbk_file = gbk_file.pop()
+        gbk_file = gbk_file[0]
         fileobj = gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file)
         for entry in Iterator(fileobj):
             yield entry
@@ -22,6 +22,6 @@ class GbkSet(Step):
     OUT = ['chromosome_sequence_set']
 
     def run(self, gbk_file):
-        gbk_file = gbk_file.pop()
+        gbk_file = gbk_file[0]
         fileobj = gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file)
         yield GbkSequenceSet(fileobj)

@@ -9,7 +9,6 @@ class GetCodonSequenceLength(Step):
     def run(self, major_transcript):
         for transcript in major_transcript:
             yield None if transcript is None else len(transcript)
-        del major_transcript[:]
 
 
 class GetMajorTranscriptCodingSequence(Step):
@@ -25,8 +24,15 @@ class GetMajorTranscriptCodingSequence(Step):
         self.max_buffer = 10
         self.invalid = []
 
+    def consume_input(self, input):
+        copy = {
+            'chromosome_sequence_set': input['chromosome_sequence_set'][0],
+            'major_transcript': input['major_transcript'][:]
+        }
+        del input['major_transcript'][:]
+        return copy
+
     def run(self, chromosome_sequence_set, major_transcript):
-        chromosome_sequence_set = chromosome_sequence_set[0]
         for transcript in major_transcript:
             if transcript is None:
                 yield None
@@ -45,7 +51,6 @@ class GetMajorTranscriptCodingSequence(Step):
                 self.buffer.popitem()
             self.buffer[buffer_key] = res
             yield res
-        del major_transcript[:]
 
     def get_user_warnings(self):
         return ['{} coding sequence length not a multiple of 3, possible mis-annotation'.format(invalid)
@@ -72,6 +77,14 @@ class GetFivePrimeUtr(Step):
     IN = ['chromosome_sequence_set', 'major_transcript']
     OUT = ['five_prime_utr']
 
+    def consume_input(self, input):
+        copy = {
+            'chromosome_sequence_set': input['chromosome_sequence_set'][0],
+            'major_transcript': input['major_transcript'][:]
+        }
+        del input['major_transcript'][:]
+        return copy
+
     def run(self, chromosome_sequence_set, major_transcript):
         chromosome_sequence_set = chromosome_sequence_set[0]
         for transcript in major_transcript:
@@ -86,6 +99,14 @@ class GetThreePrimeUtr(Step):
 
     IN = ['chromosome_sequence_set', 'major_transcript']
     OUT = ['three_prime_utr']
+
+    def consume_input(self, input):
+        copy = {
+            'chromosome_sequence_set': input['chromosome_sequence_set'][0],
+            'major_transcript': input['major_transcript'][:]
+        }
+        del input['major_transcript'][:]
+        return copy
 
     def run(self, chromosome_sequence_set, major_transcript):
         chromosome_sequence_set = chromosome_sequence_set[0]

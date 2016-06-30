@@ -15,14 +15,20 @@ class GetUpstreamSequence(Step):
     def __init__(self, offset=1000):
         self.offset = offset
 
+    def consume_input(self, input):
+        copy = {
+            'chromosome_sequence_set': input['chromosome_sequence_set'][0],
+            'major_transcript': input['major_transcript'][:]
+        }
+        del input['major_transcript'][:]
+        return copy
+
     def run(self, major_transcript, chromosome_sequence_set):
-        chromosome_sequence_set = chromosome_sequence_set[0]
         for transcript in major_transcript:
             ivl = transcript.ivl
             start_pos = GenomicPosition(ivl.chr, ivl.get_5p(), ivl.strand)
             upstream_pos = start_pos.get_offset(-self.offset)
             yield start_pos.get_interval(upstream_pos).get_sub_seq(chromosome_sequence_set)
-        del major_transcript[:]
 
 
 class GetUpstreamSequence2(Step):
@@ -37,13 +43,19 @@ class GetUpstreamSequence2(Step):
     def __init__(self, offset=1000):
         self.offset = offset
 
+    def consume_input(self, input):
+        copy = {
+            'chromosome_sequence_set': input['chromosome_sequence_set'][0],
+            'genomic_interval': input['genomic_interval'][:]
+        }
+        del input['genomic_interval'][:]
+        return copy
+
     def run(self, genomic_interval, chromosome_sequence_set):
-        chromosome_sequence_set = chromosome_sequence_set[0]
         for interval in genomic_interval:
             start_pos = GenomicPosition(interval.chr, interval.get_5p(), interval.strand)
             upstream_pos = start_pos.get_offset(-self.offset)
             yield start_pos.get_interval(upstream_pos).get_sub_seq(chromosome_sequence_set)
-        del genomic_interval[:]
 
 
 class GetUpstreamORFs(Step):
@@ -54,8 +66,15 @@ class GetUpstreamORFs(Step):
     IN = ['upstream_sequence', 'genetic_code']
     OUT = ['upstream_orfs']
 
+    def consume_input(self, input):
+        copy = {
+            'genetic_code': input['genetic_code'][0],
+            'upstream_sequence': input['upstream_sequence'][:]
+        }
+        del input['upstream_sequence'][:]
+        return copy
+
     def run(self, upstream_sequence, genetic_code):
-        genetic_code = genetic_code[0]
         for sequence in upstream_sequence:
             stops = genetic_code.get_codons('*')
             res = []
@@ -66,7 +85,6 @@ class GetUpstreamORFs(Step):
                     if sequence[j:j + 3] in stops:
                         res.append(sequence[i:j + 3])
             yield res
-        del upstream_sequence[:]
 
 
 class GetNumberOfUpstreamORFs(Step):
@@ -77,4 +95,3 @@ class GetNumberOfUpstreamORFs(Step):
     def run(self, upstream_orfs):
         for orf in upstream_orfs:
             yield len(orf)
-        del upstream_orfs[:]

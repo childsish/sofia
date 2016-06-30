@@ -17,7 +17,6 @@ class GetVariantSamples(Step):
             for sample in variant_.samples.itervalues():
                 res.append(':'.join(sample[key] for key in variant_.format))
             yield '\t'.join(res)
-        del variant[:]
 
 
 class GetNumberOfVariants(Step):
@@ -28,7 +27,6 @@ class GetNumberOfVariants(Step):
     def run(self, variant):
         for variant_ in variant:
             yield 0 if variant_ is None else len(variant_)
-        del variant[:]
 
 
 class GetPosition(Step):
@@ -39,7 +37,6 @@ class GetPosition(Step):
     def run(self, chromosome_pos):
         for position in chromosome_pos:
             yield position + 1
-        del chromosome_pos[:]
 
 
 class GetSubstitutionContext(Step):
@@ -47,12 +44,18 @@ class GetSubstitutionContext(Step):
     IN = ['variant', 'chromosome_sequence_set']
     OUT = ['substitution_context']
 
+    def consume_input(self, input):
+        copy = {
+            'variant': input['variant'][:],
+            'chromosome_sequence_set': input['chromosome_sequence_set'][0]
+        }
+        del input['variant'][:]
+        return copy
+
     def run(self, variant, chromosome_sequence_set):
-        chromosome_sequence_set = chromosome_sequence_set[0]
         for variant_ in variant:
             context = chromosome_sequence_set[variant_.chr][variant_.pos - 1: variant_.pos + 2]
             yield context if variant_.ref[0] in 'CT' else revcmp(context)
-        del variant[:]
 
 
 class GetSubstitutionType(Step):
@@ -63,7 +66,6 @@ class GetSubstitutionType(Step):
     def run(self, variant):
         for variant_ in variant:
             yield '{}>{}'.format(variant_.ref, variant_.alt) if variant_.ref[0] in 'CT' else '{}>{}'.format(revcmp(variant_.ref), revcmp(variant_.alt))
-        del variant[:]
 
 
 class GetVariantAlleleFrequency(Step):
@@ -96,7 +98,6 @@ class GetVariantAlleleFrequency(Step):
             ao = float(variant_.info['AO'])
             ro = float(variant_.info['RO'])
             yield ao / (ao + ro)
-        del variant[:]
 
 
 class GetVariantEffect(Step):
@@ -130,10 +131,6 @@ class GetVariantEffect(Step):
                     else:
                         res.append('frameshift_truncation')
             yield res
-        del major_transcript[:]
-        del variant[:]
-        del coding_variant[:]
-        del amino_acid_variant[:]
 
     def _get_amino_acid_type(self, pos, ref, alt):
         if ref == alt:
@@ -202,8 +199,6 @@ class GetCodingVariant(Step):
                 ref = revcmp(ref)
                 alt = map(revcmp, alt)
             yield CodingVariant(coding_position, ref, alt)
-        del major_transcript[:]
-        del variant[:]
 
 
 class CodonVariant(namedtuple('CodonVariant', ('pos', 'ref', 'alt', 'fs'))):
@@ -248,9 +243,6 @@ class GetCodonVariant(Step):
                 fs.append(fs_pos)
             ref_codon = sequence[pos - fr:pos + len(ref) + to]
             yield CodonVariant(pos - fr, ref_codon, alts, fs)
-        del coding_variant[:]
-        del coding_sequence[:]
-        del downstream_1000[:]
 
 
 class AminoAcidVariant(namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'))):
@@ -307,8 +299,15 @@ class GetAminoAcidVariant(Step):
         self.abbreviations = self.ABBREVIATIONS if use_3code[0].lower() == 't'\
             else {name: name for name in self.ABBREVIATIONS}
 
+    def consume_input(self, input):
+        copy = {
+            'genetic_code': input['genetic_code'][0],
+            'codon_variant': input['codon_variant'][:]
+        }
+        del input['codon_variant'][:]
+        return copy
+
     def run(self, codon_variant, genetic_code):
-        genetic_code = genetic_code[0]
         for variant in codon_variant:
             if variant is None:
                 yield None
@@ -316,7 +315,6 @@ class GetAminoAcidVariant(Step):
             alts = [None if alt is None else genetic_code.translate(alt) for alt in variant.alt]
             fs = [None if fs_ is None else fs_ / 3 for fs_ in variant.fs]
             yield AminoAcidVariant(variant.pos / 3, genetic_code.translate(variant.ref), alts, fs)
-        del codon_variant[:]
 
     @classmethod
     def get_out_resolvers(cls):

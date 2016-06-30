@@ -6,14 +6,20 @@ class GetIntervalByPosition(Step):
     IN = ['genomic_interval_set', 'genomic_position']
     OUT = ['genomic_interval']
 
+    def consume_input(self, input):
+        copy = {
+            'genomic_interval_set': input['genomic_interval_set'][0],
+            'genomic_position': input['genomic_position'][:]
+        }
+        del input['genomic_position'][:]
+        return copy
+
     def run(self, genomic_interval_set, genomic_position):
-        genomic_interval_set = genomic_interval_set[0]
         for position in genomic_position:
             yield genomic_interval_set.fetch(
                 position.chr,
                 position.pos,
                 position.pos + 1)
-        del genomic_position[:]
 
     @classmethod
     def get_out_resolvers(cls):
@@ -47,5 +53,3 @@ class GetBoundsProximity(Step):
                 ds.append((position.pos - interval.stop, '3p'))
             d = sorted(ds, key=lambda x:abs(x[0]))[0]
             yield '{}{:+d}'.format(d[1], d[0])
-        del genomic_position[:]
-        del genomic_interval[:]

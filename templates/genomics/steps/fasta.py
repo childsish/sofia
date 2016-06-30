@@ -13,7 +13,7 @@ class FastaChromosomeSequenceSet(Step):
         self.fileobj = None
     
     def run(self, fasta_file):
-        fasta_file = fasta_file.pop()
+        fasta_file = fasta_file[0]
         self.fileobj = gzip.open(fasta_file) if fasta_file.endswith('.gz') else open(fasta_file)
         yield FastaInOrderAccessSet(self.fileobj)
 

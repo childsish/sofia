@@ -16,7 +16,6 @@ class GetMajorTranscriptFromGenomicFeature(Step):
                 transcripts = sorted(feature.children, key=self.get_transcript_length)
                 res = transcripts[-1]
             yield res
-        del genomic_feature[:]
 
     @staticmethod
     def get_transcript_length(transcript):

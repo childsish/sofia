@@ -17,7 +17,7 @@ class MafSet(Step):
     OUT = ['maf_set']
 
     def run(self, maf_file):
-        maf_file = maf_file.pop()
+        maf_file = maf_file[0]
         with gzip.open(maf_file) if maf_file.endswith('.gz') else open(maf_file) as fileobj:
             yield InOrderAccessIntervalSet(MafIterator(fileobj), key=maf_key)
 
@@ -31,8 +31,15 @@ class GetMafByVariant(Step):
     IN = ['maf_set', 'variant']
     OUT = ['maf']
 
+    def consume_input(self, input):
+        copy = {
+            'maf_set': input['maf_set'][0],
+            'variant': input['variant'][:]
+        }
+        del input['variant'][:]
+        return copy
+
     def run(self, maf_set, variant):
-        maf_set = maf_set[0]
         for variant_ in variant:
             #TODO: check matched variants
             if variant_ is None:
@@ -46,7 +53,6 @@ class GetMafByVariant(Step):
             if len(hits) == 0:
                 yield None
             yield hits
-        del variant[:]
 
 
 class ConvertMafToVariant(Step):
@@ -73,4 +79,3 @@ class ConvertMafToVariant(Step):
                           ','.join({maf_.tumour_seq_allele1, maf_.tumour_seq_allele2} - {maf_.reference_allele}),
                           maf_.score,
                           '.')
-        del maf[:]

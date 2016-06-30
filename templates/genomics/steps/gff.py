@@ -12,7 +12,7 @@ class GffIterator(Step):
     OUT = ['genomic_feature']
 
     def run(self, gff_file):
-        gff_file = gff_file.pop()
+        gff_file = gff_file[0]
         fileobj = gzip.open(gff_file) if gff_file.endswith('.gz') else open(gff_file)
         for entry in GffEntryIterator(fileobj):
             yield entry
@@ -36,7 +36,7 @@ class GffSet(Step):
     OUT = ['genomic_feature_set']
 
     def run(self, gff_file):
-        gff_file = gff_file.pop()
+        gff_file = gff_file[0]
         fileobj = gzip.open(gff_file) if gff_file.endswith('.gz') else open(gff_file)
         yield InOrderAccessIntervalSet(GffEntryIterator(fileobj), key=gff_key)
 
