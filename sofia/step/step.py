@@ -8,12 +8,36 @@ class Step(object):
     OUT = []
     PARAMS = []
 
+    def consume_input(self, input):
+        """
+        Make a copy of the input for the run function and consume the input to free up the queue for more input. If all
+        input is consumed, there is no need to overload this function. Input is provided as lists. To copy and consume
+        input the following commands can be run:
+
+        1. To consume all the input
+        >>> copy['entity'] = input['entity'][:]
+        >>> del input['entity'][:]
+
+        2. To consume one item from the input (and pass it to run as a single item - not a list)
+        >>> copy['entity'] = input['entity'].pop()
+
+        3. To use an item but not consume it
+        >>> copy['entity'] = input['entity'][0]
+
+        :param input: input arguments
+        :return: copy of the input arguments
+        """
+        copy = {}
+        for key in input:
+            copy[key] = input[key][:]
+            del input[key][:]
+        return copy
+
     def run(self, **kwargs):
         """
         Run this step
 
-        Assumes dependencies are already resolved. This function must be
-        overridden when implementing new steps.
+        Assumes dependencies are already resolved. This function must be overridden when implementing new steps.
 
         :param kwargs: arguments defined in class IN variable
         :return: output of running the step

@@ -26,6 +26,9 @@ class ConcreteStep(object):
         """
         self.step = self.step_class(**self.params)
 
+    def consume_input(self, input):
+        return self.step.consume_input(input)
+
     def run(self, **kwargs):
         """
         Run the step and wrap the output in a named tuple.
