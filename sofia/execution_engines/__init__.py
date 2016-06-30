@@ -1,2 +1,5 @@
 from low_memory_engine import LowMemoryExecutionEngine
+from parallel_engine import ParallelExecutionEngine
 from simple_engine import SimpleExecutionEngine
+from sofia.execution_engines.workers.parallel_worker import parallel_worker
+
