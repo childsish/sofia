@@ -17,7 +17,7 @@ class GetGenomicFeatureByPosition(Step):
         for position in genomic_position:
             if position is None:
                 yield None
-                raise StopIteration()
+                continue
             #TODO: select correct gene (currently selecting largest)
             self.ttl += 1
             res = None
