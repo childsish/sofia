@@ -8,8 +8,6 @@ class ConcreteStep(object):
      3) Allow generic steps to be dynamically specialised like the extractors and converters.
     """
     def __init__(self, step_class, name=None, ins=None, outs=None, params=None):
-        self.step = None
-
         self.step_class = step_class
         self.name = step_class.__name__ if name is None else name
         self.ins = step_class.IN if ins is None else ins
@@ -19,26 +17,10 @@ class ConcreteStep(object):
     def __str__(self):
         return self.name
 
-    def init(self):
+    def init(self, input):
         """
         Instantiate and initialise the step.
         :return:
         """
-        self.step = self.step_class(**self.params)
-
-    def consume_input(self, input):
-        return self.step.consume_input(input)
-
-    def run(self, **kwargs):
-        """
-        Run the step and wrap the output in a named tuple.
-        :param kwargs: keyword arguments for the step
-        :return: named tuple of output entities
-        """
-        return self.step.run(**kwargs)
-
-    def finalise(self):
-        return self.step.finalise()
-
-    def get_user_warnings(self):
-        return self.step.get_user_warnings()
+        self.params.update(input)
+        return self.step_class(**self.params)

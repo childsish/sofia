@@ -8,51 +8,61 @@ class Step(object):
     OUT = []
     PARAMS = []
 
-    def consume_input(self, input):
+    def __init__(self, **kwargs):
         """
         Make a copy of the input for the run function and consume the input to free up the queue for more input. If all
         input is consumed, there is no need to overload this function. Input is provided as lists. To copy and consume
         input the following commands can be run:
 
         1. To consume all the input
-        >>> copy['entity'] = input['entity'][:]
-        >>> del input['entity'][:]
+        >>> self.entity = input['entity'].splice()
 
-        2. To consume one item from the input (and pass it to run as a single item - not a list)
-        >>> copy['entity'] = input['entity'].pop()
+        2. To consume one item from the input (and store it as a single item - not a list)
+        >>> self.entity = input['entity'].pop()
 
-        3. To use an item but not consume it
-        >>> copy['entity'] = input['entity'][0]
-
-        :param input: input arguments
-        :return: copy of the input arguments
+        :param kwargs: input arguments
         """
-        copy = {}
-        for key in input:
-            copy[key] = input[key][:]
-            del input[key][:]
-        return copy
+        keys = kwargs.keys()
+        values = self.splice(kwargs.values())
+        for k, v in zip(keys, values):
+            setattr(self, k, v)
 
     def run(self, **kwargs):
         """
-        Run this step
+        Run this step. The variable names are the entity names given in IN and OUT and are defined in the same order
+        starting with IN and continuing with OUT. The entities are passed in streams with the functions 'peek' and 'pop'
+        to get the entities from the input steams and 'push' to insert entities into the output streams. Run will be
+        called until a StopIteration is pushed into all output streams
 
-        Assumes dependencies are already resolved. This function must be overridden when implementing new steps.
+        :param kwargs: arguments defined in class IN and OUT members
+        """
+        raise NotImplementedError('a step has no implemented functionality')
 
-        :param kwargs: arguments defined in class IN variable
-        :return: output of running the step
+    def finalise(self, **kwargs):
         """
-        return
-        yield  # allows the generator to return nothing
+        Finalise the step. This function creates output entities that can only be produced when it is known that the
+        input stream has ended (eg. an output file). The variable names are the entity names given in OUT. The entities
+        are passed in streams with the functions 'push' to insert entities into the output streams. Finalise will be
+        called until a StopIteration is pushed into all output streams.
 
-    def finalise(self):
+        :param kwargs: arguments defined in class OUT member
         """
-        Finalise the step. This function is a generator for the output entities that can only be produced when it is
-        known that the input stream has ended (eg. an output file).
-        :return:
+        for value in kwargs.itervalues():
+            value.push(StopIteration)
+
+    def splice(self, *args):
         """
-        return
-        yield  # allows the generator to return nothing
+        Get the maximum number of entites from each stream, delete from the stream and return a copy of the deleted
+        entities.
+
+        :param args: input entities
+        :return: copy of input entities
+        """
+        minimum = min(len(arg) for arg in args)
+        res = [arg[:minimum] for arg in args]
+        for arg in args:
+            del arg[:minimum]
+        return res
 
     @classmethod
     def get_in_resolvers(cls):
