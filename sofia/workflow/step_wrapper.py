@@ -27,9 +27,6 @@ class StepWrapper(object):
     def init(self):
         self.step.init()
 
-    def consume_input(self, input):
-        return self.step.consume_input(input)
-
     def run(self, inputs, n):
         keys = [in_.name for in_ in self.ins]
         inputs = self.step.consume_input(dict(zip(keys, inputs)))
