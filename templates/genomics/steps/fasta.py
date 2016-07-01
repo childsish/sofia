@@ -8,14 +8,11 @@ class FastaChromosomeSequenceSet(Step):
 
     IN = ['fasta_file']
     OUT = ['chromosome_sequence_set']
-
-    def __init__(self):
-        self.fileobj = None
     
     def run(self, fasta_file):
         fasta_file = fasta_file[0]
-        self.fileobj = gzip.open(fasta_file) if fasta_file.endswith('.gz') else open(fasta_file)
-        yield FastaInOrderAccessSet(self.fileobj)
+        fileobj = gzip.open(fasta_file) if fasta_file.endswith('.gz') else open(fasta_file)
+        yield FastaInOrderAccessSet(fileobj)
 
     @classmethod
     def get_out_resolvers(cls):
