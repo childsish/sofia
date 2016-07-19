@@ -2,6 +2,7 @@ import gzip
 
 from sofia.step import Step
 from lhc.io.fasta.inorder_access_set import FastaInOrderAccessSet
+from lhc.filetools import SharedFile
 
 
 class FastaChromosomeSequenceSet(Step):
@@ -9,10 +10,14 @@ class FastaChromosomeSequenceSet(Step):
     IN = ['fasta_file']
     OUT = ['chromosome_sequence_set']
     
-    def run(self, fasta_file):
-        fasta_file = fasta_file[0]
-        fileobj = gzip.open(fasta_file) if fasta_file.endswith('.gz') else open(fasta_file)
-        yield FastaInOrderAccessSet(fileobj)
+    def __init__(self, fasta_file):
+        self.fileobj = None
+        self.fasta_file = fasta_file.pop()
+
+    def run(self, chromosome_sequence_set):
+        if self.fileobj is None:
+            self.fileobj = gzip.open(self.fasta_file) if self.fasta_file.endswith('.gz') else SharedFile(self.fasta_file)
+        yield FastaInOrderAccessSet(self.fileobj)
 
     @classmethod
     def get_out_resolvers(cls):

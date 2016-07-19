@@ -34,9 +34,13 @@ class GetPosition(Step):
     IN = ['chromosome_pos']
     OUT = ['position']
 
-    def run(self, chromosome_pos):
-        for position in chromosome_pos:
-            yield position + 1
+    def run(self, position):
+        try:
+            res = self.chromosome_pos.pop() + 1
+            while position.push(res):
+                res = self.chromosome_pos.pop() + 1
+        except IndexError:
+            position.push(StopIteration)
 
 
 class GetSubstitutionContext(Step):

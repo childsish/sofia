@@ -8,28 +8,27 @@ class GetGenomicFeatureByPosition(Step):
     IN = ['genomic_feature_set', 'genomic_position']
     OUT = ['genomic_feature']
 
-    def __init__(self):
+    def __init__(self, genomic_feature_set, genomic_position):
+        self.genomic_feature_set = genomic_feature_set.pop()
+        self.genomic_position = genomic_position.consume()
+        self.pos = 0
+
         self.ttl = 0
         self.cnt = Counter()
 
-    def consume_input(self, input):
-        copy = {
-            'genomic_feature_set': input['genomic_feature_set'][0],
-            'genomic_position': input['genomic_position'][:]
-        }
-        del input['genomic_position'][:]
-        return copy
-
-    def run(self, genomic_feature_set, genomic_position):
-        for position in genomic_position:
+    def run(self, genomic_feature):
+        pos = self.pos
+        while pos < len(self.genomic_position):
+            position = self.genomic_position[pos]
+            pos += 1
             if position is None:
-                yield None
+                genomic_feature.push(None)
                 continue
             #TODO: select correct gene (currently selecting largest)
             self.ttl += 1
             res = None
             try:
-                features = genomic_feature_set.fetch(
+                features = self.genomic_feature_set.fetch(
                     position.chr,
                     position.pos,
                     position.pos + 1)
@@ -41,7 +40,8 @@ class GetGenomicFeatureByPosition(Step):
                     self.cnt['could not create iterator for region ...'] += 1
                 else:
                     self.cnt[e.message] += 1
-            yield res
+            genomic_feature.push(res)
+        self.pos = pos
 
     @classmethod
     def get_out_resolvers(cls):
@@ -69,14 +69,6 @@ class GetGenomicFeatureByInterval(Step):
         
     IN = ['genomic_feature_set', 'genomic_interval']
     OUT = ['genomic_feature']
-
-    def consume_input(self, input):
-        copy = {
-            'genomic_feature_set': input['genomic_feature_set'][0],
-            'genomic_interval': input['genomic_interval'][:]
-        }
-        del input['genomic_interval'][:]
-        return copy
 
     def run(self, genomic_feature_set, genomic_interval):
         #TODO: select correct gene (currently selecting largest)

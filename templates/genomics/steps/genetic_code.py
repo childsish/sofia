@@ -8,9 +8,11 @@ class GeneticCode(Step):
     IN = ['prt_file']
     OUT = ['genetic_code']
 
-    def run(self, prt_file):
-        prt_file = prt_file[0]
-        yield GeneticCodes(prt_file)['Standard']
+    def __init__(self, prt_file):
+        self.prt_file = prt_file.pop()
+
+    def run(self, genetic_code):
+        genetic_code.push(GeneticCodes(self.prt_file)['Standard'])
 
     @classmethod
     def get_out_resolvers(cls):
