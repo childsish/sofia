@@ -48,7 +48,7 @@ class InputStream(object):
         while self.index in self.chunks:
             index = self.index
             self.input.extend(entity for entity in self.chunks[index] if entity is not StopIteration)
-            if self.chunks[index][-1] is StopIteration:
+            if len(self.chunks[index]) > 0 and self.chunks[index][-1] is StopIteration:
                 self.index += 1
             del self.chunks[index]
 
