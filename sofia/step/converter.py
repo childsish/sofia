@@ -1,20 +1,21 @@
 from collections import Counter
 from step import Step
-from copy import copy
 
 
 class Converter(Step):
-    def __init__(self, map_file, fr, to, path=None):
+    def __init__(self, map_file, fr, to, path=None, **kwargs):
+        self.input_stream = kwargs.values()[0].consume()
         self.map = self.load_map_file(map_file, fr, to)
         self.path = [] if path is None else path
         self.ttl = 0
         self.cnt = Counter()
 
     def run(self, **kwargs):
-        entities = copy(kwargs.values()[0])
-        for entity in entities:
+        output_stream = kwargs.values()[0]
+        while len(self.input_stream) > 0:
+            entity = self.input_stream.pop()
             if entity is None:
-                yield None
+                output_stream.push(None)
                 continue
 
             self.ttl += 1
@@ -23,8 +24,7 @@ class Converter(Step):
             except KeyError, e:
                 self.cnt[e.message] += 1
                 entity = None
-            yield entity
-        del kwargs.values()[0][:]
+            output_stream.push(entity)
 
     def _convert(self, entity, path, id_map):
         if len(path) == 0:
