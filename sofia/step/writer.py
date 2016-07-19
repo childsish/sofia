@@ -4,28 +4,27 @@ from step import Step
 
 
 class Writer(Step):
-    def __init__(self, entities, format=None, output=sys.stdout):
+    def __init__(self, entities, format=None, output=sys.stdout, **kwargs):
+        self.keys = kwargs.keys()
+        self.values = self.splice(*kwargs.values())
         self.entities = entities
         self.format = '\t'.join('{{{}}}'.format(entity) for entity in entities) if format is None else format
         self.format += '\n'
         self.output = output
 
-    def run(self, **kwargs):
-        keys = kwargs.keys()
-        for values in zip(*kwargs.values()):
-            self.output.write(self.format.format(**dict(zip(keys, values))))
-        for k in kwargs:
-            del kwargs[k][:]
-        return
-        yield  # allows the generator to return nothing
+    def run(self, txt_file):
+        for values in zip(*self.values):
+            self.output.write(self.format.format(**dict(zip(self.keys, values))))
+        txt_file.push(StopIteration)
 
-    def finalise(self):
-        yield self.output
+    def finalise(self, txt_file):
+        self.output.close()
+        txt_file.push(self.output.name)
+        txt_file.push(StopIteration)
 
     def __getstate__(self):
-        return self.entities, self.format, 'stdout' if self.output is sys.stdout else self.output
+        return self.keys, self.values, self.entities, self.format, 'stdout' if self.output is sys.stdout else self.output
 
     def __setstate__(self, state):
-        self.entities = state[0]
-        self.format = state[1]
-        self.output = sys.stdout if state[2] == 'stdout' else state[2]
+        self.keys, self.values, self.entities, self.format, self.output = state
+        self.output = sys.stdout if self.output == 'stdout' else self.output

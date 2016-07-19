@@ -23,16 +23,3 @@ class StepWrapper(object):
 
     def init(self, input):
         return self.step.init(input)
-
-    def run(self, output):
-        keys = [in_.name for in_ in self.ins]
-        input = dict(zip(keys, input))
-        kwargs.update((out.name, output[out]) for out in self.outs)
-        self.step.run(**kwargs)
-
-    def finalise(self, output):
-        kwargs = {out.name: output[out] for out in self.outs}
-        self.step.finalise(**kwargs)
-
-    def get_user_warnings(self):
-        return self.step.get_user_warnings()

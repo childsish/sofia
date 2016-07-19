@@ -15,15 +15,18 @@ class Step(object):
         input the following commands can be run:
 
         1. To consume all the input
-        >>> self.entity = input['entity'].splice()
+        >>> self.entity = entity.consume()
 
         2. To consume one item from the input (and store it as a single item - not a list)
-        >>> self.entity = input['entity'].pop()
+        >>> self.entity = entity.pop()
+
+        3. To access the top item but not consume it
+        >>> self.entity = entity.peek()
 
         :param kwargs: input arguments
         """
         keys = kwargs.keys()
-        values = self.splice(kwargs.values())
+        values = self.splice(*kwargs.values())
         for k, v in zip(keys, values):
             setattr(self, k, v)
 
@@ -59,9 +62,7 @@ class Step(object):
         :return: copy of input entities
         """
         minimum = min(len(arg) for arg in args)
-        res = [arg[:minimum] for arg in args]
-        for arg in args:
-            del arg[:minimum]
+        res = [arg.consume(minimum) for arg in args]
         return res
 
     @classmethod
