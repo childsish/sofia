@@ -16,6 +16,17 @@ class ParallelExecutionEngine(object):
         state_manager = StateManager(steps, workflow, self.max_entities)
         processes, conn = self.start_processes(workflow, state_manager)
 
+        try:
+            self.loop(steps, conn, state_manager)
+            for process in processes:
+                conn.send(('stop', None, None))
+                process.join()
+        except Exception:
+            for process in processes:
+                process.terminate()
+            raise
+
+    def loop(self, steps, conn, state_manager):
         finalised = set()
         while not finalised.issuperset(steps):
             message, step, state = conn.recv()
@@ -57,10 +68,6 @@ class ParallelExecutionEngine(object):
                         conn.send(('finalise', consumer, state_))
             else:
                 raise ValueError('recieved unknown message from worker: {}'.format(message))
-
-        for process in processes:
-            conn.send(('stop', None, None))
-            process.join()
 
     def start_processes(self, workflow, state_manager):
         to_worker, from_worker = Pipe()
