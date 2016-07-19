@@ -22,7 +22,11 @@ class StateManager(object):
                 self.input_streams[step][in_] = InputStream(threshold)
 
     def get_state(self, step):
-        state = State(step.init(self.get_input_streams(step)),
+        try:
+            step_class = step.init(self.get_input_streams(step))
+        except Exception:
+            raise TypeError('failed to create {}'.format(step))
+        state = State(step_class,
                       self.get_output_streams(step),
                       self.indices[step])
         self.indices[step] += 1
