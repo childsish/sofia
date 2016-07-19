@@ -5,12 +5,12 @@ import sys
 
 from build import build, get_input
 from resolve import resolve
-from sofia.execution_engines import LowMemoryExecutionEngine#, ParallelEngine
+from sofia.execution_engines import ParallelExecutionEngine, LowMemoryExecutionEngine
 
 
 def execute(workflow, engine=None):
     if engine is None:
-        engine = LowMemoryExecutionEngine(5)
+        engine = ParallelExecutionEngine(5, 1)
     engine.execute(workflow)
 
 
