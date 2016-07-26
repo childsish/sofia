@@ -39,9 +39,9 @@ class EntityDefinitionParser(object):
         type, format_string = match.groups('')
         return EntityType(type, attributes=attributes, alias=alias, format_string=format_string)
 
-    def parse_provided_entity(self, definition):
+    def parse_provided_entity(self, definition, type=None):
         filename, alias, attributes = self.parse_definition(definition)
-        type = self.get_type_by_extension(filename)
+        type = self.get_type_by_extension(filename) if type is None else type
         attributes['filename'] = {filename}
         if alias is None:
             alias = os.path.basename(filename)
