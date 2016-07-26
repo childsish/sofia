@@ -3,13 +3,14 @@ from collections import defaultdict
 
 class InputStream(object):
 
-    __slots__ = ('index', 'input', 'threshold', 'chunks', 'finished')
+    __slots__ = ('index', 'input', 'threshold', 'chunks', 'done_states', 'finished')
 
     def __init__(self, threshold, input=None):
         self.index = 0
         self.input = [] if input is None else input
         self.threshold = threshold
         self.chunks = defaultdict(list)
+        self.done_states = set()
         self.finished = False
 
     def __iter__(self):
@@ -28,6 +29,8 @@ class InputStream(object):
         return len(self.input) == 0 and self.finished
 
     def peek(self):
+        if len(self.input) == 0:
+            return None
         return self.input[0]
 
     def pop(self):
@@ -43,17 +46,23 @@ class InputStream(object):
         del self.input[:n]
         return res
 
-    def write(self, entities, index):
+    def write(self, entities, index, is_done=False):
+        if index < self.index:
+            raise ValueError('index of entities must be greater or equal to current index')
+
         self.chunks[index].extend(entities)
+        if is_done:
+            self.done_states.add(index)
         while self.index in self.chunks:
             index = self.index
-            self.input.extend(entity for entity in self.chunks[index] if entity is not StopIteration)
-            if len(self.chunks[index]) > 0 and self.chunks[index][-1] is StopIteration:
+            self.input.extend(self.chunks[index])
+            if index in self.done_states:
                 self.index += 1
+                self.done_states.remove(index)
             del self.chunks[index]
 
     def __getstate__(self):
-        return self.index, self.input, self.threshold, self.chunks, self.finished
+        return self.index, self.input, self.threshold, self.chunks, self.done_states, self.finished
 
     def __setstate__(self, state):
-        self.index, self.input, self.threshold, self.chunks, self.finished = state
+        self.index, self.input, self.threshold, self.chunks, self.done_states, self.finished = state

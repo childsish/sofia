@@ -31,8 +31,10 @@ def load_steps(step_directory):
 
 
 def load_attributes(attribute_directory):
-    attributes = load_plugins(attribute_directory, AttributeResolver)
-    return {attribute.ATTRIBUTE: attribute for attribute in attributes}
+    if os.path.exists(attribute_directory):
+        attributes = load_plugins(attribute_directory, AttributeResolver)
+        return {attribute.ATTRIBUTE: attribute for attribute in attributes}
+    return {}
 
 
 def load_plugins(plugin_directory, plugin_class, exclude=None):
@@ -66,7 +68,7 @@ def get_extractors(entities):
             extractors[(in_, out)] = ([], 'Cast{}To{}'.format(capitalise_name(in_), capitalise_name(out)))
     res = {}
     for (in_, out), (path, name) in extractors.iteritems():
-        res[name] = ConcreteStep(Extractor, name, [in_], [out], {'path': path})
+        res[name] = ConcreteStep(Extractor, name, [in_], [out], {'path': path, 'in_': in_, 'out': out})
     return res
 
 

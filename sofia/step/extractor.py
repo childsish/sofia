@@ -1,4 +1,4 @@
-from step import Step
+from step import Step, EndOfStream
 from sofia.workflow_template.entity_set import EntitySet
 
 
@@ -6,15 +6,24 @@ class Extractor(Step):
 
     PARAMS = ['path']
 
-    def __init__(self, path=None, **kwargs):
-        self.input_stream = kwargs.values()[0].consume()
+    def __init__(self, in_, out, path=None):
+        self.in_ = in_
+        self.out = out
         self.path = [] if path is None else path
 
-    def run(self, **kwargs):
-        entity, output_stream = kwargs.items()[0]
-        while len(self.input_stream) > 0:
-            res = None if entity is None else EntitySet.get_descendent(self.input_stream.pop(), self.path)
+    def __str__(self):
+        return 'get {} from {}'.format(self.out, self.in_)
+
+    def run(self, ins, outs):
+        input_stream = getattr(ins, self.in_)
+        output_stream = getattr(outs, self.out)
+        while len(input_stream) > 0:
+            entity = input_stream.pop()
+            if entity is EndOfStream:
+                output_stream.push(EndOfStream)
+                return True
+
+            res = None if entity is None else EntitySet.get_descendent(entity, self.path)
             if not output_stream.push(res):
                 break
-        if len(self.input_stream) == 0:
-            output_stream.push(StopIteration)
+        return len(ins) == 0

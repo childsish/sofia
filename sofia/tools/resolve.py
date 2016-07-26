@@ -53,10 +53,10 @@ def resolve_requested_entity(template, entity, maps=None):
 
     ERROR_MANAGER.reset()
     sys.stderr.write('     {} - '.format(entity.name))
-    solution_iterator = EntityResolver(entity.name, template, maps, requested_resources=entity.attributes['resource'])
+    solution_iterator = EntityResolver(entity.name, template, maps, requested_resources=entity.attributes.get('resource', set()))
     possible_graphs = list(solution_iterator)
     possible_graphs = [graph for graph in possible_graphs
-                       if satisfies_request(graph, entity.attributes['resource'])]
+                       if satisfies_request(graph, entity.attributes.get('resource', set()))]
     if len(possible_graphs) == 0:
         sys.stderr.write('unable to resolve entity.\n\n')
         sys.stderr.write('     Possible reasons:\n')

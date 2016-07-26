@@ -1,69 +1,50 @@
+class EndOfStream(object):
+    __slots__ = []
+
+
 class Step(object):
     """
     A step that can be calculated from resources and other steps. Primarily concerned with execution of the step. Not
-    concerned with attributes etc...
+    concerned with attributes etc... When implementing a step, please import:
+    >>> from sofia.step import EndOfStream
     """
     
     IN = []
     OUT = []
     PARAMS = []
 
-    def __init__(self, **kwargs):
+    def run(self, ins, outs):
         """
-        Make a copy of the input for the run function and consume the input to free up the queue for more input. If all
-        input is consumed, there is no need to overload this function. Input is provided as lists. To copy and consume
-        input the following commands can be run:
+        Run the step. This function must be overloaded to provide specific functionality.
+        Input streams are accessed from the ins variable as members (eg. ins.entity). Input streams have the following
+        fuctionality:
 
-        1. To consume all the input
-        >>> self.entity = entity.consume()
+        1. If the input streams are synchronised, you can get all the next entities with:
+        >>> entities = ins.pop()
 
-        2. To consume one item from the input (and store it as a single item - not a list)
-        >>> self.entity = entity.pop()
+        2. If the input streams are synchronised, you can get the number of entities in the stream with:
+        >>> len(ins)
 
-        3. To access the top item but not consume it
-        >>> self.entity = entity.peek()
+        3. Entities from individual streams can be accessed with:
+        >>> ins.entity.pop()
+        >>> len(ins.entity)
+         where 'entity' is the name of the entity stream you want to pop from.
 
-        :param kwargs: input arguments
-        """
-        keys = kwargs.keys()
-        values = self.splice(*kwargs.values())
-        for k, v in zip(keys, values):
-            setattr(self, k, v)
+        Output streams are accessed from the outs variable as members (eg. out.entity). Output streams have the
+        following functionality:
 
-    def run(self, **kwargs):
-        """
-        Run this step. The variable names are the entity names given in IN and OUT and are defined in the same order
-        starting with IN and continuing with OUT. The entities are passed in streams with the functions 'peek' and 'pop'
-        to get the entities from the input steams and 'push' to insert entities into the output streams. Run will be
-        called until a StopIteration is pushed into all output streams
+        1. To push an entity to an output stream:
+        >>> outs.entity.push()
+         where 'entity' is the entity stream you want to push to.
 
-        :param kwargs: arguments defined in class IN and OUT members
+        2. To end a stream:
+        >>> outs.entity.push(EndOfStream)
+
+        :param ins: input streams. Individual streams can be accessed as members (ie. ins.entity)
+        :param outs: output streams. Individual streams can be accessed as members (ie. outs.entity)
+        :return: False if the step can still provide output, True if the step is done.
         """
         raise NotImplementedError('a step has no implemented functionality')
-
-    def finalise(self, **kwargs):
-        """
-        Finalise the step. This function creates output entities that can only be produced when it is known that the
-        input stream has ended (eg. an output file). The variable names are the entity names given in OUT. The entities
-        are passed in streams with the functions 'push' to insert entities into the output streams. Finalise will be
-        called until a StopIteration is pushed into all output streams.
-
-        :param kwargs: arguments defined in class OUT member
-        """
-        for value in kwargs.itervalues():
-            value.push(StopIteration)
-
-    def splice(self, *args):
-        """
-        Get the maximum number of entites from each stream, delete from the stream and return a copy of the deleted
-        entities.
-
-        :param args: input entities
-        :return: copy of input entities
-        """
-        minimum = min(len(arg) for arg in args)
-        res = [arg.consume(minimum) for arg in args]
-        return res
 
     @classmethod
     def get_in_resolvers(cls):

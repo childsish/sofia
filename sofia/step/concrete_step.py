@@ -1,6 +1,3 @@
-from copy import copy
-
-
 class ConcreteStep(object):
     """
     A concrete step acts as the interface between user-defined steps and the template building engine. It can also be
@@ -20,11 +17,9 @@ class ConcreteStep(object):
     def __str__(self):
         return self.name
 
-    def init(self, input):
+    def init(self):
         """
         Instantiate and initialise the step.
         :return:
         """
-        kwargs = copy(self.params)
-        kwargs.update(input)
-        return self.step_class(**kwargs)
+        return self.step_class(**self.params)

@@ -21,5 +21,5 @@ class StepWrapper(object):
     def __eq__(self, other):
         return str(self) == str(other)
 
-    def init(self, input):
-        return self.step.init(input)
+    def init(self):
+        return self.step.init()
