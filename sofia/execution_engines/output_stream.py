@@ -16,7 +16,7 @@ class OutputStream(object):
         return len(self.output) > 0
 
     def is_writable(self):
-        return len(self.output) < self.threshold
+        return len(self.output) < self.threshold and not self.has_ended
 
     def is_done(self):
         return len(self.output) > 0 and self.output[-1] is EndOfStream
@@ -26,11 +26,11 @@ class OutputStream(object):
         self.output.clear()
         return res
 
-    def push(self, entity):
-        if entity is EndOfStream:
+    def push(self, *entities):
+        self.output.extend(entities)
+        if entities[-1] is EndOfStream:
             self.has_ended = True
-        self.output.append(entity)
-        return self.is_writable() and entity is not StopIteration
+        return self.is_writable()
 
     def __getstate__(self):
         return self.has_ended, self.output, self.threshold, self.consumers
