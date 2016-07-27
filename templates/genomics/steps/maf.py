@@ -1,58 +1,84 @@
-from __future__ import with_statement
-
 import gzip
 
-from sofia.step import Step
-from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
-from lhc.interval import Interval
-from lhc.io.maf.iterator import MafIterator
+from lhc.filetools import SharedFile
 from lhc.io.vcf.iterator import Variant
+from lhc.io.maf import MafIterator
+from sofia.step import Step, EndOfStream
 
 
-class MafSet(Step):
-    """A set of variants parsed from a .vcf file
-    """
+class IterateMaf(Step):
 
     IN = ['maf_file']
-    OUT = ['maf_set']
+    OUT = ['maf']
 
-    def run(self, maf_file):
-        maf_file = maf_file[0]
-        with gzip.open(maf_file) if maf_file.endswith('.gz') else open(maf_file) as fileobj:
-            yield InOrderAccessIntervalSet(MafIterator(fileobj), key=maf_key)
+    def __init__(self):
+        self.iterator = None
 
+    def run(self, ins, outs):
+        while len(ins) > 0:
+            if self.iterator is None:
+                maf_file = ins.maf_file.pop()
+                fileobj = gzip.open(maf_file) if maf_file.endswith('.gz') else SharedFile(maf_file)
+                self.iterator = MafIterator(fileobj)
 
-def maf_key(line):
-    return Interval((line.chr, line.start), (line.chr, line.stop))
+            for item in self.iterator:
+                if not outs.maf.push(item):
+                    return False
+            self.iterator = None
+        return len(ins) == 0
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
+
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'maf': set()
+        }
 
 
 class GetMafByVariant(Step):
 
-    IN = ['maf_set', 'variant']
+    IN = ['variant', 'maf']
     OUT = ['maf']
 
-    def consume_input(self, input):
-        copy = {
-            'maf_set': input['maf_set'][0],
-            'variant': input['variant'][:]
-        }
-        del input['variant'][:]
-        return copy
+    def __init__(self):
+        self.variant = None
+        self.mafs = []
 
-    def run(self, maf_set, variant):
-        for variant_ in variant:
-            #TODO: check matched variants
-            if variant_ is None:
-                yield None
-            try:
-                overlap = maf_set.fetch(variant_.chr, variant_.pos, variant_.pos + 1)
-            except ValueError:
-                yield None
-            hits = [o for o in overlap if o.start_position == variant_.pos and
-                    o.reference_allele == variant_.ref and variant_.alt in {o.tumour_seq_allele1, o.tumour_seq_allele2}]
-            if len(hits) == 0:
-                yield None
-            yield hits
+    def run(self, ins, outs):
+        variant = self.variant
+        mafs = self.mafs
+
+        while len(ins.variant) > 0 and len(ins.maf) > 0:
+            if variant is None:
+                variant = ins.variant.pop()
+            if variant is EndOfStream:
+                outs.maf.push(EndOfStream)
+                return True
+
+            i = 0
+            while i < len(mafs) and mafs[i] < variant:
+                i += 1
+            del mafs[:i]
+
+            while variant is not None and len(ins.maf) > 0:
+                maf = ins.maf.peek()
+                if maf is EndOfStream:
+                    outs.maf.push(mafs, EndOfStream)
+                    return True
+
+                if maf > variant:
+                    if not outs.maf.push(mafs):
+                        self.variant = None
+                        return False
+                    variant = None
+                elif maf == variant:
+                    mafs.append(ins.maf.pop())
+        self.variant = variant
 
 
 class ConvertMafToVariant(Step):
@@ -60,22 +86,18 @@ class ConvertMafToVariant(Step):
     IN = ['maf']
     OUT = ['variant']
 
-    def run(self, maf):
-        for maf_ in maf:
-            if maf_ is None:
-                yield None
-            if isinstance(maf_, list):
-                yield [
-                    Variant(m.chromosome,
-                            m.start_position,
-                            '.', m.reference_allele,
-                            ','.join({m.tumour_seq_allele1, m.tumour_seq_allele2} - {m.reference_allele}),
-                            m.score,
-                            '.')
-                    for m in maf_]
-            yield Variant(maf_.chromosome,
-                          maf_.start_position,
-                          '.', maf_.reference_allele,
-                          ','.join({maf_.tumour_seq_allele1, maf_.tumour_seq_allele2} - {maf_.reference_allele}),
-                          maf_.score,
-                          '.')
+    def run(self, ins, outs):
+        while len(ins) > 0:
+            maf = ins.maf.pop()
+            if maf is EndOfStream:
+                outs.variant.push(EndOfStream)
+
+            variant = Variant(maf.chromosome,
+                              maf.start_position,
+                              '.', maf.reference_allele,
+                              ','.join({maf.tumour_seq_allele1, maf.tumour_seq_allele2} - {maf.reference_allele}),
+                              maf.score,
+                              '.')
+            if not outs.variant.push(variant):
+                break
+        return len(ins) == 0

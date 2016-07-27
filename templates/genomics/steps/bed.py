@@ -1,33 +1,41 @@
 import gzip
 
-from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
-from lhc.interval import Interval
-from lhc.io.bed.iterator import BedLineIterator
-from sofia.step import Step
+from lhc.io.bed import BedEntryIterator
+from lhc.filetools import SharedFile
+from sofia.step import Step, EndOfStream
 
 
-class BedIterator(Step):
+class IterateBed(Step):
 
     IN = ['bed_file']
     OUT = ['genomic_interval']
 
-    def run(self, bed_file):
-        bed_file = bed_file[0]
-        fileobj = gzip.open(bed_file) if bed_file.endswith('.gz') else open(bed_file)
-        for line in BedLineIterator(fileobj):
-            yield line
+    def __init__(self):
+        self.iterator = None
 
+    def run(self, ins, outs):
+        if self.iterator is None:
+            bed_file = ins.bed_file.pop()
+            if bed_file is EndOfStream:
+                outs.variant.push(EndOfStream)
+                return True
+            fileobj = gzip.open(bed_file) if bed_file.endswith('.gz') else SharedFile(bed_file)
+            self.iterator = BedEntryIterator(fileobj)
 
-class BedSet(Step):
+        for item in self.iterator:
+            if not outs.genomic_interval.push(item):
+                return False
+        self.iterator = None
+        return len(ins) == 0
 
-    IN = ['bed_file']
-    OUT = ['genomic_interval_set']
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
 
-    def run(self, bed_file):
-        bed_file = bed_file[0]
-        fileobj = gzip.open(bed_file) if bed_file.endswith('.gz') else open(bed_file)
-        yield InOrderAccessIntervalSet(BedLineIterator(fileobj), key=bed_key)
-
-
-def bed_key(line):
-    return Interval((line.chr, line.start), (line.chr, line.stop))
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'genomic_interval': set()
+        }

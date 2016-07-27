@@ -1,4 +1,4 @@
-from sofia.step import Step
+from sofia.step import Step, EndOfStream
 
 
 class GetGotermByGene(Step):
@@ -9,17 +9,18 @@ class GetGotermByGene(Step):
     
     def __init__(self, domain=None):
         self.domain = domain
-
-    def consume_input(self, input):
-        copy = {
-            'gene_id': input['gene_id'][:],
-            'gene_goterm_map': input['gene_goterm_map'][0]
-        }
-        del input['gene_id'][:]
-        return copy
     
-    def run(self, gene_id, gene_goterm_map):
-        for id_ in gene_id:
-            if self.domain is None:
-                yield set(goterm for goterm, domain in gene_goterm_map[id_] if domain == self.domain)
-            yield set(goterm for goterm, domain in gene_goterm_map[id_])
+    def run(self, ins, outs):
+        gene_goterm_map = ins.gene_goterm_map.peek()
+        while len(ins.gene_id) > 0:
+            gene_id = ins.gene_id.pop()
+            if gene_id is EndOfStream:
+                outs.goterm.push(EndOfStream)
+                return True
+
+            goterm = None if gene_id is None else\
+                set(goterm for goterm, domain in gene_goterm_map[gene_id]) if self.domain is None else\
+                set(goterm for goterm, domain in gene_goterm_map[gene_id] if domain == self.domain)
+            if not outs.goterm.push(goterm):
+                break
+        return len(ins.gene_id) == 0

@@ -1,6 +1,5 @@
 from lhc.binf.genetic_code import GeneticCodes
-
-from sofia.step import Step
+from sofia.step import Step, EndOfStream
 
 
 class GeneticCode(Step):
@@ -8,11 +7,17 @@ class GeneticCode(Step):
     IN = ['prt_file']
     OUT = ['genetic_code']
 
-    def __init__(self, prt_file):
-        self.prt_file = prt_file.pop()
+    def run(self, ins, outs):
+        while len(ins) > 0:
+            prt_file = ins.prt_file.pop()
+            if prt_file is EndOfStream:
+                outs.genetic_code.push(EndOfStream)
+                return True
 
-    def run(self, genetic_code):
-        genetic_code.push(GeneticCodes(self.prt_file)['Standard'])
+            genetic_code = GeneticCodes(prt_file)['Standard']
+            if not outs.genetic_code.push(genetic_code):
+                break
+        return len(ins) == 0
 
     @classmethod
     def get_out_resolvers(cls):

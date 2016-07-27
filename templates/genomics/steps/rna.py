@@ -6,7 +6,7 @@ class RnaIterator(Step):
     IN = ['rna_file']
     OUT = ['rna_structure_iterator']
 
-    def run(self, rna_file):
+    def run(self, ins, outs):
         raise NotImplementedError
 
 
@@ -15,5 +15,5 @@ class RnaSet(Step):
     IN = ['rna_structure']
     OUT = ['rna_structure_set']
 
-    def run(self, rna_structure):
+    def run(self, ins, outs):
         raise NotImplementedError

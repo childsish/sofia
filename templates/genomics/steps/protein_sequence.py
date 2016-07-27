@@ -1,107 +1,152 @@
-from collections import Counter
-from itertools import islice, izip
-from warnings import warn
+from collections import defaultdict
+from functools import reduce
+from itertools import izip
+from operator import add, mul
 
-from sofia.step import Step
+from lhc.binf.kmer import KmerCounter
+
+from sofia.step import Step, EndOfStream
 
 
-class GetPest(Step):
+class TranslateCodingSequence(Step):
     """
-    Finds regions rich in P, E, S and T. These sequences are associated with protein that have a short half life.
-    PEST rich is defined by Rogers et. al. (1986).
+    Translates a coding sequence into an amino acid sequence using the standard genetic code.
     """
 
-    IN = ['protein_sequence', 'molecular_weight_set']
-    OUT = ['pest_sequences']
-    PARAMETERS = ['win', 'thr', 'mono']
+    IN = ['coding_sequence', 'genetic_code']
+    OUT = ['protein_sequence']
 
-    POSITIVE = set('RHK')
-    REQUIRED = ('P', 'DE', 'ST')
-    
-    def __init__(self, win=12, thr=5, mono=False):
-        self.win = win
-        self.thr = thr
-        self.mono = 'mono' if mono else 'avg'
+    def run(self, ins, outs):
+        genetic_code = ins.genetic_code.peek()
+
+        while len(ins.coding_sequence) > 0:
+            coding_sequence = ins.coding_sequence.pop()
+            if coding_sequence is EndOfStream:
+                outs.protein_sequence.push(EndOfStream)
+                return True
+
+            protein_sequence = genetic_code.translate(coding_sequence)
+            if not outs.protein_sequence.push(protein_sequence):
+                break
+        return len(ins.coding_sequence) == 0
+
+
+class GetCodonUsage(Step):
+    """
+    Calculate the codon usage of a coding sequence.
+    """
+
+    IN = ['coding_sequence']
+    OUT = ['codon_usage']
+
+    def run(self, coding_sequence):
+        for sequence in coding_sequence:
+            if sequence is None:
+                yield None
+            yield KmerCounter(sequence, k=3, step=3)
+
+
+class GetRelativeSynonymousCodonUsage(Step):
+    """
+    Calculates and return the relative synonymous codon usage (rscu) and relative codon adaptiveness (w)
+    as defined by Sharp et. al. 1987
+    """
+
+    IN = ['codon_usage', 'genetic_code']
+    OUT = ['relative_synonymous_codon_usage', 'relative_codon_adaptiveness']
 
     def consume_input(self, input):
         copy = {
-            'molecular_weight_set': input['molecular_weight_set'][0],
-            'protein_sequence': input['protein_sequence'][:]
+            'codon_usage': input['codon_usage'][:],
+            'genetic_code': input['genetic_code'][0]
         }
-        del input['protein_sequence'][:]
+        del input['codon_usage'][:]
         return copy
 
-    def run(self, protein_sequence, molecular_weight_set):
-        for sequence in protein_sequence:
-            if sequence is None:
+    def run(self, codon_usage, genetic_code):
+        for usage in codon_usage:
+            if usage is None:
+                yield None, None
+            rscu = {}
+            w = {}
+            for aa in genetic_code.AMINO_ACIDS:
+                cdns = genetic_code.get_codons(aa)
+                usgs = [usage[cdn] for cdn in cdns]
+                ttl_usg = sum(usgs) / float(len(usgs))
+                if ttl_usg == 0:
+                    rscus = len(usgs) * [0]
+                    ws = len(usgs) * [0]
+                else:
+                    rscus = [usg / ttl_usg for usg in usgs]
+                    ws = [usg / float(max(usgs)) for usg in usgs]
+                for cdn, rscu_, w_ in izip(cdns, rscus, ws):
+                    rscu[cdn] = rscu_
+                    w[cdn] = w_
+            yield rscu, w
+
+
+class GetCodonAdaptationIndex(Step):
+    """
+    Calculate the Codon Adaptation Index as defined by Sharp et. al. 1987.
+    """
+
+    IN = ['coding_sequence', 'relative_codon_adaptiveness']
+    OUT = ['codon_adaptation_index']
+
+    def run(self, coding_sequence, relative_codon_adaptiveness):
+        for sequence, adaptiveness in zip(coding_sequence, relative_codon_adaptiveness):
+            if sequence is None or len(sequence) == 0:
                 yield None
-            sequence = sequence.rstrip('*')
-            if '*' in sequence:
-                warn('protein sequence terminates early')
+            cai = []
+            for i in xrange(0, len(sequence), 3):
+                cdn = sequence[i:i+3].lower()
+                #red = set(cdn) & RedundantCode.REDUNDANT_BASES
+                #if len(red) > 0:
+                #    warnings.warn('Redundant bases "%s" encountered in codon. Codon "%s" has been ignored.'%(','.join(sorted(red)), cdn))
+                #    continue
+                if cdn not in ['atg', 'tgg', 'taa', 'tga', 'tag'] and cdn in adaptiveness:
+                    cai.append(adaptiveness[cdn])
+            yield geometric_mean(cai)
+
+
+class GetEffectiveNumberOfCodons(Step):
+    """
+    Calculated the number of effective codons (Nc) as defined by Sun et. al. 2013
+    """
+
+    IN = ['codon_usage', 'genetic_code']
+    OUT = ['effective_number_of_codons']
+
+    def consume_input(self, input):
+        copy = {
+            'codon_usage': input['codon_usage'][:],
+            'genetic_code': input['genetic_code'][0]
+        }
+        del input['codon_usage'][:]
+        return copy
+
+    def run(self, codon_usage, genetic_code):
+        for usage in codon_usage:
+            if usage is None:
                 yield None
-            yield list(self.iter_pest(sequence, molecular_weight_set))
+            fs = {aa: self.run_f(usage, genetic_code[aa])
+                  for aa in genetic_code.AMINO_ACIDS}
+            fams = defaultdict(list)
+            for aa in genetic_code.AMINO_ACIDS:
+                if fs[aa] is not None:  # Assume missing aa have the mean F
+                    fams[len(genetic_code[aa])].append(fs[aa])
+            nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / arithmetic_mean(fam_Fs)
+                     for sz, fam_Fs in fams.iteritems())
+            yield nc
 
-    def iter_pest(self, seq, molwts):
-        """ Algorithm copied from EMBOSS:
-            https://github.com/pjotrp/EMBOSS/blob/master/emboss/epestfind.c:278
-        """
-        ltkdhi = dict(izip('ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-                           [63, 10, 70, 10, 10, 72, 41, 13, 90, 0, 6, 82, 64, 10, 0, 29, 10,
-                            0, 36, 38, 0, 87, 36, 45, 58, 10]))
-        for fr, to in self.iter_candidates(seq):
-            cnt = Counter(islice(seq, fr, to))  # islice to prevent copying
-            if self.is_valid_pest(cnt):
-                molwt = sum(molwts[seq[i]][self.mono] for i in xrange(fr, to))
-                pstsum = sum(cnt[k] * molwts[k][self.mono] for k in 'DEPST')
-                pstsum -= sum(molwts[k][self.mono] for k in 'EPT')
-                pstpct = pstsum / molwt
-                hydind = sum(v * molwts[k][self.mono] * ltkdhi[k] / molwt for k, v in cnt.iteritems())
-                pstscr = 0.55 * pstpct - 0.5 * hydind
-                yield pstscr, (fr, to)
-    
-    def iter_candidates(self, seq):
-        fr = 0
-        while fr < len(seq):
-            while fr < len(seq) and seq[fr] in self.POSITIVE:
-                fr += 1
-            to = fr + 1
-            while to < len(seq) and seq[to] not in self.POSITIVE:
-                to += 1
-            if to - fr >= self.win:
-                yield fr, to
-            fr = to
-    
-    def is_valid_pest(self, cnt):
-        return all(sum(cnt[r] for r in req) for req in self.REQUIRED)
+    def run_f(self, cut, fam):
+        n = float(sum(cut[cdn] for cdn in fam))
+        return None if n <= 1 else n * sum((cut[cdn] / n) ** 2 for cdn in fam) / (n - 1)
 
 
-class GetNumberOfPestSequences(Step):
-
-    IN = ['pest_sequences']
-    OUT = ['number_of_pest_sequences']
-
-    def run(self, pest_sequences):
-        for sequences in pest_sequences:
-            yield None if sequences is None else len(sequences)
+def arithmetic_mean(iterable):
+    return reduce(add, iterable) / float(len(iterable))
 
 
-class GetAveragePestSequenceLength(Step):
-
-    IN = ['pest_sequences']
-    OUT = ['average_pest_sequence_length']
-
-    def run(self, pest_sequences):
-        for sequences in pest_sequences:
-            if sequences is None or len(sequences) == 0:
-                yield None
-            yield sum(len(seq) for seq in sequences) / float(len(sequences))
-
-
-class GetAminoAcidFrequency(Step):
-
-    IN = ['protein_sequence']
-    OUT = ['amino_acid_frequency']
-
-    def run(self, protein_sequence):
-        for sequence in protein_sequence:
-            yield None if sequence is None else Counter(sequence)
+def geometric_mean(iterable):
+    return reduce(mul, iterable) ** (1 / float(len(iterable)))

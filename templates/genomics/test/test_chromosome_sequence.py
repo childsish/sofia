@@ -1,6 +1,6 @@
 import unittest
 
-from templates.genomics.steps.chromosome_sequence import GetHomopolymer
+from templates.genomics.steps.homopolymer import GetHomopolymer
 from lhc.io.vcf.iterator import Variant
 from lhc.io.fasta.set_ import FastaSet
 

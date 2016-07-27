@@ -1,9 +1,7 @@
 from collections import namedtuple
 from itertools import izip
-
 from lhc.binf.sequence import revcmp
-
-from sofia.step import Step
+from sofia.step import Step, EndOfStream
 
 
 class GetVariantSamples(Step):
@@ -24,9 +22,17 @@ class GetNumberOfVariants(Step):
     IN = ['variant']
     OUT = ['number_of_variants']
 
-    def run(self, variant):
-        for variant_ in variant:
-            yield 0 if variant_ is None else len(variant_)
+    def run(self, ins, outs):
+        while len(ins) > 0:
+            variant = ins.variant.pop()
+            if variant is EndOfStream:
+                outs.number_of_variants.push(EndOfStream)
+                return True
+
+            number_of_variants = 0 if variant is None else len(variant)
+            if not outs.number_of_variants.push(number_of_variants):
+                break
+        return len(ins.variant) == 0
 
 
 class GetPosition(Step):
@@ -34,13 +40,16 @@ class GetPosition(Step):
     IN = ['chromosome_pos']
     OUT = ['position']
 
-    def run(self, position):
-        try:
-            res = self.chromosome_pos.pop() + 1
-            while position.push(res):
-                res = self.chromosome_pos.pop() + 1
-        except IndexError:
-            position.push(StopIteration)
+    def run(self, ins, outs):
+        while len(ins.chromosome_pos) > 0:
+            chromosome_pos = ins.chromosome_pos.pop()
+            if chromosome_pos is EndOfStream:
+                outs.position.push(EndOfStream)
+                return True
+
+            if not outs.position.push(chromosome_pos + 1):
+                break
+        return len(ins) == 0
 
 
 class GetSubstitutionContext(Step):

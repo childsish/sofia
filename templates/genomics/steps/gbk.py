@@ -1,27 +1,41 @@
 import gzip
 
-from lhc.io.gbk import GbkIterator as Iterator, GbkSequenceSet
-from sofia.step import Step
+from lhc.io.gbk import GbkIterator as Iterator
+from sofia.step import Step, EndOfStream
 
 
-class GbkIterator(Step):
+class IterateGbk(Step):
 
     IN = ['gbk_file']
     OUT = ['genomic_interval']
 
-    def run(self, gbk_file):
-        gbk_file = gbk_file[0]
-        fileobj = gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file)
-        for entry in Iterator(fileobj):
-            yield entry
+    def __init__(self):
+        self.iterator = None
 
+    def run(self, ins, outs):
+        while len(ins) > 0:
+            if self.iterator is None:
+                gbk_file = ins.gbk_file.pop()
+                if gbk_file is EndOfStream:
+                    outs.genomic_interval.push(EndOfStream)
+                    return True
+                fileobj = gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file)
+                self.iterator = Iterator(fileobj)
 
-class GbkSet(Step):
+            for genomic_interval in self.iterator:
+                if not outs.genomic_interval.push(genomic_interval):
+                    return False
+            self.iterator = None
+        return len(ins) == 0
 
-    IN = ['gbk_file']
-    OUT = ['chromosome_sequence_set']
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
 
-    def run(self, gbk_file):
-        gbk_file = gbk_file[0]
-        fileobj = gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file)
-        yield GbkSequenceSet(fileobj)
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'genomic_interval': set()
+        }
