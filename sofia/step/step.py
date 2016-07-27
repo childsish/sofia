@@ -2,11 +2,15 @@ class EndOfStream(object):
     __slots__ = []
 
 
+class NullEntity(object):
+    __slots__ = []
+
+
 class Step(object):
     """
     A step that can be calculated from resources and other steps. Primarily concerned with execution of the step. Not
     concerned with attributes etc... When implementing a step, please import:
-    >>> from sofia.step import EndOfStream
+    >>> from sofia.step import Step, EndOfStream, NullEntity
     """
     
     IN = []
