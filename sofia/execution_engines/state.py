@@ -1,4 +1,7 @@
 class State(object):
+
+    __slots__ = ('is_done', 'step', 'inputs', 'outputs', 'index')
+
     def __init__(self, step, inputs, outputs, index):
         self.is_done = False
 
@@ -18,3 +21,9 @@ class State(object):
 
     def get_user_warnings(self):
         return self.step.get_user_warnings()
+
+    def __getstate__(self):
+        return self.is_done, self.step, self.inputs, self.outputs, self.index
+
+    def __setstate__(self, state):
+        self.is_done, self.step, self.inputs, self.outputs, self.index = state
