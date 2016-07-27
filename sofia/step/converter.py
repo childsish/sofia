@@ -1,22 +1,23 @@
 from collections import Counter
-from step import Step
+from step import Step, EndOfStream
 
 
 class Converter(Step):
-    def __init__(self, map_file, fr, to, path=None, **kwargs):
-        self.input_stream = kwargs.values()[0].consume()
+    def __init__(self, map_file, fr, to, path=None):
         self.map = self.load_map_file(map_file, fr, to)
         self.path = [] if path is None else path
         self.ttl = 0
         self.cnt = Counter()
 
-    def run(self, **kwargs):
-        output_stream = kwargs.values()[0]
-        while len(self.input_stream) > 0:
-            entity = self.input_stream.pop()
-            if entity is None:
-                output_stream.push(None)
-                continue
+    def run(self, ins, outs):
+        input_stream = ins.itervalues().next()
+        output_stream = outs.itervalues().next()
+
+        while len(input_stream) > 0:
+            entity = input_stream.pop()
+            if entity is EndOfStream:
+                output_stream.push(EndOfStream)
+                return True
 
             self.ttl += 1
             try:
@@ -24,7 +25,9 @@ class Converter(Step):
             except KeyError, e:
                 self.cnt[e.message] += 1
                 entity = None
-            output_stream.push(entity)
+            if not output_stream.push(entity):
+                break
+        return len(input_stream) == 0
 
     def _convert(self, entity, path, id_map):
         if len(path) == 0:
