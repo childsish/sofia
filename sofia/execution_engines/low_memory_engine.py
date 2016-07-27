@@ -1,7 +1,6 @@
 import sys
 
 from sofia.workflow_template import Template
-from buffer import Buffer
 
 
 class LowMemoryExecutionEngine(object):
