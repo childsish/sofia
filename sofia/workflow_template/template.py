@@ -36,12 +36,12 @@ class Template(NPartiteGraph):
         res = ['digraph {} {{'.format(self.name)]
         for entity in sorted(self.partitions[self.ENTITY_PARTITION]):
             res.append('    "{}" [shape=box];'.format(entity))
-        for e, v in sorted(self.graph.es.iteritems()):
-            if v.fr in self.steps and self.steps[v.fr].step_class in {Extractor, Converter}:
+        for fr, to in sorted(self.graph.es):
+            if fr in self.steps and self.steps[fr].step_class in {Extractor, Converter}:
                 continue
-            elif v.to in self.steps and self.steps[v.to].step_class in {Extractor, Converter}:
+            elif to in self.steps and self.steps[to].step_class in {Extractor, Converter}:
                 continue
-            res.append('    "{}" -> "{}";'.format(v.fr, v.to))
+            res.append('    "{}" -> "{}";'.format(fr, to))
         for entity in self.entities.entities.itervalues():
             if 'is_a' in entity:
                 res.append('    "{}" -> "{}" [color=red,type=dotted,label="is_a"]'.format(entity['name'], entity['is_a']))
