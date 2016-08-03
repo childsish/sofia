@@ -55,8 +55,7 @@
   },
   {
     "name": "genetic_code",
-    "description": "The genetic code for a given organism",
-    "provided": ["gc.prt genetic_code"]
+    "description": "The genetic code for a given organism"
   },
   {
     "name": "genomic_feature",
@@ -96,8 +95,7 @@
   },
   {
     "name": "molecular_weight_set",
-    "description": "A set of molecular weights used to calculate various other features",
-    "provided": ["Emolwt.dat molecular_weights"]
+    "description": "A set of molecular weights used to calculate various other features"
   },
   {
     "name": "pest_sequences",
@@ -188,12 +186,14 @@
   {
     "name": "molecular_weight_file",
     "description": "Molecular weights for amino acids",
-    "extensions": [".dat"]
+    "extensions": [".dat"],
+    "provided": ["Emolwt.dat molecular_weights"]
   },
   {
     "name": "prt_file",
     "description": "A set of genetic codes",
-    "extensions": [".prt"]
+    "extensions": [".prt"],
+    "provided": ["gc.prt genetic_code"]
   },
   {
     "name": "vcf_file",
