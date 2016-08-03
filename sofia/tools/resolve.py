@@ -19,6 +19,7 @@ def resolve(template, requested_entities, provided_entities=None, maps=None):
     provided_entities = [] if provided_entities is None else provided_entities
     for entity in provided_entities:
         template.provide_entity(entity)
+    template.provide_entity(EntityType('file_worker', attributes={'resource': {'process'}}))
     maps = {} if maps is None else maps
 
     if any(not entity.name.endswith('_file') for entity in requested_entities):

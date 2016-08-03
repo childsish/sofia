@@ -8,8 +8,6 @@ def worker(id_, conn):
     Valid messages
     --------------
     run, { 'step': <step_name>, 'input': <input_data> }
-    finalise, { 'step': <step_name> }
-    next, { 'step': <step_name> }
     stop, None
     """
     while True:
