@@ -12,11 +12,6 @@
     "description": "The distance to the closest interval start or stop position"
   },
   {
-    "name": "chromosome_sequence_set",
-    "attributes": ["chromosome_id"],
-    "description": "A set of chromosome sequences. The attributes of the chromosome_id can be set. eg. FASTA"
-  },
-  {
     "name": "chromosome_id",
     "attributes": ["chromosome_id"],
     "description": "A chromosome identifier. Just the name of the chromosome, but different groups tend to use different names. eg. \"Chr1\" vs. \"1\"."
@@ -73,21 +68,11 @@
     "description": "A model of transcribed DNA. This includes all alternative transcripts."
   },
   {
-    "name": "genomic_feature_set",
-    "attributes": ["chromosome_id", "gene_id"],
-    "description": "A set of genomic_features. The attributes of the chromosome_id and gene_id can be set. eg. GTF"
-  },
-  {
     "name": "genomic_interval",
     "has_a": [
       { "name": "chromosome_id", "key": "chr", "type": "attr" }
     ],
     "description": "An interval on a chromosome."
-  },
-  {
-    "name": "genomic_interval_set",
-    "attributes": ["chromosome_id"],
-    "description": "A set of genomic_intervals. The attributes of the chromosome_id can be set. eg. BED"
   },
   {
     "name": "genomic_position",
@@ -171,11 +156,6 @@
     "description": "The effect of the variant eg. non-synonymous, intronic etc..."
   },
   {
-    "name": "variant_set",
-    "attributes": ["chromosome_id"],
-    "description": "A set of sequence variants. The attributes of the chromosome_id can be set. eg. VCF"
-  },
-    {
     "name": "bed_file",
     "description": "A set of genomic features",
     "extensions": [".bed", ".bed.gz"]
