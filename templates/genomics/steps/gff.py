@@ -42,5 +42,5 @@ class IterateGff(Step):
     @classmethod
     def resolve_out_sync(cls, ins):
         return {
-            'genomic_feature': ins['fasta_file']
+            'genomic_feature': ins['gff_file']
         }
