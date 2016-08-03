@@ -1,5 +1,3 @@
-import gzip
-
 from lhc.filetools import SharedFile
 from lhc.io.vcf.iterator import Variant
 from lhc.io.maf import MafIterator
@@ -8,7 +6,7 @@ from sofia.step import Step, EndOfStream
 
 class IterateMaf(Step):
 
-    IN = ['maf_file']
+    IN = ['maf_file', 'file_worker']
     OUT = ['maf']
 
     def __init__(self):
@@ -18,8 +16,7 @@ class IterateMaf(Step):
         while len(ins) > 0:
             if self.iterator is None:
                 maf_file = ins.maf_file.pop()
-                fileobj = gzip.open(maf_file) if maf_file.endswith('.gz') else SharedFile(maf_file)
-                self.iterator = MafIterator(fileobj)
+                self.iterator = MafIterator(SharedFile(maf_file, ins.file_worker.peek()))
 
             for item in self.iterator:
                 if not outs.maf.push(item):
@@ -30,13 +27,20 @@ class IterateMaf(Step):
     @classmethod
     def get_out_resolvers(cls):
         return {
-            'filename': cls.resolve_out_filename
+            'filename': cls.resolve_out_filename,
+            'sync': cls.resolve_out_sync
         }
 
     @classmethod
     def resolve_out_filename(cls, ins):
         return {
             'maf': set()
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        return {
+            'maf': ins['maf_file']
         }
 
 
