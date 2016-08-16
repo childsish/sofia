@@ -10,14 +10,17 @@ def worker(id_, conn):
     run, { 'step': <step_name>, 'input': <input_data> }
     stop, None
     """
-    while True:
-        message, step, state = conn.recv()
-        sys.stderr.write(' worker {} recieved "{}" for {}\n'.format(id_, message, step))
+    try:
+        while True:
+            message, step, state = conn.recv()
+            sys.stderr.write(' worker {} recieved "{}" for {}\n'.format(id_, message, step))
 
-        if message == 'run':
-            state.run()
-            conn.send((step, state))
-        elif message == 'stop':
-            break
-        else:
-            raise ValueError('unknown message to worker: {}'.format(message))
+            if message == 'run':
+                state.run()
+                conn.send(('data', (step, state)))
+            elif message == 'stop':
+                break
+            else:
+                raise ValueError('unknown message to worker: {}'.format(message))
+    except Exception, e:
+        conn.send(('error', e))

@@ -1,7 +1,7 @@
 import sys
 from multiprocessing import Process, Pipe
 
-from lhc.filetools import SharedConnection, file_worker
+from lhc.filetools import SharedFilePool
 from sofia.execution_engines.state_manager import StateManager
 from sofia.step import EndOfStream
 from sofia.workflow_template import Template
@@ -15,20 +15,19 @@ class ParallelExecutionEngine(object):
 
     def execute(self, workflow):
         steps = workflow.partitions[Template.STEP_PARTITION]
-        file_process, file_worker_connection = self.get_file_worker()
+        filepool = SharedFilePool()
         state_manager = StateManager(steps, workflow, self.max_entities)
         processes, conn = self.start_processes()
 
         try:
-            self.initialise_streams(workflow, state_manager, conn, file_worker_connection)
+            self.initialise_streams(workflow, state_manager, conn, filepool)
             self.loop(steps, conn, state_manager)
-            file_worker_connection.send(('stop', None))
-            file_process.join()
+            filepool.join()
             for process in processes:
                 conn.send(('stop', None, None))
                 process.join()
         except Exception:
-            file_process.terminate()
+            filepool.terminate()
             for process in processes:
                 process.terminate()
             raise
@@ -36,23 +35,21 @@ class ParallelExecutionEngine(object):
     def loop(self, steps, conn, state_manager):
         finalised = set()
         while not finalised.issuperset(steps):
-            step, state = conn.recv()
-            sys.stderr.write('master recieved data for {}\n'.format(step))
+            message, data = conn.recv()
 
-            if state.has_ended():
-                finalised.add(step)
-            state_manager.drain_output(step, state)
-            for consumer in state_manager.get_consumers(step):
-                if state_manager.can_run(consumer):
-                    conn.send(('run', consumer, state_manager.get_state(consumer)))
-            if state.can_run():
-                conn.send(('run', step, state))
-
-    def get_file_worker(self):
-        to_worker, from_worker = Pipe()
-        file_process = Process(target=file_worker, args=(from_worker,))
-        file_process.start()
-        return file_process, SharedConnection(to_worker)
+            if message == 'data':
+                step, state = data
+                sys.stderr.write('master recieved data for {}\n'.format(step))
+                if state.has_ended():
+                    finalised.add(step)
+                state_manager.drain_output(step, state)
+                for consumer in state_manager.get_consumers(step):
+                    if state_manager.can_run(consumer):
+                        conn.send(('run', consumer, state_manager.get_state(consumer)))
+                if state.can_run():
+                    conn.send(('run', step, state))
+            elif message == 'error':
+                raise data
 
     def start_processes(self):
         processes = []
