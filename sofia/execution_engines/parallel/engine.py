@@ -8,6 +8,12 @@ from sofia.workflow_template import Template
 from worker import worker
 
 
+class WorkerError(Exception):
+    def __init__(self, value, tb):
+        super(WorkerError, self).__init__(value)
+        self.tb = tb
+
+
 class ParallelExecutionEngine(object):
     def __init__(self, max_entities=100, max_cpus=4):
         self.max_entities = max_entities
@@ -26,11 +32,11 @@ class ParallelExecutionEngine(object):
             for process in processes:
                 conn.send(('stop', None, None))
                 process.join()
-        except Exception:
+        except WorkerError, e:
+            sys.stderr.write(''.join(e.tb))
             filepool.terminate()
             for process in processes:
                 process.terminate()
-            raise
 
     def loop(self, steps, conn, state_manager):
         finalised = set()
@@ -45,11 +51,15 @@ class ParallelExecutionEngine(object):
                 state_manager.drain_output(step, state)
                 for consumer in state_manager.get_consumers(step):
                     if state_manager.can_run(consumer):
-                        conn.send(('run', consumer, state_manager.get_state(consumer)))
+                        consumer_state = state_manager.get_state(consumer)
+                        conn.send(('run', consumer, consumer_state))
+                        print 'sent run to {}'.format(consumer)
                 if state.can_run():
                     conn.send(('run', step, state))
+                    print 'sent run to {}'.format(step)
             elif message == 'error':
-                raise data
+                type_, value, tb = data
+                raise WorkerError(value, tb)
 
     def start_processes(self):
         processes = []
@@ -60,11 +70,11 @@ class ParallelExecutionEngine(object):
             processes.append(process)
         return processes, to_worker
 
-    def initialise_streams(self, workflow, state_manager, conn, file_worker_connection):
+    def initialise_streams(self, workflow, state_manager, conn, filepool):
         for entity_type in workflow.provided_entities:
             if entity_type not in workflow.graph:
                 continue
-            entity = [file_worker_connection] if entity_type.name == 'file_worker' else\
+            entity = [filepool.get_file_manager()] if entity_type.name == 'filepool' else\
                 list(entity_type.attributes['filename']) if entity_type.name.endswith('_file') else\
                 None
             if entity is None:

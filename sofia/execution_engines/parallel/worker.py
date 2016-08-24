@@ -22,5 +22,7 @@ def worker(id_, conn):
                 break
             else:
                 raise ValueError('unknown message to worker: {}'.format(message))
-    except Exception, e:
-        conn.send(('error', e))
+    except Exception:
+        import traceback
+        type_, value, tb = sys.exc_info()
+        conn.send(('error', (type_, value, traceback.format_exception(type_, value, tb))))
