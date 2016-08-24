@@ -1,11 +1,10 @@
-from lhc.filetools import SharedFile
-from lhc.io.gbk import GbkIterator as Iterator
+from lhc.io.gbk import GbkIterator
 from sofia.step import Step, EndOfStream
 
 
 class IterateGbk(Step):
 
-    IN = ['gbk_file', 'file_worker']
+    IN = ['gbk_file', 'filepool']
     OUT = ['genomic_interval']
 
     def __init__(self):
@@ -18,7 +17,8 @@ class IterateGbk(Step):
                 if gbk_file is EndOfStream:
                     outs.genomic_interval.push(EndOfStream)
                     return True
-                self.iterator = Iterator(SharedFile(gbk_file, ins.file_worker.peek()))
+                filepool = ins.filepool.peek()
+                self.iterator = GbkIterator(filepool.open(gbk_file))
 
             for genomic_interval in self.iterator:
                 if not outs.genomic_interval.push(genomic_interval):

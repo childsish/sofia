@@ -1,11 +1,10 @@
-from lhc.filetools import SharedFile
 from lhc.io.bed import BedEntryIterator
 from sofia.step import Step, EndOfStream
 
 
 class IterateBed(Step):
 
-    IN = ['bed_file', 'file_worker']
+    IN = ['bed_file', 'filepool']
     OUT = ['genomic_interval']
 
     def __init__(self):
@@ -18,7 +17,8 @@ class IterateBed(Step):
                 if bed_file is EndOfStream:
                     outs.variant.push(EndOfStream)
                     return True
-                self.iterator = BedEntryIterator(SharedFile(bed_file, ins.file_worker.peek()))
+                filepool = ins.filepool.peek()
+                self.iterator = BedEntryIterator(filepool.open(bed_file))
 
             for item in self.iterator:
                 if not outs.genomic_interval.push(item):

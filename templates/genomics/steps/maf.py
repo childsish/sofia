@@ -1,4 +1,3 @@
-from lhc.filetools import SharedFile
 from lhc.io.vcf.iterator import Variant
 from lhc.io.maf import MafIterator
 from sofia.step import Step, EndOfStream
@@ -6,7 +5,7 @@ from sofia.step import Step, EndOfStream
 
 class IterateMaf(Step):
 
-    IN = ['maf_file', 'file_worker']
+    IN = ['maf_file', 'filepool']
     OUT = ['maf']
 
     def __init__(self):
@@ -16,7 +15,11 @@ class IterateMaf(Step):
         while len(ins) > 0:
             if self.iterator is None:
                 maf_file = ins.maf_file.pop()
-                self.iterator = MafIterator(SharedFile(maf_file, ins.file_worker.peek()))
+                if maf_file is EndOfStream:
+                    outs.maf.push(EndOfStream)
+                    return True
+                filepool = ins.filepool.peek()
+                self.iterator = MafIterator(filepool.open(maf_file))
 
             for item in self.iterator:
                 if not outs.maf.push(item):

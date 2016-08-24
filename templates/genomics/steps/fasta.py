@@ -1,11 +1,10 @@
-from lhc.filetools import SharedFile
 from lhc.io.fasta import FastaIterator
 from sofia.step import Step, EndOfStream
 
 
 class IterateFasta(Step):
 
-    IN = ['fasta_file', 'file_worker']
+    IN = ['fasta_file', 'filepool']
     OUT = ['chromosome_sequence_segment']
     
     def __init__(self):
@@ -18,7 +17,8 @@ class IterateFasta(Step):
                 if fasta_file is EndOfStream:
                     outs.chromosome_sequence_segment.push(EndOfStream)
                     return True
-                self.iterator = FastaIterator(SharedFile(fasta_file, ins.file_worker.peek()))
+                filepool = ins.filepool.peek()
+                self.iterator = FastaIterator(filepool.open(fasta_file))
 
             for chromosome_sequence_segment in self.iterator:
                 if not outs.chromosome_sequence_segment.push(chromosome_sequence_segment):

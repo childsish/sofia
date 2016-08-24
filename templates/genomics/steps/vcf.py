@@ -1,11 +1,10 @@
-from lhc.filetools import SharedFile
 from lhc.io.vcf import VcfEntryIterator
 from sofia.step import Step, EndOfStream
 
 
 class IterateVcf(Step):
 
-    IN = ['vcf_file', 'file_worker']
+    IN = ['vcf_file', 'filepool']
     OUT = ['variant']
 
     def __init__(self):
@@ -18,7 +17,8 @@ class IterateVcf(Step):
                 if vcf_file is EndOfStream:
                     outs.variant.push(EndOfStream)
                     return True
-                self.iterator = VcfEntryIterator(SharedFile(vcf_file, ins.file_worker.peek()))
+                filepool = ins.filepool.peek()
+                self.iterator = VcfEntryIterator(filepool.open(vcf_file))
 
             for item in self.iterator:
                 if not outs.variant.push(item):
