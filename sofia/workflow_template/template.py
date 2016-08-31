@@ -1,4 +1,4 @@
-from entity_set import EntitySet
+from .entity_set import EntitySet
 from lhc.graph import NPartiteGraph
 from sofia.step import Extractor, Converter
 from sofia.workflow_template.entity_definition_parser import EntityDefinitionParser
@@ -42,7 +42,7 @@ class Template(NPartiteGraph):
             elif to in self.steps and self.steps[to].step_class in {Extractor, Converter}:
                 continue
             res.append('    "{}" -> "{}";'.format(fr, to))
-        for entity in self.entities.entities.itervalues():
+        for entity in self.entities.entities.values():
             if 'is_a' in entity:
                 res.append('    "{}" -> "{}" [color=red,type=dotted,label="is_a"]'.format(entity['name'], entity['is_a']))
             if 'has_a' in entity:
@@ -53,12 +53,12 @@ class Template(NPartiteGraph):
 
     def register_entities(self, entities):
         provided = {}
-        for entity in entities.entities.itervalues():
+        for entity in entities.entities.values():
             self.add_vertex(entity['name'], self.ENTITY_PARTITION)
         return provided
 
     def register_steps(self, steps):
-        for step in steps.itervalues():
+        for step in steps.values():
             self.add_vertex(step.name, self.STEP_PARTITION)
 
             for in_ in step.ins:

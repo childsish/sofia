@@ -1,5 +1,4 @@
 from collections import namedtuple
-from itertools import izip
 from lhc.binf.sequence import revcmp
 from sofia.step import Step, EndOfStream
 
@@ -130,7 +129,7 @@ class GetVariantEffect(Step):
             elif coding_variant_ is None:
                 yield ['intron_variant']
             res = []
-            for na_alt, aa_alt, fs in izip(variant_.alt.split(','), amino_acid_variant_.alt, amino_acid_variant_.fs):
+            for na_alt, aa_alt, fs in zip(variant_.alt.split(','), amino_acid_variant_.alt, amino_acid_variant_.fs):
                 if fs is None:
                     res.append(self._get_amino_acid_type(amino_acid_variant_.pos, amino_acid_variant_.ref, aa_alt))
                 elif len(na_alt) > len(variant_.ref):
@@ -263,7 +262,7 @@ class AminoAcidVariant(namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'
         res = []
         pos = self.pos
         ref = self.ref
-        for alt, fs in izip(self.alt, self.fs):
+        for alt, fs in zip(self.alt, self.fs):
             if len(self.ref) > len(alt):
                 d = len(self.ref) - len(alt)
                 rng = str(pos + len(ref) - 1,) if d == 1 else '{}_{}'.format(pos + len(ref) - d, pos + len(ref) - 1)

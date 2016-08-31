@@ -1,6 +1,5 @@
 from collections import defaultdict
 from functools import reduce
-from itertools import izip
 from operator import add, mul
 
 from lhc.binf.kmer import KmerCounter
@@ -79,7 +78,7 @@ class GetRelativeSynonymousCodonUsage(Step):
                 else:
                     rscus = [usg / ttl_usg for usg in usgs]
                     ws = [usg / float(max(usgs)) for usg in usgs]
-                for cdn, rscu_, w_ in izip(cdns, rscus, ws):
+                for cdn, rscu_, w_ in zip(cdns, rscus, ws):
                     rscu[cdn] = rscu_
                     w[cdn] = w_
             yield rscu, w

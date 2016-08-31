@@ -3,16 +3,16 @@ class StreamSet(object):
         self.__dict__ = dict(zip(entities, streams))
 
     def __len__(self):
-        return len(self.itervalues().next())
+        return len(next(iter(self.values())))
 
-    def iterkeys(self):
-        return self.__dict__.iterkeys()
+    def keys(self):
+        return self.__dict__.keys()
 
-    def itervalues(self):
-        return self.__dict__.itervalues()
+    def values(self):
+        return self.__dict__.values()
 
-    def iteritems(self):
-        return self.__dict__.iteritems()
+    def items(self):
+        return self.__dict__.items()
 
     def pop(self):
-        return [in_.pop() for in_ in self.itervalues()]
+        return [in_.pop() for in_ in self.values()]

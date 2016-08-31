@@ -1,7 +1,7 @@
 import sys
 
 from collections import defaultdict
-from itertools import repeat, izip
+from itertools import repeat
 from sofia.workflow_template import Template
 
 
@@ -66,4 +66,4 @@ class SimpleExecutionEngine(object):
             for i in xrange(len(entities)):
                 if lengths[i] == 1:
                     entities[i] = repeat(entities[i][0], n)
-        return izip(*entities)
+        return zip(*entities)

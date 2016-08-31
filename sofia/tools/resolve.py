@@ -1,10 +1,8 @@
-from __future__ import with_statement
-
 import argparse
-import cPickle
+import pickle
 import sys
 
-from build import build, get_input
+from .build import build, get_input
 from collections import defaultdict
 from sofia.workflow import ResolvedWorkflow, EntityNode, StepNode
 from sofia.error_manager import ERROR_MANAGER
@@ -61,7 +59,7 @@ def resolve_requested_entity(template, entity, maps=None):
     if len(possible_graphs) == 0:
         sys.stderr.write('unable to resolve entity.\n\n')
         sys.stderr.write('     Possible reasons:\n')
-        for error, names in sorted(ERROR_MANAGER.errors.iteritems()):
+        for error, names in sorted(ERROR_MANAGER.errors.items()):
             sys.stderr.write('     * {}\n'.format(error))
             if len(names - {''}) > 0:
                 sys.stderr.write('       ')
@@ -77,13 +75,13 @@ def resolve_requested_entity(template, entity, maps=None):
         resources = frozenset([r for r in graph.head.attributes['resource'] if not r == 'target'])
         extra_resources = resources - entity.attributes['resource']
         matching_graphs[len(extra_resources)].append((graph, extra_resources))
-    count, matching_graphs = sorted(matching_graphs.iteritems())[0]
+    count, matching_graphs = sorted(matching_graphs.items())[0]
     unique = True
     if len(matching_graphs) > 1:
         match_size = defaultdict(list)
         for graph, extra_resources in matching_graphs:
             match_size[len(graph)].append((graph, extra_resources))
-        matching_graphs = sorted(match_size.iteritems())[0][1]
+        matching_graphs = sorted(match_size.items())[0][1]
         if len(matching_graphs) > 1:
             unique = False
     if not unique:
@@ -168,7 +166,7 @@ def resolve_init(args):
         output = open(filename, mode)
     workflow = resolve(template, requested_entities, provided_entities, maps)
     if args.pickled:
-        cPickle.dump(workflow, output, protocol=cPickle.HIGHEST_PROTOCOL)
+        pickle.dump(workflow, output, protocol=pickle.HIGHEST_PROTOCOL)
     else:
         output.write(str(workflow))
     output.close()

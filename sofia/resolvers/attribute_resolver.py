@@ -1,4 +1,5 @@
 from operator import or_
+from functools import reduce
 
 
 class AttributeResolver(object):
@@ -15,7 +16,7 @@ class AttributeResolver(object):
         return ins
 
     def resolve_out(self, ins):
-        values = reduce(or_, ins.itervalues())
+        values = reduce(or_, ins.values())
         return {
             entity: values for entity in self.step.outs
         }

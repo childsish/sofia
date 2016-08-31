@@ -1,10 +1,8 @@
-from __future__ import with_statement
-
 import argparse
 import sys
 
-from build import build, get_input
-from resolve import resolve
+from .build import build, get_input
+from .resolve import resolve
 from sofia.execution_engines import ParallelExecutionEngine, LowMemoryExecutionEngine
 
 
@@ -76,7 +74,7 @@ def execute_init(args):
             entity.attributes['resource'].add(args.target)
 
     workflow = resolve(template, requested_entities, provided_entities, maps)
-    output = sys.stdout if args.output is None else open(args.outpu, 'w')
+    output = sys.stdout if args.output is None else open(args.output, 'w')
     execute(workflow)
     output.close()
 

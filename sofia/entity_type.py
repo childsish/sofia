@@ -11,22 +11,25 @@ class EntityType(object):
 
     def __str__(self):
         res = [self.name if self.name == self.alias else '{} ({})'.format(self.alias, self.name)]
-        res.extend('{}={}'.format(k, str(v) if isinstance(v, basestring) else ','.join(v)) for k, v in sorted(self.attributes.iteritems()))
+        res.extend('{}={}'.format(k, str(v) if isinstance(v, str) else ','.join(v)) for k, v in sorted(self.attributes.items()))
         return '\\n'.join(res)
 
     def __hash__(self):
-        attributes = tuple((key, frozenset(values)) for key, values in self.attributes.iteritems())
+        attributes = tuple((key, frozenset(values)) for key, values in self.attributes.items())
         return hash(self.name) + hash(attributes)
 
     def __eq__(self, other):
         return self.name == other.name and self.attributes == other.attributes
+
+    def __lt__(self, other):
+        return self.name <= other.name
 
     def format(self, entity):
         try:
             if isinstance(entity, (set, list)):
                 return ','.join(self.format_string.format(e) for e in entity)
             return '' if entity is None else self.format_string.format(entity)
-        except Exception, e:
+        except Exception as e:
             import sys
             sys.stderr.write('Error formatting entity {}.\n'.format(self.name))
             sys.stderr.write('Format string: {}.\n'.format(self.format_string))

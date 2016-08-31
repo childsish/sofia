@@ -1,4 +1,5 @@
 from copy import copy
+from functools import reduce
 from operator import or_
 from sofia.resolvers import AttributeResolver
 from sofia.step import Converter, ConcreteStep

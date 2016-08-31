@@ -5,7 +5,7 @@ from lhc.filetools import SharedFilePool
 from sofia.execution_engines.state_manager import StateManager
 from sofia.step import EndOfStream
 from sofia.workflow_template import Template
-from worker import worker
+from .worker import worker
 
 
 class WorkerError(Exception):
@@ -32,7 +32,7 @@ class ParallelExecutionEngine(object):
             for process in processes:
                 conn.send(('stop', None, None))
                 process.join()
-        except WorkerError, e:
+        except WorkerError as e:
             sys.stderr.write(''.join(e.tb))
             filepool.terminate()
             for process in processes:
@@ -52,11 +52,13 @@ class ParallelExecutionEngine(object):
                 for consumer in state_manager.get_consumers(step):
                     if state_manager.can_run(consumer):
                         consumer_state = state_manager.get_state(consumer)
+                        print('sending run to {}'.format(consumer))
                         conn.send(('run', consumer, consumer_state))
-                        print 'sent run to {}'.format(consumer)
+                        print('sent run to {}'.format(consumer))
                 if state.can_run():
+                    print('sending run to {}'.format(step))
                     conn.send(('run', step, state))
-                    print 'sent run to {}'.format(step)
+                    print('sent run to {}'.format(step))
             elif message == 'error':
                 type_, value, tb = data
                 raise WorkerError(value, tb)
@@ -64,7 +66,7 @@ class ParallelExecutionEngine(object):
     def start_processes(self):
         processes = []
         to_worker, from_worker = Pipe()
-        for i in xrange(self.max_cpus):
+        for i in range(self.max_cpus):
             process = Process(target=worker, args=(i, from_worker))
             process.start()
             processes.append(process)

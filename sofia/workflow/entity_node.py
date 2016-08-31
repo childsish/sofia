@@ -1,12 +1,15 @@
 from lhc.graph import NPartiteGraph
-from sofia.workflow_template import Template
 
 
 class EntityNode(NPartiteGraph):
+
+    ENTITY_PARTITION = 0
+    STEP_PARTITION = 1
+
     def __init__(self, entity):
         super(EntityNode, self).__init__(entity.alias)
         self.head = entity
-        self.add_vertex(entity, Template.ENTITY_PARTITION)
+        self.add_vertex(entity, self.ENTITY_PARTITION)
 
     def add_step_node(self, node):
         self.update(node)

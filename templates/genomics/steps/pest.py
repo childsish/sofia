@@ -1,5 +1,5 @@
 from collections import Counter
-from itertools import islice, izip
+from itertools import islice
 
 from sofia.step import Step, EndOfStream
 
@@ -39,7 +39,7 @@ class GetPest(Step):
         """ Algorithm copied from EMBOSS:
             https://github.com/pjotrp/EMBOSS/blob/master/emboss/epestfind.c:278
         """
-        ltkdhi = dict(izip('ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        ltkdhi = dict(zip('ABCDEFGHIJKLMNOPQRSTUVWXYZ',
                            [63, 10, 70, 10, 10, 72, 41, 13, 90, 0, 6, 82, 64, 10, 0, 29, 10,
                             0, 36, 38, 0, 87, 36, 45, 58, 10]))
         for fr, to in self.iter_candidates(seq):

@@ -62,6 +62,6 @@ class GetVariantIdByGenomicInterval(Step):
                 yield None
             try:
                 hits = variant_set.fetch(interval.chr, interval.start, interval.stop)
-            except ValueError, e:
+            except ValueError as e:
                 yield None
             yield ','.join(hit.id for hit in hits)

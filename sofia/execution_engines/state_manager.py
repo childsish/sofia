@@ -1,9 +1,10 @@
 from collections import defaultdict
+from functools import reduce
 from operator import or_
-from input_stream import InputStream
-from output_stream import OutputStream
-from state import State
-from stream_set import StreamSet
+from .input_stream import InputStream
+from .output_stream import OutputStream
+from .state import State
+from .stream_set import StreamSet
 
 
 class StateManager(object):
@@ -35,7 +36,7 @@ class StateManager(object):
 
         try:
             step_class = step.init()
-        except Exception, e:
+        except Exception as e:
             import sys
             sys.stderr.write(e.message + '\n')
             raise TypeError('failed to create {}'.format(step))
@@ -61,7 +62,7 @@ class StateManager(object):
         return [OutputStream(self.threshold, self.get_consumers(step)) for out in step.outs]
 
     def drain_output(self, step, state):
-        for out, producer_stream in zip(step.outs, state.outputs.itervalues()):
+        for out, producer_stream in zip(step.outs, state.outputs.values()):
             for consumer in self.workflow.get_parents(out):
                 consumer_stream = self.input_streams[consumer][out]
                 consumer_stream.write(producer_stream.output, state.index, state.is_done)

@@ -22,7 +22,7 @@ class Converter(Step):
             self.ttl += 1
             try:
                 entity = self._convert(entity, self.path, self.map)
-            except KeyError, e:
+            except KeyError as e:
                 self.cnt[e.message] += 1
                 entity = None
             if not output_stream.push(entity):

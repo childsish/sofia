@@ -14,10 +14,10 @@ class State(object):
         self.is_done = self.step.run(self.inputs, self.outputs)
 
     def can_run(self):
-        return not self.has_ended() and (not self.is_done or all(in_.is_readable() for in_ in self.inputs.itervalues()))
+        return not self.has_ended() and (not self.is_done or all(in_.is_readable() for in_ in self.inputs.values()))
 
     def has_ended(self):
-        return all(out.has_ended for out in self.outputs.itervalues())
+        return all(out.has_ended for out in self.outputs.values())
 
     def get_user_warnings(self):
         return self.step.get_user_warnings()

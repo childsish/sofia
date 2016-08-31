@@ -17,7 +17,9 @@ def worker(id_, conn):
 
             if message == 'run':
                 state.run()
+                print('sending {} data to master'.format(step))
                 conn.send(('data', (step, state)))
+                print('sent {} data to master'.format(step))
             elif message == 'stop':
                 break
             else:

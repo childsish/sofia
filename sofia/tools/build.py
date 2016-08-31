@@ -1,5 +1,5 @@
 import argparse
-import cPickle
+import pickle
 import os
 import sys
 
@@ -58,7 +58,7 @@ def build_init(args):
         test(template)
     else:
         if args.pickled:
-            cPickle.dump(template, output, protocol=cPickle.HIGHEST_PROTOCOL)
+            pickle.dump(template, output, protocol=pickle.HIGHEST_PROTOCOL)
         else:
             output.write(str(template))
     output.close()

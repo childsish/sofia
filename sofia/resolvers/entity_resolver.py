@@ -26,7 +26,7 @@ class EntityResolver(object):
         if len(step_names) == 0 and not is_provided:
             ERROR_MANAGER.add_error('No steps produce {}'.format(self.entity_type))
 
-        from step_resolver import StepResolver
+        from .step_resolver import StepResolver
         for step_name in step_names:
             if step_name in self.visited:
                 continue

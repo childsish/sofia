@@ -8,7 +8,7 @@ class EntitySet(object):
         self.entities = {}
 
     def __iter__(self):
-        return self.entities.itervalues()
+        return iter(self.entities.values())
 
     def __contains__(self, item):
         return item in self.entities
