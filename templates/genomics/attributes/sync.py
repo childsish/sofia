@@ -1,4 +1,3 @@
-from operator import or_
 from sofia.resolvers import AttributeResolver
 
 
@@ -8,7 +7,7 @@ class ChromosomeIdResolver(AttributeResolver):
 
     def resolve_out(self, ins):
         values = set()
-        for value in ins.values:
+        for value in ins.values():
             values.update(value)
         if len(values) > 1:
             raise ValueError('Unable to resolve sync stream')

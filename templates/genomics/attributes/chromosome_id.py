@@ -1,5 +1,4 @@
 from copy import copy
-from operator import or_
 from sofia.resolvers import AttributeResolver
 from sofia.step import Converter, ConcreteStep
 from sofia.workflow import StepNode, EntityNode

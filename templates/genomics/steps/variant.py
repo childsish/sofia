@@ -77,7 +77,7 @@ class GetVariantAlleleFrequency(Step):
             if variant_ is None:
                 yield None
             no_run = 'AF' in variant_.info or\
-                (hasattr(variant_, 'samples') and\
+                (hasattr(variant_, 'samples') and
                     any('AF' in sample for sample in variant_.samples))
             if hasattr(variant_, 'samples'):
                 res = {}
