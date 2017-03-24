@@ -181,8 +181,8 @@ class GetCodingVariant(Step):
             if transcript is None:
                 yield None
                 continue
-            ref = variant_.ref
-            pos = variant_.pos
+            ref = variant_.data['ref']
+            pos = variant_.position
             try:
                 coding_position = transcript.get_rel_pos(pos, types={'CDS'})\
                     if transcript.strand == '+'\
@@ -193,10 +193,10 @@ class GetCodingVariant(Step):
             except ValueError:
                 yield None
                 continue
-            alt = variant_.alt.split(',')
+            alt = variant_.data['alt'].split(',')
             if transcript.strand == '-':
                 ref = reverse_complement(ref)
-                alt = map(reverse_complement(), alt)
+                alt = map(reverse_complement, alt)
             yield CodingVariant(coding_position, ref, alt)
 
 

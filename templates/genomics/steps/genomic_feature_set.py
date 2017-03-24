@@ -1,5 +1,6 @@
 from collections import Counter
 
+from lhc.binf.genomic_coordinate.genomic_interval import Interval
 from sofia.step import Step
 
 
@@ -22,25 +23,20 @@ class GetGenomicFeatureByPosition(Step):
 
     def run(self, genomic_feature_set, genomic_position):
         for position in genomic_position:
-            if position is None:
-                yield None
-                continue
-            #TODO: select correct gene (currently selecting largest)
-            self.ttl += 1
             res = None
-            try:
-                features = genomic_feature_set.fetch(
-                    position.chr,
-                    position.pos,
-                    position.pos + 1)
-                if features is not None and len(features) > 0:
-                    res = sorted(features, key=len)[-1]
-                    res.name = res.name.rsplit('.')[0]
-            except Exception as e:
-                if e.message.startswith('could not create iterator for region'):
-                    self.cnt['could not create iterator for region ...'] += 1
-                else:
-                    self.cnt[e.message] += 1
+            if position is not None:
+                self.ttl += 1
+                try:
+                    features = genomic_feature_set[Interval(position, position + 1)]
+                    if features is not None and len(features) > 0:
+                        # TODO: select correct gene (currently selecting largest)
+                        res = sorted(features, key=len)[-1]
+                        res.name = res.data['name'].rsplit('.', 1)[0]
+                except Exception as e:
+                    if str(e).startswith('could not create iterator for region'):
+                        self.cnt['could not create iterator for region ...'] += 1
+                    else:
+                        self.cnt[str(e)] += 1
             yield res
 
     @classmethod
