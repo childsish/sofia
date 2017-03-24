@@ -21,6 +21,9 @@ class EntityType(object):
     def __eq__(self, other):
         return self.name == other.name and self.attributes == other.attributes
 
+    def __lt__(self, other):
+        return str(self) < str(other)
+
     def format(self, entity):
         try:
             if isinstance(entity, (set, list)):
