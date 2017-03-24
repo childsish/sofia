@@ -12,7 +12,7 @@ class ChromosomeIdResolver(AttributeResolver):
         ttl = 0
         for in_ in ins:
             in_ = in_.head.name
-            ttl += 'chromosome_id' in self.entity_graph.entities[in_]['attributes'] or 'chromosome_id' in self.entity_graph.has_a.get_descendants(in_)
+            ttl += self.ATTRIBUTE in self.entity_graph.entities[in_]['attributes'] or self.ATTRIBUTE in self.entity_graph.has_a.get_descendants(in_)
         if ttl < 2:
             return ins
         in_attributes = [in_.head.attributes[self.attribute] for in_ in ins]
@@ -41,14 +41,14 @@ class ChromosomeIdResolver(AttributeResolver):
 
             name = 'Convert{}s{}To{}'.format(capitalise_name(in_entity_type.name), fr.capitalize(), to.capitalize())
             params = {
-                 'map_file': self.id_maps['chromosome_id'],
+                 'map_file': self.id_maps[self.ATTRIBUTE],
                  'fr': fr,
                  'to': to,
                  'path': path
              }
             convert_step = ConcreteStep(Converter, name, [in_entity_type.name], [in_entity_type.name], params)
             out_attributes = copy(in_.head.attributes)
-            out_attributes['chromosome_id'] = {to}
+            out_attributes[self.ATTRIBUTE] = {to}
             step_node = StepNode(convert_step, {in_entity_type.name: out_attributes})
             step_node.add_entity_node(in_)
 
@@ -58,20 +58,30 @@ class ChromosomeIdResolver(AttributeResolver):
         return res
 
     def get_to(self, ins):
-        tos = set()
+        """
+        Resolve the output attribute value for 'chromosome_id'. Valid values are immutable, ie. the attribute key is not
+        an actual entity. Mutable values will be changed to match the immutable value if unique. Otherwise an error is
+        thrown.
+
+        :param ins: iterable of input workflows
+        :return: output attribute value
+        """
+        input_entities = set()
+        attribute_values = set()
         for in_ in ins:
-            if 'chromosome_id' not in self.entity_graph.has_a.get_descendants(in_.head.name):
-                tos.update(in_.head.attributes)
-        if len(tos) == 0:
-            tos = ins[0].head.attributes[self.attribute]
-        elif len(tos) > 1:
-            raise ValueError('can not convert entities: {}'.format(', '.join(tos)))
-        return list(tos)[0]
+            if self.ATTRIBUTE not in self.entity_graph.has_a.get_descendants(in_.head.name):
+                attribute_values.update(in_.head.attributes[self.ATTRIBUTE])
+                input_entities.add(in_.head.name)
+        if len(attribute_values) == 0:
+            attribute_values = ins[0].head.attributes[self.ATTRIBUTE]
+        elif len(attribute_values) > 1:
+            raise ValueError('Unable to resolve single output attribute value for chromosome_id ({}),'.format(', '.join(attribute_values)))
+        return list(attribute_values)[0]
 
     def get_path(self, entity):
         paths = self.entity_graph.get_descendent_paths(entity)
         for path in paths:
-            if 'chromosome_id' in {step['name'] for step in path}:
+            if self.ATTRIBUTE in {step['name'] for step in path}:
                 return path
         return None
 
