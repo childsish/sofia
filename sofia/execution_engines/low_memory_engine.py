@@ -19,22 +19,22 @@ class LowMemoryExecutionEngine(object):
         for entity in workflow.provided_entities:
             if entity not in workflow.graph:
                 continue
-            exhausted.add(entity)
-            for consumer in workflow.get_parents(entity):
+            for consumer in workflow.get_children(entity):
                 inputs[consumer].write(entity, entity.attributes['filename'])
                 if inputs[consumer].is_readable():
                     stack.append((consumer, consumer.run(inputs[consumer].read(), self.max_entities)))
+            exhausted.add(entity)
 
         while len(stack) > 0:
             step, state = stack.pop(0)
-            sys.stderr.write('{}, {}\n'.format(step, len(stack)))
+            #sys.stderr.write('{}, {}\n'.format(step, len(stack)))
             if not self.can_run(step, inputs, workflow):
                 stack.append((step, state))
                 continue
             try:
-                entities = state.next()
+                entities = next(state)
                 for entity, values in entities.items():
-                    for consumer in workflow.get_parents(entity):
+                    for consumer in workflow.get_children(entity):
                         inputs[consumer].write(entity, values)
                         if inputs[consumer].is_readable():
                             stack.append((consumer, consumer.run(inputs[consumer].read(), self.max_entities)))
@@ -50,6 +50,6 @@ class LowMemoryExecutionEngine(object):
 
     def can_run(self, step, inputs, workflow):
         for out in step.outs:
-            if not all(inputs[consumer].is_writable(out) for consumer in workflow.get_parents(out)):
+            if not all(inputs[consumer].is_writable(out) for consumer in workflow.get_children(out)):
                 return False
         return True
