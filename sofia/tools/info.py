@@ -3,7 +3,9 @@ import os
 import sys
 from textwrap import wrap
 
-from sofia.tools.common import get_program_directory
+
+def get_program_directory():
+    return os.path.dirname(os.path.realpath(__file__)).rsplit(os.sep, 2)[0]
 
 
 def generate_graph(workflow_template, output=sys.stdout):
