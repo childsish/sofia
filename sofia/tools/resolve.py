@@ -61,10 +61,13 @@ def resolve_requested_entity(template, entity, maps=None):
         sys.stderr.write('unable to resolve entity.\n\n')
         sys.stderr.write('     Possible reasons:\n')
         for error, names in sorted(ERROR_MANAGER.errors.items()):
-            sys.stderr.write('     * {}\n'.format(error))
+            sys.stderr.write('     * {}'.format(error))
             if len(names - {''}) > 0:
+                sys.stderr.write('\n            in step\n')
                 sys.stderr.write('       ')
                 sys.stderr.write('\n       '.join(names))
+                sys.stderr.write('\n')
+            else:
                 sys.stderr.write('\n')
         sys.exit(1)
     elif len(possible_graphs) == 1:
