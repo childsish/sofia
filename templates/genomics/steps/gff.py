@@ -1,8 +1,7 @@
 import gzip
 
 from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
-from lhc.interval import Interval
-from lhc.io.gff.iterator import GffIterator as GffEntryIterator
+from lhc.io.gff.iterator import GffIterator as GffEntryIterator, GffLineIterator
 from sofia.step import Step
 
 
@@ -13,8 +12,8 @@ class GffIterator(Step):
 
     def run(self, gff_file):
         gff_file = gff_file[0]
-        fileobj = gzip.open(gff_file) if gff_file.endswith('.gz') else open(gff_file)
-        for entry in GffEntryIterator(fileobj):
+        fileobj = gzip.open(gff_file, 'rt') if gff_file.endswith('.gz') else open(gff_file, encoding='utf-8')
+        for entry in GffEntryIterator(GffLineIterator(fileobj)):
             yield entry
 
     @classmethod
@@ -37,8 +36,8 @@ class GffSet(Step):
 
     def run(self, gff_file):
         gff_file = gff_file[0]
-        fileobj = gzip.open(gff_file) if gff_file.endswith('.gz') else open(gff_file)
-        yield InOrderAccessIntervalSet(GffEntryIterator(fileobj), key=gff_key)
+        fileobj = gzip.open(gff_file, 'rt') if gff_file.endswith('.gz') else open(gff_file, encoding='utf-8')
+        yield InOrderAccessIntervalSet(GffEntryIterator(GffLineIterator(fileobj)))
 
     @classmethod
     def get_out_resolvers(cls):
@@ -51,7 +50,3 @@ class GffSet(Step):
         return {
             'genomic_feature_set': set()
         }
-
-
-def gff_key(line):
-    return Interval((line.chr, line.start), (line.chr, line.stop))

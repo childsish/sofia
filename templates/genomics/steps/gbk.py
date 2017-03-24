@@ -11,7 +11,7 @@ class GbkIterator(Step):
 
     def run(self, gbk_file):
         gbk_file = gbk_file[0]
-        fileobj = gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file)
+        fileobj = gzip.open(gbk_file, 'rt') if gbk_file.endswith('.gz') else open(gbk_file, encoding='utf-8')
         for entry in Iterator(fileobj):
             yield entry
 
@@ -23,5 +23,5 @@ class GbkSet(Step):
 
     def run(self, gbk_file):
         gbk_file = gbk_file[0]
-        fileobj = gzip.open(gbk_file) if gbk_file.endswith('.gz') else open(gbk_file)
+        fileobj = gzip.open(gbk_file, 'rt') if gbk_file.endswith('.gz') else open(gbk_file, encoding='utf-8')
         yield GbkSequenceSet(fileobj)

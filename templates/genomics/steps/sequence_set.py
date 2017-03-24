@@ -29,13 +29,13 @@ class GetDownstream1000(Step):
     def run(self, fasta_file, genomic_position, major_transcript):
         for position, transcript in zip(genomic_position, major_transcript):
             if self.fasta_set is None:
-                fileobj = gzip.open(fasta_file) if fasta_file.endswith('.gz') else open(fasta_file)
+                fileobj = gzip.open(fasta_file, 'rt') if fasta_file.endswith('.gz') else open(fasta_file, encoding='utf-8')
                 self.fasta_set = FastaInOrderAccessSet(fileobj)
             if transcript is None:
                 yield None
                 continue
-            chr = position.chr
-            pos = position.pos
+            chr = position.chromosome
+            pos = position.position
             strand = transcript.strand
             start = pos if strand == '+' else pos - 1000
             stop = pos if strand == '-' else pos + 1000

@@ -10,7 +10,7 @@ class GenePathwayMap(Step):
 
     def run(self, gene_pathway_map_file):
         gene_pathway_map_file = gene_pathway_map_file[0]
-        fhndl = open(gene_pathway_map_file)
+        fhndl = open(gene_pathway_map_file, encoding='utf-8')
         fhndl.next()
         res = defaultdict(set)
         for line in fhndl:
@@ -27,7 +27,7 @@ class GeneGotermMap(Step):
 
     def run(self, gene_goterm_map_file):
         gene_goterm_map_file = gene_goterm_map_file[0]
-        fhndl = open(gene_goterm_map_file)
+        fhndl = open(gene_goterm_map_file, encoding='utf-8')
         fhndl.next()
         res = defaultdict(set)
         for line in fhndl:

@@ -17,7 +17,7 @@ class VcfIterator(Step):
 
     def run(self, vcf_file):
         vcf_file = vcf_file[0]
-        self.fileobj = gzip.open(vcf_file) if vcf_file.endswith('.gz') else open(vcf_file)
+        self.fileobj = gzip.open(vcf_file, 'rt') if vcf_file.endswith('.gz') else open(vcf_file, encoding='utf-8')
         for entry in VcfEntryIterator(self.fileobj):
             yield entry
 
@@ -44,7 +44,7 @@ class VcfSet(Step):
     
     def run(self, vcf_file):
         vcf_file = vcf_file[0]
-        self.fileobj = gzip.open(vcf_file) if vcf_file.endswith('.gz') else open(vcf_file)
+        self.fileobj = gzip.open(vcf_file, 'rt') if vcf_file.endswith('.gz') else open(vcf_file, encoding='utf-8')
         yield InOrderAccessSet(VcfEntryIterator(self.fileobj))
 
     @classmethod

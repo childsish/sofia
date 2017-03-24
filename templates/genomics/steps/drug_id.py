@@ -9,7 +9,7 @@ class DrugBankMap(Step):
     def run(self, drug_bank_map_file):
         drug_bank_map_file = drug_bank_map_file[0]
         interface = {}
-        fhndl = open(drug_bank_map_file)
+        fhndl = open(drug_bank_map_file, encoding='utf-8')
         fhndl.next()
         for line in fhndl:
             parts = line.rstrip('\r\n').split(',')
@@ -44,7 +44,7 @@ class GenomicsOfDrugSensitivityInCancerByGene(Step):
     def run(self, gdsc_map_file):
         gdsc_map_file = gdsc_map_file[0]
         interface = {}
-        fhndl = open(gdsc_map_file, 'rU')
+        fhndl = open(gdsc_map_file, 'rU', encoding='utf-8')
         line = fhndl.next()
         for line in fhndl:
             parts = line.rstrip('\r\n').split(',')

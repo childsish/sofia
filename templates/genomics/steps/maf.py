@@ -18,7 +18,7 @@ class MafSet(Step):
 
     def run(self, maf_file):
         maf_file = maf_file[0]
-        with gzip.open(maf_file) if maf_file.endswith('.gz') else open(maf_file) as fileobj:
+        with gzip.open(maf_file, 'rt') if maf_file.endswith('.gz') else open(maf_file, encoding='utf-8') as fileobj:
             yield InOrderAccessIntervalSet(MafIterator(fileobj), key=maf_key)
 
 

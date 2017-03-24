@@ -7,7 +7,7 @@ from sofia.step import Step
 
 class ProveanMap(object):
     def __init__(self, filename, index):
-        fhndl = gzip.open(filename)
+        fhndl = gzip.open(filename, 'rt')
         self.headers = {aa: i for i, aa in enumerate(fhndl.readline().split())}
         self.headers['*'] = self.headers['Del']
         fhndl.close()
@@ -33,7 +33,7 @@ class ProveanMapStep(Step):
 
     def run(self, provean_map_file):
         provean_map_file = provean_map_file[0]
-        fileobj = gzip.open(provean_map_file) if provean_map_file.endswith('.gz') else provean_map_file
+        fileobj = gzip.open(provean_map_file, 'rt') if provean_map_file.endswith('.gz') else provean_map_file
         it = (line.split('\t') for line in fileobj)
         yield ProveanMap(provean_map_file, InOrderAccessSet(it, key=provean_key))
 
