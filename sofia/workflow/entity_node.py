@@ -4,7 +4,7 @@ from sofia.workflow_template import Template
 
 class EntityNode(NPartiteGraph):
     def __init__(self, entity):
-        super(EntityNode, self).__init__(entity.alias)
+        super().__init__(entity.alias)
         self.head = entity
         self.add_vertex(entity, Template.ENTITY_PARTITION)
 

@@ -4,7 +4,7 @@ from sofia.workflow_template import Template
 
 class ResolvedWorkflow(NPartiteGraph):
     def __init__(self, provided_entities):
-        super(ResolvedWorkflow, self).__init__('Workflow')
+        super().__init__('Workflow')
         self.heads = []
         self.provided_entities = provided_entities
 

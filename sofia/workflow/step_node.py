@@ -5,7 +5,7 @@ from sofia.workflow.step_wrapper import StepWrapper
 
 class StepNode(NPartiteGraph):
     def __init__(self, step, out_attributes):
-        super(StepNode, self).__init__(step.name)
+        super().__init__(step.name)
         self.head = StepWrapper(step)
         self.add_vertex(self.head, Template.STEP_PARTITION)
         self.out_attributes = out_attributes
