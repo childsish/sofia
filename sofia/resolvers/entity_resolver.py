@@ -22,7 +22,7 @@ class EntityResolver(object):
                 is_provided = True
                 yield EntityNode(provided_entity)
 
-        step_names = self.template.get_children(self.entity_type)
+        step_names = self.template.get_parents(self.entity_type)
         if len(step_names) == 0 and not is_provided:
             ERROR_MANAGER.add_error('No steps produce {}'.format(self.entity_type))
 

@@ -24,12 +24,12 @@ class StepResolver(object):
         return hash(str(self))
     
     def __iter__(self):
-        entities = sorted(self.template.get_children(self.step.name))
+        entities = sorted(self.template.get_parents(self.step.name))
         resolvers = {entity: EntityResolver(entity,
                                             self.template,
-                                            self.maps,
-                                            self.requested_resources,
-                                            self.visited)
+                                            maps=self.maps,
+                                            requested_resources=self.requested_resources,
+                                            visited=self.visited)
                      for entity in entities}
         resolvers = {entity: list(resolver) for entity, resolver in resolvers.items()}
 
@@ -39,7 +39,7 @@ class StepResolver(object):
             try:
                 step_node = self.factory.make(disjoint_solution)
             except ValueError as e:
-                ERROR_MANAGER.add_error(e.message, self.step.name)
+                ERROR_MANAGER.add_error(str(e), self.step.name)
                 continue
             resources = set()
             for partial_solution in disjoint_solution:
