@@ -63,7 +63,7 @@ def resolve_requested_entity(template, entity, maps=None):
         for error, names in sorted(ERROR_MANAGER.errors.items()):
             sys.stderr.write('     * {}'.format(error))
             if len(names - {''}) > 0:
-                sys.stderr.write('\n            in step\n')
+                sys.stderr.write('\n            when resolving\n')
                 sys.stderr.write('       ')
                 sys.stderr.write('\n       '.join(names))
                 sys.stderr.write('\n')
