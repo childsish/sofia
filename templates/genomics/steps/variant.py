@@ -99,6 +99,11 @@ class GetVariantAlleleFrequency(Step):
             yield ao / (ao + ro)
 
 
+class VariantEffect(namedtuple('VariantEffect', ['effects'])):
+    def __str__(self):
+        return ', '.join(self.effects)
+
+
 class GetVariantEffect(Step):
     """
     Determines the variant type according to the sequence ontology
@@ -111,25 +116,26 @@ class GetVariantEffect(Step):
     def run(self, major_transcript, variant, coding_variant, amino_acid_variant):
         for transcript, variant_, coding_variant_, amino_acid_variant_ in zip(major_transcript, variant, coding_variant, amino_acid_variant):
             #TODO: Improve intron detection
-            if transcript is None:
-                yield ['intergenic_variant']
-            elif coding_variant_ is None:
-                yield ['intron_variant']
             res = []
-            for na_alt, aa_alt, fs in zip(variant_.alt.split(','), amino_acid_variant_.alt, amino_acid_variant_.fs):
-                if fs is None:
-                    res.append(self._get_amino_acid_type(amino_acid_variant_.pos, amino_acid_variant_.ref, aa_alt))
-                elif len(na_alt) > len(variant_.ref):
-                    if (len(na_alt) - len(variant_.ref)) % 3 == 0:
-                        res.append('inframe_insertion')
+            if transcript is None:
+                res.append('intergenic_variant')
+            elif coding_variant_ is None:
+                res.append('intron_variant')
+            else:
+                for na_alt, aa_alt, fs in zip(variant_.data['alt'], amino_acid_variant_.alt, amino_acid_variant_.fs):
+                    if fs is None:
+                        res.append(self._get_amino_acid_type(amino_acid_variant_.pos, amino_acid_variant_.ref, aa_alt))
+                    elif len(na_alt) > len(variant_.ref):
+                        if (len(na_alt) - len(variant_.ref)) % 3 == 0:
+                            res.append('inframe_insertion')
+                        else:
+                            res.append('frameshift_elongation')
                     else:
-                        res.append('frameshift_elongation')
-                else:
-                    if (len(variant.ref) - len(na_alt)) % 3 == 0:
-                        res.append('inframe_deletion')
-                    else:
-                        res.append('frameshift_truncation')
-            yield res
+                        if (len(variant.ref) - len(na_alt)) % 3 == 0:
+                            res.append('inframe_deletion')
+                        else:
+                            res.append('frameshift_truncation')
+            yield VariantEffect(res)
 
     def _get_amino_acid_type(self, pos, ref, alt):
         if ref == alt:
@@ -193,7 +199,7 @@ class GetCodingVariant(Step):
             except ValueError:
                 yield None
                 continue
-            alt = variant_.data['alt'].split(',')
+            alt = variant_.data['alt']
             if transcript.strand == '-':
                 ref = reverse_complement(ref)
                 alt = map(reverse_complement, alt)
@@ -313,7 +319,7 @@ class GetAminoAcidVariant(Step):
                 continue
             alts = [None if alt is None else genetic_code.translate(alt) for alt in variant.alt]
             fs = [None if fs_ is None else fs_ / 3 for fs_ in variant.fs]
-            yield AminoAcidVariant(variant.pos / 3, genetic_code.translate(variant.ref), alts, fs)
+            yield AminoAcidVariant(variant.pos // 3, genetic_code.translate(variant.ref), alts, fs)
 
     @classmethod
     def get_out_resolvers(cls):
