@@ -1,6 +1,6 @@
 from lhc.graph import NPartiteGraph
 from sofia.workflow_template import Template
-from step_wrapper import StepWrapper
+from sofia.workflow.step_wrapper import StepWrapper
 
 
 class StepNode(NPartiteGraph):

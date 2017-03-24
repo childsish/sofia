@@ -1,6 +1,6 @@
 import gzip
 
-from lhc.binf.sequence import revcmp
+from lhc.binf.sequence.reverse_complement import reverse_complement
 from lhc.io.fasta import FastaInOrderAccessSet
 from sofia.step import Step
 
@@ -40,7 +40,7 @@ class GetDownstream1000(Step):
             start = pos if strand == '+' else pos - 1000
             stop = pos if strand == '-' else pos + 1000
             seq = self.fasta_set.fetch(chr, start, stop)
-            yield seq if strand == '+' else revcmp(seq)
+            yield seq if strand == '+' else reverse_complement(seq)
 
     @classmethod
     def get_out_resolvers(cls):

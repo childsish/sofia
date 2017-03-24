@@ -1,7 +1,7 @@
 import sys
 
 from collections import defaultdict
-from itertools import repeat, izip
+from itertools import repeat
 from sofia.workflow_template import Template
 
 
@@ -48,10 +48,10 @@ class SimpleExecutionEngine(object):
         inputs = self.get_inputs(step.ins)
         outputs = defaultdict(list)
         for output in step.run(inputs):
-            for k, v in output.iteritems():
+            for k, v in output.items():
                 outputs[k].extend(v)
         for output in step.finalise():
-            for k, v in output.iteritems():
+            for k, v in output.items():
                 outputs[k].extend(v)
         self.unresolved_steps.remove(step)
         return outputs
@@ -63,7 +63,7 @@ class SimpleExecutionEngine(object):
             raise ValueError('unable to handle inputs of different lengths')
         n = max(lengths)
         if n > 1:
-            for i in xrange(len(entities)):
+            for i in range(len(entities)):
                 if lengths[i] == 1:
                     entities[i] = repeat(entities[i][0], n)
-        return izip(*entities)
+        return zip(*entities)

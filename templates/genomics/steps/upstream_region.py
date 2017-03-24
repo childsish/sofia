@@ -78,10 +78,10 @@ class GetUpstreamORFs(Step):
         for sequence in upstream_sequence:
             stops = genetic_code.get_codons('*')
             res = []
-            for i in xrange(len(sequence)):
+            for i in range(len(sequence)):
                 if not sequence[i:i + 3] == 'atg':
                     continue
-                for j in xrange(i, len(sequence), 3):
+                for j in range(i, len(sequence), 3):
                     if sequence[j:j + 3] in stops:
                         res.append(sequence[i:j + 3])
             yield res

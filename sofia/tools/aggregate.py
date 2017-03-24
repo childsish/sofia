@@ -4,7 +4,7 @@ import sys
 import time
 from collections import defaultdict
 
-from common import get_program_directory
+from sofia.tools.common import get_program_directory
 from sofia.attribute_map_factory import AttributeMapFactory
 from sofia.error_manager import ERROR_MANAGER
 from sofia.resolvers.entity_resolver import EntityResolver
@@ -47,7 +47,7 @@ class Aggregator(object):
             self.stdout.write('\n')
 
         is_warning_header_written = False
-        for step in solution.steps.itervalues():
+        for step in solution.steps.values():
             warnings = step.get_user_warnings()
             if len(warnings) > 0:
                 if not is_warning_header_written:
@@ -83,7 +83,7 @@ class Aggregator(object):
         if len(possible_graphs) == 0:
             sys.stderr.write('unable to resolve entity.\n\n')
             sys.stderr.write('     Possible reasons:\n')
-            for error, names in sorted(ERROR_MANAGER.errors.iteritems()):
+            for error, names in sorted(ERROR_MANAGER.errors.items()):
                 sys.stderr.write('     * {}\n'.format(error))
                 if len(names - {''}) > 0:
                     sys.stderr.write('       ')
@@ -99,13 +99,13 @@ class Aggregator(object):
             resources = frozenset([r for r in graph.head.attributes['resource'] if not r == 'target'])
             extra_resources = resources - requested_entity.attributes['resource']
             matching_graphs[len(extra_resources)].append((graph, extra_resources))
-        count, matching_graphs = sorted(matching_graphs.iteritems())[0]
+        count, matching_graphs = sorted(matching_graphs.items())[0]
         unique = True
         if len(matching_graphs) > 1:
             match_size = defaultdict(list)
             for graph, extra_resources in matching_graphs:
                 match_size[len(graph)].append((graph, extra_resources))
-            matching_graphs = sorted(match_size.iteritems())[0][1]
+            matching_graphs = sorted(match_size.items())[0][1]
             if len(matching_graphs) > 1:
                 unique = False
         if not unique:

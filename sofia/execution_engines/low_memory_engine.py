@@ -1,7 +1,7 @@
 import sys
 
 from sofia.workflow_template import Template
-from buffer import Buffer
+from sofia.execution_engines.buffer import Buffer
 
 
 class LowMemoryExecutionEngine(object):
@@ -33,7 +33,7 @@ class LowMemoryExecutionEngine(object):
                 continue
             try:
                 entities = state.next()
-                for entity, values in entities.iteritems():
+                for entity, values in entities.items():
                     for consumer in workflow.get_parents(entity):
                         inputs[consumer].write(entity, values)
                         if inputs[consumer].is_readable():

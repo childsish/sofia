@@ -36,7 +36,7 @@ class GetGenomicFeatureByPosition(Step):
                 if features is not None and len(features) > 0:
                     res = sorted(features, key=len)[-1]
                     res.name = res.name.rsplit('.')[0]
-            except Exception, e:
+            except Exception as e:
                 if e.message.startswith('could not create iterator for region'):
                     self.cnt['could not create iterator for region ...'] += 1
                 else:
@@ -57,7 +57,7 @@ class GetGenomicFeatureByPosition(Step):
 
     def get_user_warnings(self):
         res = set()
-        for error, cnt in self.cnt.iteritems():
+        for error, cnt in self.cnt.items():
             frq = round(cnt / float(self.ttl), 3)
             if frq < 1:
                 continue

@@ -4,12 +4,12 @@ from sofia.entity_type import EntityType
 
 
 class EntityResolver(object):
-    def __init__(self, entity_type, template, maps={}, requested_resources=set(), visited=None):
+    def __init__(self, entity_type, template, *, maps=None, requested_resources=None, visited=None):
         self.entity_type = entity_type
         self.template = template
-        self.maps = maps
-        self.requested_resources = requested_resources
 
+        self.maps = maps if maps else {}
+        self.requested_resources = requested_resources if requested_resources else set()
         self.visited = set() if visited is None else visited
 
     def __str__(self):
@@ -26,7 +26,7 @@ class EntityResolver(object):
         if len(step_names) == 0 and not is_provided:
             ERROR_MANAGER.add_error('No steps produce {}'.format(self.entity_type))
 
-        from step_resolver import StepResolver
+        from sofia.resolvers.step_resolver import StepResolver
         for step_name in step_names:
             if step_name in self.visited:
                 continue

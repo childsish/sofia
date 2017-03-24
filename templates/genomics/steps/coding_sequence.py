@@ -1,6 +1,4 @@
 from collections import defaultdict
-from functools import reduce
-from itertools import izip
 from operator import add, mul
 
 from lhc.binf.kmer import KmerCounter
@@ -79,7 +77,7 @@ class GetRelativeSynonymousCodonUsage(Step):
                 else:
                     rscus = [usg / ttl_usg for usg in usgs]
                     ws = [usg / float(max(usgs)) for usg in usgs]
-                for cdn, rscu_, w_ in izip(cdns, rscus, ws):
+                for cdn, rscu_, w_ in zip(cdns, rscus, ws):
                     rscu[cdn] = rscu_
                     w[cdn] = w_
             yield rscu, w
@@ -98,7 +96,7 @@ class GetCodonAdaptationIndex(Step):
             if sequence is None or len(sequence) == 0:
                 yield None
             cai = []
-            for i in xrange(0, len(sequence), 3):
+            for i in range(0, len(sequence), 3):
                 cdn = sequence[i:i+3].lower()
                 #red = set(cdn) & RedundantCode.REDUNDANT_BASES
                 #if len(red) > 0:
@@ -136,7 +134,7 @@ class GetEffectiveNumberOfCodons(Step):
                 if fs[aa] is not None:  # Assume missing aa have the mean F
                     fams[len(genetic_code[aa])].append(fs[aa])
             nc = sum(len(fam_Fs) if sz == 1 else len(fam_Fs) / arithmetic_mean(fam_Fs)
-                     for sz, fam_Fs in fams.iteritems())
+                     for sz, fam_Fs in fams.items())
             yield nc
 
     def run_f(self, cut, fam):
@@ -145,8 +143,18 @@ class GetEffectiveNumberOfCodons(Step):
 
 
 def arithmetic_mean(iterable):
-    return reduce(add, iterable) / float(len(iterable))
+    sum = 0
+    total = 0.
+    for item in iterable:
+        sum += item
+        total += 1
+    return sum / total
 
 
 def geometric_mean(iterable):
-    return reduce(mul, iterable) ** (1 / float(len(iterable)))
+    product = 1
+    total = 0.
+    for item in iterable:
+        product *= item
+        total += 1
+    return product ** (1 / total)

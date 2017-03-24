@@ -1,6 +1,6 @@
 from collections import Counter
-from step import Step
 from copy import copy
+from sofia.step.step import Step
 
 
 class Converter(Step):
@@ -20,7 +20,7 @@ class Converter(Step):
             self.ttl += 1
             try:
                 entity = self._convert(entity, self.path, self.map)
-            except KeyError, e:
+            except KeyError as e:
                 self.cnt[e.message] += 1
                 entity = None
             yield entity
@@ -51,8 +51,8 @@ class Converter(Step):
         return entity
 
     def get_user_warnings(self):
-        frqs = {msg: round(cnt / float(self.ttl), 3) for msg, cnt in self.cnt.iteritems()}
-        return {'{}% of conversions produced error {}'.format(frq * 100, msg) for msg, frq in frqs.iteritems()}
+        frqs = {msg: round(cnt / float(self.ttl), 3) for msg, cnt in self.cnt.items()}
+        return {'{}% of conversions produced error {}'.format(frq * 100, msg) for msg, frq in frqs.items()}
 
     def load_map_file(self, filename, fr, to):
         with open(filename) as fileobj:

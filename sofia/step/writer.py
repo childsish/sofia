@@ -1,6 +1,6 @@
 import sys
 
-from step import Step
+from sofia.step.step import Step
 
 
 class Writer(Step):

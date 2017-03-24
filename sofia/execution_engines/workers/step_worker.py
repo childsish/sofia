@@ -24,7 +24,7 @@ def step_worker(step, pipe, max_entities):
                 data = state.next()
                 sys.stderr.write('  {}\n'.format(step.name))
                 sys.stderr.write('  * {}\n'.format(', '.join(key.name for key in data)))
-                sys.stderr.write('  *  {}\n'.format(', '.join(str(value) for value in data.itervalues())))
+                sys.stderr.write('  *  {}\n'.format(', '.join(str(value) for value in data.values())))
                 pipe.send(('data', {'step': step, 'data': data}))
             except StopIteration:
                 pipe.send(('stop', {'step': step}))

@@ -21,7 +21,7 @@ class ProveanMap(object):
                 yield None
             try:
                 res = [float(parts[self.headers[alt]]) for alt in variant.alt]
-            except Exception, e:
+            except Exception as e:
                 res = None
             yield res
 

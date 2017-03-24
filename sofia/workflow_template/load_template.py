@@ -2,8 +2,8 @@ import imp
 import os
 import sys
 
-from template import Template
-from load_entity_set import load_entity_set
+from sofia.workflow_template.template import Template
+from sofia.workflow_template.load_entity_set import load_entity_set
 from sofia.resolvers import AttributeResolver
 from sofia.step import Step, Extractor, ConcreteStep
 
@@ -48,7 +48,7 @@ def load_plugins(plugin_directory, plugin_class, exclude=None):
             continue
         module_name, ext = os.path.splitext(fname)
         module = imp.load_source(module_name, os.path.join(plugin_directory, fname))
-        child_classes = [child_class for child_class in module.__dict__.itervalues() if type(child_class) == type]
+        child_classes = [child_class for child_class in module.__dict__.values() if type(child_class) == type]
         for child_class in child_classes:
             if issubclass(child_class, plugin_class) and child_class not in exclude:
                 plugins.append(child_class)
@@ -65,7 +65,7 @@ def get_extractors(entities):
         for out in entities.get_equivalent_ancestors(in_) - {in_}:
             extractors[(in_, out)] = ([], 'Cast{}To{}'.format(capitalise_name(in_), capitalise_name(out)))
     res = {}
-    for (in_, out), (path, name) in extractors.iteritems():
+    for (in_, out), (path, name) in extractors.items():
         res[name] = ConcreteStep(Extractor, name, [in_], [out], {'path': path})
     return res
 

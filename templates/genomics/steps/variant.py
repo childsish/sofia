@@ -1,7 +1,6 @@
 from collections import namedtuple
-from itertools import izip
 
-from lhc.binf.sequence import revcmp
+from lhc.binf.sequence.reverse_complement import reverse_complement
 
 from sofia.step import Step
 
@@ -14,7 +13,7 @@ class GetVariantSamples(Step):
     def run(self, variant):
         for variant_ in variant:
             res = [':'.join(variant_.format)]
-            for sample in variant_.samples.itervalues():
+            for sample in variant_.samples.values():
                 res.append(':'.join(sample[key] for key in variant_.format))
             yield '\t'.join(res)
 
@@ -55,7 +54,7 @@ class GetSubstitutionContext(Step):
     def run(self, variant, chromosome_sequence_set):
         for variant_ in variant:
             context = chromosome_sequence_set[variant_.chr][variant_.pos - 1: variant_.pos + 2]
-            yield context if variant_.ref[0] in 'CT' else revcmp(context)
+            yield context if variant_.ref[0] in 'CT' else reverse_complement(context)
 
 
 class GetSubstitutionType(Step):
@@ -65,7 +64,7 @@ class GetSubstitutionType(Step):
 
     def run(self, variant):
         for variant_ in variant:
-            yield '{}>{}'.format(variant_.ref, variant_.alt) if variant_.ref[0] in 'CT' else '{}>{}'.format(revcmp(variant_.ref), revcmp(variant_.alt))
+            yield '{}>{}'.format(variant_.ref, variant_.alt) if variant_.ref[0] in 'CT' else '{}>{}'.format(reverse_complement(variant_.ref), reverse_complement(variant_.alt))
 
 
 class GetVariantAlleleFrequency(Step):
@@ -83,11 +82,11 @@ class GetVariantAlleleFrequency(Step):
             if hasattr(variant_, 'samples'):
                 res = {}
                 if no_run:
-                    for name, sample in variant_.samples.iteritems():
+                    for name, sample in variant_.samples.items():
                         if sample != '.':
                             res[name] = float(sample['AF'])
                 else:
-                    for name, sample in variant_.samples.iteritems():
+                    for name, sample in variant_.samples.items():
                         if sample != '.':
                             ao = float(sample['AO'])
                             ro = float(sample['RO'])
@@ -117,7 +116,7 @@ class GetVariantEffect(Step):
             elif coding_variant_ is None:
                 yield ['intron_variant']
             res = []
-            for na_alt, aa_alt, fs in izip(variant_.alt.split(','), amino_acid_variant_.alt, amino_acid_variant_.fs):
+            for na_alt, aa_alt, fs in zip(variant_.alt.split(','), amino_acid_variant_.alt, amino_acid_variant_.fs):
                 if fs is None:
                     res.append(self._get_amino_acid_type(amino_acid_variant_.pos, amino_acid_variant_.ref, aa_alt))
                 elif len(na_alt) > len(variant_.ref):
@@ -196,8 +195,8 @@ class GetCodingVariant(Step):
                 continue
             alt = variant_.alt.split(',')
             if transcript.strand == '-':
-                ref = revcmp(ref)
-                alt = map(revcmp, alt)
+                ref = reverse_complement(ref)
+                alt = map(reverse_complement(), alt)
             yield CodingVariant(coding_position, ref, alt)
 
 
@@ -250,7 +249,7 @@ class AminoAcidVariant(namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'
         res = []
         pos = self.pos
         ref = self.ref
-        for alt, fs in izip(self.alt, self.fs):
+        for alt, fs in zip(self.alt, self.fs):
             if len(self.ref) > len(alt):
                 d = len(self.ref) - len(alt)
                 rng = str(pos + len(ref) - 1,) if d == 1 else '{}_{}'.format(pos + len(ref) - d, pos + len(ref) - 1)

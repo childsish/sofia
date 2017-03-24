@@ -1,5 +1,5 @@
 from collections import Counter
-from itertools import islice, izip
+from itertools import islice
 from warnings import warn
 
 from sofia.step import Step
@@ -45,17 +45,17 @@ class GetPest(Step):
         """ Algorithm copied from EMBOSS:
             https://github.com/pjotrp/EMBOSS/blob/master/emboss/epestfind.c:278
         """
-        ltkdhi = dict(izip('ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        ltkdhi = dict(zip('ABCDEFGHIJKLMNOPQRSTUVWXYZ',
                            [63, 10, 70, 10, 10, 72, 41, 13, 90, 0, 6, 82, 64, 10, 0, 29, 10,
                             0, 36, 38, 0, 87, 36, 45, 58, 10]))
         for fr, to in self.iter_candidates(seq):
             cnt = Counter(islice(seq, fr, to))  # islice to prevent copying
             if self.is_valid_pest(cnt):
-                molwt = sum(molwts[seq[i]][self.mono] for i in xrange(fr, to))
+                molwt = sum(molwts[seq[i]][self.mono] for i in range(fr, to))
                 pstsum = sum(cnt[k] * molwts[k][self.mono] for k in 'DEPST')
                 pstsum -= sum(molwts[k][self.mono] for k in 'EPT')
                 pstpct = pstsum / molwt
-                hydind = sum(v * molwts[k][self.mono] * ltkdhi[k] / molwt for k, v in cnt.iteritems())
+                hydind = sum(v * molwts[k][self.mono] * ltkdhi[k] / molwt for k, v in cnt.items())
                 pstscr = 0.55 * pstpct - 0.5 * hydind
                 yield pstscr, (fr, to)
     

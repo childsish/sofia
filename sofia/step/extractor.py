@@ -1,4 +1,4 @@
-from step import Step
+from sofia.step.step import Step
 from sofia.workflow_template.entity_set import EntitySet
 
 

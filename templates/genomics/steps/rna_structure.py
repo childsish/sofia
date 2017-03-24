@@ -107,7 +107,7 @@ class GetStructuralFeatures(Step):
             dots = []
             c_lvl = 0
             c_stem = 0
-            for i in xrange(len(structure)):
+            for i in range(len(structure)):
                 if structure[i] == '(':
                     if c_lvl == 0:
                         bridges.append(len(dots))

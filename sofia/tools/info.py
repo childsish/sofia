@@ -3,8 +3,7 @@ import os
 import sys
 from textwrap import wrap
 
-from common import get_program_directory
-from sofia.workflow_template import load_template
+from sofia.tools.common import get_program_directory
 
 
 def generate_graph(workflow_template, output=sys.stdout):
@@ -20,7 +19,7 @@ def list_entities(workflow_template, output=sys.stdout):
     template_factory = TemplateFactory(template_directory)
     template = template_factory.make()
 
-    for entity in sorted(template.entity_graph.entities.itervalues(), key=lambda x: x['name']):
+    for entity in sorted(template.entity_graph.entities.values(), key=lambda x: x['name']):
         output.write(entity['name'])
         output.write('\n')
         if 'description' in entity:
@@ -35,7 +34,7 @@ def list_steps(workflow_template, step=None, output=sys.stdout, verbose=False):
 
     if step is None:
         output.write('\nAvailable steps (template: {}):\n==================\n'.format(workflow_template))
-        for step in sorted(template.steps.itervalues(), key=lambda x: x.step_class.__name__):
+        for step in sorted(template.steps.values(), key=lambda x: x.step_class.__name__):
             list_step(step.step_class, output, verbose)
     else:
         list_step(template.steps[step].step_class, output, verbose)

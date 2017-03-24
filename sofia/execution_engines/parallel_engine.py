@@ -1,6 +1,6 @@
 import sys
 
-from buffer import Buffer
+from sofia.execution_engines.buffer import Buffer
 from multiprocessing import Process, Pipe
 from operator import or_
 from sofia.execution_engines.workers import parallel_worker, step_worker
@@ -30,7 +30,7 @@ class ParallelExecutionEngine(object):
 
         to_worker, from_worker = Pipe()
         processes = []
-        for i in xrange(self.max_cpus):
+        for i in range(self.max_cpus):
             process = Process(target=parallel_worker, args=(from_worker, to_step))
             process.start()
             processes.append(process)
@@ -64,9 +64,12 @@ class ParallelExecutionEngine(object):
                 status[data['step']] = 'finalising'
             elif message == 'data':
                 status[data['step']] = status[data['step']][:-7]
-                consumers = reduce(or_, (workflow.get_parents(out) for out in data['data']))
+                consumers = set()
+                for out in data['data']:
+                    consumers.update(workflow.get_parents(out))
+
                 for consumer in consumers:
-                    for entity in set(consumer.ins) & set(data['data'].iterkeys()):
+                    for entity in set(consumer.ins) & set(data['data'].keys()):
                         inputs[consumer].write(entity, data['data'][entity])
                     if self.can_run(consumer, inputs):
                         sys.stderr.write('master sending "run" to {}\n'.format(consumer))
@@ -89,16 +92,22 @@ class ParallelExecutionEngine(object):
 
         for process in processes:
             process.join()
-        for connection in to_step.itervalues():
+        for connection in to_step.values():
             connection.send('stop')
         for step_process in step_processes:
             step_process.join()
 
     def get_producers(self, step, workflow):
-        return reduce(or_, (workflow.get_parents(in_) for in_ in step.ins))
+        producers = set()
+        for in_ in step.ins:
+            producers.update(workflow.get_parents(in_))
+        return producers
 
     def get_consumers(self, step, workflow):
-        return reduce(or_, (workflow.get_children(out) for out in step.outs))
+        consumers = set()
+        for out in step.outs:
+            consumers.update(workflow.get_children(out))
+        return consumers
 
     def can_run(self, step, inputs):
         """

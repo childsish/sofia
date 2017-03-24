@@ -138,7 +138,7 @@ Example:
 
         def calculate(self, coding_sequence):
             codon_usage = {}
-            for i in xrange(0, len(coding_sequence), 3):
+            for i in range(0, len(coding_sequence), 3):
                 codon = coding_sequence[i:i+3]
                 if codon not in codon_usage:
                     codon_usage[codon] = 0

@@ -1,11 +1,9 @@
-from __future__ import with_statement
-
 import argparse
 import sys
 
-from build import build, get_input
-from resolve import resolve
-from sofia.execution_engines import LowMemoryExecutionEngine#, ParallelEngine
+from sofia.tools.build import build, get_input
+from sofia.tools.resolve import resolve
+from sofia.execution_engines.low_memory_engine import LowMemoryExecutionEngine#, ParallelEngine
 
 
 def execute(workflow, engine=None):

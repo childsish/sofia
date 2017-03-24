@@ -2,14 +2,14 @@ from collections import defaultdict
 from itertools import product
 from operator import or_
 from sofia.workflow import StepNodeFactory
-from entity_resolver import EntityResolver
+from sofia.resolvers.entity_resolver import EntityResolver
 from sofia.error_manager import ERROR_MANAGER
 
 
 class StepResolver(object):
     def __init__(self, step, template, maps={}, requested_resources=set(), visited=None):
         self.step = step
-        self.factory = StepNodeFactory(step, [attribute(attribute.ATTRIBUTE, template.entities, step, maps) for attribute in template.attributes.itervalues()])
+        self.factory = StepNodeFactory(step, [attribute(attribute.ATTRIBUTE, template.entities, step, maps) for attribute in template.attributes.values()])
         self.template = template
         self.maps = maps
         self.requested_resources = requested_resources
@@ -31,17 +31,19 @@ class StepResolver(object):
                                             self.requested_resources,
                                             self.visited)
                      for entity in entities}
-        resolvers = {entity: list(resolver) for entity, resolver in resolvers.iteritems()}
+        resolvers = {entity: list(resolver) for entity, resolver in resolvers.items()}
 
         res = defaultdict(list)
         disjoint_solutions = [resolvers[entity] for entity in entities]
         for disjoint_solution in product(*disjoint_solutions):
             try:
                 step_node = self.factory.make(disjoint_solution)
-            except ValueError, e:
+            except ValueError as e:
                 ERROR_MANAGER.add_error(e.message, self.step.name)
                 continue
-            resources = reduce(or_, (partial_solution.head.attributes['resource'] for partial_solution in disjoint_solution), set())
+            resources = set()
+            for partial_solution in disjoint_solution:
+                resources.update(partial_solution.head.attributes['resource'])
             res[len(resources - set(self.requested_resources))].append(step_node)
         if len(res) > 0:
             for solution in res[min(res)]:

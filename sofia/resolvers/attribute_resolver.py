@@ -1,6 +1,3 @@
-from operator import or_
-
-
 class AttributeResolver(object):
 
     ATTRIBUTE = ''
@@ -15,7 +12,7 @@ class AttributeResolver(object):
         return ins
 
     def resolve_out(self, ins):
-        values = reduce(or_, ins.itervalues())
-        return {
-            entity: values for entity in self.step.outs
-        }
+        values = set()
+        for value in ins.values():
+            values.update(value)
+        return {entity: values for entity in self.step.outs}
