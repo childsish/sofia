@@ -1,10 +1,11 @@
 import argparse
 import os
 import sys
-
-from common import get_program_directory, get_provided_entities, get_requested_entities
-from sofia.template_factory import TemplateFactory
 from textwrap import wrap
+
+
+def get_program_directory():
+    return os.path.dirname(os.path.realpath(__file__)).rsplit(os.sep, 2)[0]
 
 
 def generate_graph(workflow_template, output=sys.stdout):
@@ -20,7 +21,7 @@ def list_entities(workflow_template, output=sys.stdout):
     template_factory = TemplateFactory(template_directory)
     template = template_factory.make()
 
-    for entity in sorted(template.entity_graph.entities.itervalues(), key=lambda x: x['name']):
+    for entity in sorted(template.entity_graph.entities.values(), key=lambda x: x['name']):
         output.write(entity['name'])
         output.write('\n')
         if 'description' in entity:
@@ -35,7 +36,7 @@ def list_steps(workflow_template, step=None, output=sys.stdout, verbose=False):
 
     if step is None:
         output.write('\nAvailable steps (template: {}):\n==================\n'.format(workflow_template))
-        for step in sorted(template.steps.itervalues(), key=lambda x: x.step_class.__name__):
+        for step in sorted(template.steps.values(), key=lambda x: x.step_class.__name__):
             list_step(step.step_class, output, verbose)
     else:
         list_step(template.steps[step].step_class, output, verbose)

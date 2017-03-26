@@ -1,36 +1,52 @@
 import gzip
 
-from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet as IntervalSet
-from lhc.interval import Interval
-from lhc.io.gff.iterator import GffEntryIterator
-
-from sofia.step import Resource, Target
+from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
+from lhc.io.gff.iterator import GffIterator as GffEntryIterator, GffLineIterator
+from sofia.step import Step
 
 
-class GffIterator(Target):
-    
-    EXT = {'.gff', '.gff.gz', '.gff.bgz', '.gff3', '.gff3.gz', '.gff3.bgz'}
-    FORMAT = 'gff_file'
+class GffIterator(Step):
+
+    IN = ['gff_file']
     OUT = ['genomic_feature']
 
-    def get_interface(self, filename):
-        return iter(GffEntryIterator(filename))
+    def run(self, gff_file):
+        gff_file = gff_file[0]
+        fileobj = gzip.open(gff_file, 'rt') if gff_file.endswith('.gz') else open(gff_file, encoding='utf-8')
+        for entry in GffEntryIterator(GffLineIterator(fileobj)):
+            yield entry
 
-    def calculate(self):
-        entry = self.interface.next()
-        while entry.type != 'gene':
-            entry = self.interface.next()
-        entry.name = entry.name.rsplit('.', 1)[0]
-        return entry
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
+
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'genomic_feature': set()
+        }
 
 
-class GffSet(Resource):
-    
-    EXT = ['.gff', '.gff.gz', '.gff.bgz', '.gff3', '.gff3.gz', '.gff3.bgz']
-    FORMAT = 'gff_file'
+class GffSet(Step):
+
+    IN = ['gff_file']
     OUT = ['genomic_feature_set']
 
-    def get_interface(self, filename):
-        fileobj = gzip.open(filename) if filename.endswith('.gz') else\
-            open(filename)
-        return IntervalSet(GffEntryIterator(fileobj), key=lambda x: Interval((x.chr, x.start), (x.chr, x.stop)))
+    def run(self, gff_file):
+        gff_file = gff_file[0]
+        fileobj = gzip.open(gff_file, 'rt') if gff_file.endswith('.gz') else open(gff_file, encoding='utf-8')
+        yield InOrderAccessIntervalSet(GffEntryIterator(GffLineIterator(fileobj)))
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
+
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'genomic_feature_set': set()
+        }

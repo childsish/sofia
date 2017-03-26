@@ -1,20 +1,21 @@
-from sofia.step import Step, Resource
+from sofia.step import Step
 
 
-class DrugBankMap(Resource):
+class DrugBankMap(Step):
 
-    FORMAT = 'drug_bank_map'
+    IN = ['drug_bank_map_file']
     OUT = ['drug_bank_map']
 
-    def get_interface(self, filename):
+    def run(self, drug_bank_map_file):
+        drug_bank_map_file = drug_bank_map_file[0]
         interface = {}
-        fhndl = open(filename)
+        fhndl = open(drug_bank_map_file, encoding='utf-8')
         fhndl.next()
         for line in fhndl:
             parts = line.rstrip('\r\n').split(',')
             interface[parts[0]] = [part.strip() for part in parts[12].split(';')]
         fhndl.close()
-        return interface
+        yield interface
 
 
 class GetDrugIdFromDrugBank(Step):
@@ -22,18 +23,28 @@ class GetDrugIdFromDrugBank(Step):
     IN = ['drug_bank_map', 'transcript_id']
     OUT = ['drug_id']
 
-    def calculate(self, drug_bank_map, transcript_id):
-        return drug_bank_map[transcript_id] if transcript_id in drug_bank_map else None
+    def consume_input(self, input):
+        copy = {
+            'drug_bank_map': input['drug_bank_map'][0],
+            'transcript_id': input['transcript_id'][:]
+        }
+        del input['transcript_id'][:]
+        return copy
+
+    def run(self, drug_bank_map, transcript_id):
+        for id_ in transcript_id:
+            yield drug_bank_map.get(id_, None)
 
 
-class GenomicsOfDrugSensitivityInCancerByGene(Resource):
+class GenomicsOfDrugSensitivityInCancerByGene(Step):
 
-    FORMAT = 'gdsc_map'
+    IN = ['gdsc_map_file']
     OUT = ['gdsc_by_gene']
 
-    def get_interface(self, filename):
+    def run(self, gdsc_map_file):
+        gdsc_map_file = gdsc_map_file[0]
         interface = {}
-        fhndl = open(filename, 'rU')
+        fhndl = open(gdsc_map_file, 'rU', encoding='utf-8')
         line = fhndl.next()
         for line in fhndl:
             parts = line.rstrip('\r\n').split(',')
@@ -41,7 +52,7 @@ class GenomicsOfDrugSensitivityInCancerByGene(Resource):
             for gene in genes:
                 interface[gene.strip()] = parts[2]
         fhndl.close()
-        return interface
+        yield interface
 
 
 class GetDrugIdFromGDSC(Step):
@@ -49,5 +60,14 @@ class GetDrugIdFromGDSC(Step):
     IN = ['gdsc_by_gene', 'gene_id']
     OUT = ['drug_id']
 
-    def calculate(self, gdsc_by_gene, gene_id):
-        return gdsc_by_gene[gene_id] if gene_id in gdsc_by_gene else None
+    def consume_input(self, input):
+        copy = {
+            'gdsc_by_gene': input['gdsc_by_gene'][0],
+            'gene_id': input['gene_id'][:]
+        }
+        del input['gene_id'][:]
+        return copy
+
+    def run(self, gdsc_by_gene, gene_id):
+        for id_ in gene_id:
+            yield gdsc_by_gene.get(id_, None)

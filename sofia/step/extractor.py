@@ -1,16 +1,17 @@
-from sofia.graph import EntityGraph
-from step import Step
+from sofia.step.step import Step
+from sofia.workflow_template.entity_set import EntitySet
 
 
 class Extractor(Step):
 
     PARAMS = ['path']
 
-    def init(self, path=[]):
-        self.path = path
+    def __init__(self, path=None):
+        self.path = [] if path is None else path
 
-    def calculate(self, **kwargs):
-        entity = kwargs[list(self.ins)[0]]
-        if entity is None:
-            return None
-        return EntityGraph.get_descendent(entity, self.path)
+    def run(self, **kwargs):
+        entities = next(iter(kwargs.values()))
+        for entity in entities:
+            res = None if entity is None else EntitySet.get_descendent(entity, self.path)
+            yield res
+        del entities[:]

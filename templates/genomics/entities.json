@@ -55,13 +55,13 @@
   },
   {
     "name": "gene_id",
-    "is_a": "id",
     "attributes": ["gene_id"],
     "description": "A gene identifier."
   },
   {
     "name": "genetic_code",
-    "description": "The genetic code for a given organism"
+    "description": "The genetic code for a given organism",
+    "provided": ["gc.prt genetic_code"]
   },
   {
     "name": "genomic_feature",
@@ -92,8 +92,8 @@
   {
     "name": "genomic_position",
     "has_a": [
-      { "name": "chromosome_id", "key": "chr", "type": "attr" },
-      { "name": "chromosome_pos", "key": "pos", "type": "attr" }
+      { "name": "chromosome_id", "key": "chromosome", "type": "attr" },
+      { "name": "chromosome_pos", "key": "position", "type": "attr" }
     ],
     "description": "A position on a chromosome."
   },
@@ -104,14 +104,15 @@
   {
     "name": "major_transcript",
     "has_a": [
-      { "name": "chromosome_id", "key": "chr", "type": "attr" },
+      { "name": "chromosome_id", "key": "chromosome", "type": "attr" },
       { "name": "transcript_id", "key": "name", "type": "attr" }
     ],
     "description": "The major transcript of a gene model. Currently defined as the transcript with the longest coding sequence."
   },
   {
     "name": "molecular_weight_set",
-    "description": "A set of molecular weights used to calculate various other features"
+    "description": "A set of molecular weights used to calculate various other features",
+    "provided": ["Emolwt.dat molecular_weights"]
   },
   {
     "name": "pest_sequences",
@@ -157,8 +158,8 @@
     "name": "variant",
     "is_a": "genomic_position",
     "has_a": [
-      {"name": "chromosome_id", "key": "chr", "type": "attr"},
-      {"name": "chromosome_pos", "key": "pos", "type": "attr"},
+      {"name": "chromosome_id", "key": "chromosome", "type": "attr"},
+      {"name": "chromosome_pos", "key": "position", "type": "attr"},
       {"name": "reference_allele", "key": "ref", "type": "attr"},
       {"name": "alternate_allele", "key": "alt", "type": "attr"},
       {"name": "variant_quality", "key": "qual", "type": "attr"}
@@ -173,5 +174,50 @@
     "name": "variant_set",
     "attributes": ["chromosome_id"],
     "description": "A set of sequence variants. The attributes of the chromosome_id can be set. eg. VCF"
+  },
+    {
+    "name": "bed_file",
+    "description": "A set of genomic features",
+    "extensions": [".bed", ".bed.gz"]
+  },
+  {
+    "name": "fasta_file",
+    "description": "A set of sequences",
+    "extensions": [".fasta", ".fasta.gz", ".fa", ".fa.gz"]
+  },
+  {
+    "name": "gbk_file",
+    "description": "A set of genbank entries",
+    "extensions": [".gbk", ".gbk.gz"]
+  },
+  {
+    "name": "gff_file",
+    "description": "A set of genomic features",
+    "extensions": [".gff", ".gff.gz", ".gff3", ".gff3.gz"]
+  },
+  {
+    "name": "gtf_file",
+    "description": "A set of genomic features",
+    "extensions": [".gtf", ".gtf.gz"]
+  },
+  {
+    "name": "maf_file",
+    "description": "A set of sequence variants",
+    "extensions": [".maf", ".maf.gz"]
+  },
+  {
+    "name": "molecular_weight_file",
+    "description": "Molecular weights for amino acids",
+    "extensions": [".dat"]
+  },
+  {
+    "name": "prt_file",
+    "description": "A set of genetic codes",
+    "extensions": [".prt"]
+  },
+  {
+    "name": "vcf_file",
+    "description": "A set of sequence variants",
+    "extensions": [".vcf", ".vcf.gz"]
   }
 ]

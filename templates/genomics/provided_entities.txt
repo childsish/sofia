@@ -1,2 +1,0 @@
-gc.prt genetic_code
-Emolwt.dat molecular_weights entity=molecular_weight_file

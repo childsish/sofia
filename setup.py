@@ -7,10 +7,11 @@ long_description = open('README.rst').read() if os.path.exists('README.rst') els
 
 setup(
     name='sofia',
-    version='1.7.2',
+    version='1.8.0',
     author='Liam H. Childs',
     author_email='liam.h.childs@gmail.com',
-    packages=find_packages(exclude=['test']),
+    packages=find_packages(exclude=['tests']),
+    package_data={'templates': ['genomics/*.json', 'genomics/entities/*']},
     url='https://github.com/childsish/sofia',
     license='LICENSE.txt',
     description='Software for the Flexible Integration of Annotation',

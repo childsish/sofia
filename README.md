@@ -16,11 +16,11 @@ SoFIA requires [Python 2.7][python] to be installed with the pip package managem
 
 1. Open the command line with administrator priveleges (Powershell in Windows, Shell in Linux)
 2. Update pip:
-    Windows: `python -m pip install -U pip setuptools`
-    Linux: `pip install -U pip setuptools`
+    * Windows: `python -m pip install -U pip setuptools`
+    * Linux: `pip install -U pip setuptools`
 3. Install SoFIA:
-    Windows: `python -m pip install sofia`
-    Linux: `pip install sofia`
+    * Windows: `python -m pip install sofia`
+    * Linux: `pip install sofia`
 
 Running SoFIA
 -------------
@@ -61,7 +61,7 @@ SoFIA can also be used programatically. All output will be automatically printed
 
 ```python
 
-    from sofia_.subcommands import get_provided_entities
+    from sofia.tools import get_provided_entities
     
     provided_entities = get_provided_entities([
         '/absolute/path/to/target/file.extension:target',
@@ -74,7 +74,7 @@ SoFIA can also be used programatically. All output will be automatically printed
 
 ```python
 
-    from sofia_.subcommands import get_requested_entities
+    from sofia.tools import get_requested_entities
     
     requested_entities = get_requested_entities([
         'gene_name',
@@ -88,7 +88,7 @@ SoFIA can also be used programatically. All output will be automatically printed
 
 ```python
 
-    from sofia_.template_factory import TemplateFactory
+    from sofia.template_factory import TemplateFactory
     
     template_factory = TemplateFactory('/absolute/path/to/template_directory')
     template = template_factor.make(provided_entities, requested_entities)
@@ -100,7 +100,7 @@ SoFIA can also be used programatically. All output will be automatically printed
 ```python
  
     from collections import namedtuple
-    from sofia_.subcommands.aggregate import Aggregator
+    from sofia.tools.aggregate import Aggregator
     
     Arguments = namedtuple('Arguments', ['header', 'template', 'processes', 'simultaneous_entries'])
     aggregator = Aggregator(template, 'template_directory')
@@ -129,7 +129,7 @@ New steps are implemented by creating a new Python class that inherits from the 
 Example:
 ```python
 
-    from sofia_.step import Step
+    from sofia.step import Step
 
     class GetCodonUSage(Step):
 
@@ -138,7 +138,7 @@ Example:
 
         def calculate(self, coding_sequence):
             codon_usage = {}
-            for i in xrange(0, len(coding_sequence), 3):
+            for i in range(0, len(coding_sequence), 3):
                 codon = coding_sequence[i:i+3]
                 if codon not in codon_usage:
                     codon_usage[codon] = 0

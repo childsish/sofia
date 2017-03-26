@@ -7,13 +7,19 @@ class GetGotermByGene(Step):
     OUT = ['goterm']
     PARAMETERS = ['domain']
     
-    def init(self, domain=None):
+    def __init__(self, domain=None):
         self.domain = domain
+
+    def consume_input(self, input):
+        copy = {
+            'gene_id': input['gene_id'][:],
+            'gene_goterm_map': input['gene_goterm_map'][0]
+        }
+        del input['gene_id'][:]
+        return copy
     
-    def calculate(self, gene_id, gene_goterm_map):
-        if self.domain is None:
-            return set(goterm for goterm, domain in gene_goterm_map[gene_id] if domain == self.domain)
-        return set(goterm for goterm, domain in gene_goterm_map[gene_id])
-    
-    def format(self, goterm):
-        return ','.join(sorted(goterm))
+    def run(self, gene_id, gene_goterm_map):
+        for id_ in gene_id:
+            if self.domain is None:
+                yield set(goterm for goterm, domain in gene_goterm_map[id_] if domain == self.domain)
+            yield set(goterm for goterm, domain in gene_goterm_map[id_])

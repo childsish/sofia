@@ -1,37 +1,37 @@
 from collections import defaultdict
 
-from sofia.step import Resource
+from sofia.step import Step
 
 
-class GenePathwayMap(Resource):
+class GenePathwayMap(Step):
 
-    EXT = {'.txt'}
-    FORMAT = 'gene_pathway_map'
+    IN = ['gene_pathway_map_file']
     OUT = ['gene_pathway_map']
 
-    def get_interface(self, filename):
-        fhndl = open(filename)
+    def run(self, gene_pathway_map_file):
+        gene_pathway_map_file = gene_pathway_map_file[0]
+        fhndl = open(gene_pathway_map_file, encoding='utf-8')
         fhndl.next()
         res = defaultdict(set)
         for line in fhndl:
             gene_id, pathway_id = line.strip('\r\n').split('\t', 1)
             res[gene_id].add(pathway_id)
         fhndl.close()
-        return res
+        yield res
 
 
-class GeneGotermMap(Resource):
+class GeneGotermMap(Step):
 
-    EXT = {'.txt'}
-    FORMAT = 'txt_file'
+    IN = ['gene_goterm_map_file']
     OUT = ['gene_goterm_map']
 
-    def get_interface(self, filename):
-        fhndl = open(filename)
+    def run(self, gene_goterm_map_file):
+        gene_goterm_map_file = gene_goterm_map_file[0]
+        fhndl = open(gene_goterm_map_file, encoding='utf-8')
         fhndl.next()
         res = defaultdict(set)
         for line in fhndl:
             parts = [part.strip() for part in line.split('\t')]
             res[parts[0]].add((parts[1], parts[2]))
         fhndl.close()
-        return res
+        yield res

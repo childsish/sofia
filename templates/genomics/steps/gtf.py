@@ -2,37 +2,58 @@ import gzip
 
 from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
 from lhc.interval import Interval
-from lhc.io.gtf.iterator import GtfEntryIterator
+from lhc.io.gtf.iterator import GtfIterator as GtfEntryIterator
+from sofia.step import Step
 
-from sofia.step import Resource, Target
 
+class GtfIterator(Step):
 
-class GtfIterator(Target):
-    
-    EXT = {'.gtf', '.gtf.gz', '.gtf.bgz'}
-    FORMAT = 'gtf_file'
+    IN = ['gtf_file']
     OUT = ['genomic_feature']
 
-    def get_interface(self, filename):
-        return GtfEntryIterator(filename)
+    def run(self, gtf_file):
+        gtf_file = gtf_file[0]
+        fileobj = gzip.open(gtf_file, 'rt') if gtf_file.endswith('.gz') else open(gtf_file, encoding='utf-8')
+        for entry in GtfEntryIterator(fileobj):
+            if entry.type == 'gene':
+                entry.name = entry.name.rsplit('.')[0]
+                yield entry
 
-    def calculate(self):
-        try: #REMOVEME
-            entry = self.interface.next()
-        except Exception:
-            return None
-        while entry.type != 'gene':
-            entry = self.interface.next()
-        entry.name = entry.name.rsplit('.')[0]
-        return entry
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
+
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'genomic_feature': set()
+        }
 
 
-class GtfSet(Resource):
-    
-    EXT = ['.gtf', '.gtf.gz', '.gtf.bgz']
-    FORMAT = 'gtf_file'
+class GtfSet(Step):
+
+    IN = ['gtf_file']
     OUT = ['genomic_feature_set']
 
-    def get_interface(self, filename):
-        fileobj = gzip.open(filename) if filename.endswith('.gz') else open(filename)
-        return InOrderAccessIntervalSet(GtfEntryIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
+    def run(self, gtf_file):
+        gtf_file = gtf_file[0]
+        fileobj = gzip.open(gtf_file, 'rt') if gtf_file.endswith('.gz') else open(gtf_file, encoding='utf-8')
+        yield InOrderAccessIntervalSet(GtfEntryIterator(fileobj), key=gff_key)
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'filename': cls.resolve_out_filename
+        }
+
+    @classmethod
+    def resolve_out_filename(cls, ins):
+        return {
+            'genomic_feature_set': set()
+        }
+
+
+def gff_key(line):
+    return Interval((line.chr, line.start), (line.chr, line.stop))

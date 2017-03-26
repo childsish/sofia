@@ -1,3 +1,6 @@
+from collections import defaultdict
+
+
 class ErrorManager(object):
     """ An object for storing error messages from graph resolution.
     
@@ -7,14 +10,14 @@ class ErrorManager(object):
     reporting. 
     """
     def __init__(self):
-        self.errors = set()
+        self.errors = defaultdict(set)
     
     def reset(self):
         """ Empty the ErrorManager of accumulated error messages. """
-        self.errors = set()
+        self.errors = defaultdict(set)
         
-    def add_error(self, msg):
+    def add_error(self, msg, node=''):
         """ Add an error message to the ErrorManager. """
-        self.errors.add(msg)
+        self.errors[msg].add(node)
 
 ERROR_MANAGER = ErrorManager()

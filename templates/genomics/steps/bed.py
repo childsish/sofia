@@ -3,26 +3,31 @@ import gzip
 from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
 from lhc.interval import Interval
 from lhc.io.bed.iterator import BedLineIterator
+from sofia.step import Step
 
-from sofia.step import Resource, Target
 
+class BedIterator(Step):
 
-class BedIterator(Target):
-    
-    EXT = {'.bed', '.bed.gz'}
-    FORMAT = 'bed_file'
+    IN = ['bed_file']
     OUT = ['genomic_interval']
-    
-    def get_interface(self, filename):
-        return BedLineIterator(filename)
+
+    def run(self, bed_file):
+        bed_file = bed_file[0]
+        fileobj = gzip.open(bed_file, 'rt') if bed_file.endswith('.gz') else open(bed_file, encoding='utf-8')
+        for line in BedLineIterator(fileobj):
+            yield line
 
 
-class BedSet(Resource):
-    
-    EXT = {'.bed', '.bed.gz', '.bed.bgz'}
-    FORMAT = 'bed_file'
+class BedSet(Step):
+
+    IN = ['bed_file']
     OUT = ['genomic_interval_set']
 
-    def get_interface(self, filename):
-        fileobj = gzip.open(filename) if filename.endswith('.gz') else open(filename)
-        return InOrderAccessIntervalSet(BedLineIterator(fileobj), key=lambda line: Interval((line.chr, line.start), (line.chr, line.stop)))
+    def run(self, bed_file):
+        bed_file = bed_file[0]
+        fileobj = gzip.open(bed_file, 'rt') if bed_file.endswith('.gz') else open(bed_file, encoding='utf-8')
+        yield InOrderAccessIntervalSet(BedLineIterator(fileobj), key=bed_key)
+
+
+def bed_key(line):
+    return Interval((line.chr, line.start), (line.chr, line.stop))
