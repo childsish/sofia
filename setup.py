@@ -10,7 +10,7 @@ setup(
     version='1.8.0',
     author='Liam H. Childs',
     author_email='liam.h.childs@gmail.com',
-    packages=find_packages(exclude=['test']),
+    packages=find_packages(exclude=['tests']),
     package_data={'templates': ['genomics/*.json', 'genomics/entities/*']},
     url='https://github.com/childsish/sofia',
     license='LICENSE.txt',
