@@ -7,11 +7,11 @@ from sofia.error_manager import ERROR_MANAGER
 
 
 class StepResolver(object):
-    def __init__(self, step, template, maps={}, requested_resources=set(), visited=None):
+    def __init__(self, step, template, maps=None, requested_resources=set(), visited=None):
         self.step = step
         self.factory = StepNodeFactory(step, [attribute(attribute.ATTRIBUTE, template.entities, step, maps) for attribute in template.attributes.values()])
         self.template = template
-        self.maps = maps
+        self.maps = maps if maps else {}
         self.requested_resources = requested_resources
 
         self.visited = set() if visited is None else visited
