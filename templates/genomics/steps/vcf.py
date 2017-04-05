@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 import gzip
 
 from lhc.collections.inorder_access_set import InOrderAccessSet

@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 import gzip
 
 from sofia.step import Step
