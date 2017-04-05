@@ -31,15 +31,18 @@ We provide example data to help familiarise yourself with SoFIA. To get the data
 
 To try the example, run:
 
-`python -m sofia aggregate ./example/data/randome.vcf -e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect -r ./example/data/randome.gff -r ./example/data/randome.fasta -o output.txt -p 1`
+`python -m sofia execute -e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect -r ./example/data/randome.gff -r ./example/data/randome.fasta -r ./example/data/randome.vcf variants -t variants -o output.txt -p 1`
 
 The command line can be broken down into several parts:
 
 1. `python -m sofia` Call the SoFIA script.
-2. `aggregate` Run SoFIA in data aggregation mode.
-2. `./data/example/randome.vcf` Annotate a set of variants.
-3. `-e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect` Annotate each variant with the chromosome, position, gene name, amino acid variant and variant effect. 
-4. `-r ./data/example/randome.gff -r ./data/example/randome.fasta` Use a set of genes descriptions and chromosome sequences to provide the extra information needed to generate the requested entities.
+2. `execute` Build a template then resolve and run a workflow.
+3. Define provided entities (resources):
+   * `-r ./data/example/randome.gff features`. Provide a resource containing genomic features. Call it "features".
+   * `-r ./data/example/randome.fasta sequences`. Provide a resource containing chromosome sequences. Call it "sequence".
+   * `-r ./data/example/randome.vcf variants`. Provide a resource containing variants. Call it "variants".
+4. `-e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect`. Annotate each variant with the chromosome, position, gene name, amino acid variant and variant effect.
+5. `-t variants`. Declare the "variants" resource as the target. This means each variant gets annotated with the requested entities.
 
 The output will be placed in the current directory in the `output.txt` file. To check if you got the correct output, run:
 
@@ -55,57 +58,21 @@ Available:
 Using the API
 -------------
 
-SoFIA can also be used programatically. All output will be automatically printed to standard output.
-
-1. Create provided resources
+SoFIA can also be used programatically. To use SoFIA, you must build a template, resolve a workflow from the template, then the workflow can be executed.
 
 ```python
+from sofia.tools.build import build
+from sofia.tools.resolve import resolve
+from sofia.tools.execute import execute
 
-    from sofia.tools import get_provided_entities
-    
-    provided_entities = get_provided_entities([
-        '/absolute/path/to/target/file.extension:target',
-        '/absolute/path/to/sequence/file.fasta',
-        '/absolute/path/to/feature/file.gtf'
-    ])
-```
-
-2. Create requested entities
-
-```python
-
-    from sofia.tools import get_requested_entities
-    
-    requested_entities = get_requested_entities([
-        'gene_name',
-        'amino_acid_variant',
-        'variant_effect'
-    ])
-
-```
-
-3. Create the template
-
-```python
-
-    from sofia.template_factory import TemplateFactory
-    
-    template_factory = TemplateFactory('/absolute/path/to/template_directory')
-    template = template_factor.make(provided_entities, requested_entities)
-    
-```
-
-4. Call the aggregator
-
-```python
- 
-    from collections import namedtuple
-    from sofia.tools.aggregate import Aggregator
-    
-    Arguments = namedtuple('Arguments', ['header', 'template', 'processes', 'simultaneous_entries'])
-    aggregator = Aggregator(template, 'template_directory')
-    aggregator.aggregate(requested_entities, provided_entities, Arguments(None, None, 1, None))
-     
+template_directories = ['path_to_template_1', 'path_to_template_2']
+provided_entity_definitions = ['provided_entity_1', 'provided_entity_2']
+requested_entity_definitions = ['requested_entity_1', 'requested_entity_2']
+template = build(template_directories)
+provided_entities = [template.parser.parse_provided_entity(definition) for definition in provided_entity_definitions]
+requested_entities = [template.parser.parse_requested_entity(definition) for definition in requested_entity_definitions]
+workflow = resolve(template, provided_entities, requested_entities)
+execute(workflow)
 ```
 
 Defining a template
@@ -128,22 +95,21 @@ New steps are implemented by creating a new Python class that inherits from the 
 
 Example:
 ```python
+from sofia.step import Step
 
-    from sofia.step import Step
+class GetCodonUSage(Step):
 
-    class GetCodonUSage(Step):
+    IN = ['coding_sequence']
+    OUT = ['codon_usage']
 
-        IN = ['coding_sequence']
-        OUT = ['codon_usage']
-
-        def calculate(self, coding_sequence):
-            codon_usage = {}
-            for i in range(0, len(coding_sequence), 3):
-                codon = coding_sequence[i:i+3]
-                if codon not in codon_usage:
-                    codon_usage[codon] = 0
-                codon_usage[codon] += 1
-            return codon_usage
+    def calculate(self, coding_sequence):
+        codon_usage = {}
+        for i in range(0, len(coding_sequence), 3):
+            codon = coding_sequence[i:i+3]
+            if codon not in codon_usage:
+                codon_usage[codon] = 0
+            codon_usage[codon] += 1
+        return codon_usage
 ```
 
 ### Defining resources
