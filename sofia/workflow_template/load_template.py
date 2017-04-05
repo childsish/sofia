@@ -1,6 +1,7 @@
-import imp
+import importlib.util
 import os
 import sys
+import types
 
 from sofia.workflow_template.template import Template
 from sofia.workflow_template.load_entity_set import load_entity_set
@@ -47,7 +48,9 @@ def load_plugins(plugin_directory, plugin_class, exclude=None):
         if fname.startswith('.') or not fname.endswith('.py'):
             continue
         module_name, ext = os.path.splitext(fname)
-        module = imp.load_source(module_name, os.path.join(plugin_directory, fname))
+        spec = importlib.util.spec_from_file_location(module_name, os.path.join(plugin_directory, fname))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
         child_classes = [child_class for child_class in module.__dict__.values() if type(child_class) == type]
         for child_class in child_classes:
             if issubclass(child_class, plugin_class) and child_class not in exclude:
