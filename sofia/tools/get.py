@@ -1,13 +1,12 @@
-from __future__ import with_statement
-
 import argparse
 import os
 import re
 import shutil
 import tarfile
 import tempfile
-import urllib
 import zipfile
+
+from urllib.request import urlopen
 
 url_regx = re.compile('^https?://')
 
@@ -24,7 +23,7 @@ def get_url(url):
         '.zip' if url.endswith('.zip') else\
         ''
     fileobj, filename = tempfile.mkstemp(suffix=suffix)
-    os.write(fileobj, urllib.urlopen(url).read())
+    os.write(fileobj, urlopen(url).read())
     os.close(fileobj)
     return filename
 
