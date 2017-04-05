@@ -17,9 +17,14 @@ def main():
 def get_parser():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
+    subparsers.required = True
+    subparsers.dest = 'command'
 
     build_parser = subparsers.add_parser('build')
     build.define_parser(build_parser)
+
+    resolve_parser = subparsers.add_parser('resolve')
+    resolve.define_parser(resolve_parser)
 
     execute_parser = subparsers.add_parser('execute')
     execute.define_parser(execute_parser)
@@ -29,9 +34,6 @@ def get_parser():
 
     info_parser = subparsers.add_parser('info')
     info.define_parser(info_parser)
-
-    resolve_parser = subparsers.add_parser('resolve')
-    resolve.define_parser(resolve_parser)
 
     return parser
 
