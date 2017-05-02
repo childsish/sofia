@@ -7,6 +7,12 @@ from sofia.workflow_template import load_template
 
 
 def build(template_directories):
+    """
+    Build a template from the source template directories.
+
+    :param template_directories: source template directories
+    :return: template workflow
+    """
     template = load_template(template_directories[0])
     for directory in template_directories[1:]:
         template.update(load_template(directory))

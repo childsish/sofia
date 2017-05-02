@@ -7,6 +7,12 @@ from sofia.execution_engines.low_memory_engine import LowMemoryExecutionEngine#,
 
 
 def execute(workflow, engine=None):
+    """
+    Execute a workflow using the given engine.
+
+    :param workflow: Workflow to be executed
+    :param engine: Engine used to execute workflow. Default: LowMemoryExecutionEngine
+    """
     if engine is None:
         engine = LowMemoryExecutionEngine(5)
     engine.execute(workflow)
