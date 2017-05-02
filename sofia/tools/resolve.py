@@ -51,7 +51,7 @@ def resolve_requested_entity(template, entity, maps=None):
 
     ERROR_MANAGER.reset()
     sys.stderr.write('     {} - '.format(entity.name))
-    solution_iterator = EntityResolver(entity.name, template, maps=maps, requested_resources=entity.attributes['resource'])
+    solution_iterator = EntityResolver(entity.name, template, maps=maps, requested_resources=entity.attributes.get('resource', set()))
     possible_graphs = list(solution_iterator)
     possible_graphs = [graph for graph in possible_graphs
                        if satisfies_request(graph, entity.attributes['resource'])]
@@ -145,13 +145,11 @@ def resolve_init(args):
 
     provided_entities = [template.parser.parse_provided_entity(entity) for entity in args.resource]
     if args.resource_list:
-        with open(args.resource_list) as fileobj:
-            provided_entities.extend(template.parser.parse_provided_entity(line.split()) for line in fileobj)
+        provided_entities.extend(parse_entity_list(args.resource_list, template.parser.parse_provided_entity))
 
     requested_entities = [template.parser.parse_requested_entity(definition) for definition in args.entity]
     if args.entity_list:
-        with open(args.entity_list) as fileobj:
-            requested_entities.extend(template.parser.parse_requested_entity(line.split()) for line in fileobj)
+        requested_entities.extend(parse_entity_list(args.entity_list, template.parser.parse_requested_entity))
 
     maps = {arg.split('=')[0]: arg.split('=')[1] for arg in args.maps}
 
@@ -172,6 +170,23 @@ def resolve_init(args):
     else:
         output.write(str(workflow))
     output.close()
+
+
+def parse_entity_list(filename, parse_function):
+    entities = []
+    with open(filename) as fileobj:
+        for line in fileobj:
+            if line.strip() == '':
+                continue
+
+            try:
+                entity = parse_function(line.strip().split())
+            except Exception as e:
+                sys.stderr.write(str(e) + '\n')
+                return 1
+            entities.append(entity)
+    return entities
+
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -32,10 +32,14 @@ class EntityDefinitionParser(object):
         self.extensions = extensions
 
     def parse_requested_entity(self, definition):
-        type, alias, attributes = self.parse_definition(definition)
+        try:
+            type, alias, attributes = self.parse_definition(definition)
+        except Exception:
+            raise ValueError('Invalid entity definition: {}'.format(definition))
+
         match = self.REGX.match(type)
         if match is None:
-            raise ValueError('Invalid entity definition: {}'.format(type))
+            raise ValueError('Invalid entity type: {}'.format(type))
         type, format_string = match.groups('')
         return EntityType(type, attributes=attributes, alias=alias, format_string=format_string)
 

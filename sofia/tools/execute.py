@@ -2,7 +2,7 @@ import argparse
 import sys
 
 from sofia.tools.build import build, get_input
-from sofia.tools.resolve import resolve
+from sofia.tools.resolve import resolve, parse_entity_list
 from sofia.execution_engines.low_memory_engine import LowMemoryExecutionEngine#, ParallelEngine
 
 
@@ -21,7 +21,7 @@ def execute(workflow, engine=None):
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    args.func(args)
+    return args.func(args)
 
 
 def get_parser():
@@ -63,13 +63,11 @@ def execute_init(args):
 
     provided_entities = [template.parser.parse_provided_entity(entity) for entity in args.resource]
     if args.resource_list:
-        with open(args.resource_list) as fileobj:
-            provided_entities.extend(template.parser.parse_provided_entity(line.split()) for line in fileobj)
+        provided_entities.extend(parse_entity_list(args.resource_list, template.parser.parse_provided_entity))
 
     requested_entities = [template.parser.parse_requested_entity(definition) for definition in args.entity]
     if args.entity_list:
-        with open(args.entity_list) as fileobj:
-            requested_entities.extend(template.parser.parse_requested_entity(line.split()) for line in fileobj)
+        requested_entities.extend(parse_entity_list(args.entity_list, template.parser.parse_requested_entity))
 
     maps = {arg.split('=')[0]: arg.split('=')[1] for arg in args.maps}
 

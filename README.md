@@ -12,7 +12,7 @@ There is a [Google Group][google-group] for discussions about SoFIA.
 Installation
 ------------
 
-SoFIA requires [Python 2.7][python] to be installed with the pip package management system. Pip should come with the latest Python.
+SoFIA requires [Python 3][python] to be installed with the pip package management system. Pip should come with the latest Python.
 
 1. Open the command line with administrator priveleges (Powershell in Windows, Shell in Linux)
 2. Update pip:
