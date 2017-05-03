@@ -140,12 +140,20 @@ def define_parser(parser):
 
 
 def resolve_init(args):
+    import os
+    
     input = get_input(args.input)
     template = build(input)
 
     provided_entities = [template.parser.parse_provided_entity(entity) for entity in args.resource]
     if args.resource_list:
         provided_entities.extend(parse_entity_list(args.resource_list, template.parser.parse_provided_entity))
+
+    for entity in provided_entities:
+        filename = next(iter(entity.attributes['filename']))
+        if not os.path.exists(filename):
+            sys.stderr.write('No such file or directory \'{}\'.\n'.format(filename))
+            sys.exit(1)
 
     requested_entities = [template.parser.parse_requested_entity(definition) for definition in args.entity]
     if args.entity_list:
