@@ -15,6 +15,14 @@ class ChromosomeIdResolver(AttributeResolver):
             ttl += self.ATTRIBUTE in self.entity_graph.entities[in_]['attributes'] or self.ATTRIBUTE in self.entity_graph.has_a.get_descendants(in_)
         if ttl < 2:
             return ins
+
+        in_attributes = []
+        for in_ in ins:
+            try:
+                in_attributes.append(in_.head.attributes[self.attribute])
+            except KeyError:
+                raise KeyError('{} does not have the "{}" attribute'.format(in_.name, self.attribute))
+
         in_attributes = [in_.head.attributes[self.attribute] for in_ in ins]
         attributes = set()
         for attribute in in_attributes:
