@@ -153,6 +153,20 @@ class GetVariantEffect(Step):
         #TODO: split into conservative or non-conservative
         return 'missense_variant'
 
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'sync': cls.resolve_out_sync
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        if len(ins['variant'] | ins['coding_variant'] | ins['amino_acid_variant']) != 1:
+            raise ValueError('Conflicting sync attributes when resolving GetVariantsEffect')
+        return {
+            'variant_effect': ins['variant']
+        }
+
 
 class CodingVariant(namedtuple('CodingVariant', ['pos', 'ref', 'alt'])):
     def __str__(self):
@@ -205,6 +219,18 @@ class GetCodingVariant(Step):
                 alt = map(reverse_complement, alt)
             yield CodingVariant(coding_position, ref, alt)
 
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'sync': cls.resolve_out_sync
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        return {
+            'coding_variant': ins['variant']
+        }
+
 
 class CodonVariant(namedtuple('CodonVariant', ('pos', 'ref', 'alt', 'fs'))):
     def __str__(self):
@@ -248,6 +274,18 @@ class GetCodonVariant(Step):
                 fs.append(fs_pos)
             ref_codon = sequence[pos - fr:pos + len(ref) + to]
             yield CodonVariant(pos - fr, ref_codon, alts, fs)
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'sync': cls.resolve_out_sync
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        return {
+            'codon_variant': ins['coding_variant']
+        }
 
 
 class AminoAcidVariant(namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'))):

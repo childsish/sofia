@@ -31,3 +31,15 @@ class GetHomopolymer(Step):
             while i < len(seq) and seq[i] == seq[0]:
                 i += 1
             yield seq[:i]
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'sync': cls.resolve_out_sync
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        return {
+            'homopolymer': ins['variant']
+        }
