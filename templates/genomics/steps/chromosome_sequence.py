@@ -19,13 +19,13 @@ class GetHomopolymer(Step):
 
     def run(self, variant, chromosome_sequence_set):
         for variant_ in variant:
-            ref = variant_.ref
-            alt = variant_.alt
+            ref = variant_.data['ref']
+            alt = variant_.data['alt']
             i = 0
             while i < len(ref) and i < len(alt) and ref[i] == alt[i]:
                 i += 1
-            pos = variant_.pos + i
-            seq = chromosome_sequence_set.fetch(variant_.chr, pos, pos + 100)
+            pos = variant_.position + i
+            seq = chromosome_sequence_set.fetch(variant_.chromosome, pos, pos + 100)
 
             i = 0
             while i < len(seq) and seq[i] == seq[0]:

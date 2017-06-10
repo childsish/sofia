@@ -86,3 +86,15 @@ class GetGenomicFeatureByInterval(Step):
             res = sorted(features, key=len)[-1]
             res.name = res.name.rsplit('.')[0]
             yield res
+
+    @classmethod
+    def get_out_resolvers(cls):
+        return {
+            'sync': cls.resolve_out_sync
+        }
+
+    @classmethod
+    def resolve_out_sync(cls, ins):
+        return {
+            'genomic_feature': ins['genomic_interval']
+        }

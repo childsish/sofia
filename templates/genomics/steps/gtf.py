@@ -2,7 +2,7 @@ import gzip
 
 from lhc.collections.inorder_access_interval_set import InOrderAccessIntervalSet
 from lhc.interval import Interval
-from lhc.io.gtf.iterator import GtfIterator as GtfEntryIterator
+from lhc.io.gtf.iterator import GtfIterator as GtfEntryIterator, GtfLineIterator
 from sofia.step import Step
 
 
@@ -14,9 +14,9 @@ class GtfIterator(Step):
     def run(self, gtf_file):
         gtf_file = gtf_file[0]
         fileobj = gzip.open(gtf_file, 'rt') if gtf_file.endswith('.gz') else open(gtf_file, encoding='utf-8')
-        for entry in GtfEntryIterator(fileobj):
-            if entry.type == 'gene':
-                entry.name = entry.name.rsplit('.')[0]
+        for entry in GtfEntryIterator(GtfLineIterator(fileobj)):
+            if entry.data['type'] == 'gene':
+                entry.name = entry.data['name'].rsplit('.')[0]
                 yield entry
 
     @classmethod
@@ -40,7 +40,7 @@ class GtfSet(Step):
     def run(self, gtf_file):
         gtf_file = gtf_file[0]
         fileobj = gzip.open(gtf_file, 'rt') if gtf_file.endswith('.gz') else open(gtf_file, encoding='utf-8')
-        yield InOrderAccessIntervalSet(GtfEntryIterator(fileobj), key=gff_key)
+        yield InOrderAccessIntervalSet(GtfEntryIterator(GtfLineIterator(fileobj)))
 
     @classmethod
     def get_out_resolvers(cls):
@@ -53,7 +53,3 @@ class GtfSet(Step):
         return {
             'genomic_feature_set': set()
         }
-
-
-def gff_key(line):
-    return Interval((line.chr, line.start), (line.chr, line.stop))

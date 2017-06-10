@@ -1,5 +1,7 @@
 from sofia.step import Step
 
+from lhc.binf.genomic_coordinate import GenomicInterval
+
 
 class GetVariantByVariant(Step):
     
@@ -19,12 +21,13 @@ class GetVariantByVariant(Step):
         for variant_ in variant:
             if variant_ is None:
                 yield None
+                continue
             try:
-                overlap = variant_set.fetch(variant_.chr, variant_.pos, variant_.pos + 1)
+                overlap = variant_set[GenomicInterval(variant_, variant_ + 1)]
             except ValueError:
                 yield None
-            hits = [o for o in overlap if o.pos == variant_.pos and
-                    o.ref == variant_.ref and o.alt == variant_.alt]
+            hits = [o for o in overlap if o.position == variant_.position and
+                    o.data['ref'] == variant_.data['ref'] and o.data['alt'] == variant_.data['alt']]
             if len(hits) == 0:
                 yield None
             yield hits

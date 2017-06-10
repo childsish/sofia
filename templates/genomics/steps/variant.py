@@ -227,6 +227,9 @@ class GetCodingVariant(Step):
 
     @classmethod
     def resolve_out_sync(cls, ins):
+        if ins['variant'] != ins['major_transcript']:
+            msg = 'major_transcript and variant have conflicting sync attributes: {} vs. {}'
+            raise ValueError(msg.format(ins['major_transcript'], ins['variant']))
         return {
             'coding_variant': ins['variant']
         }
@@ -248,8 +251,8 @@ class GetCodonVariant(Step):
             if variant is None or sequence is None:
                 yield None
                 continue
-            pos = variant.pos
-            ref = variant.ref
+            pos = variant.position
+            ref = variant.data['ref']
             if len(ref) == 1:
                 fr = pos % 3
                 to = 2 - (pos % 3)
@@ -258,7 +261,7 @@ class GetCodonVariant(Step):
                 to = [2, 4, 3][(pos + len(ref)) % 3]
             alts = []
             fs = []
-            for alt in variant.alt:
+            for alt in variant.data['alt']:
                 seq = list(sequence)
                 seq[pos:pos + len(ref)] = list(alt)
                 alts.append(''.join(seq[pos - fr:pos + len(alt) + to]))
