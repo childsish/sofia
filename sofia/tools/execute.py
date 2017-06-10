@@ -14,7 +14,7 @@ def execute(workflow, engine=None):
     :param engine: Engine used to execute workflow. Default: LowMemoryExecutionEngine
     """
     if engine is None:
-        engine = LowMemoryExecutionEngine(5)
+        engine = LowMemoryExecutionEngine(256)
     engine.execute(workflow)
 
 
@@ -54,10 +54,10 @@ def define_parser(parser):
             help='name of implicit entity')
     add_arg('-w', '--workflow-template', default=['genomics'], nargs='+',
             help='specify a workflow template (default: genomics).')
-    parser.set_defaults(func=execute_init)
+    parser.set_defaults(func=init_execute)
 
 
-def execute_init(args):
+def init_execute(args):
     import os
 
     input = get_input(args.input)
@@ -83,7 +83,10 @@ def execute_init(args):
         for entity in requested_entities:
             if 'resource' not in entity.attributes:
                 entity.attributes['resource'] = set()
+            if 'sync' not in entity.attributes:
+                entity.attributes['sync'] = set()
             entity.attributes['resource'].add(args.target)
+            entity.attributes['sync'].add(args.target)
 
     workflow = resolve(template, requested_entities, provided_entities, maps)
     output = sys.stdout if args.output is None else open(args.outpu, 'w')

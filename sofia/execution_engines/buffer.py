@@ -11,6 +11,8 @@ class Buffer(object):
         return all(len(input) > 0 for input in self.items)
 
     def is_writable(self, key):
+        if key not in self.keys:
+            raise ValueError('Key mismatched. Please check that all attributes match.')
         return len(self.items[self.keys.index(key)]) < self.n
 
     def read(self):

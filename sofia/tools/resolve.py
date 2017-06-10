@@ -44,8 +44,12 @@ def resolve(template, requested_entities, provided_entities=None, maps=None):
 
 
 def resolve_requested_entity(template, entity, maps=None):
-    def satisfies_request(graph, requested_resources):
-        return graph.head.attributes['resource'].intersection(requested_resources) == requested_resources
+
+    def satisfies_request(request, response):
+        res = response['resource'].intersection(request['resource']) == request['resource'] and \
+              (not 'sync' in request or request['sync'] == response['sync'])
+        return response['resource'].intersection(request['resource']) == request['resource'] and \
+               (not 'sync' in request or request['sync'] == response['sync'])
 
     maps = {} if maps is None else maps
 
@@ -53,8 +57,7 @@ def resolve_requested_entity(template, entity, maps=None):
     sys.stderr.write('     {} - '.format(entity.name))
     solution_iterator = EntityResolver(entity.name, template, maps=maps, requested_resources=entity.attributes.get('resource', set()))
     possible_graphs = list(solution_iterator)
-    possible_graphs = [graph for graph in possible_graphs
-                       if satisfies_request(graph, entity.attributes['resource'])]
+    possible_graphs = [graph for graph in possible_graphs if satisfies_request(entity.attributes, graph.head.attributes)]
     if len(possible_graphs) == 0:
         sys.stderr.write('unable to resolve entity.\n\n')
         sys.stderr.write('     Possible reasons:\n')
@@ -72,12 +75,15 @@ def resolve_requested_entity(template, entity, maps=None):
         sys.stderr.write('unique solution found\n')
         return possible_graphs[0]
 
+    # Pick the graphs with the least extra resources
     matching_graphs = defaultdict(list)
     for graph in possible_graphs:
         resources = frozenset([r for r in graph.head.attributes['resource'] if not r == 'target'])
         extra_resources = resources - entity.attributes['resource']
         matching_graphs[len(extra_resources)].append((graph, extra_resources))
     count, matching_graphs = sorted(matching_graphs.items())[0]
+
+    # Pick the graphs with the
     unique = True
     if len(matching_graphs) > 1:
         match_size = defaultdict(list)
@@ -136,10 +142,10 @@ def define_parser(parser):
             help='name of implicit entity')
     add_arg('-w', '--workflow-template', default=['genomics'], nargs='+',
             help='specify a workflow template (default: genomics).')
-    parser.set_defaults(func=resolve_init)
+    parser.set_defaults(func=init_resolve)
 
 
-def resolve_init(args):
+def init_resolve(args):
     import os
     
     input = get_input(args.input)
@@ -165,7 +171,10 @@ def resolve_init(args):
         for entity in requested_entities:
             if 'resource' not in entity.attributes:
                 entity.attributes['resource'] = set()
+            if 'sync' not in entity.attributes:
+                entity.attributes['sync'] = set()
             entity.attributes['resource'].add(args.target)
+            entity.attributes['sync'].add(args.target)
 
     output = sys.stdout
     if args.output is not None:

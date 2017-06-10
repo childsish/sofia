@@ -33,7 +33,7 @@ class StepResolver(object):
                      for entity in entities}
         resolvers = {entity: list(resolver) for entity, resolver in resolvers.items()}
 
-        res = defaultdict(list)
+        solutions = defaultdict(list)
         disjoint_solutions = [resolvers[entity] for entity in entities]
         for disjoint_solution in product(*disjoint_solutions):
             try:
@@ -44,7 +44,7 @@ class StepResolver(object):
             resources = set()
             for partial_solution in disjoint_solution:
                 resources.update(partial_solution.head.attributes['resource'])
-            res[len(resources - set(self.requested_resources))].append(step_node)
-        if len(res) > 0:
-            for solution in res[min(res)]:
+            solutions[len(resources - set(self.requested_resources))].append(step_node)
+        if len(solutions) > 0:
+            for solution in solutions[min(solutions)]:
                 yield solution

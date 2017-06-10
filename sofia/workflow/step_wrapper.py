@@ -16,7 +16,7 @@ class StepWrapper(object):
         return self.step.name
 
     def __str__(self):
-        return str(self.step)
+        return self.step.name
 
     def __hash__(self):
         return hash(str(self))
