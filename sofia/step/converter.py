@@ -1,11 +1,13 @@
 from collections import Counter
 from copy import copy
 from sofia.step.step import Step
+from lhc.order import natural_key
 
 
 class Converter(Step):
-    def __init__(self, map_file, fr, to, path=None):
-        self.map = self.load_map_file(map_file, fr, to)
+    def __init__(self, map_file, fr, to, path=None, order=None):
+        self.map = self.load_map_file(map_file, fr, to,
+                                      lambda x: tuple(natural_key(x)) if order == 'natural' else lambda x: x)
         self.path = [] if path is None else path
         self.ttl = 0
         self.cnt = Counter()
@@ -51,10 +53,10 @@ class Converter(Step):
         frqs = {msg: round(cnt / float(self.ttl), 3) for msg, cnt in self.cnt.items()}
         return {'{}% of conversions produced error {}'.format(frq * 100, msg) for msg, frq in frqs.items()}
 
-    def load_map_file(self, filename, fr, to):
+    def load_map_file(self, filename, fr, to, key):
         with open(filename) as fileobj:
             hdrs = fileobj.readline().strip().split('\t')
             fr_idx = hdrs.index(fr)
             to_idx = hdrs.index(to)
-            map = {parts[fr_idx].strip(): parts[to_idx].strip() for parts in (line.split('\t') for line in fileobj)}
+            map = {key(parts[fr_idx].strip()): key(parts[to_idx].strip()) for parts in (line.split('\t') for line in fileobj)}
         return map

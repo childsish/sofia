@@ -17,7 +17,8 @@ def resolve(template, requested_entities, provided_entities=None, maps=None):
     provided_entities = [] if provided_entities is None else provided_entities
     for entity in provided_entities:
         template.provide_entity(entity)
-    maps = {} if maps is None else maps
+
+    maps = initialise_maps(maps)
 
     if any(not entity.name.endswith('_file') for entity in requested_entities):
         ins = [entity.name for entity in requested_entities if not entity.name.endswith('_file')]
@@ -41,6 +42,19 @@ def resolve(template, requested_entities, provided_entities=None, maps=None):
     for partial_solution in partial_solutions:
         solution.add_entity_node(partial_solution)
     return solution
+
+
+def initialise_maps(maps=None):
+    res = {}
+    if maps is None:
+        return res
+    for map in maps:
+        if len(map) < 2:
+            msg = 'Map "{}" was improperly defined. It requires at least the attribute name and filename, and optionally several parameters'
+            raise ValueError(msg.format(' '.join(map)))
+        res[map[0]] = dict(part.split('=', 1) for part in map[2:])
+        res[map[0]]['map_file'] = map[1]
+    return res
 
 
 def resolve_requested_entity(template, entity, maps=None):
@@ -132,7 +146,7 @@ def define_parser(parser):
             help='text file with a list of provided resources')
 
     add_arg = parser.add_argument_group('miscellaneous').add_argument
-    add_arg('-m', '--maps', nargs='+', default=[],
+    add_arg('-m', '--maps', nargs='+', default=[], action='append',
             help='maps for converting for entity attributes')
     add_arg('-o', '--output',
             help='direct output to named file (default: stdout)')
@@ -165,8 +179,6 @@ def init_resolve(args):
     if args.entity_list:
         requested_entities.extend(parse_entity_list(args.entity_list, template.parser.parse_requested_entity))
 
-    maps = {arg.split('=')[0]: arg.split('=')[1] for arg in args.maps}
-
     if args.target is not None:
         for entity in requested_entities:
             if 'resource' not in entity.attributes:
@@ -181,7 +193,7 @@ def init_resolve(args):
         filename = args.output + ('' if args.output.endswith('.sfw') else '.sfw')
         mode = 'wb' if args.pickled else 'w'
         output = open(filename, mode)
-    workflow = resolve(template, requested_entities, provided_entities, maps)
+    workflow = resolve(template, requested_entities, provided_entities, args.maps)
     if args.pickled:
         pickle.dump(workflow, output, protocol=pickle.HIGHEST_PROTOCOL)
     else:

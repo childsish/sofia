@@ -44,7 +44,7 @@ def define_parser(parser):
             help='text file with a list of provided resources')
 
     add_arg = parser.add_argument_group('miscellaneous').add_argument
-    add_arg('-m', '--maps', nargs='+', default=[],
+    add_arg('-m', '--maps', nargs='+', default=[], action='append',
             help='maps for converting for entity attributes')
     add_arg('-o', '--output',
             help='direct output to named file (default: stdout)')
@@ -77,8 +77,6 @@ def init_execute(args):
     if args.entity_list:
         requested_entities.extend(parse_entity_list(args.entity_list, template.parser.parse_requested_entity))
 
-    maps = {arg.split('=')[0]: arg.split('=')[1] for arg in args.maps}
-
     if args.target is not None:
         for entity in requested_entities:
             if 'resource' not in entity.attributes:
@@ -88,7 +86,7 @@ def init_execute(args):
             entity.attributes['resource'].add(args.target)
             entity.attributes['sync'].add(args.target)
 
-    workflow = resolve(template, requested_entities, provided_entities, maps)
+    workflow = resolve(template, requested_entities, provided_entities, args.maps)
     output = sys.stdout if args.output is None else open(args.outpu, 'w')
     execute(workflow)
     output.close()
