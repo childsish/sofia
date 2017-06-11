@@ -53,7 +53,7 @@ class ChromosomeIdResolver(AttributeResolver):
             params['to'] = to
             params['path'] = path
 
-            convert_step = ConcreteStep(Converter, name, [in_entity_type.name], [in_entity_type.name], params)
+            convert_step = ConcreteStep(Converter, name=name, ins=[in_entity_type.name], outs=[in_entity_type.name], params=params)
             out_attributes = copy(in_.head.attributes)
             out_attributes[self.ATTRIBUTE] = {to}
             step_node = StepNode(convert_step, {in_entity_type.name: out_attributes})

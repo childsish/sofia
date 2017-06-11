@@ -1,6 +1,6 @@
 from collections import Counter
 
-from lhc.binf.genomic_coordinate.genomic_interval import Interval
+from lhc.binf.genomic_coordinate.genomic_interval import GenomicInterval
 from sofia.step import Step
 
 
@@ -27,7 +27,7 @@ class GetGenomicFeatureByPosition(Step):
             if position is not None:
                 self.ttl += 1
                 try:
-                    features = genomic_feature_set[Interval(position, position + 1)]
+                    features = genomic_feature_set[GenomicInterval(position, position + 1)]
                     if features is not None and len(features) > 0:
                         # TODO: select correct gene (currently selecting largest)
                         res = sorted(features, key=len)[-1]

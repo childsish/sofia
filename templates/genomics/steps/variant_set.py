@@ -20,16 +20,18 @@ class GetVariantByVariant(Step):
         #TODO: check matched variants
         for variant_ in variant:
             if variant_ is None:
-                yield None
+                yield []
                 continue
             try:
                 overlap = variant_set[GenomicInterval(variant_, variant_ + 1)]
             except ValueError:
                 yield None
+                continue
             hits = [o for o in overlap if o.position == variant_.position and
                     o.data['ref'] == variant_.data['ref'] and o.data['alt'] == variant_.data['alt']]
             if len(hits) == 0:
                 yield None
+                continue
             yield hits
 
     @classmethod
