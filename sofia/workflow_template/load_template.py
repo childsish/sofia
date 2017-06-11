@@ -69,7 +69,7 @@ def get_extractors(entities):
             extractors[(in_, out)] = ([], 'Cast{}To{}'.format(capitalise_name(in_), capitalise_name(out)))
     res = {}
     for (in_, out), (path, name) in extractors.items():
-        res[name] = ConcreteStep(Extractor, name, [in_], [out], {'path': path})
+        res[name] = ConcreteStep(Extractor, name=name, ins=[in_], outs=[out], params={'path': path})
     return res
 
 

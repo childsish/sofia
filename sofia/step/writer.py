@@ -4,16 +4,15 @@ from sofia.step.step import Step
 
 
 class Writer(Step):
-    def __init__(self, entities, format=None, output=sys.stdout):
+    def __init__(self, entities, output=sys.stdout):
         self.entities = entities
-        self.format = '\t'.join('{{{}}}'.format(entity) for entity in entities) if format is None else format
-        self.format += '\n'
         self.output = output
 
     def run(self, **kwargs):
-        keys = kwargs.keys()
-        for values in zip(*kwargs.values()):
-            self.output.write(self.format.format(**dict(zip(keys, values))))
+        for values in zip(*[kwargs[entity.name] for entity in self.entities]):
+            res = [entity.format(value) for entity, value in zip(self.entities, values)]
+            self.output.write('\t'.join(res))
+            self.output.write('\n')
         for k in kwargs:
             del kwargs[k][:]
         return

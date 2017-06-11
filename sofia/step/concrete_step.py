@@ -7,7 +7,7 @@ class ConcreteStep(object):
      2) Wrap the output of a user-defined step in a tuple.
      3) Allow generic steps to be dynamically specialised like the extractors and converters.
     """
-    def __init__(self, step_class, name=None, ins=None, outs=None, params=None):
+    def __init__(self, step_class, *, name=None, ins=None, outs=None, params=None):
         self.step = None
 
         self.step_class = step_class
