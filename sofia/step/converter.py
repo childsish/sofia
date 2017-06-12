@@ -33,15 +33,16 @@ class Converter(Step):
         child = getattr(entity, step['key']) if step['type'] == 'attr' else\
             getattr(entity, step['key'])() if step['type'] == 'function' else\
             entity[step['key']]
-
         value = self._convert(child, path[1:], id_map)
 
         if step['type'] == 'attr':
             if hasattr(entity, '_replace'):  # for tuples
                 entity = entity._replace(**{path[0]['key']: value})
             else:
+                entity = copy(entity)
                 setattr(entity, step['key'], value)
         elif step['type'] == 'function':
+            entity = copy(entity)
             getattr(entity, step['key'])(value)
         else:
             entity = entity.copy()
