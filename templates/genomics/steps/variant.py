@@ -125,13 +125,13 @@ class GetVariantEffect(Step):
                 for na_alt, aa_alt, fs in zip(variant_.data['alt'], amino_acid_variant_.alt, amino_acid_variant_.fs):
                     if fs is None:
                         res.append(self._get_amino_acid_type(amino_acid_variant_.pos, amino_acid_variant_.ref, aa_alt))
-                    elif len(na_alt) > len(variant_.ref):
-                        if (len(na_alt) - len(variant_.ref)) % 3 == 0:
+                    elif len(na_alt) > len(variant_.data['ref']):
+                        if (len(na_alt) - len(variant_.data['ref'])) % 3 == 0:
                             res.append('inframe_insertion')
                         else:
                             res.append('frameshift_elongation')
                     else:
-                        if (len(variant.ref) - len(na_alt)) % 3 == 0:
+                        if (len(variant_.data['ref']) - len(na_alt)) % 3 == 0:
                             res.append('inframe_deletion')
                         else:
                             res.append('frameshift_truncation')
@@ -216,7 +216,7 @@ class GetCodingVariant(Step):
             alt = variant_.data['alt']
             if transcript.strand == '-':
                 ref = reverse_complement(ref)
-                alt = map(reverse_complement, alt)
+                alt = list(map(reverse_complement, alt))
             yield CodingVariant(coding_position, ref, alt)
 
     @classmethod
@@ -251,8 +251,8 @@ class GetCodonVariant(Step):
             if variant is None or sequence is None:
                 yield None
                 continue
-            pos = variant.position
-            ref = variant.data['ref']
+            pos = variant.pos
+            ref = variant.ref
             if len(ref) == 1:
                 fr = pos % 3
                 to = 2 - (pos % 3)
@@ -261,7 +261,7 @@ class GetCodonVariant(Step):
                 to = [2, 4, 3][(pos + len(ref)) % 3]
             alts = []
             fs = []
-            for alt in variant.data['alt']:
+            for alt in variant.alt:
                 seq = list(sequence)
                 seq[pos:pos + len(ref)] = list(alt)
                 alts.append(''.join(seq[pos - fr:pos + len(alt) + to]))
@@ -272,7 +272,7 @@ class GetCodonVariant(Step):
                 else:
                     fs_pos = 0
                     seq = downstream
-                    while fs_pos < len(seq) and seq[fs_pos:fs_pos + 3] not in ['TAA', 'TAG', 'TGA']:
+                    while fs_pos < len(seq) and seq[fs_pos:fs_pos + 3] not in {'TAA', 'TAG', 'TGA'}:
                         fs_pos += 3
                 fs.append(fs_pos)
             ref_codon = sequence[pos - fr:pos + len(ref) + to]
@@ -317,7 +317,7 @@ class AminoAcidVariant(namedtuple('AminoAcidVariant', ('pos', 'ref', 'alt', 'fs'
                     j += 1
                 r = 'p.{}{}{}'.format(ref[i:j + 1], pos + i + 1, alt[i:j + 1])
                 if fs is not None:
-                    r += 'fs*{}'.format(fs)
+                    r += 'fs*{}'.format(int(fs))
             res.append(r)
         return ','.join(res)
 

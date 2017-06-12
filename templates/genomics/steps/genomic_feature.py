@@ -12,14 +12,15 @@ class GetMajorTranscriptFromGenomicFeature(Step):
     def run(self, genomic_feature):
         for feature in genomic_feature:
             if feature is not None and len(feature.children) > 0:
-                transcripts = sorted((child for child in feature.children if child.data['type'] == 'mRNA'), key=self.get_transcript_length)
-                if len(feature) < 0:
-                    feature = transcripts[-1]
+                transcripts = sorted((child for child in feature.children if child.data['type'] in {'transcript', 'mRNA'}), key=self.get_transcript_length)
+                feature = transcripts[-1]
+            else:
+                feature = None
             yield feature
 
     @staticmethod
     def get_transcript_length(transcript):
-        return sum(len(child) for child in transcript.children if child.type == 'CDS')
+        return sum(len(child) for child in transcript.children if child.data['type'] == 'CDS')
 
 
 #class GetMajorTranscriptFromGenomicInterval(Step):
