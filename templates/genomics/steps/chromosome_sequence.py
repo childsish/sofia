@@ -25,7 +25,7 @@ class GetHomopolymer(Step):
             while i < len(ref) and i < len(alt) and ref[i] == alt[i]:
                 i += 1
             pos = variant_.position + i
-            seq = chromosome_sequence_set.fetch(variant_.chromosome, pos, pos + 100)
+            seq = chromosome_sequence_set.fetch(str(variant_.chromosome), pos, pos + 100)
 
             i = 0
             while i < len(seq) and seq[i] == seq[0]:

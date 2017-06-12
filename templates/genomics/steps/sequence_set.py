@@ -1,8 +1,18 @@
 import gzip
 
-from lhc.binf.sequence.reverse_complement import reverse_complement
-from lhc.io.fasta import FastaInOrderAccessSet
 from sofia.step import Step
+from lhc.binf.sequence.reverse_complement import reverse_complement
+try:
+    import pysam
+
+    def get_fasta_set(filename):
+        return pysam.FastaFile(filename)
+except ImportError:
+    from lhc.io.fasta import FastaInOrderAccessSet
+
+    def get_fasta_set(filename):
+        fileobj = gzip.open(filename, 'rt') if filename.endswith('.gz') else open(filename, encoding='utf-8')
+        return FastaInOrderAccessSet(fileobj)
 
 
 class GetDownstream1000(Step):
@@ -29,12 +39,11 @@ class GetDownstream1000(Step):
     def run(self, fasta_file, genomic_position, major_transcript):
         for position, transcript in zip(genomic_position, major_transcript):
             if self.fasta_set is None:
-                fileobj = gzip.open(fasta_file, 'rt') if fasta_file.endswith('.gz') else open(fasta_file, encoding='utf-8')
-                self.fasta_set = FastaInOrderAccessSet(fileobj)
+                self.fasta_set = get_fasta_set(fasta_file)
             if transcript is None:
                 yield None
                 continue
-            chr = position.chromosome
+            chr = str(position.chromosome)
             pos = position.position
             strand = transcript.strand
             start = pos if strand == '+' else pos - 1000
