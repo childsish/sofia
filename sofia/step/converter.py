@@ -2,12 +2,13 @@ from collections import Counter
 from copy import copy
 from sofia.step.step import Step
 from lhc.order import natural_key
+from lhc.binf.genomic_coordinate.genomic_position import ChromosomeIdentifier
 
 
 class Converter(Step):
     def __init__(self, map_file, fr, to, path=None, order=None):
         self.map = self.load_map_file(map_file, fr, to,
-                                      lambda x: tuple(natural_key(x)) if order == 'natural' else lambda x: x)
+                                      lambda x: ChromosomeIdentifier(tuple(natural_key(x))) if order == 'natural' else lambda x: x)
         self.path = [] if path is None else path
         self.ttl = 0
         self.cnt = Counter()

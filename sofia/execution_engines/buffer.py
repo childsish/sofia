@@ -19,4 +19,6 @@ class Buffer(object):
         return self.items
 
     def write(self, key, values):
-        self.items[self.keys.index(key)].extend(values)
+        for i, k in enumerate(self.keys):
+            if key == k:
+                self.items[i].extend(values)

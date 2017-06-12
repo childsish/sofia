@@ -34,5 +34,6 @@ class EntityType(object):
             sys.stderr.write('Error formatting entity {}.\n'.format(self.name))
             sys.stderr.write('Format string: {}.\n'.format(self.format_string))
             sys.stderr.write('Entity: {}.\n'.format(entity))
+            sys.stderr.write('Error: {}\n'.format(e))
             #raise e
         return ''
