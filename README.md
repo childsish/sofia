@@ -31,7 +31,7 @@ We provide example data to help familiarise yourself with SoFIA. To get the data
 
 To try the example, run:
 
-`python -m sofia execute -e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect -r ./example/data/randome.gff -r ./example/data/randome.fasta -r ./example/data/randome.vcf variants -t variants -o output.txt -p 1`
+`python -m sofia execute -e chromosome_id -e position -e gene_id -e amino_acid_variant -e variant_effect -r ./example/data/randome.gff -r ./example/data/randome.fasta -r ./example/data/randome.vcf variants -t variants -o output.txt`
 
 The command line can be broken down into several parts:
 

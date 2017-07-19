@@ -87,7 +87,7 @@ def init_execute(args):
             entity.attributes['sync'].add(args.target)
 
     workflow = resolve(template, requested_entities, provided_entities, args.maps)
-    output = sys.stdout if args.output is None else open(args.outpu, 'w')
+    output = sys.stdout if args.output is None else open(args.output, 'w')
     execute(workflow)
     output.close()
 
