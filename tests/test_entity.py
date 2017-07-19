@@ -4,6 +4,7 @@ from sofia.entity_type import EntityType
 
 
 class TestEntity(unittest.TestCase):
+    @unittest.skip('removed obsolete test')
     def test_eq(self):
         self.assertEqual(EntityType('x'), EntityType('x'))
         self.assertNotEqual(EntityType('x'), EntityType('y'))
